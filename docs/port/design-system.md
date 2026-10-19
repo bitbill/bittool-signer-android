@@ -51,7 +51,7 @@ What the old screenshots show (do **not** copy these specifics; the code changed
   (`design/Brand.md`). Nothing in it names a coin.
 - App name `"BitTool Signer"` (localisation key exists; translates to itself). Brand line
   `"Air-gapped signing. For everyone."` (zh-Hans: 离线签名，人人可用。). Publisher `BITTOOL PTE. LTD.`
-  (`Features/Settings/SettingsTab.swift:125`).
+  (`Features/Settings/SettingsTab.swift:119`).
 
 ### 1.2 Geometry (1024 grid) — `design/Brand.md`, `scripts/make-brand-assets.py:18-27`
 | Element | Value |
@@ -89,7 +89,7 @@ without a jump."
 | Welcome hero | 96 | yes | appears with `scale 0.9→1` + `opacity 0→1`, `.spring(duration: 0.8)` (none with Reduce Motion); title "BitTool Signer" `.largeTitle.bold`; slogan `.title3` secondary; hero stack spacing 14; page has a top `RadialGradient(accent @16% → clear, center .top, startRadius 10, endRadius 420)` behind everything | `Features/Onboarding/WelcomeView.swift:31-35,59,62-74` |
 | App Lock | 84 | yes | title "BitTool Signer Is Locked" `.title2.bold`, subtitle "Unlock to view your wallets and activity." subheadline secondary; stack spacing 14; page spacing 28, top spacer ≥ 60, padding h28 b24, readable width 440 | `Features/Lock/AppLockView.swift:18-41` |
 | Settings › About footer | 44 | no | `VStack(spacing: 10) { BrandTile; Text("Air-gapped signing. For everyone.") }` centred, top 24, bottom 28 (footer style text) | `Features/Settings/SettingsTab.swift:89-97` |
-| Wallet directory | — | — | BitTool Wallet's own logo `wallet_bittool` (ring mark, **black on white**) | `Models/CompatibleWallets.swift:134` |
+| Wallet directory | — | — | BitTool Wallet's own logo `wallet_bittool` (ring mark, **black on white**) | `Models/CompatibleWallets.swift:132` |
 
 ---
 
@@ -218,7 +218,7 @@ Default ("Large") sizes, which are the Android sp values to use:
 Special faces
 - **Monospaced** (`.monospaced()` = SF Mono): every address (`AddressText`), hash (`HashText`, caption), derivation
   path, fingerprint ("Fingerprint %@" caption mono; detail header footnote mono), `DetailLine` values (footnote mono),
-  payload (caption2 mono), licence text (`.system(size: 11, design: .monospaced)`, `SettingsTab.swift:325`),
+  payload (caption2 mono), licence text (`.system(size: 11, design: .monospaced)`, `SettingsTab.swift:341`),
   `CopyableText` (footnote mono by default), token IDs (callout mono), Solana path captions.
 - **Monospaced digits** (`.monospacedDigit()`): QR frame counter, scanner percentage, address-row index labels, time in activity rows, address-index field.
 - **Rounded** (`design: .rounded`): review amount `.largeTitle` bold with `minimumScaleFactor(0.5)`, `lineLimit(2)` (none for NFTs) (`RequestReviewView.swift:285-290`); `TokenIcon` fallback letters (bold, size×0.3); `WalletAvatar` initial (semibold, size×0.44).
@@ -273,7 +273,7 @@ principle); copy buttons 30×30 visual, eye button 32×32, scanner circle button
 | QR plate | black 8% / 16 / 6 |
 | Brand tile | black 16% / size×0.1 / size×0.04 |
 | Toast capsule | black 12% / 12 / 4 |
-| Toast text shadow on avatar initial | black 15% / 1 / 1 |
+| Wallet-avatar initial (text shadow) | black 15% / 1 / 1 |
 
 ---
 
@@ -558,7 +558,7 @@ max width 420, error text `.orange`, `.sensoryFeedback(.error)` on new error.
 |---|---|---|---|
 | `.smooth(0.35)` | 0 | damping 1.0, stiffness 322 | root stage cross-fade |
 | `.smooth(0.3)` | 0 | 1.0 / 439 | scan tab content swap (home → review → result) |
-| `.smooth(0.25)` / `.smooth` | 0 | 1.0 / 632 (default 0.5 s → 158) | reveal/hide (other specs), onboarding paging |
+| `.smooth(0.25)` / `.smooth` | 0 | 1.0 / 632 (default 0.5 s → 158) | secret reveal (`RecoveryPhraseViews.swift:35`, `RecoveryBackupViews.swift:108,236`), onboarding paging (`WelcomeView.swift:167`) |
 | `.smooth(0.2)` | 0 | 1.0 / 987 | strength bar, QR section appear, scanner panel |
 | `.snappy(0.25)` | 0.15 | 0.85 / 632 | payload disclosure, pairing level, multisig picker |
 | `.snappy(0.28)` | 0.15 | 0.85 / 504 | chain picker |
@@ -836,7 +836,7 @@ Implementation notes per component
   Use the BitTool chain drawables (not Ownbit coin logos) and keep the sliding selection (`animateDpAsState` of the tile offset or
   `SharedTransitionLayout`).
 - **ProfileMenu**: row + `DropdownMenu` anchored to the row (items: title + detail as supporting text, check on the selected one).
-- **AddressIndexControl**: `BasicTextField` (`KeyboardType.NumberPassword`? no — `KeyboardType.Number`), filter digits, ≤ 10, clamp to
+- **AddressIndexControl**: `BasicTextField` with `KeyboardType.Number`, filter digits, ≤ 10, clamp to
   2 147 483 647; replace `Stepper` with a tonal pill of two 40 dp icon buttons (`remove` / `add`, repeat while held).
 - **GroupedSection** (insetGrouped `List` rendition): Android 16-style "segmented" list — rows on `card`, 2 dp gaps,
   outer corners 22 dp, inner corners 4 dp (or one card with `opaqueSeparator` hairlines inset 16 dp, closer to iOS);
@@ -858,8 +858,8 @@ Implementation notes per component
   `ClipDescription.timestamp`; after 120 s (Handler in-process, re-checked on next `ON_RESUME`) clear with
   `clearPrimaryClip()` (API 28+) only if the current description timestamp/label is still ours (readable only while the app has
   focus — otherwise defer to the next resume). Android cannot force "local only" (OEM cross-device clipboards); public data only.
-  Android 13+ shows its own copy confirmation; keep the in-app icon swap/toast anyway (iOS parity) but skip the toast when
-  `SDK_INT >= 33` only if product prefers no duplicate (decision for the owner; default: keep).
+  Android 13+ shows its own system copy confirmation; default: keep the in-app icon swap / toast too (iOS parity) — the owner may
+  drop the in-app toast on API 33+ to avoid a double confirmation.
 - **QrRenderer / QrCodeView**: ZXing `QRCodeWriter` (Ownbit `core/ui/qr/QrEncoder.kt`), hints: `ERROR_CORRECTION` = M if
   UTF-8 bytes ≤ 600 else L; **`MARGIN = 1`** (match CoreImage's 1-module quiet zone); `CHARACTER_SET = UTF-8` **only** when
   the text contains non-ASCII (otherwise ZXing auto-selects numeric/alphanumeric/byte like CoreImage; forcing UTF-8 would add
@@ -938,7 +938,7 @@ SF Symbol → Material Symbol (used by shared components and chrome):
 | gearshape | settings | signature | signature |
 | lock.fill / lock.open / lock.rotation | lock / lock_open / lock_reset | key(.fill) / key.viewfinder | key |
 | camera.fill | photo_camera | flashlight.on.fill / .off.fill | flashlight_on / flashlight_off |
-| xmark / plus | close / add | square.and.arrow.down / .up | download / ios_share→`file_save` for "Export as File" |
+| xmark / plus | close / add | square.and.arrow.down / square.and.arrow.up | download / file_save ("Export as File") |
 | arrow.clockwise | refresh | doc.on.clipboard / doc.badge.plus | content_paste / note_add |
 | text.magnifyingglass | manage_search | arrow.uturn.left | undo |
 | list.bullet.rectangle | list_alt | wrench.and.screwdriver | build |

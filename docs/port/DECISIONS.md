@@ -1,0 +1,135 @@
+# BitTool Signer for Android — binding decisions
+
+Every implementer reads this first. The specs in this folder describe *what* the iOS app does; this file fixes *how*
+the Android port is built. Where a spec recommends something different, this file wins; where this file is silent, the
+spec's "Android mapping" section is the default.
+
+## 1. Product scope
+
+- Functionally identical to BitTool Signer for iOS 1.0.0 (`/Users/tanguopeng/Documents/bitsigner-ios/BitSigner`), with
+  Android-native UI polish. iOS-only items are dropped (Face ID wording and permission prompt, Liquid Glass, iOS 17/18
+  fallbacks, simulator UI-test context, App Store specifics, PrivacyInfo.xcprivacy).
+- App name "BitTool Signer" in every language. applicationId `com.bittool.signer` (debug: `.debug`). Version 1.0.0.
+- Two distributions: product flavors `apk` (direct download from bittool.com/signer) and `play` (Google Play), i.e.
+  `apkRelease` / `playRelease`. Both are offline and functionally identical; they differ only in distribution-specific
+  About/Open Source content (`BuildConfig.DISTRIBUTION`), signing (Play upload key) and packaging (App Bundle for play).
+
+## 2. Toolchain (already scaffolded, builds green)
+
+Gradle 9.7.1, AGP 9.4.1 with **built-in Kotlin** (never apply `org.jetbrains.kotlin.android`), Kotlin 2.4.21, KSP 2.3.12,
+JDK 21 (daemon criteria in `gradle/gradle-daemon-jvm.properties`), compileSdk 37, targetSdk 36, minSdk 26.
+Compose BOM 2026.09.00 (Material 3 1.4.0), Navigation Compose 2.10.2 (type-safe `@Serializable` routes),
+Hilt 2.60.1 + hilt-navigation-compose 1.4.0, kotlinx.serialization 1.12.0, coroutines 1.11.0, DataStore 1.2.1,
+CameraX 1.6.2, ZXing core 3.5.4, QuickJS `wang.harlon.quickjs:wrapper-android` 3.2.3, androidx.biometric 1.1.0,
+core-splashscreen 1.2.0, AppCompat 1.8.0 (per-app locales). Versions live in `gradle/libs.versions.toml` only.
+
+Build commands (always through the slot limiter; JAVA_HOME is set by it):
+
+```
+tools/gradle-slot.sh ./gradlew :core:model:test
+tools/gradle-slot.sh ./gradlew :core:crypto:testDebugUnitTest
+tools/gradle-slot.sh ./gradlew :feature:sign:compileDebugKotlin
+tools/gradle-slot.sh ./gradlew :app:assembleApkDebug
+tools/gradle-slot.sh ./gradlew :core:engine:connectedDebugAndroidTest   # emulator-5554 is running
+```
+
+## 3. Modules and dependency rules
+
+| Module | Owns |
+|---|---|
+| `:core:common` | dispatchers qualifiers, `AppClock`/monotonic clock, small utilities (hex, grapheme count, UTF-8 size), logging that is a no-op in release |
+| `:core:model` | pure Kotlin/JVM: every domain type and engine-result reader (models-state.md), `AddressFormatter`, recovery cards, backup verification, compatible-wallet data, `AppLanguage` enum, password policy rules if pure |
+| `:core:l10n` | ALL user-visible strings (generated `strings_ios.xml` + Android-only `strings_<area>.xml`), `IosStrings` lookup, `ReviewText` translation helpers, locale application helpers |
+| `:core:designsystem` | `SignerTheme`, colour/typography/shape/motion tokens, generic components (no domain types), brand mark/tile, chain glyph vectors |
+| `:core:engine` | the QuickJS host and `SignerEngine` (done); engine-level tests and vectors |
+| `:core:crypto` | vault format v2, PBKDF2/AES-GCM/Keystore device key, public-index HMAC, BIP39 (10 languages, NFKD, detection, ambiguity, SeedQR/phrase QR parsing), native seed derivation, password policy, secure random, secret zeroing |
+| `:core:data` | `SignerStore` (= iOS `AppStore`), wallet repositories, receipt (Activity) store, preferences (DataStore), token registry, known contracts, token icon pack, legal texts |
+| `:core:security` | App Lock (`AppAccessController`), biometric adapter, lifecycle/capture/screenshot monitors, recovery privacy sessions, lock window + window gate, secure-window helpers |
+| `:core:scanner` | CameraX + ZXing QR scanning (composable + analyzer), QR encoding to bitmaps, animated multi-frame QR player |
+| `:core:ui` | domain-aware shared composables: network/chain logos, token icon, wallet avatar & app icons, address/hash text, QR card, payload disclosure, password fields + strength meter, legal document view, review building blocks shared by sign + activity |
+| `:core:navigation` | `@Serializable` route types, `Tab`, `AppRouter` (iOS AppRouter), setup intent/presentation types |
+| `:feature:onboarding` | Welcome, onboarding pager |
+| `:feature:setup` | create / import / backup (words, QR, recovery cards, tips) / verify / password / naming flows, reveal-phrase flow |
+| `:feature:wallets` | Wallets tab, wallet detail, addresses, Connect (pairing), wallet security sheets (rename, change/reset password, delete) |
+| `:feature:sign` | Scan tab, scanner screen, paste / import file, request review, per-task password, signature result |
+| `:feature:activity` | Activity tab, receipt detail (re-review, response QR, export, raw text) |
+| `:feature:settings` | Settings tab and every page under it (App Lock row, appearance, language, networks, tokens & contracts, compatibility, air-gapped guide, open source, legal, about) |
+| `:app` | `SignerApplication`, `MainActivity`, root stage machine, tab scaffold, NavHost wiring, lock/cover layers, global alert, splash gate, flavor-specific code (`src/apk`, `src/play`) |
+
+Rules: features never depend on other features (navigate through `:core:navigation`). Nothing depends on `:app`.
+`:core:model` stays Android-free. Use `api(...)` only where a module's public signatures expose the other module's types.
+
+Package root: `com.bittool.signer.<module path>` (e.g. `com.bittool.signer.core.data`, `com.bittool.signer.feature.sign`).
+
+## 4. Strings and languages
+
+- Never hard-code user-visible text in Kotlin. Every iOS string already exists as a resource in `:core:l10n`
+  (`core/l10n/src/main/res/values*/strings_ios.xml`, 773 strings × 21 languages, generated by
+  `tools/l10n/import_ios_strings.py`). Find a resource name by its English text in `tools/l10n/strings-index.tsv`
+  (`grep -F` the exact English). Use `com.bittool.signer.core.l10n.R.string.<name>` with `stringResource(...)` /
+  `context.getString(...)`; `%@` became `%s`, `%lld` became `%d` (positional when there are two or more).
+- Text produced by the engine (field labels, display actions, review titles) is translated at draw time like iOS
+  `ReviewText`: `IosStrings.lookup(english)` returns the resource id or null (then show the English unchanged).
+- New Android-only text (e.g. Android wording of the air-gapped guide, biometric prompt texts that differ, "Open
+  settings", screen-lock requirement, APK certificate fingerprint): add it in English to
+  `core/l10n/src/main/res/values/strings_<area>.xml`, one file per feature area (`strings_setup.xml`, `strings_sign.xml`,
+  …) so parallel work never conflicts, names prefixed with the area (`setup_…`). A later pass translates these into the
+  20 other languages. Keep them few: prefer the iOS string whenever its meaning fits.
+- Per-app language via `AppCompatDelegate.setApplicationLocales` (manifest already has `AppLocalesMetadataHolderService`
+  with `autoStoreLocales`). Arabic is applied as `ar-u-nu-latn` (Latin digits), RTL layout follows automatically.
+
+## 5. Engine
+
+`SignerEngine` (`:core:engine`) is implemented and verified on the emulator (BIP84/EVM/TRON/Solana vectors match):
+fresh QuickJS runtime per secret/untrusted operation, one warm runtime for `derivePublicAddresses` /
+`createPublicPairing` / `createWalletPairing`, one scan-session runtime, single dedicated engine thread, 1 MiB request
+and 2 MiB response limits, sorted-key JSON, iOS-identical entropy bootstrap, SHA-256 check of the shipped `signer.js`.
+Callers pass `kotlinx.serialization.json.JsonObject` parameters and get the engine `result` object back (non-object
+results wrapped as `{"value": …}`), or an `EngineException(code, message)`. Typed parsing of results lives in
+`:core:model`. Measured on the emulator: fresh runtime ≈ 0.2 s, `derivePublicIndex` from a seed ≈ 7 s — show progress
+and never run it on the main thread.
+
+## 6. Security posture (Android equivalents, decided)
+
+- No `INTERNET` permission (manifest removes it even if a library adds it). No network code anywhere.
+- `FLAG_SECURE` on the activity window from `onCreate`, never toggled (blank Recents thumbnail, no screenshots or
+  recordings). A debug-only switch may disable it for the screenshot tour. API 33+: `setRecentsScreenshotEnabled(false)`.
+- App Lock: `BiometricPrompt` with `BIOMETRIC_STRONG` only and the negative button "Use a Wallet Password" (iOS
+  semantics); 120 s background grace measured with `SystemClock.elapsedRealtime()`; locked on cold launch; fail closed
+  while preferences load. App Lock never authorizes a signature.
+- Vault: PBKDF2-HMAC-SHA256 600,000 iterations → AES-256-GCM, then an outer AES-GCM layer under a non-exportable Android
+  Keystore key (StrongBox when available); public index authenticated with a Keystore HMAC-SHA256 key; files in
+  `noBackupFilesDir`, written atomically; `allowBackup=false` + data extraction rules exclude everything.
+- Secrets in `ByteArray`/`CharArray`, zeroed after use; never in logs, `toString`, saved state, navigation arguments or
+  `SavedStateHandle`. Background (`onStop`, not during configuration changes) clears passwords, risk acknowledgements and
+  revealed phrases immediately.
+- Secret/phrase fields: no personalized IME learning, no autocorrect/suggestions, autofill excluded app-wide.
+- Clipboard: addresses/xpubs only, marked sensitive (`ClipDescription.EXTRA_IS_SENSITIVE`); never secrets.
+
+## 7. Architecture conventions
+
+- UI: Jetpack Compose + Material 3, single activity (`MainActivity : AppCompatActivity`), edge-to-edge, predictive back
+  (`enableOnBackInvokedCallback`), splash screen API. Screens are `@Composable fun XxxScreen(...)` + `@HiltViewModel`
+  `XxxViewModel` exposing `StateFlow<XxxUiState>`; collect with `collectAsStateWithLifecycle()`.
+- State: `SignerStore` is the single source of truth for wallets, the request pipeline and activity (iOS `AppStore`),
+  `@Singleton`, state as `StateFlow<SignerState>`, mutations confined to the main thread, epoch checks after every
+  suspension (models-state.md §5). Vault work on `Dispatchers.Default`, file I/O on `Dispatchers.IO`, engine on its thread.
+- DI: Hilt everywhere. The app provides `@Named(EngineModule.ENGINE_TEST_OPERATIONS) Boolean = BuildConfig.DEBUG`.
+- Navigation: one `NavHost` in `:app`; each feature exposes `fun NavGraphBuilder.xxxGraph(...)` plus screen entry
+  points; routes are `@Serializable` types in `:core:navigation`. No secrets or large payloads in routes (pass ids;
+  read the request from `SignerStore`).
+- Quality bar: "looks and feels like a flagship app from a top-tier company" — consistent spacing, motion (shared-axis /
+  fade-through transitions, springs without bounce for layout), haptics on meaningful actions, dark mode first-class,
+  RTL-correct, large-font-safe, TalkBack labels, 48 dp touch targets, no jank (heavy work off the main thread, stable
+  lambdas/keys in lazy lists).
+- Tests: port the iOS unit tests that apply (`BitToolSignerTests/*`) as JVM tests (`:core:model:test`,
+  `testDebugUnitTest`), Robolectric where Android types are needed, instrumented tests for engine/Keystore.
+
+## 8. Parallel work protocol
+
+- Implementation agents work in their own git worktree branch and touch **only the paths their task owns** (their
+  modules, their `strings_<area>.xml`). Shared files (`settings.gradle.kts`, `gradle/libs.versions.toml`,
+  `build-logic/**`, `app/**` unless the task owns `:app`, other modules) are read-only; if a dependency is missing from
+  the catalog, add it in the module's own `build.gradle.kts` with a full coordinate and say so in the report.
+- Commit with a descriptive message in the worktree before finishing; the orchestrator merges branches.
+- A task is done only when its modules compile and their tests pass; report anything stubbed, skipped or unverified.
