@@ -1,0 +1,775 @@
+resource	english
+x_lock	%@ Lock
+x_account	%@ account
+x_address_x	%@ address #%lld
+x_x	%@: %@…
+x	%lld
+x_contracts	%lld Contracts
+x_tokens	%lld Tokens
+x_contract_addresses_published_by_the_projects	%lld contract addresses published by the projects themselves. When a request authorizes one of them, the review names it; when it authorizes an address that is not listed, the review says so. A listing identifies a deployment. It is not a judgement about the request. Updated %@.
+x_contracts_2	%lld contracts
+x_contracts_at_the_same_address_on_every_network	%lld contracts at the same address on every network
+x_decimals	%lld decimals
+x_dp	%lld dp
+x_tokens_2	%lld tokens
+x_wallets	%lld wallets
+x_words	%lld words
+x_2	%lld%%
+x_3	%lld.
+x_x_2	%lld/%lld
+n_0	0
+n_1_word	1 word
+n_12_words	12 words
+n_12_24_words_any_bip39_language	12–24 words · any BIP39 language
+n_24_words	24 words
+n_3_of_uppercase_lowercase_number_symbol	3 of: uppercase, lowercase, number, symbol
+n_8_to_64_characters	8 to 64 characters
+a_backup_check_requires_a_supported_bip39_phrase_length	A backup check requires a supported BIP39 phrase length.
+a_link_to_the_image_or_attach_it_a_square_icon_of_at	A link to the image, or attach it. A square icon of at least 512 px.
+a_link_to_the_repository_if_the_wallet_is_open_source	A link to the repository, if the wallet is open source.
+a_local_record_of_signatures_created_on_this_device	A local record of signatures created on this device. Check broadcast and confirmation in your other wallet.
+a_wallet_is_already_being_saved	A wallet is already being saved.
+a_wallet_needs_repair_before_it_can_be_matched_open_it	A wallet needs repair before it can be matched. Open it in Wallets and repair its data.
+about	About
+access_list	Access list
+account	Account
+account_mint	Account / mint
+account_owner_program	Account owner program
+account_path	Account path
+account_type	Account type
+accounts	Accounts
+accounts_by_derivation_path	Accounts by derivation path
+action	Action
+activity	Activity
+add_wallet	Add Wallet
+added_x	Added %@
+additional_authority_accounts	Additional authority accounts
+address_index	Address index
+address_only_no_public_key_or_derivation_path_is	Address only. No public key or derivation path is included in this QR code.
+address_only_no_public_key_or_derivation_path_is_2	Address only. No public key or derivation path is included.
+address_type	Address type
+addresses	Addresses
+advanced_adds_a_25th_word	Advanced. Adds a “25th word”.
+air_gapped_signing_for_everyone	Air-gapped signing. For everyone.
+all_decoded_fields	All Decoded Fields
+all_evm_networks	All EVM networks
+allocated_bytes	Allocated bytes
+allow_camera_access_in_settings_to_scan_qr_codes_or	Allow camera access in Settings to scan QR codes, or import the request as a file or pasted text.
+allowance	Allowance
+allowance_raw_units	Allowance (raw units)
+allowance_nft_token_id	Allowance / NFT token ID
+also_paid_out	Also paid out
+always_compare_the_first_addresses_in_both_apps_before	Always compare the first addresses in both apps before receiving funds.
+amount	Amount
+amount_sol	Amount (SOL)
+amount_trx	Amount (TRX)
+amount_nft_token_id	Amount / NFT token ID
+animated_qr_code_part_x_of_x	Animated QR code, part %lld of %lld
+another_saved_wallet_uses_the_same_recovery_phrase_and	Another saved wallet uses the same recovery phrase and passphrase. Both are kept. Requests that match both cannot be signed until you delete one copy.
+another_wallet_has_the_same_key_identity_requests_it	Another wallet has the same key identity. Requests it matches cannot be signed.
+any_address_index	Any address index
+anyone_who_scans_or_photographs_it_can_take_your_funds	Anyone who scans or photographs it can take your funds. Show it only in private, to move this wallet to another device of your own.
+anyone_with_these_words_can_take_your_funds_from_any	Anyone with these words can take your funds from any device. No one from BitTool Signer will ever ask for them.
+anyone_with_these_words_can_take_your_funds_write_them	Anyone with these words can take your funds. Write them on paper and store them offline. Never type them into a website or share a photo.
+app_authentication_is_unavailable_right_now	App authentication is unavailable right now.
+app_icon	App icon
+app_version	App version
+appearance	Appearance
+approve_nft_or_token	Approve (NFT or token)
+approve_all_nfts	Approve All NFTs
+approve_nft_or_token_2	Approve NFT or token
+approve_all_assets	Approve all assets
+asset	Asset
+asset_owner	Asset owner
+asset_type	Asset type
+attached_trx	Attached TRX
+authenticate_app_access_before_changing_app_lock	Authenticate app access before changing App Lock.
+authentication_failed_try_again_or_use_a_wallet_password	Authentication failed. Try again or use a wallet password.
+authority	Authority
+authority_type	Authority type
+authorize	Authorize
+authorize_signature	Authorize Signature
+available	Available
+awaiting_password	Awaiting password
+bip39_passphrase	BIP39 passphrase
+bip39_passphrase_back_up_separately	BIP39 passphrase · back up separately
+btc_evm_tron_sol	BTC · EVM · TRON · SOL
+btc_single_sig_and_multisig	BTC · Single-sig and multisig
+back	Back
+back_up_your_phrase	Back Up Your Phrase
+back_up_any_passphrase_separately	Back up any passphrase separately
+backup_format	Backup format
+base_network_fee_sol	Base network fee (SOL)
+based_on_each_wallets_documentation_or_source_code_or	Based on each wallet’s documentation or source code, or its official QR hardware-wallet guide (September 2026). Versions change: always compare the first address in both apps before receiving funds.
+batch_transaction	Batch Transaction
+batch_order	Batch order
+batch	Batch:
+being_listed_is_not_a_review_or_an_endorsement_we_do	Being listed is not a review or an endorsement. We do not audit the wallets people submit, and BitTool is not responsible for what happens through them.
+biometric_authentication_is_unavailable_check_face_id	Biometric authentication is unavailable. Check Face ID or Touch ID in iOS Settings, or use a wallet password.
+biometrics_are_locked_after_too_many_attempts_use_a	Biometrics are locked after too many attempts. Use a wallet password, or unlock your iPhone with its passcode first.
+bittool_signer	BitTool Signer
+bittool_signer_is_locked	BitTool Signer Is Locked
+bittool_signer_can_show_this_request_but_cannot_sign	BitTool Signer can show this request but cannot sign this kind of request.
+bittool_signer_creates_a_new_recovery_phrase_on_this	BitTool Signer creates a new recovery phrase on this device. It works for Bitcoin, EVM networks, TRON and Solana.
+bittool_signer_decodes_it_and_finds_the_matching_wallet	BitTool Signer decodes it and finds the matching wallet on this device.
+bittool_signer_decrypts_the_wallet_once_to_rebuild_its	BitTool Signer decrypts the wallet once to rebuild its public keys and addresses. Your recovery phrase and password do not change.
+bittool_signer_does_not_broadcast_whether_this	BitTool Signer does not broadcast. Whether this transaction was sent or confirmed is only known to your other wallet and the network.
+bittool_signer_is_open_source_all_of_it_the_app_the	BitTool Signer is open source, all of it. The app, the offline signing engine and the token data are published under one repository, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.
+bittool_signer_uses_open_qr_standards_the_wallets_below	BitTool Signer uses open QR standards. The wallets below support these formats according to their documentation, source code or official QR hardware-wallet guides (September 2026). Versions change, so always compare addresses in both apps before receiving funds.
+bitcoin	Bitcoin
+bitcoin_evm_networks_tron_and_solana	Bitcoin, EVM networks, TRON and Solana
+bitcoin_ethereum_bnb_chain_arbitrum_base_tron_and_solana	Bitcoin, Ethereum, BNB Chain, Arbitrum, Base, TRON and Solana
+blur_bulk_listing_blind	Blur Bulk Listing (blind)
+both_are_secure_24_words_is_common_for_long_term_storage	Both are secure. 24 words is common for long-term storage.
+built_for_compatibility	Built for Compatibility
+built_to_work_entirely_offline_no_accounts_no_cloud	Built to work entirely offline. No accounts, no cloud.
+bulk_order	Bulk order
+bytes	Bytes
+camera_access_needed	Camera Access Needed
+cancel	Cancel
+cannot_sign	Cannot Sign
+card_x_of_x	Card %lld of %lld
+chain_id	Chain ID
+chain_specific_qr_codes_coin_level_remain_the_choice	Chain-specific QR codes (Coin Level) remain the choice for Sparrow, MetaMask, Solflare and the other wallets listed there.
+change_password	Change Password
+check_your_backup	Check Your Backup
+checked	Checked
+choose_a_psbt_file_or_a_text_file_containing_a_ur	Choose a PSBT file or a text file containing a UR request.
+choose_a_wallet	Choose a wallet
+choose_a_wallet_name_of_1_40_characters	Choose a wallet name of 1–40 characters.
+clear	Clear
+clear_activity	Clear Activity
+clear_nft_approval_if_erc_721	Clear NFT Approval (if ERC-721)
+clear_nft_approval	Clear NFT approval
+clear_all_activity	Clear all activity?
+clone_the_repository_and_check_out_the_tag_for_version_x	Clone the repository and check out the tag for version %@.
+close	Close
+coin_level	Coin Level
+collection	Collection
+compare_the_sha_256_it_prints_and_engine_bundle	Compare the SHA-256 it prints, and engine/bundle-manifest.json, with the digest above.
+compatibility	Compatibility
+compute_unit_limit	Compute unit limit
+compute_unit_price_micro_lamports	Compute unit price (micro-lamports)
+confirm	Confirm
+confirm_wi_fi_cellular_data_and_bluetooth_are_off	Confirm Wi‑Fi, cellular data and Bluetooth are off
+confirm_before_deleting_this_wallet	Confirm before deleting this wallet.
+confirm_new_password	Confirm new password
+confirm_passphrase	Confirm passphrase
+confirm_password	Confirm password
+contact_us	Contact Us
+contact_email	Contact email
+continue_text	Continue
+contract	Contract
+contract_interaction	Contract Interaction
+contract_is_not_in_the_known_list	Contract is not in the known list
+control_characters_are_not_allowed	Control characters are not allowed.
+copied	Copied
+copies_the_master_fingerprint	Copies the master fingerprint
+copy_address	Copy Address
+copy_contract_address	Copy Contract Address
+copy_payload	Copy Payload
+copy_qr_data	Copy QR Data
+copy_address_2	Copy address
+copy_every_word_by_hand_in_order_keep_the_paper	Copy every word by hand, in order. Keep the paper somewhere safe from fire and water, apart from this device.
+cosigner_account_path	Cosigner account path
+create_new_wallet	Create New Wallet
+create_recovery_phrase	Create Recovery Phrase
+create_wallet	Create Wallet
+create_a_wallet	Create a Wallet
+create_a_wallet_before_enabling_app_lock	Create a wallet before enabling App Lock.
+current_authority	Current authority
+current_voting_member	Current voting member
+current_wallet_password	Current wallet password
+dark	Dark
+date	Date
+decimals	Decimals
+decimals_local_registry	Decimals (local registry)
+decimals_bound_by_instruction	Decimals bound by instruction
+decoded_on_device	Decoded on device
+decoding_again	Decoding again…
+delegated_balance_trx	Delegated balance (TRX)
+delete	Delete
+delete_wallet	Delete Wallet
+delete_this_wallet	Delete this wallet?
+deleting_asks_for_x_then_for_this_wallets_password	Deleting asks for %@, then for this wallet’s password.
+deleting_asks_for_this_wallets_password	Deleting asks for this wallet’s password.
+deleting_removes_this_wallet_from_bittool_signer_only	Deleting removes this wallet from BitTool Signer only. Funds stay on the blockchain and can be restored with the recovery phrase.
+deploy_contract	Deploy Contract
+deploy_contract_2	Deploy contract
+deployment_bytecode	Deployment bytecode
+derivation_path	Derivation path
+derivation_path_x	Derivation path %@
+derivation_paths	Derivation paths
+derived_on_this_device_from_public_keys_balances_are	Derived on this device from public keys. Balances are never checked.
+destination_stake	Destination stake
+details	Details
+discard	Discard
+discard_partial_signatures	Discard partial signatures?
+discard_this_wallet	Discard this wallet?
+display_amount	Display amount
+distinct_token_ids	Distinct token IDs
+does_your_wallet_read_bittool_signers_qr_codes_send_us	Does your wallet read BitTool Signer's QR codes? Send us the details and we will add it to the list. Anyone can submit a wallet, including its own developers.
+domain	Domain
+done	Done
+duplicate_signing_task	Duplicate signing task.
+duplicate_wallet	Duplicate wallet
+erc_1155_token	ERC-1155 token
+evm_networks	EVM networks
+each_chinese_word_is_one_character	Each Chinese word is one character
+each_passphrase_opens_a_different_wallet_back_it_up	Each passphrase opens a different wallet. Back it up separately: the recovery phrase alone cannot restore this wallet. It is not your wallet password.
+each_wallet_signs_with_its_own_password_the_final	Each wallet signs with its own password. The final signature appears after every wallet has signed.
+ed25519_message_signature	Ed25519 message signature
+email	Email
+energy_budget	Energy budget
+energy_budget_up_to_x_total_fee_not_known_offline	Energy budget up to %@ · total fee not known offline
+engine_size	Engine size
+enter_a_wallet_name	Enter a wallet name.
+enter_that_wallets_password_to_sign	Enter that wallet’s password to sign.
+enter_the_12_15_18_21_or_24_words_of_an_existing_bip39	Enter the 12, 15, 18, 21 or 24 words of an existing BIP39 recovery phrase, in any of the ten BIP39 languages.
+enter_the_password_of_any_wallet_on_this_device	Enter the password of any wallet on this device.
+enter_this_wallets_password_to_delete_it_without_the	Enter this wallet’s password to delete it. Without the recovery phrase this cannot be undone.
+enter_this_wallets_password	Enter this wallet’s password.
+enter_your_recovery_phrase	Enter your recovery phrase.
+enter_your_words_separated_by_spaces	Enter your words separated by spaces
+ethereum_bnb_chain_arbitrum_base_and_more	Ethereum, BNB Chain, Arbitrum, Base and more
+every_tron_receive_index_is_available_to_export_a	Every TRON receive index is available. To export a specific index, use Pair.
+every_line_that_touches_your_keys_is_published_read_it	Every line that touches your keys is published. Read it, or rebuild it and compare.
+every_signature_needs_your_wallet_password	Every signature needs your wallet password
+every_wallet_here_supports_or_says_it_supports_bittool	Every wallet here supports, or says it supports, BitTool Signer's QR codes. Anyone can submit a wallet and claim that. We have not fully verified these claims and we do not audit, endorse or vouch for any of these wallets.
+exact_bytes	Exact bytes
+exact_calldata	Exact calldata
+exact_instruction_bytes	Exact instruction bytes
+exact_message_bytes	Exact message bytes
+existing_signatures	Existing signatures
+existing_signers	Existing signers
+expiration_utc	Expiration (UTC)
+expires_utc	Expires (UTC)
+export_as	Export as
+export_as_file	Export as File
+export_public_keys_to_a_watch_only_wallet_such_as	Export public keys to a watch-only wallet such as Sparrow or MetaMask. Private keys never leave this device.
+fee_payer	Fee payer
+field_definitions	Field definitions
+fills_this_blank_next	Fills this blank next
+finding_the_matching_wallet	Finding the matching wallet…
+fingerprint	Fingerprint
+fingerprint_x	Fingerprint %@
+first_address_path	First address path
+for_the_strongest_isolation_use_a_dedicated_iphone_and	For the strongest isolation, use a dedicated iPhone and keep its connections off.
+format	Format
+formats	Formats
+fully_open_source	Fully Open Source
+fully_open_source_2	Fully open source
+function_selector	Function selector
+funding_sol	Funding (SOL)
+gas_limit	Gas limit
+get_started	Get Started
+hidden	Hidden
+hidden_while_your_screen_is_recorded_or_mirrored	Hidden while your screen is recorded or mirrored
+hide_cards	Hide Cards
+hide_qr_code	Hide QR Code
+hide_recovery_phrase	Hide Recovery Phrase
+hide_secret	Hide secret
+high_risk	High risk
+hook_extra_accounts	Hook extra accounts
+hook_validation_account	Hook validation account
+how_signing_works	How signing works
+i_confirm_i_want_to_delete_this_wallet	I confirm I want to delete this wallet
+i_understand_the_risks_of_this_request	I understand the risks of this request
+i_understand_this_request_cant_be_fully_verified	I understand this request can’t be fully verified
+if_ios_asks_to_allow_wireless_data_choose_dont_allow	If iOS asks to allow wireless data, choose Don’t Allow: the app never connects
+if_this_wallet_uses_a_bip39_passphrase_the_words_alone	If this wallet uses a BIP39 passphrase, the words alone cannot restore it.
+if_you_forget_this_password_import_this_recovery_phrase	If you forget this password, import this recovery phrase again to set a new one.
+ignored_request_keys	Ignored request keys
+import_existing_wallet	Import Existing Wallet
+import_file	Import File
+import_recovery_phrase	Import Recovery Phrase
+import_wallet	Import Wallet
+import_a_wallet	Import a Wallet
+include_at_least	Include at least
+include_at_least_3_of_uppercase_lowercase_numbers_and	Include at least 3 of: uppercase, lowercase, numbers and symbols.
+includes_an_account_xpub_for_each_bitcoin_address_type	Includes an account xpub for each Bitcoin address type (bc1q, bc1p, 3, 1), for EVM and for TRON, plus all three Solana addresses. Your wallet can then use every Bitcoin, EVM and TRON address without scanning again. Hold the camera steady until every frame is read.
+input	Input
+inputs	Inputs
+inputs_signed	Inputs signed
+insert_x	Insert %@
+instruction	Instruction
+interpretation	Interpretation
+invalid_activity_record	Invalid activity record.
+invalid_local_document	Invalid local document.
+invalid_public_wallet_data	Invalid public wallet data.
+invalid_public_wallet_data_repair_this_wallet	Invalid public wallet data. Repair this wallet.
+invalid_recovery_phrase_check_the_words_and_their_order	Invalid recovery phrase. Check the words and their order.
+invalid_recovery_phrase_x_are_not_in_the_bip39_word_list	Invalid recovery phrase: %@ are not in the BIP39 word list.
+invalid_recovery_phrase_x_is_not_in_the_bip39_word_list	Invalid recovery phrase: %@ is not in the BIP39 word list.
+invalid_recovery_phrase_it_has_x_words_recovery_phrases	Invalid recovery phrase: it has %lld words. Recovery phrases have 12, 15, 18, 21 or 24 words.
+invalid_recovery_phrase_it_has_1_word_recovery_phrases	Invalid recovery phrase: it has 1 word. Recovery phrases have 12, 15, 18, 21 or 24 words.
+invalid_request_format	Invalid request format.
+invalid_signing_plan	Invalid signing plan.
+invalid_signing_wallet_identity	Invalid signing wallet identity.
+it_contains_the_x_words_only_your_bip39_passphrase_is	It contains the %lld words only. Your BIP39 passphrase is not included; restoring this wallet also needs the passphrase.
+items	Items
+ive_written_them_down_in_order	I’ve Written Them Down in Order
+keep_editing	Keep Editing
+keep_it_offline	Keep it offline
+keep_the_three_cards_in_three_different_places_one_card	Keep the three cards in three different places. One card alone does not hold the full phrase, but it shows two thirds of the words; with a 12- or 15-word phrase the rest can be guessed with enough computing power, so hide every card.
+keep_these_three_cards_in_three_different_places_any	Keep these three cards in three different places. Any two of them restore the complete recovery phrase, so if one card is lost or stolen, the other two keep your wallet safe and recoverable.
+keep_these_three_cards_in_three_different_places_any_2	Keep these three cards in three different places. Any two of them restore the complete recovery phrase, so if one card is lost, the other two can still restore your wallet.
+keep_your_recovery_phrase_private_anyone_with_it_can	Keep your recovery phrase private: anyone with it can take your funds
+keys_and_signing_stay_on_this_device	Keys and signing stay on this device.
+keys_stay_on_this_device	Keys stay on this device
+know_what_you_sign	Know what you sign
+known_public_contracts	Known Public Contracts
+known_contract_ethereum	Known contract (Ethereum)
+known_public_contract	Known public contract
+known_public_contract_operator	Known public contract (operator)
+known_public_contract_spender	Known public contract (spender)
+language	Language
+leaves_out_words_x	Leaves out words %@
+legacy_and_v0_transactions_with_static_accounts_and	Legacy and v0 transactions with static accounts, and messages. Address lookup tables are not supported offline.
+legacy_eip_2930_and_eip_1559_transactions_personal	Legacy, EIP-2930 and EIP-1559 transactions, personal messages and EIP-712 typed data, including Safe, Permit2 and NFT marketplace orders.
+light	Light
+listings_root	Listings root
+lock_period_blocks	Lock period (blocks)
+locked	Locked
+locktime	Locktime
+make_sure_no_one_can_see_your_screen	Make sure no one can see your screen
+make_sure_no_one_can_see_your_screen_2	Make sure no one can see your screen.
+maker_fee	Maker fee
+marketplace	Marketplace
+master_fingerprint	Master fingerprint
+match_again	Match Again
+matching	Matching…
+maximum_energy_fee_trx	Maximum energy fee (TRX)
+maximum_gas_price_wei	Maximum gas price (wei)
+maximum_network_fee	Maximum network fee
+maximum_priority_fee_sol	Maximum priority fee (SOL)
+memo	Memo
+memo_hex	Memo (hex)
+merkle_root	Merkle root
+message	Message
+message_version	Message version
+met	Met
+method	Method
+mint	Mint
+missing_or_invalid_transaction_commitment	Missing or invalid transaction commitment.
+more_than_one_saved_wallet_matches_delete_the_duplicate	More than one saved wallet matches. Delete the duplicate wallet, then scan again.
+multisig	Multisig
+multisig_account	Multisig account
+multisig_coordinators_sign_by_qr	Multisig coordinators · sign by QR
+multisig_signers	Multisig signers
+my_wallet	My Wallet
+nft	NFT
+nft_or_token	NFT or token
+nft_order	NFT order
+name_project_or_address	Name, project or address
+native_amount	Native amount
+native_amount_wei	Native amount (wei)
+native_transfer	Native transfer
+network	Network
+network_connections	Network connections
+network_context	Network context
+network_fee	Network fee
+network_fee_up_to_x	Network fee up to %@
+networking_code	Networking code
+networks	Networks
+networks_tokens_contracts	Networks, Tokens & Contracts
+never_share_it	Never share it
+never_take_a_screenshot_or_photo_of_the_words_and_never	Never take a screenshot or photo of the words, and never store them in notes, email, messages or cloud storage.
+never_type_it_into_a_website	Never type it into a website
+new_text	New
+new_wallet	New Wallet
+new_account	New account
+new_authority	New authority
+new_owner_program	New owner program
+new_password	New password
+new_permission_configuration	New permission configuration
+no_signatures_yet	No Signatures Yet
+no_accounts_servers_or_cloud_sync	No accounts, servers or cloud sync
+no_camera_is_available_import_the_request_as_a_file	No camera is available. Import the request as a file instead.
+no_interrupted_or_unmatched_request_to_retry	No interrupted or unmatched request to retry.
+no_matching_signing_task_review_the_request_again	No matching signing task. Review the request again.
+no_matching_word	No matching word
+nonce	Nonce
+nonce_account	Nonce account
+nonce_authority	Nonce authority
+none	None
+not_checked	Not checked
+not_decoded	Not decoded
+not_met	Not met
+number_of_listings_as_signed	Number of listings (as signed)
+ok	OK
+official_website	Official website
+offline_by_design	Offline by Design
+one_qr_code_for_all_four_chains	One QR code for all four chains
+one_qr_for_every_chain	One QR for every chain
+one_address_works_on_ethereum_bnb_smart_chain_arbitrum	One address works on Ethereum, BNB Smart Chain, Arbitrum, Base and other EVM networks.
+one_animated_qr_code_for_all_four_chains	One animated QR code for all four chains
+only_enter_your_recovery_phrase_into_a_wallet_you_trust	Only enter your recovery phrase into a wallet you trust, on a device you control, when you restore it.
+only_the_password_changes_the_wallet_keeps_its_name	Only the password changes. The wallet keeps its name, addresses, paired wallets and history.
+open_bc_ur_and_psbt_qr_standards	Open BC-UR and PSBT QR standards
+open_camera	Open Camera
+open_settings	Open Settings
+open_source	Open Source
+operator	Operator
+operator_is_not_a_known_contract	Operator is not a known contract
+order_side	Order side
+output	Output
+owner	Owner
+owner_authority	Owner / authority
+psbt_v0_v2_single_sig_legacy_nested_native_segwit	PSBT v0/v2: single-sig (Legacy, Nested, Native SegWit, Taproot) and multisig (P2SH, P2SH-P2WSH, P2WSH, Taproot script path). MuSig2 is not supported.
+page_x_of_x	Page %lld of %lld
+pair	Pair
+pair_x	Pair %@
+pair_bittool_signer_with_a_watch_only_wallet_on_another	Pair BitTool Signer with a watch-only wallet on another device. It prepares transactions; BitTool Signer reviews and signs them.
+pair_wallet	Pair Wallet
+pair_a_wallet	Pair a Wallet
+pairing_level	Pairing level
+partially_decoded	Partially decoded
+password	Password
+password_changed	Password Changed
+password_reset	Password Reset
+password_meets_the_requirements	Password meets the requirements.
+passwords_match	Passwords match
+paste_request	Paste Request
+paste_a_psbt_base64_or_hex_or_a_ur_signing_request	Paste a PSBT (Base64 or hex) or a UR signing request. Multi-part UR requests can be pasted one part per line.
+paste_from_clipboard	Paste from Clipboard
+pause_qr_animation	Pause QR animation
+payer	Payer
+payload_json	Payload (JSON)
+permission_id	Permission ID
+permit_spending	Permit Spending
+personal_signature_eip_191	Personal signature (EIP-191)
+placed	Placed
+play_qr_animation	Play QR animation
+point_the_camera_at_the_qr_code_in_your_other_wallet	Point the camera at the QR code in your other wallet.
+prepare_your_device	Prepare Your Device
+primary_type	Primary type
+privacy_policy	Privacy Policy
+program	Program
+program_known	Program (known)
+program_name	Program name
+public_addresses_and_public_keys_only_no_private_key	Public addresses and public keys only. No private key, recovery phrase or passphrase is included.
+public_wallet_data_is_incomplete_or_inconsistent	Public wallet data is incomplete or inconsistent.
+public_wallet_data_is_too_large	Public wallet data is too large.
+publisher	Publisher
+qr_code	QR Code
+qr_code_2	QR code
+qr_format	QR format
+qr_formats	QR formats
+qr_formats_supported	QR formats supported
+qr_scanning_is_unavailable	QR scanning is unavailable.
+qr_transfer_is_too_large	QR transfer is too large.
+quantity	Quantity
+raw_amount	Raw amount
+read_every_warning_above_before_signing	Read every warning above before signing.
+reading	Reading…
+rebuild_it_yourself	Rebuild it yourself
+receive_addresses	Receive Addresses
+receive_x	Receive · %@
+receive_all_evm_networks	Receive · All EVM networks
+receive_trx_and_trc_20_tokens	Receive · TRX and TRC-20 tokens
+receiver	Receiver
+receiver_callback_bytes	Receiver callback bytes
+recent_blockhash_durable_nonce	Recent blockhash / durable nonce
+recipient	Recipient
+recipient_contract	Recipient / contract
+recipient_wallet_owner_of_destination_token_account	Recipient wallet (owner of destination token account)
+recognized_token_contract	Recognized token contract
+recognized_tokens_are_shown_with_their_name_icon_and	Recognized tokens are shown with their name, icon and decimals when you review a request, entirely offline. Unknown tokens are shown by contract address with raw amounts. A listed token is not an endorsement. Registry %@.
+recovery_cards	Recovery Cards
+recovery_phrase	Recovery Phrase
+recovery_cards_any_two_restore	Recovery cards: any two restore
+recovery_phrase_2	Recovery phrase
+recovery_phrase_length	Recovery phrase length
+recovery_phrases_never_leave_the_app	Recovery phrases never leave the app
+reference	Reference
+referenced_proposal	Referenced proposal
+refund_base_gas	Refund base gas
+refund_gas_price	Refund gas price
+refund_receiver	Refund receiver
+refund_token	Refund token
+reject	Reject
+reject_request	Reject Request
+removes_this_word	Removes this word
+rename_wallet	Rename Wallet
+rent_payer	Rent payer
+rent_recipient	Rent recipient
+repair_wallet	Repair Wallet
+repair_wallet_data	Repair Wallet Data
+repair_needed	Repair needed
+repair_this_wallet_before_renaming_it	Repair this wallet before renaming it.
+repair_wallet_data_2	Repair wallet data
+repository	Repository
+request_payload	Request Payload
+request_changed_review_the_transaction_again	Request changed. Review the transaction again.
+request_exceeds_the_supported_size	Request exceeds the supported size.
+request_fingerprint	Request fingerprint
+requested_signer	Requested signer
+requests_are_decoded_before_you_sign	Requests are decoded before you sign
+require_x_to_open_bittool_signer_at_launch_and_after_2	Require %@ to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.
+required_signers	Required signers
+reset_password	Reset Password
+resource	Resource
+return_text	Return
+reveal_the_words_first	Reveal the words first.
+review	Review
+review_request	Review Request
+revoke_nft_approval	Revoke NFT Approval
+revoke_collection_operator	Revoke collection operator
+risk	Risk
+run_cd_engine_npm_ci_npm_run_build	Run: cd engine && npm ci && npm run build
+safe	Safe
+safe_address	Safe address
+safe_nonce	Safe nonce
+safe_operation	Safe operation
+safe_transaction_gas	Safe transaction gas
+safe_2	Safe:
+salt	Salt
+same_address_on_every_evm_network	Same address on every EVM network.
+save	Save
+scan	Scan
+scan_again	Scan Again
+scan_recovery_qr	Scan Recovery QR
+scan_request	Scan Request
+scan_a_qr_code_containing_the_words_such_as_bittool	Scan a QR code containing the words (such as BitTool Signer’s recovery phrase QR code) or a Standard SeedQR.
+scan_a_signing_request	Scan a Signing Request
+scan_a_request_see_it_decoded_and_matched_to_your	Scan a request, see it decoded and matched to your wallet, then sign it here.
+scan_signing_request	Scan signing request
+scan_the_signature_back_your_other_wallet_broadcasts_it	Scan the signature back. Your other wallet broadcasts it.
+scan_this_code_with_the_wallet_that_created_the_request	Scan this code with the wallet that created the request.
+scan_with_bittool_wallet_or_another_wallet_that	Scan with BitTool Wallet or another wallet that supports BitTool Signer wallet pairing.
+scan_with_your_multisig_coordinator	Scan with your multisig coordinator
+scan_with_your_watch_only_wallet	Scan with your watch-only wallet
+secure_randomness_is_unavailable_try_again_after	Secure randomness is unavailable. Try again after unlocking your device.
+security	Security
+security_tips	Security Tips
+send	Send
+send_erc_1155_batch	Send ERC-1155 Batch
+send_erc_1155_token	Send ERC-1155 Token
+send_nft	Send NFT
+sender	Sender
+set_a_password	Set a Password
+set_an_iphone_passcode_before_creating_a_wallet_the	Set an iPhone passcode before creating a wallet. The device key requires passcode protection.
+set_up_face_id_or_touch_id_in_ios_settings_to_lock	Set up Face ID or Touch ID in iOS Settings to lock BitTool Signer. Every signature always needs the wallet’s password.
+settings	Settings
+show_all	Show All
+show_less	Show Less
+show_qr_code	Show QR Code
+show_recovery_phrase	Show Recovery Phrase
+show_recovery_cards	Show recovery cards
+show_recovery_phrase_2	Show recovery phrase
+show_recovery_phrase_qr_code	Show recovery phrase QR code
+show_secret	Show secret
+show_the_phrase_again	Show the Phrase Again
+show_the_unsigned_transaction_or_message_as_a_qr_code	Show the unsigned transaction or message as a QR code in your other wallet.
+showing_receive_addresses_multisig_addresses_need_every	Showing receive addresses. Multisig addresses need every cosigner key and are created by your coordinator.
+showing_the_first_x_of_x_characters_copy_includes	Showing the first %@ of %@ characters. Copy includes everything.
+shown	Shown
+shows_qr_code_and_derivation_path	Shows QR code and derivation path
+shows_wallet_details	Shows wallet details
+sign	Sign
+sign_ethereum_message	Sign Ethereum message
+sign_message	Sign Message
+sign_nft_marketplace_order	Sign NFT marketplace order
+sign_solana_message	Sign Solana message
+sign_tron_message	Sign TRON message
+sign_typed_data	Sign Typed Data
+sign_with_x	Sign with %@
+signature	Signature
+signature_x_of_x	Signature %lld of %lld
+signature_created	Signature Created
+signature_payload	Signature Payload
+signature_created_2	Signature created
+signatures_already_created_for_this_request_will_be	Signatures already created for this request will be discarded.
+signatures_you_create_on_this_device_are_listed_here	Signatures you create on this device are listed here. BitTool Signer never broadcasts transactions.
+signed	Signed
+signed_request	Signed Request
+signed_values	Signed values
+signer_position	Signer position
+signing	Signing
+signing_wallet	Signing Wallet
+signing_wallets	Signing Wallets
+signing_address	Signing address
+signing_doesnt_send_anything_your_other_wallet	Signing doesn’t send anything. Your other wallet broadcasts the transaction, and it is only final once confirmed on the network.
+signing_engine	Signing engine
+single_sig	Single-sig
+single_sig_and_multisig_accounts	Single-sig and multisig accounts
+solana_wallets_use_different_derivation_paths_pick_the	Solana wallets use different derivation paths. Pick the one your other wallet uses.
+some_effects_couldnt_be_decoded_on_this_device	Some effects couldn’t be decoded on this device.
+some_words_dont_match_check_your_written_backup_and_try	Some words don't match. Check your written backup and try again.
+source	Source
+source_code	Source code
+source_stake	Source stake
+source_token_account	Source token account
+spender	Spender
+spender_is_not_a_known_contract	Spender is not a known contract
+splits_the_phrase_across_three_cards_any_two_restore_it	Splits the phrase across three cards. Any two restore it.
+stake_account	Stake account
+stake_accounts	Stake accounts
+standard_trust_and_legacy_paths	Standard, Trust and Legacy paths
+step_x_of_x	Step %lld of %lld
+subject	Subject
+submit_a_wallet	Submit a Wallet
+symbol_name_or_address	Symbol, name or address
+system	System
+tron_personal_signature	TRON personal signature
+trx_and_trc_20_transfers_contract_calls_permission	TRX and TRC-20 transfers, contract calls, permission updates and Stake 2.0 resources. No mainstream wallet sends TRON transactions to a QR signer in this format yet.
+trx_transfer	TRX transfer
+tap_to_reveal	Tap to Reveal
+terms_of_use	Terms of Use
+text_payload_exceeds_256_kb	Text payload exceeds 256 KB.
+the_bip39_passphrase_exceeds_1_024_utf_8_bytes	The BIP39 passphrase exceeds 1,024 UTF-8 bytes.
+the_bip39_passphrases_must_match_and_cannot_be_empty	The BIP39 passphrases must match and cannot be empty.
+the_qr_code_is_the_phrase	The QR code is the phrase
+the_address_the_wallet_itself_publishes	The address the wallet itself publishes.
+the_app_never_opens_a_browser_copy_the_address_and_open	The app never opens a browser. Copy the address and open it on another device.
+the_app_never_opens_a_mail_app_copy_the_address_and	The app never opens a mail app. Copy the address and write to us from another device.
+the_camera_is_unavailable	The camera is unavailable.
+the_cards_contain_the_words_only_back_up_your_bip39	The cards contain the words only. Back up your BIP39 passphrase separately.
+the_encrypted_wallet_could_not_be_created	The encrypted wallet could not be created.
+the_encrypted_wallet_could_not_be_read_or_saved	The encrypted wallet could not be read or saved.
+the_engine_bundle_is_deterministic_the_same_sources	The engine bundle is deterministic: the same sources produce the same bytes, so a digest that differs means the installed engine is not the published one.
+the_engine_bundles_open_source_libraries_for	The engine bundles open-source libraries for cryptography and encoding. Their licences and copyright notices are reproduced in full.
+the_engine_digest_is_the_sha_256_of_signer_js_as_it_is	The engine digest is the SHA-256 of signer.js as it is bundled in this app, computed on this device each time you open this page.
+the_exact_request_that_was_signed_it_is_decoded_again	The exact request that was signed. It is decoded again on this device, and its fingerprint must still match the one above.
+the_existing_wallet_collection_could_not_be_read_retry	The existing wallet collection could not be read. Retry before adding a wallet.
+the_fingerprint_and_addresses_stay_the_same	The fingerprint and addresses stay the same.
+the_interface_language_what_a_signing_request_itself	The interface language. What a signing request itself says is decided by the request and stays as it is.
+the_name_as_it_is_published	The name as it is published.
+the_password_decrypts_this_wallet_for_this_signature	The password decrypts this wallet for this signature only.
+the_password_encrypts_this_wallet_on_this_device_and	The password encrypts this wallet on this device and authorizes every signature. It is not part of your recovery phrase.
+the_password_is_incorrect	The password is incorrect.
+the_password_key_could_not_be_created	The password key could not be created.
+the_phrase_is_hidden_again_but_the_screenshot_may	The phrase is hidden again, but the screenshot may already contain it. Delete it from Photos, Recently Deleted and any synced copies, and keep a written backup offline.
+the_recovery_phrase_is_empty_or_too_large	The recovery phrase is empty or too large.
+the_recovery_phrase_shown_here_will_be_erased_if_you	The recovery phrase shown here will be erased. If you already wrote it down, it will not be used.
+the_recovery_phrase_stays_hidden_until_you_choose_to	The recovery phrase stays hidden until you choose to show it.
+the_request_and_signature_are_kept_for_the_x_most	The request and signature are kept for the %lld most recent signatures. This one is older, so only its summary remains.
+the_request_does_not_say_which_key_should_sign_export	The request does not say which key should sign. Export it again from your other wallet with its account details.
+the_request_is_incomplete_import_all_qr_frames	The request is incomplete. Import all QR frames.
+the_screenshot_may_contain_your_recovery_phrase_or_some	The screenshot may contain your recovery phrase or some of its words. Delete it from Photos, Recently Deleted and any synced copies, and keep a written backup offline.
+the_signature_exactly_as_it_was_produced_showing_it	The signature exactly as it was produced. Showing it again creates nothing new: the same code can be scanned by the wallet that made the request.
+the_stored_request_could_not_be_read	The stored request could not be read.
+the_stored_request_does_not_match_this_signatures	The stored request does not match this signature's fingerprint.
+the_wallet_file_is_damaged_or_has_an_invalid_format	The wallet file is damaged or has an invalid format.
+the_wallet_password_only_unlocks_the_copy_on_this	The wallet password only unlocks the copy on this device. The words restore the wallet anywhere.
+the_words_you_entered_will_be_erased_from_this_screen	The words you entered will be erased from this screen.
+theme	Theme
+these_wallets_can_show_this_addresss_balance_but_cannot	These wallets can show this address’s balance but cannot send its transactions to BitTool Signer for signing.
+these_wallets_can_show_this_addresss_balance_no	These wallets can show this address’s balance. No mainstream wallet currently sends TRON transactions to a QR signer in BitTool Signer’s format.
+these_words_are_a_valid_recovery_phrase_in_more_than	These words are a valid recovery phrase in more than one language. Choose the language of your written backup.
+these_words_are_valid_in_more_than_one_language_and	These words are valid in more than one language, and each language gives a different wallet. Choose the language your backup is written in.
+third_party_notices	Third-Party Notices
+third_party_notices_are_included_with_the_source	Third-party notices are included with the source distribution.
+this_qr_code_contains_your_complete_recovery_phrase_in	This QR code contains your complete recovery phrase in plain text. Use it only in private, to move this wallet to another device of your own. Writing the words down by hand is still the safest backup.
+this_qr_code_is_your_recovery_phrase_anyone_who_scans	This QR code is your recovery phrase. Anyone who scans or photographs it can take all your funds, and no support team will ever ask to see it. Never take a screenshot of it, send it or show it to anyone.
+this_build	This build
+this_camera_cannot_read_qr_codes_import_a_request_file	This camera cannot read QR codes. Import a request file instead.
+this_exports_one_cosigner_key_your_multisig_coordinator	This exports one cosigner key. Your multisig coordinator combines all cosigner keys and the threshold to create the wallet and its addresses.
+this_file_is_larger_than_512_kb	This file is larger than 512 KB.
+this_is_the_signature_that_was_already_created_scanning	This is the signature that was already created. Scanning it again signs nothing new.
+this_only_removes_the_local_records_it_does_not_affect	This only removes the local records. It does not affect any transaction.
+this_page_is_information_only_check_any_wallet_yourself	This page is information only. Check any wallet yourself before trusting it with money. BitTool is not responsible for anything that happens through another wallet — bugs, hacks, scams or losses of any kind.
+this_recovery_phrase_already_belongs_to_a_wallet_on	This recovery phrase already belongs to a wallet on this device. Set a new password for it: the phrase you just entered is the proof, so the old password is not needed.
+this_recovery_phrase_and_passphrase_already_belong_to	This recovery phrase and passphrase already belong to an existing wallet.
+this_recovery_phrase_belongs_to_a_different_wallet	This recovery phrase belongs to a different wallet.
+this_removes_the_encrypted_wallet_and_its_public_data	This removes the encrypted wallet and its public data from this device. Funds are not affected, but you can only recover them with the recovery phrase and any BIP39 passphrase.
+this_request_cannot_be_signed_nothing_has_been_signed	This request cannot be signed. Nothing has been signed.
+this_request_does_not_belong_to_any_wallet_on_this	This request does not belong to any wallet on this device. Check that you scanned the request for this wallet.
+this_signing_request_is_already_being_processed	This signing request is already being processed.
+this_wallet_could_not_be_found	This wallet could not be found.
+this_wallet_format_is_not_supported_by_this_version_of	This wallet format is not supported by this version of BitTool Signer.
+this_wallet_is_encrypted_with_your_new_password_use_it	This wallet is encrypted with your new password. Use it to authorize signatures from now on.
+this_wallet_needs_repair_before_its_password_can_be	This wallet needs repair before its password can be reset.
+this_wallets_public_data_is_missing_or_damaged_your	This wallet's public data is missing or damaged. Your encrypted recovery phrase is safe. Enter the wallet password once to rebuild it.
+this_wallets_device_key_is_unavailable_restore_your	This wallet’s device key is unavailable. Restore your recovery phrase on this device.
+to	To
+token_id	Token ID
+token_id_hex	Token ID (hex)
+token_id_or_raw_amount	Token ID or raw amount
+token_account	Token account
+token_amount_raw_units	Token amount (raw units)
+token_holder	Token holder
+token_owner	Token owner
+token_registry	Token registry
+too_many_unsuccessful_attempts_try_again_in_x_seconds	Too many unsuccessful attempts. Try again in %lld seconds.
+total_output	Total output
+total_quantity	Total quantity
+trader	Trader
+transaction_id	Transaction ID
+transaction_type	Transaction type
+transfer	Transfer
+transfer_nft_or_token	Transfer (NFT or token)
+transfer_erc_1155_batch	Transfer ERC-1155 batch
+transfer_erc_1155_token	Transfer ERC-1155 token
+transfer_nft	Transfer NFT
+transfer_asset_type_unconfirmed	Transfer asset (type unconfirmed)
+transfer_hook_program_supplied	Transfer hook program (supplied)
+try_again	Try Again
+turn_off_flashlight	Turn off flashlight
+turn_on_airplane_mode	Turn on Airplane Mode
+turn_on_flashlight	Turn on flashlight
+type_a_word_to_see_suggestions	Type a word to see suggestions
+unable_to_continue	Unable to Continue
+unable_to_rename	Unable to Rename
+unable_to_derive_public_addresses	Unable to derive public addresses.
+unable_to_encode_public_wallet_information	Unable to encode public wallet information.
+unable_to_encode_signature_response	Unable to encode signature response.
+unable_to_encode_the_wallet_pairing	Unable to encode the wallet pairing.
+unable_to_generate_recovery_phrase	Unable to generate recovery phrase.
+unavailable	Unavailable
+unclassified_extra_accounts	Unclassified extra accounts
+unknown_contract_call	Unknown contract call
+unknown_x	Unknown: %@
+unlimited_permit	Unlimited permit
+unlock	Unlock
+unlock_to_view_your_wallets_and_activity	Unlock to view your wallets and activity.
+unlocking_the_app_never_authorizes_a_signature	Unlocking the app never authorizes a signature.
+update_account_permissions	Update account permissions
+use_x_instead	Use %@ Instead
+use_8_64_characters	Use 8–64 characters.
+use_a_wallet_password	Use a Wallet Password
+use_a_wallet_name_of_40_characters_or_fewer	Use a wallet name of 40 characters or fewer.
+using_your_written_copy_tap_the_missing_words_in_order	Using your written copy, tap the missing words in order. Tap a blank to choose it, or a filled blank to change it.
+validator_vote_account	Validator vote account
+verify	Verify
+verify_the_address	Verify the address
+verify_the_first_address_of_each_account	Verify the first address of each account
+verify_the_first_receive_address	Verify the first receive address
+version	Version
+wallet	Wallet
+wallet_x	Wallet %lld
+wallet_created	Wallet Created
+wallet_imported	Wallet Imported
+wallet_level	Wallet Level
+wallet_level_all_chains	Wallet Level · all chains
+wallet_password	Wallet Password
+wallet_information_changed_match_this_request_again	Wallet information changed. Match this request again.
+wallet_name	Wallet name
+wallet_password_2	Wallet password
+wallet_setup_required	Wallet setup required.
+wallets	Wallets
+wallets_unavailable	Wallets Unavailable
+watch_and_sign_by_qr	Watch and sign by QR
+watch_only	Watch only
+which_language_is_your_backup_in	Which language is your backup in?
+which_of_these_the_wallet_reads_wallet_level_and_coin	Which of these the wallet reads: Wallet Level, and Coin Level for Bitcoin, EVM, TRON or Solana.
+word_x	Word %lld
+word_x_x	Word %lld, %@
+word_x_hidden	Word %lld, hidden
+word_x_not_on_this_card	Word %lld, not on this card
+words	Words
+works_with	Works with
+write_it_on_paper	Write it on paper
+write_these_x_words_on_paper_in_order_and_keep_them	Write these %lld words on paper, in order, and keep them safe. You’ll confirm them on the next screen.
+you_give	You give
+you_receive	You receive
+your_encrypted_wallet_files_are_unchanged_unlock_this	Your encrypted wallet files are unchanged. Unlock this device, then try again.
+your_keys_are_created_encrypted_and_used_only_on_this	Your keys are created, encrypted and used only on this device. BitTool Signer works without a network connection.
+your_keys_are_encrypted_on_this_device_next_pair_a	Your keys are encrypted on this device. Next, pair a watch-only wallet to receive funds and prepare transactions.
+your_password_is_not_a_backup	Your password is not a backup
+your_recovery_phrase_fingerprint_and_addresses_stay_the	Your recovery phrase, fingerprint and addresses stay the same.
+your_watch_only_wallet_shows_the_unsigned_request_as_a	Your watch-only wallet shows the unsigned request as a QR code.
+text	·
+text_2	•
+camera_usage_description	BitTool Signer scans signing requests from your other wallet and recovery-phrase QR codes. Camera images are processed on this device and never leave it.

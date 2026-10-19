@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project-wide lint policy, wired into every module by the build-logic convention plugins (lintConfig). -->
+<lint>
+    <!-- values-b+id is shipped next to values-in on purpose (legacy "in" code plus BCP-47 "id"). -->
+    <issue id="LocaleFolder" severity="ignore" />
+    <!-- Every string is translated from the iOS catalogue; a missing translation falls back to English and must not block a build. -->
+    <issue id="MissingTranslation" severity="warning" />
+</lint>

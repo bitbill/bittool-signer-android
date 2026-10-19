@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The signer ships the dark version of the shared mark: white on ink #0A0A0C, in light and dark mode alike. -->
+    <color name="launch_background">#0A0A0C</color>
+</resources>
