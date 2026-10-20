@@ -7,7 +7,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -131,6 +134,12 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
 internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
     val password = remember { TextFieldState() }
     DisposableEffect(password) { onDispose { password.clearText() } }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(focus) {
+        // Like the iOS alert, the field takes the keyboard at once (the dialog window attaches a frame later).
+        withFrameNanos { }
+        runCatching { focus.requestFocus() }
+    }
     val delete = {
         val entered = SecretText.of(password.text)
         password.clearText()
@@ -158,7 +167,7 @@ internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -
             kind = PasswordKind.WalletPassword,
             state = password,
             // The outer tag wins over the field's own "Wallet password" tag: the e2e id of this field is delete.password.
-            modifier = Modifier.testTag("delete.password"),
+            modifier = Modifier.testTag("delete.password").focusRequester(focus),
             imeAction = ImeAction.Done,
             onSubmit = delete,
             containerColor = SignerTheme.colors.raised,

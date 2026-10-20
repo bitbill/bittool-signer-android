@@ -339,5 +339,14 @@ private val BRIGHTNESS_TARGET = 48.dp
  * interface: wrapped in a left-to-right isolate (U+2066 … U+2069) so its tokens are not reordered; unchanged otherwise.
  */
 @Composable
-internal fun leftToRight(value: String): String =
-    if (LocalLayoutDirection.current == LayoutDirection.Rtl) "⁦$value⁩" else value
+internal fun leftToRight(value: String): String {
+    if (LocalLayoutDirection.current != LayoutDirection.Rtl) return value
+    return buildString {
+        append(LEFT_TO_RIGHT_ISOLATE)
+        append(value)
+        append(POP_DIRECTIONAL_ISOLATE)
+    }
+}
+
+private val LEFT_TO_RIGHT_ISOLATE = Char(0x2066)
+private val POP_DIRECTIONAL_ISOLATE = Char(0x2069)

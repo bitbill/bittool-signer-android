@@ -146,8 +146,13 @@ fun NavGraphBuilder.walletsDestinations(navController: NavController) {
  */
 internal fun NavController.close(entry: NavBackStackEntry) {
     if (entry.lifecycle.currentState == Lifecycle.State.DESTROYED) return
-    if (currentBackStack.value.none { it.id == entry.id }) return
-    if (currentBackStackEntry?.id == entry.id) popBackStack() else popBackStack(entry.destination.id, inclusive = true)
+    if (currentBackStackEntry?.id == entry.id) {
+        popBackStack()
+        return
+    }
+    // Still on the stack under another page (e.g. the wallet page under Delete Wallet): pop down through it.
+    val onStack = runCatching { getBackStackEntry(entry.destination.id) }.getOrNull()
+    if (onStack?.id == entry.id) popBackStack(entry.destination.id, inclusive = true)
 }
 
 /** [dropUnlessResumed] for a callback with one argument (a wallet id, a chain). */
