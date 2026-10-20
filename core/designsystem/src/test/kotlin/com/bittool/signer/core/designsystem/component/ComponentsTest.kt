@@ -1,12 +1,19 @@
 package com.bittool.signer.core.designsystem.component
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -18,16 +25,25 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /** Behaviour of the generic components (iOS `Design/DesignSystem.swift`). */
 @RunWith(RobolectricTestRunner::class)
@@ -141,5 +157,75 @@ class ComponentsTest {
         assertEquals(1, opened)
         // Title and text merge into one node (iOS `.accessibilityElement(children: .combine)`).
         compose.onNode(hasText("Review") and hasText("Read every warning above before signing.")).assertExists()
+    }
+
+    /**
+     * iOS tab roots use large titles: `.largeTitle` bold (34 / 41), not Material's 28 sp regular headline. The bar grows
+     * with the font scale, so the title is laid out whole (Material clips a title taller than its fixed 88 dp row).
+     */
+    @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+    @Test
+    fun largeTitlesAreTheIosLargeTitleAndAreNeverClipped() {
+        var fontScale by mutableStateOf(1f)
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    SignerTopAppBar(title = "Settings", navigation = NavIcon.None, large = true, modifier = Modifier.testTag("bar"))
+                }
+            }
+        }
+        for (scale in listOf(1f, 1.3f, 2f)) {
+            fontScale = scale
+            compose.waitForIdle()
+            val title = compose.onNodeWithText("Settings").fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            title.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val style = layouts.single().layoutInput.style
+            assertEquals(34.sp, style.fontSize, "large title size at $scale")
+            assertEquals(FontWeight.Bold, style.fontWeight)
+            val shown = title.boundsInRoot
+            assertTrue(shown.height >= title.size.height - 1f, "title clipped at font scale $scale: $shown vs ${title.size}")
+            val bar = compose.onNodeWithTag("bar").fetchSemanticsNode().boundsInRoot
+            assertTrue(shown.bottom <= bar.bottom + 1f, "title outside the bar at $scale")
+        }
+    }
+
+    /** A long trailing value never crushes the row title (the title keeps its own share of the row). */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE) // real text metrics
+    fun aLongRowValueLeavesTheTitleReadable() {
+        content {
+            Column(Modifier.width(360.dp)) {
+                NavRow(
+                    title = "Language",
+                    icon = SignerIcons.Language,
+                    onClick = {},
+                    value = "Português (Brasil) — a very long value that would take the whole row",
+                    modifier = Modifier.testTag("row"),
+                )
+            }
+        }
+        val title = compose.onNodeWithText("Language", useUnmergedTree = true).fetchSemanticsNode()
+        assertTrue(title.size.width > 0, "the title has room")
+        val layouts = mutableListOf<TextLayoutResult>()
+        title.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        assertEquals(1, layout.lineCount, "the title stays on one line")
+        assertTrue(!layout.isLineEllipsized(0) && layout.getLineRight(0) <= title.size.width + 1f, "the title is not cut")
+        // The value still shows, end-aligned in its share.
+        compose.onNodeWithTag("row").assertExists()
+    }
+
+    /** iOS plays `.success` with every status toast; a warning toast (an overlay blocked a tap) must not. */
+    @Test
+    fun aToastCarriesTheHapticOfItsMeaning() {
+        val state = StatusToastState()
+        state.show("Copied")
+        assertEquals(HapticKind.Success, state.current?.haptic)
+        state.show("Another app is drawing over BitTool Signer.", SignerIcons.WarningFilled, HapticKind.Warning)
+        assertEquals(HapticKind.Warning, state.current?.haptic)
+        state.show("Shown quietly", haptic = null)
+        assertNull(state.current?.haptic)
     }
 }

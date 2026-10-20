@@ -187,9 +187,12 @@ fun NavRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
-        // At accessibility text sizes the value moves under the title instead of squeezing it.
+        // At accessibility text sizes the value moves under the title instead of squeezing it. Beside the title, title
+        // and value share the free width (as in ValueRow): an unweighted value would be measured first and could take
+        // the whole row, leaving the title no width at all.
         val stackValue = SignerTheme.isAccessibilityTextSize
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        val valueBeside = value != null && !stackValue
+        Column(Modifier.weight(1f, fill = !valueBeside), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
                 style = typography.body,
@@ -202,8 +205,10 @@ fun NavRow(
             if (subtitle != null) Text(subtitle, style = typography.footnote, color = colors.secondaryLabel)
             if (value != null && stackValue) Text(value, style = typography.body, color = colors.secondaryLabel)
         }
-        if (value != null && !stackValue) {
-            Text(value, style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.End, maxLines = 2)
+        if (valueBeside) {
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                Text(value.orEmpty(), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.End, maxLines = 2)
+            }
         }
         if (showChevron) {
             Icon(SignerIcons.ChevronRight, contentDescription = null, tint = colors.tertiaryLabel, modifier = Modifier.size(20.dp))

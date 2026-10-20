@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerMotion
@@ -50,9 +51,12 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import kotlinx.coroutines.delay
 
-/** One toast on screen. [id] distinguishes two toasts with the same text. */
+/**
+ * One toast on screen. [id] distinguishes two toasts with the same text; [haptic] is played when it appears (null:
+ * none).
+ */
 @Stable
-class StatusToast internal constructor(val id: Long, val message: String, val icon: ImageVector)
+class StatusToast internal constructor(val id: Long, val message: String, val icon: ImageVector, val haptic: HapticKind?)
 
 /**
  * The state behind [StatusToastHost] (iOS `StatusToast` / `copiedToast` / `statusToast`,
@@ -68,8 +72,13 @@ class StatusToastState {
     var current: StatusToast? by mutableStateOf(null)
         private set
 
-    fun show(message: String, icon: ImageVector = SignerIcons.CheckCircleFilled) {
-        current = StatusToast(++nextId, message, icon)
+    /**
+     * Shows [message] with [icon]. [haptic] defaults to the success feedback iOS plays with every status toast
+     * (`.sensoryFeedback(.success)`); a toast that reports a problem rather than a completed action passes
+     * `HapticKind.Warning` (e.g. `security_overlay_blocked` with `SignerIcons.WarningFilled`, ARCHITECTURE §4.8) or null.
+     */
+    fun show(message: String, icon: ImageVector = SignerIcons.CheckCircleFilled, haptic: HapticKind? = HapticKind.Success) {
+        current = StatusToast(++nextId, message, icon, haptic)
     }
 
     /** Removes [toast] if it is still the current one (a newer toast is never cut short by an older timer). */
@@ -85,9 +94,10 @@ fun rememberStatusToastState(): StatusToastState = remember { StatusToastState()
  * Draws [state]'s toast inside the current window, bottom centre: a capsule (light: `card` with a 12 % shadow, blur
  * 12, y 4; dark: the elevated card with a hairline), padding 16 × 10, the icon and the message in subheadline
  * semibold, [bottomSpacing] (24 dp) above the navigation bar or the keyboard. It slides up and fades in with the 0.3 s
- * spring, stays [SignerMotion.TOAST_MILLIS], plays the success haptic when it appears and is a polite live region, so
- * TalkBack announces it in the current language (iOS posts an English-only announcement; Android announces the
- * localised message). Place it last in the screen's root `Box` so it draws above the content; touches pass through.
+ * spring, stays [SignerMotion.TOAST_MILLIS], plays its haptic (success by default) when it appears and is a polite
+ * live region, so TalkBack announces it in the current language (iOS posts an English-only announcement; Android
+ * announces the localised message). Place it last in the screen's root `Box` so it draws above the content; touches
+ * pass through.
  */
 @Composable
 fun StatusToastHost(state: StatusToastState, modifier: Modifier = Modifier, bottomSpacing: Dp = 24.dp) {
@@ -95,7 +105,7 @@ fun StatusToastHost(state: StatusToastState, modifier: Modifier = Modifier, bott
     val toast = state.current
     if (toast != null) {
         LaunchedEffect(toast.id) {
-            haptics.success()
+            toast.haptic?.let(haptics::perform)
             delay(SignerMotion.TOAST_MILLIS)
             state.dismiss(toast)
         }

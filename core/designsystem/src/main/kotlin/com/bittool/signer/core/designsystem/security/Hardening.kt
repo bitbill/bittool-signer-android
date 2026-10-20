@@ -32,7 +32,8 @@ import java.util.WeakHashMap
 /**
  * Refuses a touch that reached the app through another app's window drawn over it: the `ACTION_DOWN` of a gesture
  * whose `MotionEvent` carries `FLAG_WINDOW_IS_OBSCURED` (or, API 29+, `FLAG_WINDOW_IS_PARTIALLY_OBSCURED`) is consumed
- * together with the rest of that gesture, and [onBlocked] is called once (show the `security_overlay_blocked` toast).
+ * together with the rest of that gesture, and [onBlocked] is called once (show the `security_overlay_blocked` toast
+ * with `SignerIcons.WarningFilled` and `HapticKind.Warning`: it reports a refusal, not a success).
  *
  * The check runs in the initial pass, before the decorated control sees the event, so the click never happens. Put it
  * on decisive controls only (Sign, the risk acknowledgement, reveal, delete, confirm; ARCHITECTURE §4.8), never on the
@@ -98,6 +99,11 @@ val LocalSensitiveDataMarking: ProvidableCompositionLocal<Boolean> = staticCompo
  * QR, the verification board, a non-empty phrase editor, a visible passphrase, the authorize sheet (ARCHITECTURE §4.8).
  * Dialogs and sheets are separate windows: call it inside them. Reference-counted per view. Nothing exists below API
  * 34; `FLAG_SECURE` and the immediate conceal on pause remain the protection there.
+ *
+ * The pinned Compose also offers the per-node `Modifier.semantics { isSensitiveData = true }` (gaps G5.1 asked to
+ * check): it hides that one node and its events from non-tool services. Components that draw a secret set it on the
+ * secret's own node as well (the revealed passphrase field does), but the view-level marking stays the rule because it
+ * also covers the text around a secret and every event of the window.
  */
 @Composable
 fun AccessibilitySensitive(active: Boolean) {
