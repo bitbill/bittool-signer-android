@@ -105,14 +105,19 @@ internal fun LanguageContent(state: LanguageUiState, onSelect: (AppLanguage) -> 
         ) {
             item(key = "languages") {
                 val systemName = stringResource(R.string.system)
+                // Each language's name in the interface language ("German"), and the device language "System" follows.
+                val details = remember(state.options, state.systemLocale, appLocale) {
+                    state.options.associateWith { option ->
+                        if (option == AppLanguage.System) {
+                            state.systemLocale.getDisplayName(appLocale)
+                        } else {
+                            Locale.forLanguageTag(option.languageTag).getDisplayName(appLocale).takeIf { it != option.endonym }
+                        }
+                    }
+                }
                 val rows = state.options.map { option ->
                     val title = if (option == AppLanguage.System) AnnotatedString(systemName) else endonym(option)
-                    val detail = if (option == AppLanguage.System) {
-                        state.systemLocale.getDisplayName(appLocale)
-                    } else {
-                        Locale.forLanguageTag(option.languageTag).getDisplayName(appLocale).takeIf { it != option.endonym }
-                    }
-                    Triple(option, title, detail)
+                    Triple(option, title, details[option])
                 }
                 GroupedSection(
                     modifier = SectionFrame.selectableGroup(),

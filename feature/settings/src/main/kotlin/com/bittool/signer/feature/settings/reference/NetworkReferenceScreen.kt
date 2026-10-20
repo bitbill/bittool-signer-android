@@ -165,7 +165,8 @@ private fun ReferenceLists(state: NetworkReferenceUiState, insets: PaddingValues
     ) { contracts ->
         when {
             state.loading -> Unit
-            state.showsNoResults -> NoResults(state.query, insets)
+            // Decided per shown list, so the list fading out never flips to "No Results" during the cross-fade.
+            (if (contracts) state.contracts.isEmpty() else state.tokens.isEmpty()) -> NoResults(state.query, insets)
             contracts -> ReferenceList(contractsState, insets) {
                 items(state.contracts, key = { it.id }, contentType = { "contract" }) { ContractRow(it, toast) }
             }
