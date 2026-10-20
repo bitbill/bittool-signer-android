@@ -11,6 +11,7 @@ import com.bittool.signer.core.crypto.bip39.Bip39
 import com.bittool.signer.core.crypto.bip39.Bip39Canonical
 import com.bittool.signer.core.crypto.bip39.Bip39Error
 import com.bittool.signer.core.crypto.bip39.Bip39Language
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.BackupVerification
 import com.bittool.signer.core.model.SecretText
@@ -137,20 +138,8 @@ class WalletSetupViewModel @AssistedInject constructor(
         flowOf(PhraseAnalysis.Empty)
     }
 
-    val uiState: StateFlow<WalletSetupUiState> = combine(_state, analysis, store.state) { state, phrase, signer ->
-        val identityId = state.duplicateOf ?: state.created?.id
-        state.copy(
-            phrase = phrase,
-            securityEpoch = signer.securityEpoch,
-            identity = identityId?.let { id ->
-                WalletIdentity(
-                    name = signer.displayName(id) ?: state.created?.name.orEmpty(),
-                    fingerprint = signer.fingerprint(id),
-                    avatarIdentity = signer.avatarIdentity(id),
-                )
-            },
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _state.value)
+    val uiState: StateFlow<WalletSetupUiState> = combine(_state, analysis, store.state, ::present)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), present(_state.value, PhraseAnalysis.Empty, store.state.value))
 
     init {
         // iOS WalletSetupFlow `onAppear`: a phrase generated after the flow closed or re-opened is discarded.
@@ -595,6 +584,22 @@ class WalletSetupViewModel @AssistedInject constructor(
             }
             if (operation == id) _state.update { it.copy(busy = false) }
         }
+    }
+
+    /** The published state: the draft plus what the store knows (the epoch keying the backup panel, wallet identities). */
+    private fun present(state: WalletSetupUiState, phrase: PhraseAnalysis, signer: SignerState): WalletSetupUiState {
+        val identityId = state.duplicateOf ?: state.created?.id
+        return state.copy(
+            phrase = phrase,
+            securityEpoch = signer.securityEpoch,
+            identity = identityId?.let { id ->
+                WalletIdentity(
+                    name = signer.displayName(id) ?: state.created?.name.orEmpty(),
+                    fingerprint = signer.fingerprint(id),
+                    avatarIdentity = signer.avatarIdentity(id),
+                )
+            },
+        )
     }
 
     private fun currentPassphrase(): SecretText =

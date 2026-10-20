@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -126,6 +127,8 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
                     Screen.BackupQr -> {
                         compose.onNodeWithText("QR Code").performClick()
                         compose.onNodeWithTag("backup.qr.reveal").performScrollTo().performClick()
+                        // The code is encoded off the main thread: record it once it is drawn, not the spinner.
+                        compose.waitUntil(10_000) { compose.onAllNodesWithContentDescription("QR code").fetchSemanticsNodes().isNotEmpty() }
                     }
                     else -> Unit
                 }

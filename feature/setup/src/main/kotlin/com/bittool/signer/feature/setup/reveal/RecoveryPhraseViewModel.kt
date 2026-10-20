@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
@@ -97,14 +98,13 @@ class RecoveryPhraseViewModel internal constructor(
     private var token = 0L
     private var job: Job? = null
 
-    val uiState: StateFlow<RecoveryPhraseUiState> = combine(_state, store.state) { state, signer ->
-        state.copy(
-            securityEpoch = signer.securityEpoch,
-            identity = walletId?.let { id ->
-                WalletIdentity(signer.displayName(id).orEmpty(), signer.fingerprint(id), signer.avatarIdentity(id))
-            },
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _state.value)
+    val uiState: StateFlow<RecoveryPhraseUiState> = combine(_state, store.state, ::present)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), present(_state.value, store.state.value))
+
+    private fun present(state: RecoveryPhraseUiState, signer: SignerState): RecoveryPhraseUiState = state.copy(
+        securityEpoch = signer.securityEpoch,
+        identity = walletId?.let { id -> WalletIdentity(signer.displayName(id).orEmpty(), signer.fingerprint(id), signer.avatarIdentity(id)) },
+    )
 
     init {
         store.beginSensitiveSession()
