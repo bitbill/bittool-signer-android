@@ -101,8 +101,8 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         WalletIdentityCard(uiState.identity)
         if (lost) {
             Callout(
-                text = stringResource(R.string.data_lost_key_message),
-                title = stringResource(R.string.data_lost_key_title),
+                text = stringResource(R.string.wallets_lost_key_message),
+                title = stringResource(R.string.wallets_lost_key_title),
                 tone = Tone.Danger,
                 modifier = Modifier.testTag("delete.deviceKeyLost"),
             )
@@ -116,8 +116,8 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         GroupedSection(
             footer = stringResource(
                 when {
-                    lost && uiState.asksForBiometrics -> R.string.data_lost_key_footer_biometric
-                    lost -> R.string.data_lost_key_footer
+                    lost && uiState.asksForBiometrics -> R.string.wallets_lost_key_footer_biometric
+                    lost -> R.string.wallets_lost_key_footer
                     uiState.asksForBiometrics -> R.string.security_delete_footer_biometric
                     else -> R.string.deleting_asks_for_this_wallets_password
                 },
@@ -125,7 +125,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         ) {
             item {
                 SwitchRow(
-                    title = stringResource(if (lost) R.string.data_lost_key_confirm else R.string.i_confirm_i_want_to_delete_this_wallet),
+                    title = stringResource(if (lost) R.string.wallets_lost_key_confirm else R.string.i_confirm_i_want_to_delete_this_wallet),
                     icon = null,
                     checked = uiState.confirmed,
                     onCheckedChange = actions.onConfirmedChange,
@@ -136,7 +136,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         }
         SecurityError(uiState.error)
         DestructiveButton(
-            text = stringResource(if (lost) R.string.data_lost_key_remove else R.string.delete_wallet),
+            text = stringResource(if (lost) R.string.wallets_lost_key_remove else R.string.delete_wallet),
             icon = SignerIcons.Delete,
             onClick = actions.onDelete,
             busy = uiState.busy || uiState.confirming,
@@ -160,10 +160,10 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
 @Composable
 internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
     SignerAlertDialog(
-        title = stringResource(R.string.data_lost_key_dialog_title),
-        text = stringResource(R.string.data_lost_key_dialog_message),
+        title = stringResource(R.string.wallets_lost_key_dialog_title),
+        text = stringResource(R.string.wallets_lost_key_dialog_message),
         confirm = DialogAction(
-            text = stringResource(R.string.data_lost_key_dialog_confirm),
+            text = stringResource(R.string.wallets_lost_key_dialog_confirm),
             destructive = true,
             testTag = "delete.removeConfirm",
             onObscuredTouch = onBlocked,

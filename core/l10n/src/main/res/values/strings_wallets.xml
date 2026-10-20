@@ -13,4 +13,26 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <!-- Switch state: full brightness while the code is shown, for cameras that struggle with a dim screen. -->
     <string name="wallets_qr_brightness_bright">Bright</string>
+
+    <!--
+      Android-only (no iOS text): removing a wallet whose device key is provably gone (QA backlog B9,
+      SignerStore.removeWalletWithLostDeviceKey): the Delete Wallet page shows them instead of the iOS password path.
+      The vault's refusal of such a removal is crypto_device_key_loss_unconfirmed (strings_crypto.xml).
+    -->
+    <!-- Callout title on the Delete Wallet page. -->
+    <string name="wallets_lost_key_title">This Wallet Can’t Be Unlocked</string>
+    <!-- Callout text: why the password cannot help and how the wallet is restored. -->
+    <string name="wallets_lost_key_message">Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.</string>
+    <!-- The confirmation switch the person must turn on first. -->
+    <string name="wallets_lost_key_confirm">I understand that only the recovery phrase can restore this wallet</string>
+    <!-- Footer under the switch (App Lock off). -->
+    <string name="wallets_lost_key_footer">Removing this wallet does not ask for its password: the device key the password needs is gone.</string>
+    <!-- Footer under the switch (App Lock on with biometrics). -->
+    <string name="wallets_lost_key_footer_biometric">Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.</string>
+    <!-- The page's destructive button. -->
+    <string name="wallets_lost_key_remove">Remove This Wallet</string>
+    <!-- The final confirmation dialog. -->
+    <string name="wallets_lost_key_dialog_title">Remove This Wallet?</string>
+    <string name="wallets_lost_key_dialog_message">Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.</string>
+    <string name="wallets_lost_key_dialog_confirm">Remove</string>
 </resources>
