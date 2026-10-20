@@ -4,7 +4,13 @@
 local.properties
 /.idea
 .DS_Store
-build/
+# Gradle build output: the build directory of the root project and of every project one level down (app,
+# build-logic, a future e2e) or two (core/*, feature/*, build-logic/convention). Anchored, because a bare "build/"
+# also ignores any source package, resource or asset folder named build (com.bittool.signer.build once never reached
+# the repository). Sources always sit deeper, under <project>/src/.
+/build/
+/*/build/
+/*/*/build/
 /captures
 .externalNativeBuild
 .cxx
