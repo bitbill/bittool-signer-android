@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
  * `onCreate`, in this order: the debug UI-test harness reads its launch extras (before Hilt injects anything, gaps.md
  * G3) → the system splash is installed → `FLAG_SECURE`, no Recents screenshot, hidden foreign overlays, autofill and
  * content capture excluded (`SecureWindowPolicy`, never toggled) → the lifecycle monitor attaches (it sees every edge)
- * → Arabic keeps Latin digits → the Theme preference is followed → edge to edge → `super.onCreate` → the splash is kept
+ * → Arabic keeps Latin digits → the Theme preference is followed → `super.onCreate` → edge to edge → the splash is kept
  * until App Lock and the first wallet load are known ([LaunchGate]) → the lock window follows App Lock → content.
  *
  * Lifecycle (iOS scene phases, app-shell.md §10, §15.4): `onStart` runs App Lock's grace decision and shows the lock
@@ -86,11 +86,12 @@ class MainActivity : AppCompatActivity() {
         shell.lifecycleMonitor().attach(this)
         AppLocales.ensureLatinDigits()
         shell.appearance().start()
+        super.onCreate(savedInstanceState)
+        // After AppCompat installed its decor (reading the decor any earlier would install it first).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
         )
-        super.onCreate(savedInstanceState)
         // enableEdgeToEdge turns the contrast scrim back on for `auto` styles: it painted a strip over the grouped page.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) window.isNavigationBarContrastEnforced = false
         exposeTestTags = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
