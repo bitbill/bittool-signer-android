@@ -14,11 +14,11 @@ fun secret(key: String): String = (secrets.getProperty(key) ?: System.getenv(key
 
 /**
  * Version. versionCode = MAJOR·1 000 000 + MINOR·10 000 + PATCH·100 + BUILD, where BUILD (0–99,
- * `-Psigner.buildNumber=N`, default 0) re-issues the same versionName (e.g. a rejected store upload).
- * 1.0.0 → 1000000; 1.0.1 → 1000100; 1.1.0 → 1010000. Kept in step with the iOS MARKETING_VERSION.
+ * `-Psigner.buildNumber=N`, default 1 = iOS CURRENT_PROJECT_VERSION) re-issues the same versionName (e.g. a rejected store upload).
+ * 1.0.0 (1) → 1000001; 1.0.1 (1) → 1000101; 1.1.0 (1) → 1010001. Kept in step with the iOS MARKETING_VERSION.
  */
 val signerVersionName = "1.0.0"
-val signerBuildNumber = providers.gradleProperty("signer.buildNumber").orNull?.trim()?.toInt() ?: 0
+val signerBuildNumber = providers.gradleProperty("signer.buildNumber").orNull?.trim()?.toInt() ?: 1
 val signerVersionCode: Int = signerVersionName.split('.').map(String::toInt).let { (major, minor, patch) ->
     require(minor in 0..99 && patch in 0..99 && signerBuildNumber in 0..99) {
         "versionName $signerVersionName / signer.buildNumber $signerBuildNumber out of range (0–99 each)"

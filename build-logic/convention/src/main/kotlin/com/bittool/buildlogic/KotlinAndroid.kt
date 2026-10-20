@@ -52,6 +52,8 @@ internal fun Project.configureKotlinJvm() {
 private fun Project.configureUnitTestJvm() {
     tasks.withType<Test>().configureEach {
         jvmArgs("-XX:+EnableDynamicAgentLoading")
+        // Robolectric's Android 16 (API 36) sandbox sets FileDescriptor internals through jdk.internal.access on JDK 21.
+        jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED", "--add-opens=java.base/java.io=ALL-UNNAMED")
         maxHeapSize = "1536m"
     }
 }

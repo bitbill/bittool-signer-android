@@ -8,6 +8,7 @@ android {
 
 dependencies {
     implementation(projects.core.common)
+    implementation(projects.core.model)
     implementation(projects.core.l10n)
     implementation(projects.core.designsystem)
     implementation(libs.androidx.core.ktx)

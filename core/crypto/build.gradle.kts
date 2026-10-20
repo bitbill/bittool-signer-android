@@ -11,6 +11,7 @@ android {
 dependencies {
     implementation(projects.core.common)
     api(projects.core.model)
+    implementation(projects.core.l10n)
     implementation(libs.kotlinx.serialization.json)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.kotlin.test)

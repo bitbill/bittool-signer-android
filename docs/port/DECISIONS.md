@@ -163,3 +163,12 @@ progress for create/import/repair/sign and never call the engine from the main t
 8. **`:e2e` module (G1–G3):** owned by the orchestrator during integration (shared Gradle files).
 9. **Third-party wallet round trips:** a pre-release acceptance item on physical devices; not automatable here.
 10. **README staleness:** follow the code (the air-gapped device guide lives in onboarding only).
+
+## 10. Owner decisions left open by the contracts review (binding)
+
+- Default build number is **1**, so Settings shows "1.0.0 (1)" like iOS (`-Psigner.buildNumber` overrides).
+- Activity hides "Clear Activity" when the record file cannot be read (iOS parity); `activityUnreadable` drives the
+  explanatory state.
+- "BitTool Wallet" platforms and every other compatible-wallet entry stay exactly as the iOS data.
+- Product and protocol names the iOS catalogue leaves untranslated (Taproot, Account XPUB, …) stay untranslated.
+- No Android-only "Allow camera" label: the camera-permission UI uses the iOS strings plus the system dialog.
