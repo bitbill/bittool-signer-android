@@ -1,6 +1,7 @@
 package com.bittool.signer.core.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.DeviceStore.Companion.PASSWORD
 import com.bittool.signer.core.data.doubles.PublicFixtures
@@ -22,6 +23,7 @@ import com.bittool.signer.core.model.pairing.QrPayloadView
 import com.bittool.signer.core.model.signing.MatchingIssue
 import java.util.Base64
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -41,8 +43,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Port of iOS `BitToolSignerTests/SessionTests.swift` (15 cases) over the bundled engine. Gates expose races
- * deterministically. Public BIP39 fixtures and synthetic offline transactions only.
+ * Port of iOS `BitToolSignerTests/SessionTests.swift` (15 cases) over the bundled engine and the production crypto
+ * ([RealStoreFixture]: `DefaultWalletVault` over in-memory device keys like iOS `SessionDeviceKeys`, the Keystore
+ * journal cipher, the asset BIP39 lists, the native seed, the ZXing encoder). The iOS probes read the vault files, as
+ * here: the `.bsvault` bytes ("repair never rewrites the encrypted wallet") and the attempts file ("nothing tried a
+ * password"). Gates expose races deterministically. Public BIP39 fixtures and synthetic offline transactions only.
  */
 @RunWith(AndroidJUnit4::class)
 class SignerStoreSessionTest {
@@ -51,13 +56,15 @@ class SignerStoreSessionTest {
     @Test
     fun oldEncryptedWalletMigratesWithoutRewritingItsSecret() = DeviceStore.run {
         val wallet = makeStore(complete = false)
-        val before = vault.revision(wallet.id)
+        val before = fixture.vaultBytes(wallet.id)
         assertEquals(PublicMetadataStatus.NeedsCompletion, state.metadataStatus(wallet.id))
         assertNull(state.publicMetadata(wallet.id))
-        assertEquals(0, vault.unlockAttempts(wallet.id), "Loading never tries a password.")
+        assertFalse(fixture.attemptsFile(wallet.id).exists(), "Loading never tries a password.")
         PASSWORD.asSecret { store.completeSetup(wallet.id, it) }
         assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(wallet.id))
-        assertEquals(before, vault.revision(wallet.id), "Repair never rewrites the encrypted wallet.")
+        assertContentEquals(before, fixture.vaultBytes(wallet.id), "Repair never rewrites the encrypted wallet.")
+        // Repair decrypted the wallet once: the counter file now exists (so its absence above is a real signal).
+        assertTrue(fixture.attemptsFile(wallet.id).exists())
         val index = assertNotNull(state.publicMetadata(wallet.id))
         assertEquals(6, index.raw.arr("bitcoinPublicNodes")?.size)
         assertEquals(100, index.raw.arr("tronAddressIndex")?.size)
@@ -103,14 +110,15 @@ class SignerStoreSessionTest {
     @Test
     fun corruptPublicCacheDoesNotDamageOrDecryptTheWallet() = DeviceStore.run {
         val wallet = makeStore()
-        val encrypted = vault.revision(wallet.id)
-        val attempts = vault.unlockAttempts(wallet.id)
+        val encrypted = fixture.vaultBytes(wallet.id)
+        // Every unlock rewrites the sealed counter under a fresh nonce: unchanged bytes mean no password was tried.
+        val attempts = assertNotNull(fixture.attemptsBytes(wallet.id))
         sidecar(wallet.id).writeText("corrupt public fixture")
         store.reload()
         assertEquals(PublicMetadataStatus.Invalid, state.metadataStatus(wallet.id))
         assertNull(state.publicMetadata(wallet.id))
-        assertEquals(encrypted, vault.revision(wallet.id))
-        assertEquals(attempts, vault.unlockAttempts(wallet.id), "A damaged cache never triggers seed decryption.")
+        assertContentEquals(encrypted, fixture.vaultBytes(wallet.id))
+        assertContentEquals(attempts, fixture.attemptsBytes(wallet.id), "A damaged cache never triggers seed decryption.")
         PASSWORD.asSecret { store.completeSetup(wallet.id, it) }
         assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(wallet.id))
     }
@@ -122,11 +130,11 @@ class SignerStoreSessionTest {
         assertEquals(PublicFixtures.WALLET_KEY_ID, key)
         val fingerprint = state.fingerprint(wallet.id)
         assertEquals("73C5DA0A", fingerprint, "The displayed identity is the BIP32 master fingerprint, as in pairing exports.")
-        val encrypted = vault.revision(wallet.id)
+        val encrypted = fixture.vaultBytes(wallet.id)
         store.renameWallet(wallet.id, "Renamed public fixture")
         assertEquals("Renamed public fixture", state.displayName(wallet.id))
         assertEquals(fingerprint, state.fingerprint(wallet.id))
-        assertEquals(encrypted, vault.revision(wallet.id))
+        assertContentEquals(encrypted, fixture.vaultBytes(wallet.id))
         val duplicate = assertFailsWith<AppIssue>("The same effective seed must not create a duplicate wallet.") { createWallet("Duplicate") }
         assertTrue((duplicate.text as com.bittool.signer.core.model.UiText.Ios).english.contains("already belong"))
         assertEquals(1, state.wallets.size)
@@ -139,6 +147,9 @@ class SignerStoreSessionTest {
         assertEquals(fingerprint, state.fingerprint(wallet.id))
         assertNotEquals(fingerprint, state.fingerprint(other.id), "A different passphrase gives a different fingerprint.")
         "Changed-Password2".asSecret { vault.verifyPassword(wallet.id, it) }
+        // The real vault re-encrypted the file under the new password; the old one no longer opens it.
+        assertFalse(encrypted.contentEquals(fixture.vaultBytes(wallet.id)))
+        assertFailsWith<VaultError.AuthenticationFailed> { PASSWORD.asSecret { vault.verifyPassword(wallet.id, it) } }
     }
 
     @Test
@@ -196,7 +207,7 @@ class SignerStoreSessionTest {
         assertFalse(state.hasSignedResponse)
         sign(next.id)
         assertEquals(2, state.receipts.size)
-        val journal = fixture.cipher.open(fixture.journalFile.readBytes()).decodeToString()
+        val journal = fixture.journalText()
         assertFalse(journal.contains("abandon"))
         assertFalse(journal.contains(PASSWORD))
     }
@@ -403,6 +414,8 @@ class SignerStoreSessionTest {
         gate.release()
         assertIs<CancellationException>(creation.await().exceptionOrNull(), "Suspension before persistence must cancel creation.")
         assertTrue(vault.list().isEmpty())
+        assertTrue(fixture.walletIds.isEmpty(), "No vault file was written.")
+        assertEquals(0, (fixture.deviceKeys as InMemoryDeviceKeyStore).keyCount, "No device key outlives a cancelled creation.")
         assertTrue(state.wallets.isEmpty())
         assertTrue(fixture.publicRepository.directory.listFiles().orEmpty().none { it.name.endsWith(".json") })
     }

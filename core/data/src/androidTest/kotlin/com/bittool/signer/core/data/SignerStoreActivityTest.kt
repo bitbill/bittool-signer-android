@@ -19,8 +19,9 @@ import org.junit.runner.RunWith
 
 /**
  * Port of the six store cases of iOS `BitToolSignerTests/ActivityRecordTests.swift`: what Activity keeps for a
- * signature and what it can rebuild from it, over the bundled engine and the sealed journal. The four pure cases are
- * `:core:model`'s `SigningTest` / `ReviewModelTest`.
+ * signature and what it can rebuild from it, over the bundled engine, the real vault and the journal sealed by
+ * `KeystoreJournalCipher` ([RealStoreFixture]). A relaunch is a new vault, cipher and store over the same files. The
+ * four pure cases are `:core:model`'s `SigningTest` / `ReviewModelTest`.
  */
 @RunWith(AndroidJUnit4::class)
 class SignerStoreActivityTest {
@@ -37,8 +38,8 @@ class SignerStoreActivityTest {
         sign(task.id, risk = risk)
     }
 
-    /** The journal's plaintext, decrypted with the test's Keystore stand-in. */
-    private fun DeviceStore.journalText(): String = fixture.cipher.open(fixture.journalFile.readBytes()).decodeToString()
+    /** The journal's plaintext, decrypted with the Keystore journal key. */
+    private fun DeviceStore.journalText(): String = fixture.journalText()
 
     @Test
     fun aSignatureKeepsTheRequestItSignedAndTheResponseItProduced() = DeviceStore.run {
