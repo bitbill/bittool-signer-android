@@ -103,6 +103,25 @@ class AppLockViewModelTest {
         assertEquals("Public fixture 1", viewModel.uiState.value.selectedName)
     }
 
+    /**
+     * Review fix: a cold launch shows the lock while the wallets still load; without biometrics the form appeared at once
+     * and the only wallet, listed a moment later, was not chosen.
+     */
+    @Test
+    fun theOnlyWalletIsChosenAlsoWhenTheListArrivesAfterTheForm() = runTest(dispatcher) {
+        store.setState { SignerState(isLoading = true) }
+        access.mutableState.value = AppAccessState(resolving = false, isEnabled = true, isLocked = true, biometricsAvailable = false)
+        val viewModel = AppLockViewModel(access, store)
+        viewModel.onResumedChanged(true)
+        assertTrue(viewModel.uiState.value.usePassword)
+        assertNull(viewModel.uiState.value.selectedWallet)
+
+        store.setState { it.copy(isLoading = false, walletLoadSucceeded = true, wallets = listOf(first)) }
+        assertEquals(first.id, viewModel.uiState.value.selectedWallet)
+        viewModel.unlock(SecretText.of("Public-Test-Password1!"))
+        assertEquals(listOf(first.id), access.passwordUnlocks)
+    }
+
     @Test
     fun choosingAWalletPasswordInThePromptOpensTheForm() = runTest(dispatcher) {
         val viewModel = AppLockViewModel(access, store)

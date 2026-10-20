@@ -69,7 +69,8 @@ enum class AppLockEvent {
  * prompt, shown as soon as the activity is resumed and App Lock has resolved (iOS `.task { authenticateBiometrics() }`).
  * Returning from a short background visit while still locked does not prompt again.
  *
- * - Biometrics unavailable: the password form at once (with the only wallet preselected, an Android improvement).
+ * - Biometrics unavailable: the password form at once, with the only wallet preselected (an Android improvement),
+ *   also when the wallet list finishes loading after the form appeared.
  * - The prompt's "Use a Wallet Password" switches to the password form; a dismissal or a system cancel is silent.
  * - Unlocking with a password takes the typed password, which the field has already cleared ("a wrong password
  *   therefore requires retyping"), checks it through `AppAccessController.authenticate` and wipes it; a failure of the
@@ -99,7 +100,7 @@ class AppLockViewModel @Inject constructor(
         AppLockUiState(
             usePassword = local.usePassword,
             wallets = wallets,
-            selectedWallet = local.selectedWallet?.takeIf { id -> wallets.any { it.id == id } },
+            selectedWallet = selection(local, wallets.map { it.id }),
             busy = local.busy,
             authenticating = accessState.isAuthenticating,
             biometricsAvailable = accessState.biometricsAvailable,
@@ -149,6 +150,13 @@ class AppLockViewModel @Inject constructor(
         events.trySend(AppLockEvent.ClearPassword)
     }
 
+    /**
+     * The wallet the password is for: the person's choice while that wallet exists, otherwise on the password form the
+     * only wallet — also when the list arrives after the form (a cold launch shows the lock while the wallets load).
+     */
+    private fun selection(local: Local, wallets: List<WalletId>): WalletId? =
+        local.selectedWallet?.takeIf { it in wallets } ?: wallets.singleOrNull()?.takeIf { local.usePassword }
+
     /** The lock screen's `LifecycleResumeEffect`: prompts are shown only while the activity is resumed. */
     fun onResumedChanged(resumed: Boolean) {
         this.resumed = resumed
@@ -186,15 +194,9 @@ class AppLockViewModel @Inject constructor(
         }
     }
 
-    /** "Use a Wallet Password": the form, the only wallet preselected. */
+    /** "Use a Wallet Password": the form, the only wallet preselected ([selection]). */
     fun usePassword() {
-        local.update { current ->
-            current.copy(
-                usePassword = true,
-                error = null,
-                selectedWallet = current.selectedWallet ?: store.state.value.wallets.singleOrNull()?.id,
-            )
-        }
+        local.update { it.copy(usePassword = true, error = null) }
     }
 
     /** "Use Biometrics Instead": back to the biometric actions, the typed password cleared. */
@@ -213,7 +215,7 @@ class AppLockViewModel @Inject constructor(
      */
     fun unlock(password: SecretText) {
         val current = local.value
-        val walletId = current.selectedWallet?.takeIf { id -> store.state.value.wallets.any { it.id == id } }
+        val walletId = selection(current, store.state.value.wallets.map { it.id })
         if (current.busy || walletId == null || password.isEmpty()) {
             password.wipe()
             return

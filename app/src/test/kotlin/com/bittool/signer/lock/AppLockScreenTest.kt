@@ -8,9 +8,11 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.bittool.signer.core.crypto.vault.VaultError
@@ -78,5 +80,24 @@ class AppLockScreenTest {
         compose.waitForIdle()
         assertEquals(listOf(wallet.id, wallet.id), access.passwordUnlocks)
         assertEquals(false, access.state.value.isLocked)
+    }
+
+    /** iOS menu `Picker("Wallet")`: one element that says the choice and opens the menu of names. */
+    @Test
+    fun theWalletMenuOffersTheNamesAndSaysTheChoice() {
+        val second = VaultMetadata(WalletId.random(), "Travel Signer", 2L)
+        store.setState { it.copy(wallets = listOf(wallet, second)) }
+        val viewModel = AppLockViewModel(access, store)
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) { AppLockScreen(viewModel) }
+        }
+        compose.waitForIdle()
+        val picker = compose.onNodeWithTag(AppLockTags.WALLET)
+        picker.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Choose a wallet"))
+        picker.assertHasClickAction().performClick()
+        compose.onNodeWithText("Travel Signer").performClick()
+        compose.waitForIdle()
+        picker.assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Travel Signer"))
+        assertEquals(second.id, viewModel.uiState.value.selectedWallet)
     }
 }
