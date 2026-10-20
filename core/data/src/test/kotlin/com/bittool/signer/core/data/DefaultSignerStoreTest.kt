@@ -300,6 +300,40 @@ class DefaultSignerStoreTest {
     }
 
     @Test
+    fun aDeletedWalletsActivityRecordsAreKept() = JvmStore.run {
+        // AppStore.swift:520-531 never touches the journal; Activity then labels the record "Deleted wallet"
+        // (activity-settings.md §2.2).
+        store.reload()
+        val wallet = create()
+        store.prepare(request())
+        sign(state.pendingTasks.single().id)
+        val receipt = state.receipts.single()
+        PASSWORD.asSecret { store.deleteWallet(wallet.id, it) }
+        assertEquals(listOf(receipt), state.receipts)
+        assertEquals(wallet.id, state.receipts.single().walletIdOrNull)
+        assertNull(state.displayName(wallet.id))
+        assertEquals(listOf(receipt), fixture.receiptRepository.read())
+    }
+
+    @Test
+    fun aPasswordChangeKeepsTheSessionTheReviewAndThePlan() = JvmStore.run {
+        // AppStore.swift:514-519: only the password that opens the vault changes.
+        store.reload()
+        val wallet = create()
+        store.prepare(request())
+        val before = state
+        PASSWORD.asSecret { current -> "Changed-Password2".asSecret { new -> store.changePassword(wallet.id, current, new) } }
+        assertEquals(before.securityEpoch, state.securityEpoch)
+        assertEquals(before.review, state.review)
+        assertEquals(before.plan, state.plan)
+        assertNull(state.matchingIssue)
+        assertEquals(0, engine.count("releaseWarmContext"))
+        assertFailsWith<VaultError.AuthenticationFailed> { sign(state.pendingTasks.single().id) }
+        sign(state.pendingTasks.single().id, password = "Changed-Password2")
+        assertTrue(state.hasSignedResponse)
+    }
+
+    @Test
     fun aPublicCacheThatCannotBeRemovedIsReported() = JvmStore.run {
         store.reload()
         val wallet = create()
