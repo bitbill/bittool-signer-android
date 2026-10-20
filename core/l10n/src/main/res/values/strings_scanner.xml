@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android strings of :core:scanner (owner: W1-scanner). English only until the translation pass (DECISIONS §9.2). -->
+<resources>
+    <!-- QrScanFrameGate rejections shown under the scanner hint. Exact iOS English of QRScanFrameGate.Issue.message(for:)
+         (Features/Sign/QRScannerView.swift:214-219), which has no key in the iOS catalogue (gaps.md G6).
+         They must stay equal to QrScanFrameGate.Issue.english(purpose) in :core:model (ScannerStringsTest). -->
+    <string name="scanner_gate_non_text_signing">A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.</string>
+    <string name="scanner_gate_empty_signing">This QR code is empty. Scan the signing request from your other wallet.</string>
+    <string name="scanner_gate_too_large_signing">This QR code is too large. Use an animated QR code or export a request file.</string>
+    <string name="scanner_gate_non_text_recovery">This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.</string>
+    <string name="scanner_gate_empty_recovery">This QR code is empty. Scan a QR code that contains your recovery phrase.</string>
+    <string name="scanner_gate_too_large_recovery">This QR code is too large to be a recovery phrase.</string>
+</resources>
