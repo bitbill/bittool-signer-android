@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- QR scanning (scan-sign.md §23.3). Already in the gaps.md G8 allowlist; declared here because this module uses it. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- The camera is optional: devices without one still install the app and import requests by paste or file.
+         CAMERA would otherwise imply required camera and autofocus features for store filtering. -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+</manifest>
