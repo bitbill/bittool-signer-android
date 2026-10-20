@@ -54,13 +54,17 @@ sealed class Bip39Error(text: UiText) : SignerException(text) {
     /**
      * Tokens not in the best-matching list. The message names the first 3 in “ ” joined by ", "; singular wording is
      * chosen by the total count of [words] (not by how many are listed). [words] are user input: never log them.
+     * They are shown through [text] only: the exception's [message] (and so `toString()` and stack traces) names how
+     * many, never which, because a mistyped word is most of a recovery word (DECISIONS.md §6).
      */
     class UnknownWords(val words: List<String>) : Bip39Error(
         UiText.Ios(
             if (words.size == 1) "Invalid recovery phrase: %@ is not in the BIP39 word list." else "Invalid recovery phrase: %@ are not in the BIP39 word list.",
             listOf(words.take(3).joinToString(", ") { "“$it”" }),
         ),
-    )
+    ) {
+        override val message: String get() = "Invalid recovery phrase: ${words.size} unknown word(s) <redacted>"
+    }
 
     /** Every token is a word, but no reading passes the checksum. */
     class Checksum : Bip39Error(UiText.Ios("Invalid recovery phrase. Check the words and their order."))

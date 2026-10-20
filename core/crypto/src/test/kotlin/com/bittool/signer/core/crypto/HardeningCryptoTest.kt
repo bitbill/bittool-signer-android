@@ -190,6 +190,11 @@ class HardeningCryptoTest {
             com.bittool.signer.core.model.UiText.Ios("Invalid recovery phrase: %@ are not in the BIP39 word list.", listOf("“xyzzy”, “plugh”, “frob”")),
             error.text,
         )
+        // The words reach the UI through `text` only; a logged exception, its toString or stack trace never names them.
+        val trace = java.io.StringWriter().also { error.printStackTrace(java.io.PrintWriter(it)) }.toString()
+        for (leak in listOf(error.message.orEmpty(), error.toString(), error.localizedMessage.orEmpty(), trace)) {
+            assertTrue(listOf("xyzzy", "plugh", "frob", "ábaco").none { it in leak }, leak)
+        }
     }
 
     @Test
