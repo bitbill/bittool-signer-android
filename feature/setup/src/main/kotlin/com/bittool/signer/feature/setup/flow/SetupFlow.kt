@@ -4,6 +4,8 @@ import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.SeekableTransitionState
@@ -15,6 +17,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -26,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -41,6 +45,7 @@ import com.bittool.signer.core.designsystem.component.DialogAction
 import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
+import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.navigation.WalletRoute
@@ -89,11 +94,13 @@ internal fun SetupFlow(
     val defaultName = model.defaultName.asString()
     LaunchedEffect(model) { model.seedName(defaultName) }
 
+    // How far a back gesture that closes setup has gone (0 = none): the whole surface shrinks with the finger.
+    val closePreview = remember { Animatable(0f) }
     CompositionLocalProvider(LocalRecoverySessions provides model.recoverySessions) {
-        OverlayGuardHost(modifier.background(SignerTheme.colors.page)) {
+        OverlayGuardHost(modifier.closePreview(closePreview).background(SignerTheme.colors.page)) {
             // No Autofill offer reaches a passphrase or a new wallet password (setup-backup §15.7).
             ExcludeFromAutofill()
-            SetupSteps(state, model)
+            SetupSteps(state, model, closePreview)
         }
         if (state.confirmDiscard) {
             DiscardWalletDialog(state.intent, onDiscard = model::discard, onKeepEditing = model::keepEditing)
@@ -103,12 +110,14 @@ internal fun SetupFlow(
 
 /**
  * Renders [state]'s step path. Pushes and wholesale replacements animate on the shared X axis (forward when the path
- * grows); system Back is the predictive gesture: on a pushed step the previous page follows the finger and a committed
- * gesture pops, a cancelled one springs back; on the form, the Done step or while busy it is [WalletSetupViewModel.back]
- * (Cancel, "Done", or consumed).
+ * grows); system Back is the predictive gesture (setup-backup §15.4): on a pushed step the previous page follows the
+ * finger and a committed gesture pops, a cancelled one springs back. Where Back ends the presentation (the form without
+ * a draft, the Done step) the surface shrinks with the finger ([closePreview], "back to previous") and a committed
+ * gesture is Cancel / "Done"; with a draft it asks "Discard this wallet?" and while busy it is consumed, both without a
+ * preview (the system must not preview leaving).
  */
 @Composable
-private fun SetupSteps(state: WalletSetupUiState, model: WalletSetupViewModel) {
+private fun SetupSteps(state: WalletSetupUiState, model: WalletSetupViewModel, closePreview: Animatable<Float, AnimationVector1D>) {
     val screen = state.screen
     val transitionState = remember { SeekableTransitionState(screen) }
     val scope = rememberCoroutineScope()
@@ -121,11 +130,21 @@ private fun SetupSteps(state: WalletSetupUiState, model: WalletSetupViewModel) {
         if (!seeking) transitionState.animateTo(screen)
     }
 
+    val reduceMotion = SignerTheme.reduceMotion
+    val latestReduceMotion by rememberUpdatedState(reduceMotion)
     PredictiveBackHandler(enabled = true) { progress ->
         val current = latestState
         if (!model.canPop()) {
-            progress.collect { }
+            val preview = model.backEndsPresentation() && !latestReduceMotion
+            try {
+                progress.collect { event -> if (preview) closePreview.snapTo(event.progress) }
+            } catch (e: CancellationException) {
+                scope.launch { closePreview.animateTo(0f, SignerMotion.quick()) }
+                throw e
+            }
             model.back()
+            // The overlay leaves from where the gesture ended; anything else springs back.
+            if (!model.hasEnded) scope.launch { closePreview.animateTo(0f, SignerMotion.quick()) }
             return@PredictiveBackHandler
         }
         val previous = SetupScreen(current.path.dropLast(1).lastOrNull(), current.path.size - 1)
@@ -145,7 +164,6 @@ private fun SetupSteps(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val density = LocalDensity.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val distance = remember(density) { with(density) { SHARED_AXIS_DISTANCE.roundToPx() } }
-    val reduceMotion = SignerTheme.reduceMotion
     rememberTransition(transitionState, label = "setupSteps").AnimatedContent(
         transitionSpec = { sharedAxisX(distance, rtl, reduceMotion) },
         contentKey = { it },
@@ -176,6 +194,25 @@ private fun AnimatedContentTransitionScope<SetupScreen>.sharedAxisX(distance: In
 
 private val SHARED_AXIS_DISTANCE = 30.dp
 private const val SHARED_AXIS_MILLIS = 300
+
+/**
+ * The predictive "back to previous" preview of a gesture that closes setup: at full progress the surface is at 90 %
+ * with large rounded corners, so what setup returns to shows around it (Material predictive back for full-screen
+ * surfaces). Read in the draw phase only: the gesture never recomposes the steps.
+ */
+private fun Modifier.closePreview(progress: Animatable<Float, AnimationVector1D>): Modifier = graphicsLayer {
+    val fraction = progress.value
+    if (fraction > 0f) {
+        val scale = 1f - (1f - CLOSE_PREVIEW_MIN_SCALE) * fraction
+        scaleX = scale
+        scaleY = scale
+        shape = RoundedCornerShape(CLOSE_PREVIEW_CORNER * fraction)
+        clip = true
+    }
+}
+
+private const val CLOSE_PREVIEW_MIN_SCALE = 0.9f
+private val CLOSE_PREVIEW_CORNER = 32.dp
 
 /**
  * "Discard this wallet?" (iOS `confirmationDialog`, `WalletSetupFlow.swift:46-53`): "Discard" (destructive) erases the

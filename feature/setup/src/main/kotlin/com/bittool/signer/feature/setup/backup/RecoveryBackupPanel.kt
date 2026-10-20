@@ -1,9 +1,9 @@
 package com.bittool.signer.feature.setup.backup
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,7 +78,9 @@ fun RecoveryBackupPanel(
         AnimatedContent(
             targetState = format,
             transitionSpec = {
-                (fadeIn(SignerMotion.disclosure()) togetherWith fadeOut(SignerMotion.quick())) using
+                // The format left behind goes in this frame: revealed words or a revealed QR code never fade out over
+                // the other format (the rule of every concealment here); the new one fades in.
+                (fadeIn(SignerMotion.disclosure()) togetherWith ExitTransition.None) using
                     SizeTransform(clip = false) { _, _ -> SignerMotion.disclosure() }
             },
             label = "backupFormat",

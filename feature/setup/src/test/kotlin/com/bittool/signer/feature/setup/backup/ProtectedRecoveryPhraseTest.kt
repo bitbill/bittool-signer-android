@@ -115,6 +115,27 @@ class ProtectedRecoveryPhraseTest {
         assertNoWordComposed()
     }
 
+    /**
+     * Switching Words → QR Code conceals what is left (§8.1) at once: revealed words never fade out over the QR tab
+     * (the new format fades in; the old one is gone within the transition's first frames).
+     */
+    @Test
+    fun switchingFormatsTakesRevealedWordsAwayInTheSameFrame() {
+        compose.setContent { SetupTestHost(factory) { RecoveryBackupPanel(words = words) } }
+        compose.onNodeWithTag("recovery.reveal").performClick()
+        compose.onNodeWithTag("recovery.word.0").assertExists()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("QR Code").performClick()
+        // A few frames (the switch, then the transition's first frames): far less than the fade-in.
+        repeat(4) { compose.mainClock.advanceTimeByFrame() }
+        assertNoWordComposed()
+        compose.onNodeWithTag("backup.qr.reveal").assertExists()
+        compose.mainClock.autoAdvance = true
+        compose.onNodeWithText("Words").performClick()
+        compose.onNodeWithTag("recovery.reveal").assertExists()
+        assertNoWordComposed()
+    }
+
     @Test
     fun theRevealedGridMarksTheViewSensitiveAndNamesEachCell() {
         lateinit var view: View

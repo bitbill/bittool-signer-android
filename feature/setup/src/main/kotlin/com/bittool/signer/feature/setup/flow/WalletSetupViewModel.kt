@@ -188,6 +188,17 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** Whether system Back / the bar's back arrow pops a step (with the predictive animation). */
     fun canPop(): Boolean = _state.value.let { !it.busy && it.path.isNotEmpty() && it.step != SetupStep.Done }
 
+    /**
+     * Whether system Back now ends the presentation (setup-backup §15.4): the form without draft secrets (Cancel) or
+     * the Done step ("Done"). The gesture then previews leaving; with a draft it asks first, while busy it is consumed.
+     */
+    fun backEndsPresentation(): Boolean = _state.value.let {
+        !ended && !it.busy && (it.step == SetupStep.Done || (it.path.isEmpty() && !hasDraftSecrets()))
+    }
+
+    /** The presentation sent its outcome ([SetupEvent.Close] / [SetupEvent.Finish]); the overlay is on its way out. */
+    val hasEnded: Boolean get() = ended
+
     // -------------------------------------------------------------------------------------------------------------
     // Form
 

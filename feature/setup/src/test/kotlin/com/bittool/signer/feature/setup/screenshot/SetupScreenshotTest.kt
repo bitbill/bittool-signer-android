@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.setup.screenshot
 
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -79,6 +80,9 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
         Tips("11-security-tips"),
         RecoveryPassword("12-recovery-phrase-password"),
         RecoveryRevealed("13-recovery-phrase-revealed"),
+
+        /** A back gesture that closes setup, held at 80 %: the shrinking surface (setup-backup §15.4). */
+        ClosePreview("14-close-preview"),
     }
 
     private fun model(intent: SetupIntent): WalletSetupViewModel =
@@ -113,6 +117,14 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
         if (look.rtl) RuntimeEnvironment.setQualifiers("+ar")
         when (screen) {
             Screen.Create -> showFlow(model(SetupIntent.Create))
+            Screen.ClosePreview -> {
+                showFlow(model(SetupIntent.Create))
+                compose.runOnUiThread {
+                    val back = compose.activity.onBackPressedDispatcher
+                    back.dispatchOnBackStarted(BackEventCompat(8f, 600f, 0f, BackEventCompat.EDGE_LEFT))
+                    back.dispatchOnBackProgressed(BackEventCompat(240f, 600f, 0.8f, BackEventCompat.EDGE_LEFT))
+                }
+            }
             Screen.Import -> {
                 val model = model(SetupIntent.Restore)
                 showFlow(model)

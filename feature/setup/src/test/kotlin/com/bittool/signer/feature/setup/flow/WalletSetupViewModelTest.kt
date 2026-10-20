@@ -720,6 +720,32 @@ class WalletSetupViewModelTest {
         assertTrue(model.state.confirmDiscard, "the form with a generated phrase asks before discarding")
     }
 
+    /** Where the back gesture previews leaving setup (§15.4): only where Back really ends the presentation. */
+    @Test
+    fun backPreviewsLeavingOnlyWhereItEndsThePresentation() = runTest(dispatcher) {
+        val model = started()
+        assertTrue(model.backEndsPresentation(), "an empty form closes (the name is no secret)")
+        val gate = CompletableDeferred<com.bittool.signer.core.model.SecretText>()
+        store.onGenerateMnemonic = { gate.await() }
+        model.startCreate()
+        assertFalse(model.backEndsPresentation(), "busy: consumed")
+        gate.complete(com.bittool.signer.core.model.SecretText.of(Phrases.VECTOR_24))
+        advanceUntilIdle()
+        assertFalse(model.backEndsPresentation(), "a pushed step pops")
+        model.pop()
+        assertFalse(model.backEndsPresentation(), "a generated phrase asks before discarding")
+
+        val done = started()
+        done.reachPasswordStep()
+        assertFalse(done.backEndsPresentation())
+        done.setPasswords()
+        done.createWallet()
+        assertTrue(done.backEndsPresentation(), "Back on Done is Done")
+        done.back()
+        assertTrue(done.hasEnded)
+        assertFalse(done.backEndsPresentation(), "nothing more once the presentation ended")
+    }
+
     @Test
     fun doneOpensConnectOnTheWalletLevelQrOrNothing() = runTest(dispatcher) {
         val model = started()

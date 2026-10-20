@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.setup.flow
 
+import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -150,6 +151,48 @@ class SetupFlowTest {
         compose.onNodeWithText("Discard this wallet?").assertDoesNotExist()
         compose.onNodeWithTag("setup.cancel").performClick()
         compose.onNodeWithTag("setup.discard").performClick()
+        compose.runOnIdle { assertEquals(1, cancelled) }
+    }
+
+    /** A predictive back gesture (setup-backup §15.4): started, followed by the finger, then committed or cancelled. */
+    private fun backGesture(commit: Boolean) {
+        val dispatcher = compose.activity.onBackPressedDispatcher
+        compose.runOnUiThread {
+            dispatcher.dispatchOnBackStarted(BackEventCompat(8f, 400f, 0f, BackEventCompat.EDGE_LEFT))
+            dispatcher.dispatchOnBackProgressed(BackEventCompat(120f, 400f, 0.4f, BackEventCompat.EDGE_LEFT))
+        }
+        compose.waitForIdle()
+        compose.runOnUiThread { if (commit) dispatcher.onBackPressed() else dispatcher.dispatchOnBackCancelled() }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun aCancelledBackGestureStaysAndACommittedOnePopsOrCloses() {
+        flow()
+        compose.onNodeWithTag("setup.create").performClick()
+        assertStep(2, 4)
+        backGesture(commit = false)
+        assertStep(2, 4)
+        compose.onNodeWithTag("recovery.reveal").assertExists()
+        backGesture(commit = true)
+        assertStep(1, 4)
+
+        // The form keeps the generated phrase: Back asks first, and a cancelled gesture asks nothing.
+        backGesture(commit = false)
+        compose.onNodeWithText("Discard this wallet?").assertDoesNotExist()
+        backGesture(commit = true)
+        compose.onNodeWithText("Discard this wallet?").assertExists()
+        compose.onNodeWithTag("setup.keepEditing").performClick()
+        compose.runOnIdle { assertEquals(0, cancelled) }
+    }
+
+    @Test
+    fun aBackGestureOnAnEmptyFormClosesOnlyWhenCommitted() {
+        flow(SetupIntent.Restore)
+        backGesture(commit = false)
+        compose.runOnIdle { assertEquals(0, cancelled) }
+        assertStep(1, 2)
+        backGesture(commit = true)
         compose.runOnIdle { assertEquals(1, cancelled) }
     }
 
