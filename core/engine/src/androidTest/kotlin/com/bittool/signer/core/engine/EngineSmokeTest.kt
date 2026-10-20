@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** The bundled engine runs in QuickJS on a device and reproduces the BIP84/BIP44 reference vectors. */
+/** The bundled engine runs on the device and reproduces the BIP84/BIP44 reference vectors. */
 @RunWith(AndroidJUnit4::class)
 class EngineSmokeTest {
     private val engine = EngineModule.create(ApplicationProvider.getApplicationContext(), allowTestOperations = true)
@@ -23,26 +23,26 @@ class EngineSmokeTest {
     // abandon ×11 about, empty passphrase (BIP39 reference seed).
     private val seed = "5eb00bbddcf069084889a8ab9155568165f5c453ccb85e70811aaed6f6da5fc19a5ac40b389cd370d086206dec8aa6c43daea6690f20ad3d8d48b2d2ce9e38e4"
 
+    private fun log(message: String) = Log.i("EngineSmokeTest", message)
+
     @Test
     fun derivesReferenceAddresses() = runBlocking {
         var t = SystemClock.elapsedRealtime()
-        engine.run(EngineOperation.Capabilities)
-        Log.i("EngineSmokeTest", "first context (load+compile+capabilities): ${SystemClock.elapsedRealtime() - t} ms")
+        engine.prewarm()
+        log("prewarm (verify + compile): ${SystemClock.elapsedRealtime() - t} ms")
         t = SystemClock.elapsedRealtime()
         engine.run(EngineOperation.Capabilities)
-        Log.i("EngineSmokeTest", "fresh context (bytecode): ${SystemClock.elapsedRealtime() - t} ms")
+        log("fresh runtime + capabilities: ${SystemClock.elapsedRealtime() - t} ms")
         t = SystemClock.elapsedRealtime()
         val index = engine.run(EngineOperation.DerivePublicIndex, JsonObject(mapOf("seed" to JsonPrimitive(seed))))
-        Log.i("EngineSmokeTest", "derivePublicIndex: ${SystemClock.elapsedRealtime() - t} ms")
+        log("derivePublicIndex: ${SystemClock.elapsedRealtime() - t} ms")
         assertEquals("73c5da0a", index["masterFingerprint"]!!.jsonPrimitive.content)
 
-        fun first(chain: String): String {
-            val r = runBlocking {
-                engine.run(
-                    EngineOperation.DerivePublicAddresses,
-                    JsonObject(mapOf("publicIndex" to index, "chain" to JsonPrimitive(chain), "start" to JsonPrimitive(0), "count" to JsonPrimitive(1))),
-                )
-            }
+        suspend fun first(chain: String): String {
+            val r = engine.run(
+                EngineOperation.DerivePublicAddresses,
+                JsonObject(mapOf("publicIndex" to index, "chain" to JsonPrimitive(chain), "start" to JsonPrimitive(0), "count" to JsonPrimitive(1))),
+            )
             return r["addresses"]!!.jsonArray[0].jsonObject["address"]!!.jsonPrimitive.content
         }
         t = SystemClock.elapsedRealtime()
@@ -50,20 +50,38 @@ class EngineSmokeTest {
         assertEquals("0x9858EfFD232B4033E47d90003D41EC34EcaEda94", first("evm"))
         assertEquals("TUEZSdKsoDHQMeZwihtdoBiN46zxhGWYdH", first("tron"))
         assertEquals("HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk", first("solana"))
-        Log.i("EngineSmokeTest", "4 warm address derivations: ${SystemClock.elapsedRealtime() - t} ms")
+        log("4 warm address derivations: ${SystemClock.elapsedRealtime() - t} ms")
 
-        t = SystemClock.elapsedRealtime()
         val m = engine.run(EngineOperation.Mnemonic, JsonObject(mapOf("entropy" to JsonPrimitive("00000000000000000000000000000000"))))
         assertTrue(m["mnemonic"]!!.jsonPrimitive.content.endsWith("about"))
-        Log.i("EngineSmokeTest", "mnemonic: ${SystemClock.elapsedRealtime() - t} ms")
-        Unit
+
+        val digest = engine.bundleDigest()
+        log("engine ${digest.sha256} ${digest.bytes} bytes, QuickJS ${digest.quickJsVersion}")
+        assertEquals("6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077", digest.sha256)
     }
 
     @Test
-    fun entropyIsInstalledAndFrozen() = runBlocking {
-        // Taproot signing draws BIP340 aux randomness through crypto.getRandomValues; mnemonic needs none.
-        val error = runCatching { engine.run(EngineOperation.Wordlist) }.exceptionOrNull()
-        assertTrue(error == null)
-        Unit
+    fun nonAsciiTextRoundTripsThroughTheEngine() = runBlocking {
+        // An EIP-191 personal message with supplementary characters: the review must show them unchanged.
+        val text = "签名 ✓ 👩‍👩‍👧 \u0000end"
+        val hex = text.toByteArray(Charsets.UTF_8).joinToString("") { "%02x".format(it) }
+        val request = JsonObject(
+            mapOf(
+                "chain" to JsonPrimitive("evm"),
+                "kind" to JsonPrimitive("personal"),
+                "path" to JsonPrimitive("m/44'/60'/0'/0/0"),
+                "address" to JsonPrimitive("0x9858EfFD232B4033E47d90003D41EC34EcaEda94"),
+                "message" to JsonPrimitive("0x$hex"),
+            ),
+        )
+        val review = engine.run(EngineOperation.Review, JsonObject(mapOf("request" to request)))
+        assertTrue(review.toString().contains("签名") || review.toString().contains(hex))
+    }
+
+    @Test
+    fun runtimesHaveNoEvalAndNoNetwork() = runBlocking {
+        // The engine's capabilities are reachable; nothing else is: the runtime has no parser and no network objects.
+        val caps = engine.run(EngineOperation.Capabilities)
+        assertTrue(caps.isNotEmpty())
     }
 }

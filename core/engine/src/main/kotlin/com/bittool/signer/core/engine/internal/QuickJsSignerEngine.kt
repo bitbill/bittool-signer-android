@@ -1,6 +1,7 @@
 package com.bittool.signer.core.engine.internal
 
 import android.content.Context
+import com.bittool.signer.core.engine.BundleDigest
 import com.bittool.signer.core.engine.EngineException
 import com.bittool.signer.core.engine.EngineOperation
 import com.bittool.signer.core.engine.SignerEngine
@@ -23,23 +24,36 @@ internal class QuickJsSignerEngine(
     private var warm: QuickJsContextHost? = null
     private var scanHost: QuickJsContextHost? = null
 
-    override val engineSha256: String get() = EngineBundle.EXPECTED_SHA256
-    override val engineBytes: Int get() = ENGINE_BYTES
-
     override suspend fun run(operation: EngineOperation, parameters: JsonObject): JsonObject {
         if (!operation.production && !allowTestOperations) {
             throw EngineException(EngineException.UNSUPPORTED_OPERATION, "This signing operation is not supported.")
         }
         val json = requestJson(operation.wireName, parameters)
-        return withContext(EngineThread.dispatcher) {
+        try {
+            return runOn(operation, json)
+        } finally {
+            // The request may carry a seed: wipe this copy (the JsonObject strings themselves cannot be wiped).
+            json.fill(0)
+        }
+    }
+
+    private suspend fun runOn(operation: EngineOperation, json: ByteArray): JsonObject =
+        withContext(EngineThread.dispatcher) {
             if (operation.isWarm) {
                 val host = warm ?: newHost().also { warm = it }
-                decode(host.call(json))
+                val response = try {
+                    host.call(json)
+                } catch (e: EngineException) {
+                    // A native failure leaves the runtime in an unknown state: destroy it so the next call starts clean.
+                    host.close()
+                    warm = null
+                    throw e
+                }
+                decode(response)
             } else {
                 newHost().use { decode(it.call(json)) }
             }
         }
-    }
 
     override suspend fun beginScanSession() = withContext(EngineThread.dispatcher) {
         scanHost?.close()
@@ -58,7 +72,14 @@ internal class QuickJsSignerEngine(
         val json = requestJson("scanAdd", JsonObject(mapOf("frame" to JsonPrimitive(frame))))
         return withContext(EngineThread.dispatcher) {
             val host = scanHost ?: throw EngineException(EngineException.SCAN, "The scan session ended. Scan again.")
-            decode(host.call(json))
+            val response = try {
+                host.call(json)
+            } catch (e: EngineException) {
+                host.close()
+                scanHost = null
+                throw e
+            }
+            decode(response)
         }
     }
 
@@ -72,26 +93,34 @@ internal class QuickJsSignerEngine(
         warm = null
     }
 
+    override suspend fun prewarm() = withContext(EngineThread.dispatcher) {
+        if (bundle == null) bundle = EngineBundle.load(appContext)
+    }
+
+    override suspend fun bundleDigest(): BundleDigest = withContext(EngineThread.dispatcher) {
+        val bytes = appContext.assets.open(EngineBundle.ASSET_PATH).use { it.readBytes() }
+        BundleDigest(EngineBundle.sha256Hex(bytes), bytes.size, NativeQuickJs.version())
+    }
+
     private fun newHost(): QuickJsContextHost {
         val b = bundle ?: EngineBundle.load(appContext).also { bundle = it }
         return QuickJsContextHost.create(b)
     }
 
-    private fun requestJson(operation: String, parameters: JsonObject): String {
+    private fun requestJson(operation: String, parameters: JsonObject): ByteArray {
         val request = JsonObject(parameters + ("operation" to JsonPrimitive(operation)))
-        val text = Json.encodeToString(JsonElement.serializer(), sortKeys(request))
-        if (text.toByteArray(Charsets.UTF_8).size > MAX_REQUEST_BYTES) {
+        val bytes = Json.encodeToString(JsonElement.serializer(), sortKeys(request)).toByteArray(Charsets.UTF_8)
+        if (bytes.size > MAX_REQUEST_BYTES) {
+            bytes.fill(0)
             throw EngineException(EngineException.REQUEST_TOO_LARGE, "This request exceeds the 1 MB offline signing limit.")
         }
-        return text
+        return bytes
     }
 
-    private fun decode(responseJson: String): JsonObject {
-        if (responseJson.length > MAX_RESPONSE_BYTES || responseJson.toByteArray(Charsets.UTF_8).size > MAX_RESPONSE_BYTES) {
-            throw failure()
-        }
+    private fun decode(response: ByteArray): JsonObject {
+        if (response.size > MAX_RESPONSE_BYTES) throw failure()
         val envelope = try {
-            Json.parseToJsonElement(responseJson) as? JsonObject
+            Json.parseToJsonElement(String(response, Charsets.UTF_8)) as? JsonObject
         } catch (t: Throwable) {
             null
         } ?: throw failure()
@@ -115,7 +144,6 @@ internal class QuickJsSignerEngine(
     companion object {
         const val MAX_REQUEST_BYTES = 1_048_576
         const val MAX_RESPONSE_BYTES = 2_097_152
-        const val ENGINE_BYTES = 1_181_026
 
         /** Keys sorted at every level, like iOS `JSONSerialization(.sortedKeys)`. */
         internal fun sortKeys(element: JsonElement): JsonElement = when (element) {

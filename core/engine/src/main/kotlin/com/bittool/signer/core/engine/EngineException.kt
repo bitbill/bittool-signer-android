@@ -1,8 +1,11 @@
 package com.bittool.signer.core.engine
 
+import java.text.BreakIterator
+
 /**
  * A bounded, engine-authored error. Only controlled `EngineError`/`ProtocolError` messages cross the native boundary
- * (code ≤ 80 chars, message ≤ 400 chars, like iOS); unexpected failures carry a generic message without input text.
+ * (code ≤ 80, message ≤ 400 grapheme clusters, like iOS `String.prefix`); unexpected failures carry a generic message
+ * without input text.
  */
 class EngineException(val code: String, override val message: String) : Exception(message) {
     companion object {
@@ -18,8 +21,20 @@ class EngineException(val code: String, override val message: String) : Exceptio
         const val SIGNING_FAILED = "SIGNING_FAILED"
 
         internal fun bounded(code: String?, message: String?): EngineException = EngineException(
-            (code ?: SIGNING_FAILED).take(80),
-            (message ?: "This request could not be signed.").take(400),
+            prefixGraphemes(code ?: SIGNING_FAILED, 80),
+            prefixGraphemes(message ?: "This request could not be signed.", 400),
         )
+
+        internal fun prefixGraphemes(text: String, limit: Int): String {
+            val boundaries = BreakIterator.getCharacterInstance()
+            boundaries.setText(text)
+            var end = 0
+            repeat(limit) {
+                val next = boundaries.next()
+                if (next == BreakIterator.DONE) return text
+                end = next
+            }
+            return text.substring(0, end)
+        }
     }
 }

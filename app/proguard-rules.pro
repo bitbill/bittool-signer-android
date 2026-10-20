@@ -2,9 +2,6 @@
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# QuickJS wrapper: JNI looks these classes and members up by name (duplicates the AAR's own rule, kept explicit).
--keep class com.whl.quickjs.** { *; }
-
 # Hilt keys the ViewModel map by class name; AGP does not read META-INF/proguard of library subprojects.
 -keep,allowobfuscation,allowshrinking @dagger.hilt.android.lifecycle.HiltViewModel class *
 

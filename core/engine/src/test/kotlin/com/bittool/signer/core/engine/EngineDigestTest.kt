@@ -16,22 +16,20 @@ class EngineDigestTest {
     @Test
     fun engineAssetMatchesThePinnedDigest() {
         val bytes = asset.readBytes()
-        assertEquals(1_181_026, bytes.size)
+        assertEquals(EngineBundle.EXPECTED_BYTES, bytes.size)
         val digest = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
         assertEquals(EngineBundle.EXPECTED_SHA256, digest)
     }
+}
 
+class EngineExceptionTest {
     @Test
-    fun jniSafeSourceEscapesNulAndSupplementaryCharacters() {
-        assertEquals("/[\\x00-\\x08]/", EngineBundle.jniSafeSource("/[\u0000-\\x08]/"))
-        assertEquals("'\\x00'", EngineBundle.jniSafeSource("'\\\u0000'"))
-        assertEquals("'\\uD83D\\uDE00'", EngineBundle.jniSafeSource("'😀'"))
-        assertEquals("plain ascii", EngineBundle.jniSafeSource("plain ascii"))
-    }
-
-    @Test
-    fun theShippedEngineHasExactlyOneCharacterThatNeedsEscaping() {
-        val source = asset.readText(Charsets.UTF_8)
-        assertEquals(1, source.count { it == '\u0000' || it.isSurrogate() })
+    fun boundsCodeAndMessageByGraphemes() {
+        val e = EngineException.bounded("C".repeat(100), "👩‍👩‍👧".repeat(500))
+        assertEquals(80, e.code.length)
+        assertEquals("👩‍👩‍👧".repeat(400), e.message)
+        val d = EngineException.bounded(null, null)
+        assertEquals("SIGNING_FAILED", d.code)
+        assertEquals("This request could not be signed.", d.message)
     }
 }

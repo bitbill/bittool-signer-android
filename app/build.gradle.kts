@@ -1,4 +1,3 @@
-import com.android.build.api.artifact.SingleArtifact
 import java.util.Properties
 
 plugins {
@@ -140,33 +139,9 @@ android {
     }
 }
 
-/**
- * The QuickJS wrapper AAR ships its own test scripts as root-level assets (test_*.js / test_*.mjs). Nothing but the
- * signer's assets belongs in the APK, and `ignoreAssetsPattern` does not reach dependency assets, so the merged
- * assets are rewritten without them.
- */
-abstract class StripQuickJsTestAssets : DefaultTask() {
-    @get:InputDirectory abstract val input: DirectoryProperty
-    @get:OutputDirectory abstract val output: DirectoryProperty
-
-    @TaskAction
-    fun run() {
-        val out = output.get().asFile
-        out.deleteRecursively()
-        input.get().asFile.copyRecursively(out)
-        out.listFiles { f -> f.isFile && f.name.matches(Regex("test_.*\\.m?js")) }?.forEach { it.delete() }
-    }
-}
-
 androidComponents {
     onVariants(selector().withBuildType("release").withFlavor("distribution" to "play")) { variant ->
         if (hasUploadKey) variant.signingConfig.setConfig(android.signingConfigs.getByName("upload"))
-    }
-    onVariants { variant ->
-        val strip = tasks.register<StripQuickJsTestAssets>("strip${variant.name.replaceFirstChar(Char::uppercase)}QuickJsTestAssets")
-        variant.artifacts.use(strip)
-            .wiredWithDirectories(StripQuickJsTestAssets::input, StripQuickJsTestAssets::output)
-            .toTransform(SingleArtifact.ASSETS)
     }
 }
 

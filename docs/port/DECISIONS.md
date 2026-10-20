@@ -20,7 +20,8 @@ Gradle 9.7.1, AGP 9.4.1 with **built-in Kotlin** (never apply `org.jetbrains.kot
 JDK 21 (daemon criteria in `gradle/gradle-daemon-jvm.properties`), compileSdk 37, targetSdk 36, minSdk 26.
 Compose BOM 2026.09.00 (Material 3 1.4.0), Navigation Compose 2.10.2 (type-safe `@Serializable` routes),
 Hilt 2.60.1 + hilt-navigation-compose 1.4.0, kotlinx.serialization 1.12.0, coroutines 1.11.0, DataStore 1.2.1,
-CameraX 1.6.2, ZXing core 3.5.4, QuickJS `wang.harlon.quickjs:wrapper-android` 3.2.3, androidx.biometric 1.1.0,
+CameraX 1.6.2, ZXing core 3.5.4, QuickJS 2026-06-04 vendored in `core/engine/src/main/cpp` (own JNI, NDK 28.2,
+CMake 3.22.1, 16 KB-aligned), androidx.biometric 1.1.0,
 core-splashscreen 1.2.0, AppCompat 1.8.0 (per-app locales). Versions live in `gradle/libs.versions.toml` only.
 
 Build commands (always through the slot limiter; JAVA_HOME is set by it):
@@ -81,13 +82,17 @@ Package root: `com.bittool.signer.<module path>` (e.g. `com.bittool.signer.core.
 ## 5. Engine
 
 `SignerEngine` (`:core:engine`) is implemented and verified on the emulator (BIP84/EVM/TRON/Solana vectors match):
-fresh QuickJS runtime per secret/untrusted operation, one warm runtime for `derivePublicAddresses` /
-`createPublicPairing` / `createWalletPairing`, one scan-session runtime, single dedicated engine thread, 1 MiB request
-and 2 MiB response limits, sorted-key JSON, iOS-identical entropy bootstrap, SHA-256 check of the shipped `signer.js`.
+own minimal JNI over vendored QuickJS 2026-06-04 (UTF-8 byte arrays in and out — no JNI modified-UTF-8 problems);
+fresh runtime per secret/untrusted operation, created **without the Eval intrinsic** (engine code cannot `eval` or
+`new Function`), one warm runtime for `derivePublicAddresses` / `createPublicPairing` / `createWalletPairing`
+(discarded after a native failure), one scan-session runtime, single dedicated engine thread, 1 MiB request and
+2 MiB response limits, sorted-key JSON, iOS-equivalent entropy bootstrap (bionic `arc4random_buf`), SHA-256 check of
+the shipped `signer.js`, bytecode compiled once in memory and never persisted, `prewarm()` and `bundleDigest()`.
 Callers pass `kotlinx.serialization.json.JsonObject` parameters and get the engine `result` object back (non-object
 results wrapped as `{"value": …}`), or an `EngineException(code, message)`. Typed parsing of results lives in
-`:core:model`. Measured on the emulator: fresh runtime ≈ 0.2 s, `derivePublicIndex` from a seed ≈ 7 s — show progress
-and never run it on the main thread.
+`:core:model`. Measured on the emulator: verify + compile ≈ 0.3 s (call `prewarm()` after launch), fresh runtime
+≈ 40 ms, `derivePublicIndex` from a seed ≈ 0.65 s (every `signPlanTask` re-derives it internally) — still show
+progress for create/import/repair/sign and never call the engine from the main thread.
 
 ## 6. Security posture (Android equivalents, decided)
 

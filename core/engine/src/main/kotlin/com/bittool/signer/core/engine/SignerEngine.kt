@@ -11,22 +11,28 @@ import kotlinx.serialization.json.JsonObject
  * suspended. An animated-QR scan session has its own runtime, discarded when the scan ends.
  *
  * Results are the engine's `result` object; a non-object result is wrapped as `{"value": result}` exactly like iOS.
- * Failures throw [EngineException] with the engine's bounded code and message.
+ * Failures throw [EngineException] with the engine's bounded code and message. All calls are serialised on one engine
+ * thread; none blocks the caller's thread.
  */
 interface SignerEngine {
     suspend fun run(operation: EngineOperation, parameters: JsonObject = JsonObject(emptyMap())): JsonObject
 
     suspend fun beginScanSession()
+    /** Throws EngineException("SCAN", "The scan session ended. Scan again.") without a session. */
     suspend fun scan(frame: String): JsonObject
     suspend fun endScanSession()
 
     /** Drops the warm public runtime (background, App Lock, screen capture). */
     suspend fun releaseWarmContext()
 
-    /** SHA-256 of the bundled engine, for the Open Source page. */
-    val engineSha256: String
-    val engineBytes: Int
+    /** Loads, verifies and compiles the bundle ahead of the first operation (no secrets involved). */
+    suspend fun prewarm()
+
+    /** Digest of the bundled engine computed from the shipped asset bytes, for the Open Source page. */
+    suspend fun bundleDigest(): BundleDigest
 }
+
+data class BundleDigest(val sha256: String, val bytes: Int, val quickJsVersion: String)
 
 enum class EngineOperation(val wireName: String, val production: Boolean, val isWarm: Boolean = false) {
     Mnemonic("mnemonic", production = true),
