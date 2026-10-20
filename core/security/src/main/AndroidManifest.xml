@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Permissions :core:security uses (gaps.md G8 allowlist; all of normal protection level, granted at install, no prompt).
+    USE_BIOMETRIC (and USE_FINGERPRINT below API 28) come from androidx.biometric.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Activity.registerScreenCaptureCallback (API 34+): recovery displays conceal after a screenshot (app-shell.md §15.8). -->
+    <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE" />
+    <!-- WindowManager.addScreenRecordingCallback (API 35+): the "recorded or mirrored" cover and session suspension. -->
+    <uses-permission android:name="android.permission.DETECT_SCREEN_RECORDING" />
+    <!-- Window.setHideOverlayWindows (API 31+): other apps' overlays are hidden over our windows (gaps.md G4.1). -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+</manifest>

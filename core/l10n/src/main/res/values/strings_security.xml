@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android-only strings of :core:security (owner: W1-security). English only until the translation pass.
+    The App Lock set is the single replacement set of gaps.md G7.4 for the iOS "%@"-with-Face-ID keys; lock-screen and
+    Settings texts in :app and :feature:settings reference these resources.
+-->
+<resources>
+    <!-- Settings › Security toggle title (replaces the iOS "%@ Lock", G7.4). -->
+    <string name="security_app_lock">App Lock</string>
+    <!-- Settings › Security footer while biometrics are available (replaces the iOS "Require %@ to open…"). -->
+    <string name="security_app_lock_footer_available">Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.</string>
+    <!-- Settings › Security footer while no strong biometric is enrolled (replaces the iOS "Set up Face ID or Touch ID in iOS Settings…"). -->
+    <string name="security_app_lock_footer_unavailable">Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.</string>
+    <!-- Lock screen primary button (replaces the iOS "Unlock with %@"). -->
+    <string name="security_unlock_with_biometrics">Unlock with Biometrics</string>
+    <!-- Lock screen password form: back to the biometric button (replaces the iOS "Use %@ Instead"). -->
+    <string name="security_use_biometrics_instead">Use Biometrics Instead</string>
+    <!-- BiometricPrompt title when unlocking the app. -->
+    <string name="security_prompt_unlock_title">Unlock BitTool Signer</string>
+    <!-- BiometricPrompt title when turning App Lock on. -->
+    <string name="security_prompt_lock_title">Lock BitTool Signer</string>
+    <!-- BiometricPrompt description of both App Lock prompts. -->
+    <string name="security_prompt_description">Signing still requires the wallet password.</string>
+    <!-- No strong biometric can run (replaces the iOS Face ID / Touch ID wording). -->
+    <string name="security_biometric_unavailable">Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.</string>
+    <!-- ERROR_LOCKOUT / ERROR_LOCKOUT_PERMANENT (replaces the iOS "unlock your iPhone with its passcode"). -->
+    <string name="security_biometric_lockout">Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.</string>
+    <!-- Delete Wallet footer while App Lock is on and biometrics are available (replaces the iOS "Deleting asks for %@, then…"). -->
+    <string name="security_delete_footer_biometric">Deleting asks for biometric confirmation, then for this wallet’s password.</string>
+    <!-- A decisive control refused a touch because another app's window covers it (gaps.md G4.3). -->
+    <string name="security_overlay_blocked">Another app is drawing over BitTool Signer. Close it, then try again.</string>
+    <!-- The App Lock preference could not be written (DataStore I/O failure); App Lock is left unchanged. -->
+    <string name="security_app_lock_save_failed">App Lock could not be changed. Try again.</string>
+</resources>
