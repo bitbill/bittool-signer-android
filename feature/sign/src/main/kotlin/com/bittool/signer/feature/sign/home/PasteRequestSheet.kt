@@ -45,6 +45,7 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
+import com.bittool.signer.feature.sign.common.appExposesTestTags
 import com.bittool.signer.feature.sign.common.windowTestTags
 
 /**
@@ -69,7 +70,7 @@ internal fun PasteRequestSheet(
             if (state.closing) sheet.dismiss()
         }
         // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
-        Column(windowTestTags()) {
+        Column(Modifier.windowTestTags(appExposesTestTags())) {
             SheetHeader(title = stringResource(R.string.paste_request), onCancel = { sheet.dismiss() })
             PasteRequestBody(state, text, onPasteFromClipboard, Modifier.weight(1f, fill = false))
             BottomActionBar {

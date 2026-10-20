@@ -52,6 +52,7 @@ import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.rememberOverlayBlocked
+import com.bittool.signer.feature.sign.common.appExposesTestTags
 import com.bittool.signer.feature.sign.common.windowTestTags
 import kotlinx.coroutines.delay
 
@@ -105,7 +106,7 @@ internal fun AuthorizeSheet(
         val toast = rememberStatusToastState()
         val blocked = rememberOverlayBlocked(toast)
         // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
-        Box(windowTestTags()) {
+        Box(Modifier.windowTestTags(appExposesTestTags())) {
             Column {
                 SheetHeader(title = stringResource(R.string.authorize_signature), onCancel = onCancel, cancelEnabled = !state.busy)
                 AuthorizeBody(state, password, submit, Modifier.weight(1f, fill = false))

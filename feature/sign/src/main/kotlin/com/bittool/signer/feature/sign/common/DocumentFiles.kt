@@ -20,6 +20,7 @@ import java.nio.charset.CharacterCodingException
 import java.nio.charset.CodingErrorAction
 import java.util.Base64
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
@@ -100,11 +101,13 @@ class ContentRequestFileReader @Inject constructor(
             RequestFile.text(bytes)
         } catch (e: SignerException) {
             throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: IOException) {
             throw SignerException(UiText.Resource(R.string.sign_file_unreadable), e)
-        } catch (e: SecurityException) {
-            throw SignerException(UiText.Resource(R.string.sign_file_unreadable), e)
-        } catch (e: IllegalArgumentException) {
+        } catch (e: RuntimeException) {
+            // Whatever the document provider throws (SecurityException, IllegalArgumentException, IllegalStateException
+            // from a cursor, UnsupportedOperationException…): its platform wording never reaches the UI (ARCHITECTURE §4.2).
             throw SignerException(UiText.Resource(R.string.sign_file_unreadable), e)
         }
     }

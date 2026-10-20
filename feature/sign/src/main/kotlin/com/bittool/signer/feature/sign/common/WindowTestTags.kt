@@ -14,14 +14,16 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
  */
 internal fun exposesTestTags(applicationFlags: Int): Boolean = applicationFlags and ApplicationInfo.FLAG_DEBUGGABLE != 0
 
-/**
- * `testTagsAsResourceId` for the content of a sheet or dialog. `:app` sets it once at the root of the activity's
- * composition, but Compose looks for it only among a node's semantics ancestors **in the same window**, and every
- * `SignerBottomSheet` is a window of its own: without this the e2e suite cannot see `signing.payload`,
- * `signing.decode`, `authorize.sign` or the "Wallet password" field (gaps.md G1.8). Debuggable builds only, like the
- * root.
- */
+/** [exposesTestTags] for the running app. */
 @Composable
 @ReadOnlyComposable
-internal fun windowTestTags(): Modifier =
-    if (exposesTestTags(LocalContext.current.applicationInfo.flags)) Modifier.semantics { testTagsAsResourceId = true } else Modifier
+internal fun appExposesTestTags(): Boolean = exposesTestTags(LocalContext.current.applicationInfo.flags)
+
+/**
+ * `testTagsAsResourceId` for the content of a sheet or dialog when [enabled] ([appExposesTestTags]). `:app` sets it
+ * once at the root of the activity's composition, but Compose looks for it only among a node's semantics ancestors
+ * **in the same window**, and every `SignerBottomSheet` is a window of its own: without this the e2e suite cannot see
+ * `signing.payload`, `signing.decode`, `authorize.sign` or the "Wallet password" field (gaps.md G1.8).
+ */
+internal fun Modifier.windowTestTags(enabled: Boolean): Modifier =
+    if (enabled) semantics { testTagsAsResourceId = true } else this
