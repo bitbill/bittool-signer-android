@@ -30,6 +30,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +41,8 @@ import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * The primary call to action (iOS `ActionLabel` in a `.prominentAction()` button, `Design/DesignSystem.swift:47-54,
@@ -163,7 +167,13 @@ private fun SignerButton(
     }
 }
 
-/** One line (or [maxLines]) that shrinks to 80 % before ellipsizing (iOS `minimumScaleFactor(0.8)`). */
+/**
+ * One line (or [maxLines]) that shrinks to 80 % before ellipsizing (iOS `minimumScaleFactor(0.8)`).
+ *
+ * The label is as wide as its widest line, like a SwiftUI `Text`: Compose lays a wrapped paragraph out at the full
+ * available width, which would push a button's leading icon to the far edge whenever the label takes two lines
+ * (accessibility text sizes, long translations) instead of keeping it next to the text.
+ */
 @Composable
 internal fun ShrinkingLabel(
     text: String,
@@ -174,14 +184,46 @@ internal fun ShrinkingLabel(
     textAlign: TextAlign = TextAlign.Center,
 ) {
     val size = style.fontSize
+    val extent = remember { LineExtent() }
     BasicText(
         text = text,
-        modifier = modifier,
+        modifier = modifier.layout { measurable, constraints ->
+            // The text node reports its layout (onTextLayout) while it is measured here.
+            val placeable = measurable.measure(constraints)
+            val left = extent.left.coerceIn(0, placeable.width)
+            val right = extent.right.coerceIn(left, placeable.width)
+            val width = if (right > left) maxOf(right - left, constraints.minWidth) else placeable.width
+            val offset = if (right > left) left + (right - left - width) / 2 else 0
+            layout(width, placeable.height) { placeable.place(-offset, 0) }
+        },
         style = style.copy(textAlign = textAlign),
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         autoSize = TextAutoSize.StepBased(minFontSize = size * minScale, maxFontSize = size),
+        onTextLayout = { result -> extent.update(result) },
     )
+}
+
+/** The horizontal extent of a laid-out paragraph's lines, in pixels (written during measurement, never observed). */
+private class LineExtent {
+    var left = 0
+    var right = 0
+
+    fun update(result: TextLayoutResult) {
+        if (result.lineCount == 0) {
+            left = 0
+            right = 0
+            return
+        }
+        var min = Float.MAX_VALUE
+        var max = 0f
+        for (line in 0 until result.lineCount) {
+            min = minOf(min, result.getLineLeft(line))
+            max = maxOf(max, result.getLineRight(line))
+        }
+        left = floor(min).toInt()
+        right = ceil(max).toInt()
+    }
 }
 
 /**

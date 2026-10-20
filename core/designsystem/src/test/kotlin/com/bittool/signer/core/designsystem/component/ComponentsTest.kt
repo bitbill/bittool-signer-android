@@ -25,6 +25,8 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
@@ -215,6 +217,52 @@ class ComponentsTest {
         assertTrue(!layout.isLineEllipsized(0) && layout.getLineRight(0) <= title.size.width + 1f, "the title is not cut")
         // The value still shows, end-aligned in its share.
         compose.onNodeWithTag("row").assertExists()
+    }
+
+    /**
+     * iOS `ActionLabel` at accessibility sizes: the label takes two lines and the icon stays beside it, the pair
+     * centred in the capsule. A wrapped Compose paragraph spans the whole width, which used to strand the icon at the
+     * far edge.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun aWrappedButtonLabelKeepsItsIconBesideIt() {
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    Box(Modifier.width(360.dp)) {
+                        SecondaryButton("Import Recovery Phrase", onClick = {}, icon = SignerIcons.Key, modifier = Modifier.testTag("button"))
+                    }
+                }
+            }
+        }
+        val label = compose.onNodeWithText("Import Recovery Phrase", useUnmergedTree = true).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        label.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
+        assertEquals(2, layout.lineCount, "two lines at an accessibility size")
+        // Where the lines really are, in the root (the text node itself may be laid out wider than they are).
+        val origin = label.positionInRoot.x
+        val textLeft = origin + (0 until layout.lineCount).minOf { layout.getLineLeft(it) }
+        val textRight = origin + (0 until layout.lineCount).maxOf { layout.getLineRight(it) }
+        val button = compose.onNodeWithTag("button").fetchSemanticsNode().boundsInRoot
+        // Icon (20 dp) + gap (8 dp) + the lines, centred in the capsule as one group.
+        val px = compose.density.density
+        val iconAndGap = 28f * px
+        val expectedLeft = button.left + (button.width - (iconAndGap + textRight - textLeft)) / 2f + iconAndGap
+        assertTrue(kotlin.math.abs(textLeft - expectedLeft) <= 2f, "text starts at $textLeft, expected $expectedLeft")
+        // The icon is drawn just before the text: the first ink on the capsule's middle row is within the 20 dp icon
+        // box that ends 8 dp before the lines (it used to sit 20 dp from the capsule's edge).
+        val image = compose.onNodeWithTag("button").captureToImage().toPixelMap()
+        val row = image.height / 2
+        val fill = image[(12f * px).toInt(), row]
+        val firstInk = ((12f * px).toInt() until image.width).first { x ->
+            val c = image[x, row]
+            kotlin.math.abs(c.red - fill.red) + kotlin.math.abs(c.green - fill.green) + kotlin.math.abs(c.blue - fill.blue) > 0.2f
+        }
+        val iconBoxLeft = textLeft - button.left - iconAndGap
+        assertTrue(firstInk >= iconBoxLeft - 1f && firstInk <= iconBoxLeft + 20f * px, "icon ink at $firstInk, icon box from $iconBoxLeft")
     }
 
     /** iOS plays `.success` with every status toast; a warning toast (an overlay blocked a tap) must not. */
