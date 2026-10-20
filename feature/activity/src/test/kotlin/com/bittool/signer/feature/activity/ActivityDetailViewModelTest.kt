@@ -89,6 +89,34 @@ class ActivityDetailViewModelTest {
     }
 
     @Test
+    fun aFailedReReviewIsTriedAgainWhenThePageAppearsAgain() = runTest {
+        // iOS `.task(id:)` runs on every appearance while nothing is decoded (ActivityTab.swift:168, 269-275): coming
+        // back to the page (another tab and back) tries a failed re-review once more. A decoded one is never repeated.
+        val store = store(receipt(id))
+        var attempts = 0
+        store.onReviewStoredRequest = { _, _ ->
+            attempts++
+            if (attempts == 1) throw AppIssue("The stored request could not be read.") else ActivityTestData.plainReview
+        }
+        val viewModel = viewModel(store)
+        assertIs<DecodeState.Failed>(viewModel.uiState.first { it.decode !is DecodeState.Decoding }.decode)
+        viewModel.onAppear()
+        assertIs<DecodeState.Decoded>(viewModel.uiState.first { it.decode is DecodeState.Decoded }.decode)
+        viewModel.onAppear()
+        viewModel.uiState.first()
+        assertEquals(2, store.calls<FakeSignerStore.Call.ReviewStoredRequest>().size)
+    }
+
+    @Test
+    fun withoutADocumentPickerTheExportSaysTheFileCouldNotBeSaved() = runTest {
+        val store = store(receipt(id))
+        store.onReviewStoredRequest = { _, _ -> ActivityTestData.plainReview }
+        val viewModel = viewModel(store)
+        viewModel.onExportUnavailable()
+        assertEquals(UiText.Resource(R.string.activity_export_failed), viewModel.uiState.first { it.exportError != null }.exportError)
+    }
+
+    @Test
     fun aRecordWithoutPayloadsHasNothingToDecode() = runTest {
         // Only the 25 most recent records keep their request (ActivityTab.swift:157-162).
         val store = store(receipt(id, requestJson = null, frames = null, text = null))

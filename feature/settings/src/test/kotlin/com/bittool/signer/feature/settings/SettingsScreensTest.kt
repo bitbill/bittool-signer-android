@@ -20,6 +20,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.bittool.signer.core.model.NetworkBrand
 import com.bittool.signer.core.model.registry.ReferenceData
 import com.bittool.signer.feature.settings.about.Measured
@@ -51,6 +52,7 @@ import com.bittool.signer.feature.settings.reference.NetworkReferenceUiState
 import com.bittool.signer.feature.settings.reference.ReferenceTitle
 import com.bittool.signer.core.data.testing.FakeLegalDocumentRepository
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -219,7 +221,8 @@ class SettingsScreensTest {
                 onSegmentSelected = {},
             )
         }
-        compose.onNodeWithText("No Results for “zzz”").assertIsDisplayed()
+        // The query is isolated (FSI … PDI) so it keeps its own direction inside the sentence.
+        compose.onNodeWithText("No Results for “\u2068zzz\u2069”").assertIsDisplayed()
         compose.onNodeWithText("Check the spelling or try a new search.").assertIsDisplayed()
         compose.onNodeWithText("3 Tokens").assertExists()
         compose.onNodeWithText("2 Contracts").assertExists()
@@ -316,6 +319,32 @@ class SettingsScreensTest {
         compose.onNodeWithText("support@bittool.com").assertExists()
         compose.onNodeWithText("The app never opens a mail app. Copy the address and write to us from another device.").assertExists()
         assertNoLinks(compose)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun reselectingTheTabScrollsToTheTopAndExpandsTheTitle() {
+        // iOS: tapping the selected tab scrolls Settings up and the large title comes back. A programmatic scroll does
+        // not pass through the bar's nested scrolling, so the bar has to be expanded as well.
+        val reselections = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        show {
+            SettingsContent(
+                state = SettingsUiState(version = "1.0.0 (1)"),
+                onAppLockChange = {},
+                onThemeClick = {},
+                onThemeSelected = {},
+                onThemeDismissed = {},
+                onNavigate = {},
+                scrollToTop = reselections,
+            )
+        }
+        val switchTop = { compose.onNodeWithTag(SettingsTags.APP_LOCK).fetchSemanticsNode().boundsInRoot.top }
+        val expandedTop = switchTop()
+        compose.onNodeWithTag(SettingsTags.LIST).performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        reselections.tryEmit(Unit)
+        compose.waitForIdle()
+        assertEquals(expandedTop, switchTop(), "the page is back at the top under the expanded large title")
     }
 
     /** No text on screen carries a link (LinkAnnotation / URL annotation): the app opens no browser. */

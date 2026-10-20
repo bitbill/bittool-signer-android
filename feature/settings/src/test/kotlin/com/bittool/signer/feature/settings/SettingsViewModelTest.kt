@@ -64,6 +64,22 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun thePageOpensWithTheCurrentValuesInsteadOfDefaults() = runTest {
+        // The first frame is drawn before the flows are collected: an enabled App Lock must not start "off" and flip on
+        // (with the switch animation), nor the chosen theme start as "System".
+        val access = FakeAppAccessController(AppAccessState(resolving = false, isEnabled = true, isLocked = false, biometricsAvailable = true))
+        preferences.publish(com.bittool.signer.core.data.PreferenceValues(appearance = Appearance.Dark, appLockEnabled = true))
+        languages.language = AppLanguage.French
+        val viewModel = SettingsViewModel(store, access, preferences, languages, SettingsTestData.buildInfo, AppRouter())
+        val first = viewModel.uiState.value
+        assertTrue(first.appLockEnabled)
+        assertTrue(first.appLockToggleEnabled)
+        assertTrue(first.biometricsAvailable)
+        assertEquals(Appearance.Dark, first.appearance)
+        assertEquals(AppLanguage.French, first.language)
+    }
+
+    @Test
     fun appLockTurnsOnOnlyThroughTheController() = runTest {
         val access = FakeAppAccessController()
         val viewModel = settings(access)

@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -77,9 +78,13 @@ internal fun SearchField(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(SignerIcons.Search, contentDescription = null, tint = colors.secondaryLabel, modifier = Modifier.size(20.dp))
-                Box(Modifier.weight(1f).padding(vertical = 10.dp), contentAlignment = Alignment.CenterStart) {
+                // Without text the clear button is gone: the prompt keeps the same inset from the end as from the start.
+                Box(
+                    Modifier.weight(1f).padding(top = 10.dp, bottom = 10.dp, end = if (value.isEmpty()) 12.dp else 0.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
                     if (value.isEmpty()) {
-                        Text(placeholder, style = typography.body, color = colors.tertiaryLabel, maxLines = 1)
+                        Text(placeholder, style = typography.body, color = colors.tertiaryLabel, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     field()
                 }

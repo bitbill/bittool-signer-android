@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.settings
 
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,11 +14,13 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
@@ -38,6 +41,8 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * A page of the Settings area: the page colour behind the bars, [SignerTopAppBar] (large and collapsing for the tab
@@ -55,6 +60,31 @@ internal fun SettingsPage(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val behavior = if (large) TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else TopAppBarDefaults.pinnedScrollBehavior()
+    PageScaffold(title, onBack, modifier, large, behavior, actions, content)
+}
+
+/** The tab root's page: a large title driven by the caller's [scrollBehavior] (see [scrollToTopAndExpand]). */
+@ExperimentalMaterial3Api
+@Composable
+internal fun SettingsPage(
+    title: String,
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
+) = PageScaffold(title, onBack = null, modifier, large = true, scrollBehavior, actions, content)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PageScaffold(
+    title: String,
+    onBack: (() -> Unit)?,
+    modifier: Modifier,
+    large: Boolean,
+    behavior: TopAppBarScrollBehavior,
+    actions: @Composable RowScope.() -> Unit,
+    content: @Composable (PaddingValues) -> Unit,
+) {
     Scaffold(
         modifier = modifier.nestedScroll(behavior.nestedScrollConnection),
         topBar = {
@@ -88,6 +118,19 @@ internal fun listContentPadding(insets: PaddingValues, top: Dp = 8.dp): PaddingV
         top = top,
         bottom = insets.calculateBottomPadding() + SignerMetrics.listBottomInset,
     )
+}
+
+/**
+ * Tab reselection (iOS: tapping the selected tab scrolls its root to the top and the large title comes back): the list
+ * animates to its first item and the collapsed large bar expands with it. A programmatic scroll does not go through the
+ * bar's nested-scroll connection, so without the second half the list would sit at the top under a collapsed title.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+internal suspend fun scrollToTopAndExpand(list: LazyListState, bar: TopAppBarScrollBehavior) = coroutineScope {
+    launch { list.animateScrollToItem(0) }
+    val state = bar.state
+    animate(state.heightOffset, 0f) { value, _ -> state.heightOffset = value }
+    state.contentOffset = 0f
 }
 
 /** The horizontal frame of every section and floating callout: readable width, page gutter. */

@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.activity
 
+import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -81,6 +83,10 @@ fun ActivityDetailScreen(
             }
         }
     }
+    LifecycleStartEffect(viewModel) {
+        viewModel.onAppear()
+        onStopOrDispose { }
+    }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(EXPORT_MIME_TYPE), viewModel::onExport)
     val fileName = stringResource(R.string.activity_export_file_name)
     val back = rememberResumedAction<Unit> { onBack() }
@@ -91,7 +97,14 @@ fun ActivityDetailScreen(
         onOpenDecodedFields = { openDecoded(Unit) },
         onShowQr = viewModel::onShowQr,
         onDismissQr = viewModel::onDismissQr,
-        onExport = { exporter.launch(fileName) },
+        onExport = {
+            // A device without a document picker (some work profiles, stripped builds) has nothing to launch.
+            try {
+                exporter.launch(fileName)
+            } catch (_: ActivityNotFoundException) {
+                viewModel.onExportUnavailable()
+            }
+        },
         modifier = modifier,
     )
 }

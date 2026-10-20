@@ -18,6 +18,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,8 +106,11 @@ class ActivityDetailViewModel @Inject constructor(
         build(state, decoded, local)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), build(store.state.value, decode.value, local.value))
 
+    /** The re-review in flight (the first one, or a retry from [onAppear]). */
+    private var decodeJob: Job? = null
+
     init {
-        viewModelScope.launch {
+        decodeJob = viewModelScope.launch {
             val loaded = store.state.first { !it.isLoading }
             loaded.receipts.firstOrNull { it.id == receiptId }?.let { decodeAgain(it) }
         }
@@ -118,12 +122,26 @@ class ActivityDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * The page appears again (iOS `.task(id:)` runs on every appearance): a re-review that failed is tried once more.
+     * The failure stays on screen meanwhile, as on iOS, and is replaced only by the decoded request or a new failure.
+     * A decoded request is kept ("Signed Request" shares it) and nothing runs twice at once.
+     */
+    fun onAppear() {
+        if (decodeJob?.isActive == true || decode.value !is DecodeState.Failed) return
+        val receipt = currentReceipt() ?: return
+        decodeJob = viewModelScope.launch { decodeAgain(receipt, showProgress = false) }
+    }
+
     /** "Show QR Code": only a record that kept its signature frames has a code to show again. */
     fun onShowQr() {
         if (currentReceipt()?.responseFrames?.isNotEmpty() == true) local.update { it.copy(showsQr = true) }
     }
 
     fun onDismissQr() = local.update { it.copy(showsQr = false) }
+
+    /** "Export as File" found no document picker on this device (no app handles `CREATE_DOCUMENT`): say so in place. */
+    fun onExportUnavailable() = local.update { it.copy(exportError = UiText.Resource(R.string.activity_export_failed)) }
 
     /**
      * The file picker returned [uri] (null: cancelled, nothing happens). Writes the stored response text; a failure is
@@ -145,13 +163,13 @@ class ActivityDetailViewModel @Inject constructor(
         }
     }
 
-    private suspend fun decodeAgain(receipt: SigningReceipt) {
+    private suspend fun decodeAgain(receipt: SigningReceipt, showProgress: Boolean = true) {
         val json = receipt.requestJson
         if (json == null) {
             decode.value = DecodeState.NotStored
             return
         }
-        decode.value = DecodeState.Decoding
+        if (showProgress) decode.value = DecodeState.Decoding
         decode.value = try {
             DecodeState.Decoded(store.reviewStoredRequest(json, receipt.requestHash))
         } catch (e: CancellationException) {

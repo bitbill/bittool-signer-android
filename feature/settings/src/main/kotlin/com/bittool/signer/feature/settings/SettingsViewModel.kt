@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bittool.signer.core.common.BuildInfo
+import com.bittool.signer.core.data.PreferenceValues
 import com.bittool.signer.core.data.SignerPreferences
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.AppLanguage
@@ -13,6 +14,7 @@ import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.navigation.AppRouter
 import com.bittool.signer.core.navigation.Tab
 import com.bittool.signer.core.security.AppAccessController
+import com.bittool.signer.core.security.AppAccessState
 import com.bittool.signer.feature.settings.language.LanguageController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -73,6 +75,11 @@ class SettingsViewModel @Inject constructor(
     private val hasWallets = store.state.map { it.wallets.isNotEmpty() }.distinctUntilChanged()
     private val version = buildInfo.displayVersion
 
+    /**
+     * Starts from the values as they are now, not from defaults: the first frame already shows an enabled App Lock as on
+     * and the chosen theme (otherwise the switch would visibly flip on, and "System" change to "Dark", as the page
+     * opens).
+     */
     val uiState: StateFlow<SettingsUiState> = combine(
         access.state,
         hasWallets,
@@ -80,6 +87,14 @@ class SettingsViewModel @Inject constructor(
         language,
         local,
     ) { access, hasWallets, prefs, language, local ->
+        build(access, hasWallets, prefs, language, local)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        build(access.state.value, store.state.value.wallets.isNotEmpty(), preferences.values.value, language.value, local.value),
+    )
+
+    private fun build(access: AppAccessState, hasWallets: Boolean, prefs: PreferenceValues?, language: AppLanguage, local: Local) =
         SettingsUiState(
             appLockEnabled = access.isEnabled,
             appLockToggleEnabled = !local.changingLock && hasWallets && (access.biometricsAvailable || access.isEnabled),
@@ -90,7 +105,6 @@ class SettingsViewModel @Inject constructor(
             version = version,
             showsThemeDialog = local.showsThemeDialog,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(version = version, language = language.value))
 
     /** Emits when the Settings tab is tapped again while shown (the page scrolls back to the top). */
     val scrollToTop: Flow<Unit> = router.reselections.filter { it == Tab.Settings }.map { }

@@ -2,6 +2,7 @@ package com.bittool.signer.feature.activity
 
 import android.content.Context
 import android.text.format.DateFormat
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
@@ -48,9 +51,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import java.time.format.DecimalStyle
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * A page of the Activity tab: the page colour behind the bars, [SignerTopAppBar] (large for the tab root, collapsing
@@ -67,6 +72,31 @@ internal fun ActivityPage(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val behavior = if (large) TopAppBarDefaults.exitUntilCollapsedScrollBehavior() else TopAppBarDefaults.pinnedScrollBehavior()
+    PageScaffold(title, onBack, modifier, large, behavior, actions, content)
+}
+
+/** The tab root's page: a large title driven by the caller's [scrollBehavior] (see [scrollToTopAndExpand]). */
+@ExperimentalMaterial3Api
+@Composable
+internal fun ActivityPage(
+    title: String,
+    scrollBehavior: TopAppBarScrollBehavior,
+    modifier: Modifier = Modifier,
+    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
+) = PageScaffold(title, onBack = null, modifier, large = true, scrollBehavior, actions, content)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PageScaffold(
+    title: String,
+    onBack: (() -> Unit)?,
+    modifier: Modifier,
+    large: Boolean,
+    behavior: TopAppBarScrollBehavior,
+    actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+    content: @Composable (PaddingValues) -> Unit,
+) {
     Scaffold(
         modifier = modifier.nestedScroll(behavior.nestedScrollConnection),
         topBar = {
@@ -101,6 +131,19 @@ internal fun listContentPadding(insets: PaddingValues, top: Dp = 8.dp): PaddingV
         top = top,
         bottom = insets.calculateBottomPadding() + SignerMetrics.listBottomInset,
     )
+}
+
+/**
+ * Tab reselection (iOS: tapping the selected tab scrolls its root to the top and the large title comes back): the list
+ * animates to its first item and the collapsed large bar expands with it. A programmatic scroll does not go through the
+ * bar's nested-scroll connection, so without the second half the list would sit at the top under a collapsed title.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+internal suspend fun scrollToTopAndExpand(list: LazyListState, bar: TopAppBarScrollBehavior) = coroutineScope {
+    launch { list.animateScrollToItem(0) }
+    val state = bar.state
+    animate(state.heightOffset, 0f) { value, _ -> state.heightOffset = value }
+    state.contentOffset = 0f
 }
 
 /** The horizontal frame of every section: readable width, page gutter. */
@@ -169,19 +212,30 @@ internal fun WalletLabel.text(): String = when (this) {
     WalletLabel.Deleted -> stringResource(R.string.activity_deleted_wallet)
 }
 
-/** Formats Activity dates in the app locale (activity-settings.md §14.2); one instance per composition locale. */
+/**
+ * Formats Activity dates in the app locale (activity-settings.md §14.2); one instance per composition locale. Every
+ * format writes the locale's own digits (`java.time` would otherwise always write ASCII digits, so with Arabic as the
+ * device language the day header and the row time would disagree; the app's own Arabic is `ar-u-nu-latn`), and both
+ * times follow the device's 24-hour setting, like iOS.
+ */
 internal class ActivityDateFormats(context: Context, locale: Locale) {
     private val zone: ZoneId = ZoneId.systemDefault()
+    private val digits: DecimalStyle = DecimalStyle.of(locale)
 
     /** Section header, iOS `.dateTime.weekday(.wide).month().day().year()` ("Tuesday, Oct 20, 2026"). */
     private val day: DateTimeFormatter =
-        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "EEEEMMMdy"), locale)
+        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "EEEEMMMdy"), locale).withDecimalStyle(digits)
 
     /** Row time, iOS `.dateTime.hour().minute()`, honouring the 24-hour setting. */
     private val time: java.text.DateFormat = DateFormat.getTimeFormat(context)
 
-    /** Detail "Date", iOS `.formatted(date: .abbreviated, time: .standard)`, in the app locale. */
-    private val dateTime: DateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.MEDIUM).withLocale(locale)
+    /**
+     * Detail "Date", iOS `.formatted(date: .abbreviated, time: .standard)` ("Oct 20, 2026, 5:42:00 PM", or 17:42:00 with
+     * the 24-hour setting), in the app locale.
+     */
+    private val dateTime: DateTimeFormatter = DateTimeFormatter
+        .ofPattern(DateFormat.getBestDateTimePattern(locale, if (DateFormat.is24HourFormat(context)) "yMMMdHms" else "yMMMdhms"), locale)
+        .withDecimalStyle(digits)
 
     fun day(date: LocalDate): String = day.format(date)
     fun time(millis: Long): String = time.format(Date(millis))

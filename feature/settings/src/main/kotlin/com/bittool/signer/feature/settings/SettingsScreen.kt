@@ -13,12 +13,15 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -30,11 +33,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.flowWithLifecycle
 import com.bittool.signer.core.designsystem.brand.BrandTile
 import com.bittool.signer.core.designsystem.component.DialogAction
 import com.bittool.signer.core.designsystem.component.GroupedSection
@@ -62,6 +64,8 @@ import com.bittool.signer.core.navigation.OpenSourceRoute
 import com.bittool.signer.core.navigation.SignerRoute
 import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.ui.text.asString
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /** Test tags of the Settings root (iOS accessibility identifiers, gaps.md G1.18). */
 object SettingsTags {
@@ -87,13 +91,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val listState = rememberLazyListState()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(viewModel, lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            viewModel.scrollToTop.collect { listState.animateScrollToItem(0) }
-        }
-    }
+    val scrollToTop = remember(viewModel, lifecycle) { viewModel.scrollToTop.flowWithLifecycle(lifecycle) }
     LifecycleStartEffect(viewModel) {
         viewModel.refreshLanguage()
         onStopOrDispose { }
@@ -106,11 +105,15 @@ fun SettingsScreen(
         onThemeDismissed = viewModel::onThemeDismissed,
         onNavigate = rememberResumedAction(onNavigate),
         modifier = modifier,
-        listState = listState,
+        scrollToTop = scrollToTop,
     )
 }
 
-/** Stateless Settings root (previews, screenshots and Compose tests). */
+/**
+ * Stateless Settings root (previews, screenshots and Compose tests). Each [scrollToTop] emission (tab reselection)
+ * scrolls back to the top and expands the large title.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingsContent(
     state: SettingsUiState,
@@ -121,10 +124,13 @@ internal fun SettingsContent(
     onNavigate: (SignerRoute) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    scrollToTop: Flow<Unit> = emptyFlow(),
 ) {
     val toast = rememberStatusToastState()
+    val bar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    LaunchedEffect(scrollToTop, listState, bar) { scrollToTop.collect { scrollToTopAndExpand(listState, bar) } }
     Box(modifier.fillMaxSize()) {
-        SettingsPage(title = stringResource(R.string.settings), onBack = null, large = true) { insets ->
+        SettingsPage(title = stringResource(R.string.settings), scrollBehavior = bar) { insets ->
             LazyColumn(
                 state = listState,
                 modifier = Modifier

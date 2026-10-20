@@ -116,6 +116,34 @@ class ReferenceViewModelsTest {
     }
 
     @Test
+    fun theSearchFieldHoldsEveryKeystrokeAtOnce() = runTest {
+        // The field reads `query` directly: it must hold each edit before any coroutine runs, or a fast second
+        // keystroke would be applied to the old text.
+        val viewModel = page("evm:1")
+        viewModel.onQueryChange("t")
+        viewModel.onQueryChange("te")
+        assertEquals("te", viewModel.query)
+        viewModel.onQueryChange("tether")
+        assertEquals("tether", viewModel.query)
+        advanceUntilIdle()
+        assertEquals("tether", viewModel.uiState.value.query)
+        assertEquals(listOf(SettingsTestData.usdt), viewModel.uiState.value.tokens)
+    }
+
+    @Test
+    fun aRestoredSearchFiltersAsSoonAsThePageLoads() = runTest {
+        // §14.3 "first emission immediate": a query restored after process death does not show the unfiltered list
+        // for a debounce period first.
+        val handle = SavedStateHandle(mapOf(NetworkReferenceViewModel.CHAIN to "evm:1", "query" to "tether"))
+        val viewModel = NetworkReferenceViewModel(handle, repository, StandardTestDispatcher(testScheduler))
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        runCurrent()
+        assertEquals("tether", viewModel.query)
+        assertFalse(viewModel.uiState.value.loading)
+        assertEquals(listOf(SettingsTestData.usdt), viewModel.uiState.value.tokens)
+    }
+
+    @Test
     fun clearingTheSearchRestoresTheListImmediately() = runTest {
         val viewModel = page("evm:1")
         viewModel.onQueryChange("weth")

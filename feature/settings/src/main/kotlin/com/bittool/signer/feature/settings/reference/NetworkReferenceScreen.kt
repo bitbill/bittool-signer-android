@@ -70,6 +70,7 @@ import com.bittool.signer.core.model.registry.TokenRegistryEntry
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.core.ui.logo.TokenIcon
 import com.bittool.signer.core.ui.review.ContractCategoryGlyph
+import com.bittool.signer.core.ui.wallet.isolate
 import com.bittool.signer.feature.settings.SettingsPage
 import com.bittool.signer.feature.settings.rememberResumed
 
@@ -90,6 +91,7 @@ fun NetworkReferenceScreen(onBack: () -> Unit, modifier: Modifier = Modifier, vi
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     NetworkReferenceContent(
         state = state,
+        query = viewModel.query,
         onBack = rememberResumed(onBack),
         onQueryChange = viewModel::onQueryChange,
         onSegmentSelected = viewModel::onSegmentSelected,
@@ -97,6 +99,7 @@ fun NetworkReferenceScreen(onBack: () -> Unit, modifier: Modifier = Modifier, vi
     )
 }
 
+/** Stateless network page. [query] is the field's text, read synchronously (see `NetworkReferenceViewModel.query`). */
 @Composable
 internal fun NetworkReferenceContent(
     state: NetworkReferenceUiState,
@@ -104,6 +107,7 @@ internal fun NetworkReferenceContent(
     onQueryChange: (String) -> Unit,
     onSegmentSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    query: String = state.query,
 ) {
     val toast = rememberStatusToastState()
     val title = when (val t = state.title) {
@@ -114,7 +118,7 @@ internal fun NetworkReferenceContent(
         SettingsPage(title = title, onBack = onBack) { insets ->
             Column(Modifier.fillMaxSize().padding(top = insets.calculateTopPadding())) {
                 SearchField(
-                    value = state.query,
+                    value = query,
                     onValueChange = onQueryChange,
                     placeholder = stringResource(if (state.showsContracts) R.string.name_project_or_address else R.string.symbol_name_or_address),
                     modifier = Modifier
@@ -203,7 +207,8 @@ private fun NoResults(query: String, insets: PaddingValues) {
     ) {
         EmptyState(
             icon = SignerIcons.Search,
-            title = stringResource(R.string.settings_no_results, query.trim()),
+            // The query keeps its own direction inside the sentence (an address in an Arabic sentence).
+            title = stringResource(R.string.settings_no_results, isolate(query.trim())),
             description = stringResource(R.string.settings_no_results_hint),
         )
     }

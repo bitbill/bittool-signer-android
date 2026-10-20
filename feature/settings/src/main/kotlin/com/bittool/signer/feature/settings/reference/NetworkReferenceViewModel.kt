@@ -1,6 +1,9 @@
 package com.bittool.signer.feature.settings.reference
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,8 +26,8 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.withIndex
 import kotlinx.coroutines.launch
 
 /** The title of a network page: the brand's short name verbatim, or "All EVM networks". */
@@ -43,7 +46,7 @@ data class NetworkReferenceUiState(
     val tokenCount: Int = 0,
     val contractCount: Int = 0,
     val showsContracts: Boolean = false,
-    /** The text in the search field, as typed. */
+    /** The search text, as typed (the field itself reads `NetworkReferenceViewModel.query`, synchronously). */
     val query: String = "",
     /** The query the lists below were filtered with (normalised). */
     val appliedQuery: String = "",
@@ -81,26 +84,41 @@ class NetworkReferenceViewModel @Inject constructor(
     private data class Filtered(val query: String, val tokens: List<TokenRegistryEntry>, val contracts: List<KnownContractEntry>)
 
     private val source = MutableStateFlow<Source?>(null)
-    private val query = MutableStateFlow(savedStateHandle.get<String>(QUERY).orEmpty())
+
+    /**
+     * The search field's text, as typed. Compose state written synchronously by [onQueryChange] and read by the field
+     * itself: a text field fed through the `uiState` flow would recompose with a stale value between a keystroke and
+     * its round trip, and the IME's next edit would then apply to the old text (dropped or reverted characters).
+     */
+    var query: String by mutableStateOf(savedStateHandle.get<String>(QUERY).orEmpty())
+        private set
+
+    /** The same text for the filter pipeline. */
+    private val queryFlow = MutableStateFlow(query)
     private val showsContracts = MutableStateFlow(savedStateHandle.get<Boolean>(SHOWS_CONTRACTS))
 
-    private val filtered = combine(source.filterNotNull(), query.map(ReferenceSearch::normalize).distinctUntilChanged()) { s, q -> s to q }
-        .debounce { (_, q) -> if (q.isEmpty()) 0L else SEARCH_DEBOUNCE_MILLIS }
-        .mapLatest { (s, q) -> Filtered(q, ReferenceSearch.tokens(s.tokens, q), ReferenceSearch.contracts(s.contracts, q)) }
+    // The first result (the page opening, a query restored after process death, the page shown again) is immediate;
+    // typing is debounced, clearing is immediate (§14.3). Until it arrives the page keeps what it showed: loading at
+    // first, the last results when it is collected again, never the unfiltered list under a restored query.
+    private val filtered = combine(source.filterNotNull(), queryFlow.map(ReferenceSearch::normalize).distinctUntilChanged()) { s, q -> s to q }
+        .withIndex()
+        .debounce { (index, value) -> if (index == 0 || value.second.isEmpty()) 0L else SEARCH_DEBOUNCE_MILLIS }
+        .mapLatest { (_, value) ->
+            val (s, q) = value
+            Filtered(q, ReferenceSearch.tokens(s.tokens, q), ReferenceSearch.contracts(s.contracts, q))
+        }
         .flowOn(default)
-        .map<Filtered, Filtered?> { it }
-        .onStart { emit(null) }
 
     val uiState: StateFlow<NetworkReferenceUiState> = combine(
         source,
-        query,
+        queryFlow,
         showsContracts,
         filtered,
     ) { source, query, contracts, filtered ->
         if (source == null) {
             NetworkReferenceUiState(query = query)
         } else {
-            val shown = filtered ?: Filtered("", source.tokens, source.contracts)
+            val shown = filtered
             NetworkReferenceUiState(
                 loading = false,
                 title = source.title,
@@ -113,7 +131,7 @@ class NetworkReferenceViewModel @Inject constructor(
                 contracts = shown.contracts,
             )
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NetworkReferenceUiState(query = query.value))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NetworkReferenceUiState(query = query))
 
     init {
         viewModelScope.launch {
@@ -129,7 +147,8 @@ class NetworkReferenceViewModel @Inject constructor(
     }
 
     fun onQueryChange(text: String) {
-        query.value = text
+        query = text
+        queryFlow.value = text
         savedStateHandle[QUERY] = text
     }
 

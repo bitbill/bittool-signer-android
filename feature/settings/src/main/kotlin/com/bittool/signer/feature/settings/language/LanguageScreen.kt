@@ -106,12 +106,15 @@ internal fun LanguageContent(state: LanguageUiState, onSelect: (AppLanguage) -> 
             item(key = "languages") {
                 val systemName = stringResource(R.string.system)
                 // Each language's name in the interface language ("German"), and the device language "System" follows.
+                // Locale extensions are not part of the name: Arabic is applied as ar-u-nu-latn, and Android 14 puts the
+                // regional preferences (units, first day of the week) on the device locale as -u- keywords, which some
+                // runtimes spell out ("Arabic (Latin Digits)").
                 val details = remember(state.options, state.systemLocale, appLocale) {
                     state.options.associateWith { option ->
                         if (option == AppLanguage.System) {
-                            state.systemLocale.getDisplayName(appLocale)
+                            state.systemLocale.stripExtensions().getDisplayName(appLocale)
                         } else {
-                            Locale.forLanguageTag(option.languageTag).getDisplayName(appLocale).takeIf { it != option.endonym }
+                            Locale.forLanguageTag(option.languageTag).stripExtensions().getDisplayName(appLocale).takeIf { it != option.endonym }
                         }
                     }
                 }

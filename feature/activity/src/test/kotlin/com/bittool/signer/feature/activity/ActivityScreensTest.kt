@@ -1,6 +1,12 @@
 package com.bittool.signer.feature.activity
 
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
+import androidx.lifecycle.SavedStateHandle
+import com.bittool.signer.core.data.SignerState
+import com.bittool.signer.core.data.testing.FakeSignerStore
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -14,10 +20,13 @@ import com.bittool.signer.core.model.AddressFormatter
 import com.bittool.signer.feature.activity.ActivityTestData.receipt
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 /** Activity pages rendered with Robolectric (English, light). */
@@ -162,5 +171,60 @@ class ActivityScreensTest {
         compose.onNodeWithText("This only removes the local records. It does not affect any transaction.").assertIsDisplayed()
         compose.onNodeWithTag(ActivityTags.CLEAR_CONFIRM).performClick()
         assertEquals(1, confirmed)
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h891dp-xxhdpi")
+    fun reselectingTheTabScrollsToTheTopAndExpandsTheTitle() {
+        // iOS: tapping the selected tab scrolls the list up and the large title comes back. A programmatic scroll does
+        // not pass through the bar's nested scrolling, so the bar has to be expanded as well.
+        val reselections = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        val days = (18..20).map { day ->
+            ActivityDay(
+                LocalDate.of(2026, 10, day),
+                (0 until 5).map { n ->
+                    ActivityEntry("$day-$n", "Send bitcoin", "0.015 BTC", WalletLabel.Named("Public fixture 1"), ActivityTestData.utc(day, 9 + n), com.bittool.signer.core.model.Chain.Bitcoin, null)
+                },
+            )
+        }
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                ActivityContent(
+                    state = ActivityUiState(loading = false, days = days),
+                    onOpenReceipt = {},
+                    onClear = {},
+                    onConfirmClear = {},
+                    onDismissClear = {},
+                    scrollToTop = reselections,
+                )
+            }
+        }
+        val firstRowTop = { compose.onAllNodesWithTag(ActivityTags.ROW)[0].fetchSemanticsNode().boundsInRoot.top }
+        val expandedTop = firstRowTop()
+        compose.onNodeWithTag(ActivityTags.LIST).performTouchInput { swipeUp() }
+        compose.waitForIdle()
+        reselections.tryEmit(Unit)
+        compose.waitForIdle()
+        assertEquals(expandedTop, firstRowTop(), "the list is back at the top under the expanded large title")
+    }
+
+    @Test
+    fun exportWithoutADocumentPickerShowsTheFailureInsteadOfCrashing() {
+        // No app handles ACTION_CREATE_DOCUMENT (some work profiles): the launcher throws ActivityNotFoundException.
+        shadowOf(RuntimeEnvironment.getApplication()).checkActivities(true)
+        val store = FakeSignerStore(
+            SignerState(isLoading = false, walletLoadSucceeded = true, wallets = listOf(ActivityTestData.wallet), receipts = listOf(receipt(id))),
+        )
+        store.onReviewStoredRequest = { _, _ -> ActivityTestData.plainReview }
+        val viewModel = ActivityDetailViewModel(SavedStateHandle(mapOf(ActivityDetailViewModel.RECEIPT_ID to id)), store) { _, _ -> }
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                ActivityDetailScreen(onBack = {}, onOpenDecodedFields = {}, viewModel = viewModel)
+            }
+        }
+        val list = compose.onNodeWithTag(ActivityDetailTags.LIST)
+        list.performScrollToNode(hasTestTag(ActivityDetailTags.EXPORT))
+        compose.onNodeWithTag(ActivityDetailTags.EXPORT).performClick()
+        list.performScrollToNode(hasText("The file could not be saved."))
     }
 }

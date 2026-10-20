@@ -12,12 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
@@ -38,31 +39,12 @@ import com.bittool.signer.core.scanner.QrCodeView
 internal fun SignatureQrSheet(frames: List<String>, onDismiss: () -> Unit) {
     SignerBottomSheet(onDismissRequest = onDismiss, testTag = "activity.qrSheet") {
         val sheet = this
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp)
-                .padding(horizontal = 8.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.signature),
-                style = SignerTheme.typography.headline,
-                color = SignerTheme.colors.label,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(horizontal = 96.dp)
-                    .semantics { heading() },
-            )
+        SheetHeader(title = stringResource(R.string.signature)) {
             TextAction(
                 text = stringResource(R.string.done),
                 onClick = { sheet.dismiss() },
                 emphasized = true,
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .testTag(ActivityDetailTags.QR_DONE),
+                modifier = Modifier.testTag(ActivityDetailTags.QR_DONE),
             )
         }
         Column(
@@ -76,6 +58,48 @@ internal fun SignatureQrSheet(frames: List<String>, onDismiss: () -> Unit) {
         ) {
             QrCodeView(frames = frames, maxSide = 320.dp, modifier = Modifier.padding(top = 8.dp))
             Callout(stringResource(R.string.this_is_the_signature_that_was_already_created_scanning))
+        }
+    }
+}
+
+/**
+ * The sheet's bar: [title] centred with [action] on the trailing side (iOS inline title + confirmation button). When a
+ * long title or a long action (translations, large text) leaves no room to centre the title clear of the action, the
+ * title moves to the leading side and wraps into the space beside the action instead of running under it.
+ */
+@Composable
+private fun SheetHeader(title: String, action: @Composable () -> Unit) {
+    Layout(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 8.dp),
+        content = {
+            Text(
+                text = title,
+                style = SignerTheme.typography.headline,
+                color = SignerTheme.colors.label,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics { heading() },
+            )
+            Box { action() }
+        },
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val gap = 8.dp.roundToPx()
+        val lead = 8.dp.roundToPx()
+        val actionPlaceable = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
+        // Centred on the bar, the title has to clear the action on both sides.
+        val centredWidth = (width - 2 * (actionPlaceable.width + gap)).coerceAtLeast(0)
+        val centred = measurables[0].maxIntrinsicWidth(Constraints.Infinity) <= centredWidth
+        val titleMax = if (centred) centredWidth else (width - lead - actionPlaceable.width - gap).coerceAtLeast(0)
+        val titlePlaceable = measurables[0].measure(Constraints(maxWidth = titleMax))
+        val height = maxOf(actionPlaceable.height, titlePlaceable.height, constraints.minHeight)
+        layout(width, height) {
+            val x = if (centred) (width - titlePlaceable.width) / 2 else lead
+            titlePlaceable.placeRelative(x, (height - titlePlaceable.height) / 2)
+            actionPlaceable.placeRelative(width - actionPlaceable.width, (height - actionPlaceable.height) / 2)
         }
     }
 }
