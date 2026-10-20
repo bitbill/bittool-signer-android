@@ -190,7 +190,11 @@ internal fun readReduceMotion(context: Context): Boolean =
     runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
         .getOrDefault(false)
 
-/** Status / navigation bar icon colours of the hosting activity window (never a dialog's). */
+/**
+ * Status / navigation bar icon colours of the hosting activity window (never a dialog's). The previous appearance comes
+ * back when this theme leaves the composition, so a nested theme (the always-dark scanner subtree inside a light app)
+ * does not leave light icons on a light page behind it.
+ */
 @Composable
 private fun SystemBarAppearance(darkIcons: Boolean) {
     val view = LocalView.current
@@ -198,6 +202,17 @@ private fun SystemBarAppearance(darkIcons: Boolean) {
     val window = view.context.findActivity()?.window ?: return
     // Only the activity's own content view: a sheet or dialog window manages its own bars.
     if (view.rootView !== window.decorView) return
+    // Remember observers run before side effects in the same apply: this saves what was there before this theme.
+    DisposableEffect(window, view) {
+        val controller = WindowCompat.getInsetsController(window, view)
+        val status = controller.isAppearanceLightStatusBars
+        val navigation = controller.isAppearanceLightNavigationBars
+        onDispose {
+            controller.isAppearanceLightStatusBars = status
+            controller.isAppearanceLightNavigationBars = navigation
+        }
+    }
+    // Re-asserted on every recomposition (the splash hand-over and the scanner change the bars too).
     SideEffect {
         val controller = WindowCompat.getInsetsController(window, view)
         controller.isAppearanceLightStatusBars = darkIcons
