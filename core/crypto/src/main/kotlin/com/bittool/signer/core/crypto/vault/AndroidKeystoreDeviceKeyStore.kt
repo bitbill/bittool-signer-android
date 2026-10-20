@@ -35,8 +35,9 @@ import javax.inject.Singleton
  * - A key is generated only after `containsAlias` reported the alias absent, and never over an existing entry. A key
  *   that reads as missing for an existing wallet is [VaultError.DeviceKeyUnavailable], never a reason to create one
  *   (on API 26–30 a failed binder call can report a live key as missing); once the public-data key has been read in
- *   this process it is never created again either. Only [isKeyLost], which needs proof that Keystore answered, may
- *   conclude that a key is gone (QA backlog B9: removing such a wallet without its password).
+ *   this process it is not created again either, unless that proof shows it gone. Only the proof of [isKeyLost],
+ *   which needs evidence that Keystore answered, may conclude that a key is gone (QA backlog B9: removing such a
+ *   wallet without its password, and creating the public-data key again for the wallet re-imported afterwards).
  * - A secure lock screen is required to create any key ([VaultError.DevicePasscodeRequired]); iOS's
  *   `WhenPasscodeSetThisDeviceOnly` equivalent is the vault's runtime gate (option 1 of §17.3).
  *
@@ -155,17 +156,26 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
      */
     override fun isKeyLost(id: WalletId): Boolean = synchronized(lock) {
         if (id == PUBLIC_DATA_KEY_ID) return false
-        val alias = alias(id)
-        try {
-            deleteStaleProbes()
-            val first = observe(alias)
-            if (first != Observation.Absent && first != Observation.Invalidated) return false
-            repeat(LOSS_CONFIRMATIONS - 1) { if (observe(alias) != first) return false }
-            true
-        } catch (_: Exception) {
-            // GeneralSecurityException, ProviderException, IOException or anything else Keystore throws: no proof.
-            false
+        provenLoss(alias(id)) != null
+    }
+
+    /**
+     * The proof of [isKeyLost] for [alias] (the caller holds [lock]): [Observation.Absent] or
+     * [Observation.Invalidated] when [LOSS_CONFIRMATIONS] observations agree on it, else null. Never throws.
+     */
+    private fun provenLoss(alias: String): Observation? = try {
+        deleteStaleProbes()
+        val first = observe(alias)
+        if (first != Observation.Absent && first != Observation.Invalidated) {
+            null
+        } else if ((2..LOSS_CONFIRMATIONS).all { observe(alias) == first }) {
+            first
+        } else {
+            null
         }
+    } catch (_: Exception) {
+        // GeneralSecurityException, ProviderException, IOException or anything else Keystore throws: no proof.
+        null
     }
 
     private enum class Observation { Usable, Absent, Invalidated, Unsure }
@@ -233,10 +243,14 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
                 return KeystorePublicDataKey(it)
             }
             if (!createIfMissing) return null
-            // Never regenerate: an entry we cannot use, or a key this process already used that now reads as missing
-            // (flaky Keystore), would make every other wallet's public file fail its MAC.
-            if (Keystore.contains(store, alias) || publicKeySeen) throw VaultError.DeviceKeyUnavailable()
+            // Never regenerate over an entry we cannot use (generateKey would silently replace it), and never because a
+            // key this process already used now merely reads as missing (flaky Keystore): either would make every other
+            // wallet's public file fail its MAC. A used key that Keystore *provably* lacks (the proof of isKeyLost) is
+            // gone for good, so every public file already fails its MAC; it is created again, or a wallet re-imported
+            // after the lost-key removal could not save its public file until the next launch (QA backlog B9).
+            if (Keystore.contains(store, alias)) throw VaultError.DeviceKeyUnavailable()
             if (!isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
+            if (publicKeySeen && provenLoss(alias) != Observation.Absent) throw VaultError.DeviceKeyUnavailable()
             val key = Keystore.generateHmac(alias, policy)
             publicKeySeen = true
             KeystorePublicDataKey(key)

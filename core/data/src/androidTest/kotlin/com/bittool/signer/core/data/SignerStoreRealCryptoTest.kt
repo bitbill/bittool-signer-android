@@ -223,6 +223,37 @@ class SignerStoreRealCryptoTest {
             assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(restored.id))
         }
 
+    /**
+     * QA backlog B9 when Keystore lost every key at once — the wallet's and the public-data key, as removing the screen
+     * lock does to keys that need an unlocked device: the public file fails its MAC, so the wallet needs Repair, which
+     * needs the lost key. It is removed without its password, and the same phrase imports again **in the same
+     * process**, although this process had used the public-data key before: Keystore provably lacks it, so it is
+     * created again for the new wallet's public file.
+     */
+    @Test
+    fun aKeystoreThatLostEveryKeyLetsTheWalletBeRemovedAndImportedAgainWithoutARelaunch() =
+        DeviceStore.run(deviceKeys = DeviceCrypto.keystoreDeviceKeys()) {
+            store.reload()
+            val lost = createWallet("Lost")
+            assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(lost.id))
+
+            DeviceCrypto.deleteKeystoreKeys(listOf(lost.id))
+            DeviceCrypto.deletePublicDataKey()
+            store.reload()
+            assertEquals(PublicMetadataStatus.Invalid, state.metadataStatus(lost.id))
+            assertFailsWith<VaultError.DeviceKeyUnavailable> { PASSWORD.asSecret { store.completeSetup(lost.id, it) } }
+
+            assertTrue(store.isDeviceKeyLost(lost.id))
+            store.removeWalletWithLostDeviceKey(lost.id)
+            assertTrue(state.wallets.isEmpty())
+            assertFalse(sidecar(lost.id).exists())
+
+            val restored = createWallet("Restored")
+            assertEquals(listOf(restored.id), state.wallets.map { it.id })
+            assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(restored.id))
+            PASSWORD.asSecret { store.reveal(restored.id, it) }.close()
+        }
+
     private class LanguageVector(val language: Bip39Language, val mnemonic: String, val passphrase: String, val seed: String)
 
     private companion object {

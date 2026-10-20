@@ -66,6 +66,16 @@ object DeviceCrypto {
     }
 
     /**
+     * Deletes the public-data HMAC key, as if Keystore had lost it (with every other key that needs an unlocked device,
+     * when the screen lock is removed): every public file then fails its MAC.
+     */
+    fun deletePublicDataKey() {
+        val keystore = keystore()
+        val alias = AndroidKeystoreDeviceKeyStore.ALIAS_PREFIX + AndroidKeystoreDeviceKeyStore.PUBLIC_DATA_KEY_ID
+        if (keystore.containsAlias(alias)) keystore.deleteEntry(alias)
+    }
+
+    /**
      * Deletes the Activity journal key `com.bittool.signer.activity.v1`, as if Keystore had lost it. A cipher that already
      * used it then refuses to seal; a new process (a new `KeystoreJournalCipher`) creates a new key on its first seal.
      */
