@@ -29,6 +29,7 @@ import javax.inject.Singleton
 import kotlin.jvm.optionals.getOrNull
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,7 +90,8 @@ class DataStoreSignerPreferences @Inject constructor(
         val run = uiTests.getOrNull()?.run
         val store = PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
-            scope = CoroutineScope(io + SupervisorJob()),
+            // A child of the process scope (never cancelled in the app; a test ends it to open the file again).
+            scope = CoroutineScope(scope.coroutineContext + io + SupervisorJob(scope.coroutineContext[Job])),
             produceFile = { preferencesFile(context, run?.preferencesName ?: FILE_NAME) },
         )
         dataStore = store

@@ -55,14 +55,15 @@ class AssetLegalDocumentRepository @Inject constructor(
         const val NOTICES_MISSING = "Third-party notices are included with the source distribution."
 
         /**
-         * One notices file: its first line is the title; the rest, after the blank lines that follow the title, is split
-         * on `"\n\n"` like iOS (`SettingsTab.swift:359`) and kept verbatim. Empty pieces (runs of blank lines) are dropped.
+         * One notices file: its first line is the title; the rest is split on `"\n\n"` like iOS (`SettingsTab.swift:359`)
+         * and kept verbatim, except that the line breaks at the edges of a piece (left by runs of blank lines) are dropped,
+         * and so are pieces with nothing else in them.
          */
         internal fun section(text: String): NoticeSection {
             val normalized = text.replace("\r\n", "\n").trimEnd('\n')
             val title = normalized.substringBefore('\n')
             val rest = if ('\n' in normalized) normalized.substringAfter('\n').trimStart('\n') else ""
-            return NoticeSection(title, rest.split("\n\n").filter { it.isNotEmpty() })
+            return NoticeSection(title, rest.split("\n\n").map { it.trim('\n') }.filter { it.isNotEmpty() })
         }
     }
 }
