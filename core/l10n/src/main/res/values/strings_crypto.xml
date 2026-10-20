@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android-only strings of :core:crypto (owner: W1-crypto). English only until the translation pass. -->
 <resources>
-    <!-- VaultError.DevicePasscodeRequired: Android wording of the iOS "Set an iPhone passcode…" (vault-crypto.md §17.12). -->
-    <string name="crypto_device_lock_required">Set a screen lock (PIN, pattern or password) before creating a wallet. The device key requires screen lock protection.</string>
+    <!-- VaultError.DevicePasscodeRequired: Android wording of the iOS "Set an iPhone passcode…" (vault-crypto.md §17.12).
+         Unlike iOS (creation only) Android refuses every create *and* secret operation without a screen lock: shown for
+         create, unlock, sign, reveal, change/reset password and delete, so it names no single operation. -->
+    <string name="crypto_device_lock_required">Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.</string>
 </resources>

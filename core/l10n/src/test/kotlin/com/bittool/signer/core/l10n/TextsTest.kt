@@ -21,7 +21,7 @@ class TextsTest {
         assertEquals("Not in the catalogue 7", UiText.Ios("Not in the catalogue %lld", listOf(7)).resolve(resources))
         assertEquals("verbatim", UiText.Verbatim("verbatim").resolve(resources))
         assertEquals(
-            "Set a screen lock (PIN, pattern or password) before creating a wallet. The device key requires screen lock protection.",
+            "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
             UiText.Resource(R.string.crypto_device_lock_required).resolve(resources),
         )
     }
