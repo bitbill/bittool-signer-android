@@ -510,16 +510,42 @@ class DefaultSignerStore @Inject constructor(
                 reload()
                 throw e
             }
-            suspendSession()
-            try {
-                publicRepository.remove(walletId)
-            } catch (e: Exception) {
-                setError(UiText.Resource(R.string.data_public_cache_not_removed))
-            }
-            clearRequest()
-            _state.update { it.copy(navigationResetEpoch = it.navigationResetEpoch + 1) }
-            reload()
+            afterWalletRemoved(walletId)
         }
+    }
+
+    override suspend fun isDeviceKeyLost(walletId: WalletId): Boolean = withContext(main) {
+        // QA backlog B9. A query for the Delete page: no password, no counted attempt, false whenever unsure.
+        if (current.wallet(walletId) == null) return@withContext false
+        runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(walletId) } }.getOrDefault(false)
+    }
+
+    override suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) = withContext(main) {
+        // QA backlog B9 (Android-only): the vault re-proves the loss before it removes anything, then the same commit as
+        // deleteWallet, so the sidecar holding the walletKeyId goes too and the phrase can be imported again.
+        currentCoroutineContext().ensureActive()
+        withContext(NonCancellable) {
+            try {
+                withContext(default) { vault.removeWithLostDeviceKey(walletId) }
+            } catch (e: Throwable) {
+                reload()
+                throw e
+            }
+            afterWalletRemoved(walletId)
+        }
+    }
+
+    /** AppStore.swift:526-530: the commit after the encrypted wallet is gone (called inside `NonCancellable`). */
+    private suspend fun afterWalletRemoved(walletId: WalletId) {
+        suspendSession()
+        try {
+            publicRepository.remove(walletId)
+        } catch (e: Exception) {
+            setError(UiText.Resource(R.string.data_public_cache_not_removed))
+        }
+        clearRequest()
+        _state.update { it.copy(navigationResetEpoch = it.navigationResetEpoch + 1) }
+        reload()
     }
 
     override suspend fun reveal(walletId: WalletId, password: SecretText): VaultSecret {

@@ -48,7 +48,9 @@ import com.bittool.signer.core.model.WalletId
  * the write of [create], [changePassword], [resetPassword] (with its counter reset) or [delete] has started, it
  * completes and the call returns normally (or with that write's own error) even if the caller was cancelled
  * meanwhile. A `CancellationException` from these four therefore always means that no wallet, password or file was
- * changed. Main-safe: every file and Keystore call runs on the injected dispatchers.
+ * changed. Main-safe: every file and Keystore call runs on the injected dispatchers. Members added after Wave 1
+ * ([isDeviceKeyLost], [removeWithLostDeviceKey]) have conservative defaults so every existing implementation keeps
+ * compiling; [removeWithLostDeviceKey]'s commit follows the same cancellation rule as [delete].
  */
 interface WalletVault {
     /**
@@ -108,6 +110,34 @@ interface WalletVault {
      * [VaultError.DeviceKeyUnavailable]. A wrong password changes nothing.
      */
     suspend fun delete(id: WalletId, password: SecretText)
+
+    /**
+     * Whether wallet [id] can never be unlocked again because its device key is provably gone
+     * ([DeviceKeyStore.isKeyLost]: no Keystore entry while Keystore demonstrably answers, or a permanently invalidated
+     * one), the case in which [removeWithLostDeviceKey] removes it without its password (QA backlog B9). Requires the
+     * file to load ([VaultError.WalletNotFound], [VaultError.MalformedVault], [VaultError.UnsupportedVersion]); false
+     * without a secure lock screen (every secret operation then reports [VaultError.DevicePasscodeRequired] first) and
+     * whenever the loss is not proven. Reads nothing secret and counts no attempt.
+     *
+     * The default is false (an implementation that cannot prove a loss never removes a wallet without its password).
+     */
+    suspend fun isDeviceKeyLost(id: WalletId): Boolean = false
+
+    /**
+     * Removes wallet [id] **without its password** because its device key is provably gone, which leaves the wallet
+     * undecryptable forever and otherwise a dead end: it cannot be unlocked, reset, deleted or re-imported (QA backlog
+     * B9; iOS has no way out of it). Order, all under the mutex: load ([VaultError.WalletNotFound],
+     * [VaultError.MalformedVault], [VaultError.UnsupportedVersion]) → secure lock screen
+     * ([VaultError.DevicePasscodeRequired]) → the loss is re-proven here, never taken from an earlier
+     * [isDeviceKeyLost] ([VaultError.DeviceKeyLossUnconfirmed] when it is not: nothing changes, only [delete] with the
+     * password can remove a wallet whose key may still exist) → one commit: the vault file ([VaultError.StorageFailure]),
+     * the attempts file and any key remnant (an invalidated entry), both best effort. No attempt is counted.
+     *
+     * The default refuses with [VaultError.DeviceKeyLossUnconfirmed].
+     */
+    suspend fun removeWithLostDeviceKey(id: WalletId) {
+        throw VaultError.DeviceKeyLossUnconfirmed()
+    }
 
     /**
      * The app-wide public-data HMAC key (Keystore HMAC-SHA256, alias `com.bittool.signer.vault.device-key.v1/

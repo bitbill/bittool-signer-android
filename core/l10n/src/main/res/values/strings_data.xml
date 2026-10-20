@@ -29,4 +29,26 @@
     <string name="data_activity_unreadable">The local activity record could not be read.</string>
     <string name="data_activity_not_saved">The local activity record could not be saved. Any completed signature remains available.</string>
     <string name="data_public_cache_not_removed">The encrypted wallet was deleted, but its public cache could not be removed.</string>
+
+    <!--
+      Android-only (no iOS text): removing a wallet whose device key is provably gone (QA backlog B9,
+      SignerStore.removeWalletWithLostDeviceKey). Shown by :feature:wallets' Delete Wallet page instead of the iOS
+      password path; they live here with the store operation they explain. Translated in the Android-only pass.
+    -->
+    <!-- Callout title on the Delete Wallet page. -->
+    <string name="data_lost_key_title">This Wallet Can’t Be Unlocked</string>
+    <!-- Callout text: why the password cannot help and how the wallet is restored. -->
+    <string name="data_lost_key_message">Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.</string>
+    <!-- The confirmation switch the person must turn on first. -->
+    <string name="data_lost_key_confirm">I understand that only the recovery phrase can restore this wallet</string>
+    <!-- Footer under the switch (App Lock off). -->
+    <string name="data_lost_key_footer">Removing this wallet does not ask for its password: the device key the password needs is gone.</string>
+    <!-- Footer under the switch (App Lock on with biometrics). -->
+    <string name="data_lost_key_footer_biometric">Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.</string>
+    <!-- The page's destructive button. -->
+    <string name="data_lost_key_remove">Remove This Wallet</string>
+    <!-- The final confirmation dialog. -->
+    <string name="data_lost_key_dialog_title">Remove This Wallet?</string>
+    <string name="data_lost_key_dialog_message">Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.</string>
+    <string name="data_lost_key_dialog_confirm">Remove</string>
 </resources>

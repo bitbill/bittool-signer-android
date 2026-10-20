@@ -7,7 +7,8 @@ import com.bittool.signer.core.model.WalletId
  * handing out key bytes (iOS `DeviceKeyStore.read`) this interface performs the vault's outer AES-256-GCM layer.
  * Bindings (W1-crypto): `AndroidKeystoreDeviceKeyStore` in production, `InMemoryDeviceKeyStore` in JVM tests, and the
  * debug UI-test harness's file-backed fake as `Optional<@UiTestOverride DeviceKeyStore>` (gaps.md G3). Not thread-safe
- * by itself: [WalletVault] calls it under its mutex. Errors are [VaultError]s.
+ * by itself: [WalletVault] calls it under its mutex. Errors are [VaultError]s. Members added after Wave 1 ([isKeyLost])
+ * have conservative defaults so every existing implementation keeps compiling.
  */
 interface DeviceKeyStore {
     /** `KeyguardManager.isDeviceSecure()`; every create and secret operation refuses with [VaultError.DevicePasscodeRequired] when false. */
@@ -28,6 +29,18 @@ interface DeviceKeyStore {
 
     /** Deletes the key of [id]; an absent alias is success, any other failure [VaultError.DeviceKeyUnavailable]. */
     fun delete(id: WalletId)
+
+    /**
+     * Whether the key of [id] is **provably** gone, so that nothing can ever open what it sealed (the lost-key dead end,
+     * QA backlog B9): Keystore holds no entry for it *while Keystore demonstrably answers*, or the entry is permanently
+     * invalidated. A missing key is not proof by itself: a failed binder call reports a live key as missing (API 26–30,
+     * see [open]), so the Keystore implementation confirms the absence repeatedly against a key it has just generated,
+     * and a key that only failed to load, or a device that is locked, is not lost. Never throws: false when unsure.
+     *
+     * The default is false, so an implementation that cannot prove a loss never lets a wallet be removed without its
+     * password ([WalletVault.removeWithLostDeviceKey]).
+     */
+    fun isKeyLost(id: WalletId): Boolean = false
 
     /** The public-data HMAC key; semantics of [WalletVault.publicDataKey] (which delegates here). */
     fun publicDataKey(createIfMissing: Boolean): PublicDataKey?

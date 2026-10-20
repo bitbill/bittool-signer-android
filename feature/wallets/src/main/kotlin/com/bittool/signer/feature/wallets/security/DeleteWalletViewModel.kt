@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bittool.signer.core.common.coroutines.runCatchingCancellable
 import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.SecretText
@@ -17,6 +18,7 @@ import com.bittool.signer.feature.wallets.common.WalletOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -48,6 +50,14 @@ data class DeleteWalletUiState(
     /** App Lock is on with biometrics available: the footer says biometrics come first. */
     val asksForBiometrics: Boolean = false,
     val gone: Boolean = false,
+    /**
+     * Android-only (QA backlog B9): the wallet's device key is provably gone, so no password can unlock it. The page
+     * then explains that and offers "Remove This Wallet" without the password (after the same confirmation switch, the
+     * biometric check when App Lock is on, and the "Remove This Wallet?" dialog) instead of the iOS password path.
+     */
+    val deviceKeyLost: Boolean = false,
+    /** The "Remove This Wallet?" dialog is up (only while [deviceKeyLost]). */
+    val askingRemoval: Boolean = false,
 ) {
     val canDelete: Boolean get() = confirmed && !busy && !confirming
 }
@@ -63,38 +73,53 @@ class DeleteWalletViewModel @Inject constructor(
     private val operation = WalletOperation(viewModelScope) { store.state.value.securityEpoch }
     private val events = Channel<SecurityPageEvent>(Channel.BUFFERED)
 
-    private data class Local(val confirmed: Boolean = false, val confirming: Boolean = false, val askingPassword: Boolean = false)
+    private data class Local(
+        val confirmed: Boolean = false,
+        val confirming: Boolean = false,
+        val askingPassword: Boolean = false,
+        val askingRemoval: Boolean = false,
+    )
 
     private val local = MutableStateFlow(Local())
 
-    val uiState: StateFlow<DeleteWalletUiState> = combine(store.state, access.state, operation.state, local, ::uiStateOf)
+    /** What the store last proved about the device key (a fact about the wallet: [clear] keeps it). */
+    private val keyLost = MutableStateFlow(false)
+    private var keyLossCheck: Job? = null
+
+    val uiState: StateFlow<DeleteWalletUiState> = combine(store.state, access.state, operation.state, local, keyLost, ::uiStateOf)
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            uiStateOf(store.state.value, access.state.value, operation.state.value, local.value),
+            uiStateOf(store.state.value, access.state.value, operation.state.value, local.value, keyLost.value),
         )
 
-    private fun uiStateOf(state: SignerState, accessState: AppAccessState, op: WalletOperation.State, l: Local) = DeleteWalletUiState(
-        identity = walletId?.let { WalletIdentity.of(state, it) },
-        confirmed = l.confirmed,
-        confirming = l.confirming,
-        askingPassword = l.askingPassword,
-        busy = op.busy,
-        error = op.error,
-        asksForBiometrics = accessState.isEnabled && accessState.biometricsAvailable,
-        gone = WalletIdentity.isGone(state, walletId),
-    )
+    private fun uiStateOf(state: SignerState, accessState: AppAccessState, op: WalletOperation.State, l: Local, lost: Boolean) =
+        DeleteWalletUiState(
+            identity = walletId?.let { WalletIdentity.of(state, it) },
+            confirmed = l.confirmed,
+            confirming = l.confirming,
+            askingPassword = l.askingPassword,
+            busy = op.busy,
+            error = op.error,
+            asksForBiometrics = accessState.isEnabled && accessState.biometricsAvailable,
+            gone = WalletIdentity.isGone(state, walletId),
+            deviceKeyLost = lost,
+            askingRemoval = l.askingRemoval && lost,
+        )
 
     val pageEvents: Flow<SecurityPageEvent> = events.receiveAsFlow()
 
     init {
         // Suspension (background, App Lock, capture) closes the password dialog unless the deletion is running; the
-        // dialog's field leaves with it (`WalletSecuritySheets.swift:262`).
+        // dialog's field leaves with it (`WalletSecuritySheets.swift:262`). The removal dialog closes the same way, and
+        // the device key is looked at again: the person may have come back from setting a screen lock.
         viewModelScope.launch {
             store.state.map { it.securityEpoch }.distinctUntilChanged().drop(1).collect {
-                if (!operation.busy) local.update { it.copy(askingPassword = false) }
+                if (!operation.busy) local.update { it.copy(askingPassword = false, askingRemoval = false) }
+                checkDeviceKey()
             }
         }
+        checkDeviceKey()
     }
 
     fun setConfirmed(confirmed: Boolean) = local.update { it.copy(confirmed = confirmed) }
@@ -102,7 +127,8 @@ class DeleteWalletViewModel @Inject constructor(
     /**
      * "Delete Wallet" (`vaultManagement.submit`, `WalletSecuritySheets.swift:272-284`): biometrics first for someone who
      * turned App Lock on (dismissed → stop; unavailable or failed → the password still decides), then the password
-     * dialog. "The password is what actually authorizes the deletion."
+     * dialog. "The password is what actually authorizes the deletion." With a provably lost device key ("Remove This
+     * Wallet") the same biometric step leads to the "Remove This Wallet?" dialog instead: no password can help there.
      */
     fun confirm() {
         val current = local.value
@@ -118,9 +144,10 @@ class DeleteWalletViewModel @Inject constructor(
                 currentCoroutineContext().ensureActive()
                 return@launch
             } catch (unavailable: Exception) {
-                // Biometrics unavailable or failed: the password still decides.
+                // Biometrics unavailable or failed: the password (or the removal dialog) still decides.
             }
-            local.update { it.copy(confirming = false, askingPassword = true) }
+            val lost = keyLost.value
+            local.update { it.copy(confirming = false, askingPassword = !lost, askingRemoval = lost) }
         }
     }
 
@@ -130,7 +157,8 @@ class DeleteWalletViewModel @Inject constructor(
     /**
      * The dialog's "Delete" (always enabled, `WalletSecuritySheets.swift:286-295`): an empty field shows "Enter this
      * wallet’s password."; otherwise the vault verifies the password before removing anything (a wrong password changes
-     * nothing and its error shows on the page). Takes ownership of [password] and wipes it.
+     * nothing and its error shows on the page). Takes ownership of [password] and wipes it. A failure has the device
+     * key looked at again, so a key found missing ("This wallet’s device key is unavailable…") offers the removal.
      */
     fun submit(password: SecretText) {
         val id = walletId
@@ -147,8 +175,37 @@ class DeleteWalletViewModel @Inject constructor(
         operation.run {
             try {
                 store.deleteWallet(id, password)
+            } catch (failure: Throwable) {
+                if (failure !is CancellationException) checkDeviceKey()
+                throw failure
             } finally {
                 password.wipe()
+            }
+            clear()
+            events.send(SecurityPageEvent.Done)
+        }
+    }
+
+    /** "Cancel" (and Back) of the "Remove This Wallet?" dialog. */
+    fun cancelRemoval() = local.update { it.copy(askingRemoval = false) }
+
+    /**
+     * "Remove" in the "Remove This Wallet?" dialog (QA backlog B9): removes the wallet without a password. The store's
+     * vault proves the loss again before anything is removed; a refusal shows its message and the page looks at the
+     * device key again (falling back to the password path when the key may still exist). Only from the open dialog: a
+     * dialog a suspension closed confirms nothing.
+     */
+    fun remove() {
+        val id = walletId
+        val asked = local.value.askingRemoval
+        local.update { it.copy(askingRemoval = false) }
+        if (id == null || !asked || !local.value.confirmed || !keyLost.value || operation.busy) return
+        operation.run {
+            try {
+                store.removeWalletWithLostDeviceKey(id)
+            } catch (failure: Throwable) {
+                if (failure !is CancellationException) checkDeviceKey()
+                throw failure
             }
             clear()
             events.send(SecurityPageEvent.Done)
@@ -162,6 +219,22 @@ class DeleteWalletViewModel @Inject constructor(
     }
 
     private fun clear() = local.update { Local() }
+
+    /**
+     * Asks the store whether the device key is provably gone (false when unsure; the latest answer wins). When the answer
+     * changes the page's statement, the switch is turned off again: it confirmed the other one.
+     */
+    private fun checkDeviceKey() {
+        val id = walletId ?: return
+        keyLossCheck?.cancel()
+        keyLossCheck = viewModelScope.launch {
+            val lost = runCatchingCancellable { store.isDeviceKeyLost(id) }.getOrDefault(false)
+            if (lost != keyLost.value) {
+                local.update { it.copy(confirmed = false, askingPassword = false, askingRemoval = false) }
+                keyLost.value = lost
+            }
+        }
+    }
 
     companion object {
         const val CONFIRM_REASON = "Confirm before deleting this wallet."

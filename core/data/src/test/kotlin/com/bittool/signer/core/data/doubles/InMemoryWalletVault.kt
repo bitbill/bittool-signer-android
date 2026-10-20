@@ -25,7 +25,9 @@ import kotlinx.coroutines.sync.withLock
  * Test probes: [unlockAttempts] counts every unlock attempt per wallet, never reset (iOS asserts that no attempts file
  * exists, i.e. nothing ever tried a password), [revision] changes only when a wallet's stored secret or password is
  * rewritten (iOS compares the vault file bytes), [failList] makes the next [list] fail, [holdNextCreate] /
- * [holdNextUnlock] hold a call after its effect, [issuedSecrets] lists the secrets handed out.
+ * [holdNextUnlock] hold a call after its effect, [issuedSecrets] lists the secrets handed out, [loseDeviceKey] makes a
+ * wallet's device key provably gone (QA backlog B9: every password operation then fails uncounted with
+ * `DeviceKeyUnavailable`, and [removeWithLostDeviceKey] removes the wallet).
  */
 class InMemoryWalletVault : WalletVault {
 
@@ -40,6 +42,7 @@ class InMemoryWalletVault : WalletVault {
     private val mutex = Mutex()
     private val records = LinkedHashMap<WalletId, Record>()
     private val attempts = HashMap<WalletId, Int>()
+    private val lostKeys = HashSet<WalletId>()
     private var publicKey: PublicDataKey? = null
     private val clock = AtomicLong(1_760_000_000_000L)
 
@@ -67,6 +70,11 @@ class InMemoryWalletVault : WalletVault {
     fun revision(id: WalletId): Int? = records[id]?.revision
 
     fun contains(id: WalletId): Boolean = id in records
+
+    /** The device key of [id] is gone for good (Keystore lost or invalidated it). */
+    fun loseDeviceKey(id: WalletId) {
+        lostKeys += id
+    }
 
     /** Forgets the public-data key (e.g. a reinstall of the HMAC key): every sidecar then reads as invalid. */
     fun replacePublicDataKey(key: PublicDataKey?) {
@@ -129,6 +137,7 @@ class InMemoryWalletVault : WalletVault {
         if (!policy.isValid) throw VaultError.InvalidPassword(policy.message)
         if (passphrase.utf8Size() > 1_024) throw VaultError.InvalidPassword(UiText.Ios("The BIP39 passphrase exceeds 1,024 UTF-8 bytes."))
         val record = records[id] ?: throw VaultError.WalletNotFound()
+        if (id in lostKeys) throw VaultError.DeviceKeyUnavailable()
         record.mnemonic = mnemonic.chars().copyOf()
         record.passphrase = passphrase.chars().copyOf()
         record.password = newPassword.chars().copyOf()
@@ -142,12 +151,28 @@ class InMemoryWalletVault : WalletVault {
         Unit
     }
 
+    override suspend fun isDeviceKeyLost(id: WalletId): Boolean = mutex.withLock {
+        if (id !in records) throw VaultError.WalletNotFound()
+        id in lostKeys
+    }
+
+    override suspend fun removeWithLostDeviceKey(id: WalletId) = mutex.withLock {
+        if (id !in records) throw VaultError.WalletNotFound()
+        if (id !in lostKeys) throw VaultError.DeviceKeyLossUnconfirmed()
+        records.remove(id)
+        lostKeys.remove(id)
+        attempts.remove(id)
+        Unit
+    }
+
     override suspend fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = mutex.withLock {
         publicKey ?: if (createIfMissing) HmacPublicDataKey().also { publicKey = it } else null
     }
 
     private fun unlockLocked(id: WalletId, password: SecretText): VaultSecret {
         val record = records[id] ?: throw VaultError.WalletNotFound()
+        // The real vault cannot seal the attempt without the key: refused before anything is counted.
+        if (id in lostKeys) throw VaultError.DeviceKeyUnavailable()
         attempts[id] = (attempts[id] ?: 0) + 1
         if (password.isEmpty() || password.utf8Size() > 1_024 || !SecretText.wrap(record.password.copyOf()).useAndCompare(password)) {
             throw VaultError.AuthenticationFailed()

@@ -78,6 +78,11 @@ class GatedDeviceKeyStore(val delegate: InMemoryDeviceKeyStore = InMemoryDeviceK
         delegate.delete(id)
     }
 
+    override fun isKeyLost(id: WalletId): Boolean {
+        enter("isKeyLost")
+        return delegate.isKeyLost(id)
+    }
+
     override fun publicDataKey(createIfMissing: Boolean): PublicDataKey? {
         enter("publicDataKey")
         return delegate.publicDataKey(createIfMissing)

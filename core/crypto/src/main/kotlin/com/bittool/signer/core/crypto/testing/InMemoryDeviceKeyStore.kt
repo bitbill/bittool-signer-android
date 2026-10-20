@@ -21,8 +21,9 @@ import javax.crypto.spec.SecretKeySpec
  * Keys live as long as the instance (share one instance between vault instances to model a process restart).
  * Thread-safe. Never bound in production.
  *
- * Fault hooks: [deviceSecure], [replaceKey] (a different device key: "wrong device"), [forgetKey] (a lost or
- * invalidated key), [forgetPublicDataKey], [failNextSeal].
+ * Fault hooks: [deviceSecure], [replaceKey] (a different device key: "wrong device"), [forgetKey] (a lost key: absent),
+ * [invalidateKey] (a permanently invalidated entry), [unreachable] (Keystore does not answer: every key reads as missing,
+ * none is provably lost), [forgetPublicDataKey], [failNextSeal].
  */
 class InMemoryDeviceKeyStore(
     @Volatile var deviceSecure: Boolean = true,
@@ -30,16 +31,23 @@ class InMemoryDeviceKeyStore(
 ) : DeviceKeyStore {
     private val lock = Any()
     private val keys = HashMap<WalletId, ByteArray>()
+    private val invalidated = HashSet<WalletId>()
     private var publicKey: ByteArray? = null
 
     /** When set, the next [seal] throws [VaultError.DeviceKeyUnavailable] (e.g. to test cleanup after key creation). */
     @Volatile var failNextSeal: Boolean = false
 
+    /**
+     * While set, Keystore "does not answer" (the API 26–30 binder pitfall): every key operation fails with
+     * [VaultError.DeviceKeyUnavailable] and [isKeyLost] is false for every key, present or not.
+     */
+    @Volatile var unreachable: Boolean = false
+
     override fun isDeviceSecure(): Boolean = deviceSecure
 
     override fun create(id: WalletId): Unit = synchronized(lock) {
         if (!deviceSecure) throw VaultError.DevicePasscodeRequired()
-        if (id in keys) throw VaultError.DeviceKeyUnavailable()
+        if (unreachable || id in keys) throw VaultError.DeviceKeyUnavailable()
         keys[id] = ByteArray(KEY_BYTES).also(random::nextBytes)
     }
 
@@ -78,8 +86,13 @@ class InMemoryDeviceKeyStore(
     }
 
     override fun delete(id: WalletId): Unit = synchronized(lock) {
+        if (unreachable) throw VaultError.DeviceKeyUnavailable()
         keys.remove(id)?.wipe()
+        invalidated.remove(id)
     }
+
+    /** Lost = no entry, or an invalidated one, while Keystore answers (an [unreachable] Keystore proves nothing). */
+    override fun isKeyLost(id: WalletId): Boolean = synchronized(lock) { !unreachable && (id !in keys || id in invalidated) }
 
     override fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = synchronized(lock) {
         publicKey?.let { return SoftwarePublicDataKey(it.copyOf()) }
@@ -90,21 +103,31 @@ class InMemoryDeviceKeyStore(
         SoftwarePublicDataKey(key.copyOf())
     }
 
-    /** Whether a key exists for [id]. */
+    /** Whether an entry exists for [id] (an invalidated entry counts until [delete] removes it). */
     fun containsKey(id: WalletId): Boolean = synchronized(lock) { id in keys }
 
-    /** The number of wallet keys (the public-data key is not counted). */
+    /** The number of wallet key entries (the public-data key is not counted). */
     val keyCount: Int get() = synchronized(lock) { keys.size }
 
     /** Replaces the key of [id] with a fresh random one: every box sealed before fails with a bad tag. */
     fun replaceKey(id: WalletId): Unit = synchronized(lock) {
         keys[id]?.wipe()
         keys[id] = ByteArray(KEY_BYTES).also(random::nextBytes)
+        invalidated.remove(id)
     }
 
-    /** Drops the key of [id] as if Keystore had lost or invalidated it. */
+    /** Drops the key of [id] as if Keystore had lost it. */
     fun forgetKey(id: WalletId): Unit = synchronized(lock) {
         keys.remove(id)?.wipe()
+        invalidated.remove(id)
+    }
+
+    /**
+     * Keeps the entry of [id] but makes it permanently unusable (Keystore's `KeyPermanentlyInvalidatedException`): seal
+     * and open fail with [VaultError.DeviceKeyUnavailable], and [delete] removes the remnant.
+     */
+    fun invalidateKey(id: WalletId): Unit = synchronized(lock) {
+        if (id in keys) invalidated += id
     }
 
     /** Drops the public-data key (every public file then fails its MAC under a newly created key). */
@@ -114,6 +137,7 @@ class InMemoryDeviceKeyStore(
     }
 
     private fun keyOf(id: WalletId): ByteArray = synchronized(lock) {
+        if (unreachable || id in invalidated) throw VaultError.DeviceKeyUnavailable()
         keys[id]?.copyOf() ?: throw VaultError.DeviceKeyUnavailable()
     }
 
