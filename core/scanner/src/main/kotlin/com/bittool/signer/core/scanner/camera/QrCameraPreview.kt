@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -28,7 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import com.bittool.signer.core.scanner.internal.ScannerPalette
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
 
 /**
@@ -37,25 +35,21 @@ import kotlinx.coroutines.launch
  * frame is hidden (iOS removes the preview when the scene is inactive). Tapping focuses and meters at that point,
  * with a brief ring. Hidden from accessibility.
  *
- * @param analysisEnabled frames are decoded only while true (false while the scanner shows a session error).
  * @param onValues the "prefer readable" values of each frame that held QR codes, on the main thread.
  */
 @Composable
 internal fun QrCameraPreview(
     state: QrCameraState,
-    analysisEnabled: Boolean,
     onValues: (List<String?>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val hostLifecycle = LocalLifecycleOwner.current.lifecycle
-    val enabled = remember { AtomicBoolean(analysisEnabled) }
-    SideEffect { enabled.set(analysisEnabled) }
     val latestOnValues by rememberUpdatedState(onValues)
     val previewView = remember(context) { QrCameraSession.previewView(context) }
 
     DisposableEffect(hostLifecycle, previewView, state) {
-        val session = QrCameraSession(context, hostLifecycle, previewView, state, enabled) { latestOnValues(it) }
+        val session = QrCameraSession(context, hostLifecycle, previewView, state) { latestOnValues(it) }
         session.start()
         onDispose { session.release() }
     }

@@ -33,7 +33,6 @@ import com.bittool.signer.core.scanner.analysis.QrFrameAnalyzer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -94,7 +93,6 @@ internal class QrCameraSession(
     private val hostLifecycle: Lifecycle,
     private val previewView: PreviewView,
     private val state: QrCameraState,
-    private val analysisEnabled: AtomicBoolean,
     private val onValues: (List<String?>) -> Unit,
 ) {
     private val owner = ResumedLifecycleOwner(hostLifecycle)
@@ -103,6 +101,9 @@ internal class QrCameraSession(
         Thread(runnable, ANALYSIS_THREAD_NAME)
     }
     private val scope = MainScope()
+
+    /** Written on the main thread, also read by the analysis thread to skip work after [release]. */
+    @Volatile
     private var released = false
     private var provider: ProcessCameraProvider? = null
     private var camera: Camera? = null
@@ -191,7 +192,7 @@ internal class QrCameraSession(
             analysisExecutor,
             QrFrameAnalyzer(
                 onValues = { values -> mainExecutor.execute { if (!released) onValues(values) } },
-                enabled = { !released && analysisEnabled.get() },
+                enabled = { !released },
             ),
         )
         state.torchAvailable = bound.cameraInfo.hasFlashUnit()

@@ -109,11 +109,27 @@ class QrCodeViewTest {
     }
 
     @Test
-    fun aShownCodeKeepsTheScreenOnAtFullBrightnessUntilItLeaves() {
+    fun aShownCodeKeepsTheScreenOnButLeavesBrightnessAloneByDefault() {
+        // design-system.md §9.5: keep-screen-on is Android polish, "no brightness boost — iOS has none". A brighter
+        // screen would also make a recovery-phrase code easier to photograph over a shoulder.
+        var visible by mutableStateOf(true)
+        val single = listOf("UR:BYTES/SHOWN")
+        compose.setContent { if (visible) QrCodeView(frames = single, initial = prepared(single)) }
+        compose.waitForIdle()
+        val window = compose.activity.window
+        assertTrue(window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
+        assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
+        visible = false
+        compose.waitForIdle()
+        assertEquals(0, window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun fullBrightnessIsOptInAndRestoredWhenTheCodeLeaves() {
         var visible by mutableStateOf(true)
         val single = listOf("UR:BYTES/BRIGHT")
         val matrices = prepared(single)
-        compose.setContent { if (visible) QrCodeView(frames = single, initial = matrices) }
+        compose.setContent { if (visible) QrCodeView(frames = single, initial = matrices, maxBrightness = true) }
         compose.waitForIdle()
         val window = compose.activity.window
         assertTrue(window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
@@ -125,11 +141,16 @@ class QrCodeViewTest {
     }
 
     @Test
-    fun brightnessCanBeLeftAlone() {
-        compose.setContent { QrCodeView(frames = listOf("UR:BYTES/DIM"), maxBrightness = false) }
-        compose.waitForIdle()
-        val window = compose.activity.window
-        assertTrue(window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
-        assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
+    fun aZeroIntervalStillYieldsToTheMainThread() {
+        // `delay(0)` never suspends: without a floor the part loop would spin the main thread forever.
+        compose.mainClock.autoAdvance = false
+        compose.setContent { QrCodeView(frames = frames, initial = prepared(frames), intervalMillis = 0) }
+        compose.mainClock.advanceTimeByFrame()
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("1/3")
+        // The parts still advance, at most once per display frame.
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 200) { counter() != "1/3" }
     }
+
+    private fun counter(): String =
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text }
 }

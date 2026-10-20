@@ -16,7 +16,7 @@ import java.nio.BufferUnderflowException
  *   (iOS scans the full frame).
  * - [onValues] is called on the analysis thread, only for frames in which at least one QR code was read, with the
  *   "prefer readable" values; the caller posts them to the main thread for `QrScanFrameGate`.
- * - [enabled] false (an error is showing, the screen is closing) skips the decoding work entirely.
+ * - [enabled] false (the camera session was released while a frame was queued) skips the decoding work entirely.
  * - Battery: while codes are being read every frame is analysed (animated codes need every part); after
  *   [IDLE_AFTER_MILLIS] without any code, frames are analysed at most every [IDLE_FRAME_INTERVAL_MILLIS] (~15 fps)
  *   so a camera pointed at nothing does not keep a core busy. The first frame starts in the fast mode.

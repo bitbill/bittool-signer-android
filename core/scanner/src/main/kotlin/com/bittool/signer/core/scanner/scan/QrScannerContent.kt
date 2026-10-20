@@ -9,6 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -224,7 +227,8 @@ private data class PanelTarget(val kind: PanelKind, val error: String?)
 /**
  * `QRScannerView.swift:85-126`: the first state that applies — camera access needed, a session error with
  * "Scan Again", or the reading state (progress while `0 < progress < 1`, the status or the hint, then any camera
- * problem). Content changes cross-fade and the panel resizes with SwiftUI's `.smooth(0.2)`.
+ * problem). Content changes cross-fade and the panel resizes with SwiftUI's `.smooth(0.2)`. When the text does not
+ * fit under the top bar (large font sizes, landscape), the panel scrolls instead of pushing its button off-screen.
  */
 @Composable
 private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onReset: () -> Unit) {
@@ -239,7 +243,9 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
             .widthIn(max = 420.dp)
             .fillMaxWidth()
             .background(ScannerPalette.Panel, PanelShape)
-            .animateContentSize(spring(dampingRatio = 1f, stiffness = 987f)),
+            .animateContentSize(spring(dampingRatio = 1f, stiffness = 987f))
+            .clip(PanelShape)
+            .verticalScroll(rememberScrollState()),
     ) {
         AnimatedContent(
             targetState = PanelTarget(kind, chrome.error),

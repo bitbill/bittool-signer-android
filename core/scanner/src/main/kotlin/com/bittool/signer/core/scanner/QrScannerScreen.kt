@@ -50,8 +50,11 @@ import com.bittool.signer.core.l10n.R as L10n
  *   `SystemClock.elapsedRealtime()`: an accepted text reaches [onScan] **unchanged** (and clears the camera message);
  *   a rejection shows the [purpose]'s message under the hint; an identical outcome within 1 s is dropped. The gate
  *   starts afresh each time the camera does (iOS creates it with the camera coordinator).
- * - While [error] is showing, frames are not decoded at all (iOS ignores them in the session anyway); [onReset]
- *   ("Scan Again") is the way back. A new error plays the reject haptic.
+ * - [error] replaces the hint with the error and "Scan Again" ([onReset]); a new error plays the reject haptic. The
+ *   camera keeps reading meanwhile and [onScan] keeps receiving accepted text, exactly as iOS's camera does
+ *   (`QRScannerView.swift:29-31`): whether a frame counts while an error shows is the caller's rule. The signing
+ *   session ignores it (`ScanSession.receive`, `ScanTab.swift:54`: `guard error == nil`), while setup's recovery
+ *   scanner takes a valid phrase QR shown after a wrong one without "Scan Again" (`WalletSetupFlow.swift:218-228`).
  * - System Back and the Close button call [onClose] (iOS dismiss and the accessibility escape action).
  *
  * Host it full screen inside the app's activity (a separate activity would stop the main one and suspend the
@@ -65,6 +68,7 @@ import com.bittool.signer.core.l10n.R as L10n
  * @param status session status shown verbatim instead of the hint ("Reading request…", "Keep the animated code in
  *   view · 4 parts"), resolved by the caller.
  * @param error a session or protocol error, shown verbatim in orange with "Scan Again".
+ * @param onScan accepted text, unchanged, on the main thread; also while [error] is showing (see above).
  */
 @Composable
 fun QrScannerScreen(
@@ -94,7 +98,11 @@ fun QrScannerScreen(
     )
 }
 
-/** [QrScannerScreen] with its permission state supplied (tests drive the system answers through it). */
+/**
+ * [QrScannerScreen] with its collaborators supplied: tests drive the system permission answers through [permission],
+ * and frames through [camera] (which receives the camera state to fill and the per-frame "prefer readable" values
+ * sink) with a fake [clock].
+ */
 @Composable
 internal fun QrScannerScreen(
     title: String,
@@ -108,13 +116,18 @@ internal fun QrScannerScreen(
     onScan: (String) -> Unit,
     permission: CameraPermissionState,
     modifier: Modifier = Modifier,
+    clock: () -> Long = SystemClock::elapsedRealtime,
+    camera: @Composable (state: QrCameraState, onValues: (List<String?>) -> Unit) -> Unit = { state, onValues ->
+        QrCameraPreview(state = state, onValues = onValues)
+    },
 ) {
     LaunchedEffect(permission, permission.shouldRequestOnEnter) {
         if (permission.shouldRequestOnEnter) permission.request()
     }
 
     val cameraState = remember { QrCameraState() }
-    val frames = remember { ScanFrames(SystemClock::elapsedRealtime) }
+    val latestClock by rememberUpdatedState(clock)
+    val frames = remember { ScanFrames { latestClock() } }
     LifecycleResumeEffect(frames) {
         frames.restart()
         onPauseOrDispose { }
@@ -150,13 +163,7 @@ internal fun QrScannerScreen(
             onReset = onReset,
             onClose = onClose,
             modifier = modifier,
-            camera = {
-                QrCameraPreview(
-                    state = cameraState,
-                    analysisEnabled = error == null,
-                    onValues = onValues,
-                )
-            },
+            camera = { camera(cameraState, onValues) },
         )
     }
 }

@@ -1,8 +1,13 @@
 package com.bittool.signer.core.scanner.scan
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,6 +15,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.model.scanning.QrScanFrameGate
+import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.scanner.CameraPermissionStatus
 import kotlin.test.assertEquals
 import org.junit.Rule
@@ -121,6 +131,30 @@ class QrScannerContentTest {
         show(chrome(permission = CameraPermissionStatus.NotAsked))
         compose.onNodeWithTag(ScannerTags.STATUS).assertTextEquals(hint)
         compose.onNodeWithText("Camera Access Needed").assertDoesNotExist()
+    }
+
+    @Test
+    fun atLargeTextInLandscapeThePanelScrollsSoItsButtonStaysReachable() {
+        // A phone in landscape at font scale 2: the recovery wording and "Scan Again" do not fit under the top bar.
+        val long = QrScanFrameGate.Issue.NonText.english(QrScanPurpose.RecoveryPhrase).repeat(2)
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 2f)) {
+                Box(Modifier.size(width = 640.dp, height = 340.dp)) {
+                    QrScannerContent(
+                        chrome = chrome(error = long),
+                        onToggleTorch = {},
+                        onOpenSettings = {},
+                        onReset = { resets++ },
+                        onClose = {},
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag(ScannerTags.RESET).performScrollTo().assertIsDisplayed().performClick()
+        assertEquals(1, resets)
+        // The top bar stays where it is.
+        compose.onNodeWithContentDescription("Close").assertIsDisplayed()
     }
 
     @Test

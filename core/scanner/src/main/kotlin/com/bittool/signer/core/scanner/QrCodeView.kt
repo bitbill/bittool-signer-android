@@ -103,14 +103,20 @@ import com.bittool.signer.core.l10n.R as L10n
  * - TalkBack: "QR code" for one frame; "Animated QR code, part i of n" for several, updated (polite live region) only
  *   when the animation is paused, never four times a second (design-system.md §9.5, Ownbit improvement on iOS).
  * - While shown and resumed, the hosting window (the sheet's own window inside a bottom sheet) keeps the screen on
- *   and, when [maxBrightness], runs at full brightness so the other device's camera reads the code reliably; both
- *   are reference-counted and restored when the last code leaves. Android additions (iOS changes neither).
+ *   (Android polish: iOS relies on its idle timer; wallets-pairing.md §13.5, activity-settings.md §9). Brightness is
+ *   left alone unless the caller opts in with [maxBrightness]: iOS never changes it (design-system.md §9.5), and a
+ *   brighter screen also makes a recovery-phrase code easier to photograph over a shoulder. Both requests are
+ *   reference-counted per window and restored when the last code leaves.
  *
  * Only public or already-protected data belongs here: frames stay in composition memory and are never cached across
  * screens.
  *
  * @param maxSide largest plate side (iOS callers: 250 backup, 280 address, 300 coin pairing, 320 activity,
  *   340 signature, 360 wallet pairing).
+ * @param intervalMillis time per part of an animated code (iOS 250 ms); values below one frame (16 ms) are raised to
+ *   it, so a zero or negative interval can never spin the main thread.
+ * @param maxBrightness true to run the window at full brightness while the code is shown (opt-in, Android-only; for
+ *   example the dense Wallet Level animated code, wallets-pairing.md §13.5). Default false, as on iOS.
  */
 @Composable
 fun QrCodeView(
@@ -119,7 +125,7 @@ fun QrCodeView(
     maxSide: Dp = 320.dp,
     intervalMillis: Long = 250,
     initial: List<QrMatrix>? = null,
-    maxBrightness: Boolean = true,
+    maxBrightness: Boolean = false,
 ) {
     val immediate = remember(frames, initial) { QrFrames.prepared(frames, initial) }
     var rendered by remember { mutableStateOf<RenderedQr?>(null) }
@@ -147,10 +153,11 @@ fun QrCodeView(
 
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val resumed = lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
-    LaunchedEffect(frames, ready, paused, resumed, intervalMillis) {
+    val interval = intervalMillis.coerceAtLeast(MIN_INTERVAL_MILLIS)
+    LaunchedEffect(frames, ready, paused, resumed, interval) {
         if (!animated || !ready || paused || !resumed) return@LaunchedEffect
         while (true) {
-            delay(intervalMillis)
+            delay(interval)
             index = (index + 1) % imageCount.coerceAtLeast(1)
         }
     }
@@ -340,6 +347,9 @@ private fun QrDisplayWindowEffects(maxBrightness: Boolean) {
         onPauseOrDispose { window?.let { QrWindowEffects.release(it, maxBrightness) } }
     }
 }
+
+/** One display frame: the shortest part interval [QrCodeView] runs (`delay(0)` would never suspend). */
+private const val MIN_INTERVAL_MILLIS = 16L
 
 private val PlateShape = RoundedCornerShape(24.dp)
 private val PlatePadding = 18.dp
