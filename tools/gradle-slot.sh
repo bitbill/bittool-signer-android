@@ -12,6 +12,9 @@ ROOT=/tmp/bittool-signer-gradle-slots
 mkdir -p "$ROOT"
 : "${JAVA_HOME:=$HOME/Library/Java/JavaVirtualMachines/jbr-21.0.11/Contents/Home}"
 export JAVA_HOME
+# Worktrees have no local.properties (it is git-ignored): point AGP at the SDK through the environment.
+: "${ANDROID_HOME:=$HOME/Library/Android/sdk}"
+export ANDROID_HOME
 
 acquire() {
   local waited=0
