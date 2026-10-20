@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android-only strings of :feature:wallets (owner: W2-wallets). English only until the translation pass
+    (DECISIONS §4, §9.2). Every other text of the Wallets tab, wallet page, Addresses, Pair and the wallet security pages
+    is an iOS catalogue string (strings_ios.xml) or a :core:ui / :core:security resource; the toast after a password
+    change reuses the catalogue key "Password Changed" (ARCHITECTURE §4.3 table).
+-->
+<resources>
+    <!-- The QR brightness switch on the Pair and address QR codes (wallets-pairing.md §13.5; iOS never changes the
+         brightness, so it has no text for it). Read by TalkBack as "<name>, <state>". -->
+    <string name="wallets_qr_brightness">Screen brightness</string>
+    <!-- Switch state: the system brightness is left alone. -->
+    <string name="wallets_qr_brightness_normal">Normal</string>
+    <!-- Switch state: full brightness while the code is shown, for cameras that struggle with a dim screen. -->
+    <string name="wallets_qr_brightness_bright">Bright</string>
+</resources>
