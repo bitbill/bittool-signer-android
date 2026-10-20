@@ -184,7 +184,7 @@ The authenticated `publicIndex`, the `request`, the `plan` and `previousResult` 
 sealed class VaultError(text: UiText) : SignerException   // vault-crypto §6.7: InvalidPassword(policyMessage), InvalidSecret,
     // InvalidName, RandomFailure, KeyDerivationFailure, EncryptionFailure, AuthenticationFailed, DeviceKeyUnavailable,
     // DevicePasscodeRequired (Android-only string), StorageFailure, MalformedVault, UnsupportedVersion, WalletNotFound,
-    // TemporarilyLocked(seconds)
+    // TemporarilyLocked(seconds); added (B9): DeviceKeyLossUnconfirmed (Android-only string)
 interface WalletVault {                                   // vault-crypto §6–§9, §17.2 (one Mutex)
     suspend fun list(): List<VaultMetadata>
     suspend fun create(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText, id: WalletId): VaultMetadata
@@ -193,11 +193,16 @@ interface WalletVault {                                   // vault-crypto §6–
     suspend fun changePassword(id: WalletId, currentPassword: SecretText, newPassword: SecretText)
     suspend fun resetPassword(id: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText)
     suspend fun delete(id: WalletId, password: SecretText)
-    suspend fun publicDataKey(createIfMissing: Boolean): PublicDataKey? }
+    suspend fun publicDataKey(createIfMissing: Boolean): PublicDataKey?
+    // added (QA backlog B9, default bodies): a provably lost device key → removal without the password (§6.18)
+    suspend fun isDeviceKeyLost(id: WalletId): Boolean = false; suspend fun removeWithLostDeviceKey(id: WalletId) }
 interface PublicDataKey { fun mac(message: ByteArray): ByteArray; fun verify(message: ByteArray, tag: ByteArray): Boolean } // §10.3, §17.4
 interface DeviceKeyStore { fun isDeviceSecure(): Boolean; fun create(id: WalletId)                                         // §7, §17.3
     fun seal(id: WalletId, plaintext: ByteArray, aad: ByteArray): ByteArray; fun open(id: WalletId, combined: ByteArray, aad: ByteArray): ByteArray
-    fun delete(id: WalletId); fun publicDataKey(createIfMissing: Boolean): PublicDataKey? }
+    fun delete(id: WalletId); fun publicDataKey(createIfMissing: Boolean): PublicDataKey?
+    fun isKeyLost(id: WalletId): Boolean = false }                                     // added (B9): Keystore loss proof, §6.18
+object TestKeystore { fun deviceKeyStore(lockScreenSecure: () -> Boolean = { true }); fun journalCipher() } // crypto.testing (B8):
+    // the production Keystore classes with the instrumented tests' key policy, for other modules' androidTests
 interface JournalCipher { fun seal(plaintext: ByteArray): ByteArray; fun open(sealed: ByteArray): ByteArray }              // DECISIONS §9.3
 object SignerFiles { VAULTS_DIR = "Vaults"; VAULT_EXTENSION = "bsvault"; PUBLIC_WALLETS_DIR = "PublicWallets";
     RECEIPTS_FILE = "receipts.bin"; RECEIPTS_KEY_ALIAS = "com.bittool.signer.activity.v1" }
@@ -231,6 +236,7 @@ interface SignerStore {                                     // models-state §5 
     suspend fun resetPassword(walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText)
     suspend fun completeSetup(walletId: WalletId, password: SecretText); suspend fun renameWallet(walletId: WalletId, name: String)
     suspend fun changePassword(walletId: WalletId, current: SecretText, new: SecretText); suspend fun deleteWallet(walletId: WalletId, password: SecretText)
+    suspend fun isDeviceKeyLost(walletId: WalletId): Boolean; suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) // added (B9), §6.18
     suspend fun reveal(walletId: WalletId, password: SecretText): VaultSecret
     suspend fun addresses(walletId: WalletId, chain: Chain, profile: String, start: Long, count: Int): List<PublicAccount>
     suspend fun pairing(walletId: WalletId, chain: Chain, profile: String, outputMode: String, index: Long): PairingPayload
@@ -903,6 +909,15 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
     `:core:security`.
 17. Activity's Signed Request keeps iOS's older warning-severity rule (`ReviewPresentation.isSevereStoredWarning`):
     parity, not a deviation, but easy to miss because the review components are shared.
+18. **Lost device key (QA backlog B9, Android-only; iOS has the same dead end and no way out):** a wallet whose
+    Keystore key is *provably* gone (no entry in three agreeing looks, each against a just-generated probe key, or
+    `KeyPermanentlyInvalidatedException`; `DeviceKeyStore.isKeyLost`) can be neither unlocked, reset, deleted with its
+    password nor re-imported (its public file keeps the `walletKeyId`). Delete Wallet then becomes "Remove This Wallet":
+    its own switch, biometrics when App Lock is on, the "Remove This Wallet?" dialog, and
+    `SignerStore.removeWalletWithLostDeviceKey`, which removes it without the password (the vault proves the loss again
+    under its lock) and then commits like `deleteWallet`. A public-data key this process used is created again only
+    when the same proof shows it gone, so the phrase imports again without a relaunch. Every other deletion keeps the
+    iOS biometric-then-password path. Strings: `wallets_lost_key_*`, `crypto_device_key_loss_unconfirmed`.
 
 Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
 scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.
