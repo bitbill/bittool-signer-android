@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings of :core:data (owner: W1-data). English only until the translation pass (DECISIONS.md §9.2).
+  These are iOS messages that are not in the iOS catalogue (gaps.md G6): iOS shows them in English in every language.
+  The text is the exact iOS English. SignerStore publishes them as UiText.Resource.
+-->
+<resources>
+    <!-- Kotlin-host engine errors (iOS Core/SigningEngine.swift; engine-contract.md §8.1). Matched by code and message. -->
+    <!-- ENGINE_MISSING, SigningEngine.swift:210 -->
+    <string name="data_engine_missing">The bundled signing engine is unavailable. Reinstall BitTool Signer.</string>
+    <!-- ENGINE_INVALID, SigningEngine.swift:67 -->
+    <string name="data_engine_invalid">The bundled signing engine could not be loaded.</string>
+    <!-- ENGINE_UNAVAILABLE, SigningEngine.swift:20 -->
+    <string name="data_engine_unavailable">The offline signing engine could not be started.</string>
+    <!-- ENTROPY_UNAVAILABLE, SigningEngine.swift:62 -->
+    <string name="data_engine_entropy_unavailable">The engine’s secure entropy source could not be installed.</string>
+    <!-- ENGINE_FAILURE, SigningEngine.swift:82 -->
+    <string name="data_engine_failure">The offline engine could not process this request.</string>
+    <!-- UNSUPPORTED_OPERATION, SigningEngine.swift:152 -->
+    <string name="data_engine_unsupported_operation">This signing operation is not supported.</string>
+    <!-- REQUEST_TOO_LARGE, SigningEngine.swift:192 -->
+    <string name="data_engine_request_too_large">This request exceeds the 1 MB offline signing limit.</string>
+    <!-- SCAN, SigningEngine.swift:173 -->
+    <string name="data_engine_scan_ended">The scan session ended. Scan again.</string>
+    <!-- Default message of an engine error without one (SIGNING_FAILED), SigningEngine.swift:84-89 -->
+    <string name="data_engine_signing_failed">This request could not be signed.</string>
+
+    <!-- Store messages shown in the "Unable to Continue" alert (iOS Models/AppStore.swift:528, 539, 601). -->
+    <string name="data_activity_unreadable">The local activity record could not be read.</string>
+    <string name="data_activity_not_saved">The local activity record could not be saved. Any completed signature remains available.</string>
+    <string name="data_public_cache_not_removed">The encrypted wallet was deleted, but its public cache could not be removed.</string>
+</resources>
