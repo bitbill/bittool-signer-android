@@ -44,6 +44,8 @@ import com.bittool.signer.core.l10n.R as L10n
  * - Asks for the camera on appearance when needed; "Camera Access Needed" with "Open Settings" when denied; a grant
  *   made in Settings starts the camera on return ([rememberCameraPermissionState]).
  * - The camera runs only while the screen is resumed and is released on every pause; the torch goes off with it.
+ *   The torch button is invisible (keeping its space, so the title stays centred) without a flash unit; tapping the
+ *   preview focuses and meters there.
  * - Every frame's QR values go through [QrScanFrameGate] in frame order on the main thread, with
  *   `SystemClock.elapsedRealtime()`: an accepted text reaches [onScan] **unchanged** (and clears the camera message);
  *   a rejection shows the [purpose]'s message under the hint; an identical outcome within 1 s is dropped. The gate
@@ -51,6 +53,10 @@ import com.bittool.signer.core.l10n.R as L10n
  * - While [error] is showing, frames are not decoded at all (iOS ignores them in the session anyway); [onReset]
  *   ("Scan Again") is the way back. A new error plays the reject haptic.
  * - System Back and the Close button call [onClose] (iOS dismiss and the accessibility escape action).
+ *
+ * Host it full screen inside the app's activity (a separate activity would stop the main one and suspend the
+ * session): as a navigation destination, or in a `Dialog` with `usePlatformDefaultWidth = false` and
+ * `decorFitsSystemWindows = false`. It draws edge to edge and pads its chrome with the safe-drawing insets.
  *
  * @param title resolved title ("Scan Request", "Scan Recovery QR").
  * @param hint resolved guidance shown when there is no [status].

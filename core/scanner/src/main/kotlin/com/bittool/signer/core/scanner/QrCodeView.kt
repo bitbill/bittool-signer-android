@@ -135,7 +135,12 @@ fun QrCodeView(
     val imageCount by rememberUpdatedState(images.size)
 
     LaunchedEffect(frames, immediate) {
-        if (immediate != null || rendered?.frames == frames) return@LaunchedEffect
+        if (immediate != null) {
+            // Kept, so a caller that later drops its prepared matrices for the same frames shows no spinner.
+            rendered = immediate
+            return@LaunchedEffect
+        }
+        if (rendered?.frames == frames) return@LaunchedEffect
         val encoded = withContext(Dispatchers.Default) { QrFrames.render(frames) }
         rendered = RenderedQr(frames, encoded)
     }

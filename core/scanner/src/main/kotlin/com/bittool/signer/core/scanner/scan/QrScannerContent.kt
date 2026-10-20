@@ -218,6 +218,9 @@ private fun GlassCircleButton(
 
 private enum class PanelKind { CameraDenied, SessionError, Reading }
 
+/** The panel's state; the error text travels with it so a fading-out error keeps its words. */
+private data class PanelTarget(val kind: PanelKind, val error: String?)
+
 /**
  * `QRScannerView.swift:85-126`: the first state that applies — camera access needed, a session error with
  * "Scan Again", or the reading state (progress while `0 < progress < 1`, the status or the hint, then any camera
@@ -239,9 +242,10 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
             .animateContentSize(spring(dampingRatio = 1f, stiffness = 987f)),
     ) {
         AnimatedContent(
-            targetState = kind,
+            targetState = PanelTarget(kind, chrome.error),
             transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
             contentAlignment = Alignment.Center,
+            contentKey = { it.kind },
             label = "scannerPanel",
         ) { shown ->
             Column(
@@ -251,9 +255,9 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                when (shown) {
+                when (shown.kind) {
                     PanelKind.CameraDenied -> CameraDeniedPanel(onOpenSettings)
-                    PanelKind.SessionError -> SessionErrorPanel(chrome.error.orEmpty(), onReset)
+                    PanelKind.SessionError -> SessionErrorPanel(shown.error.orEmpty(), onReset)
                     PanelKind.Reading -> ReadingPanel(chrome)
                 }
             }
