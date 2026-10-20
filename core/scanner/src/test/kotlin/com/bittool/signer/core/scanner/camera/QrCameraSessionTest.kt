@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
+import androidx.camera.core.CameraState
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -136,6 +137,38 @@ class QrCameraSessionTest {
         session.release()
         pauseAndResume()
         assertEquals(1, starts)
+    }
+
+    @Test
+    fun aCameraThatOpensAfterARetryClearsTheProblemOfTheEarlierStart() {
+        // The retry bound a camera: once it opens, "No camera is available" or "The camera is unavailable" goes.
+        val open = CameraState.create(CameraState.Type.OPEN)
+        assertNull(QrCameraSession.issueAfter(CameraIssue.NoCamera, open, scanning = true))
+        assertNull(QrCameraSession.issueAfter(CameraIssue.Unavailable, open, scanning = true))
+        assertNull(QrCameraSession.issueAfter(null, open, scanning = true))
+        // Only the preview could be bound: scanning stays off, whatever the earlier start reported.
+        assertEquals(CameraIssue.ScanningUnavailable, QrCameraSession.issueAfter(CameraIssue.NoCamera, open, scanning = false))
+        assertEquals(
+            CameraIssue.ScanningUnavailable,
+            QrCameraSession.issueAfter(CameraIssue.ScanningUnavailable, open, scanning = false),
+        )
+    }
+
+    @Test
+    fun aBoundCameraThatFailsIsUnavailableEvenAfterAnEarlierStartFoundNone() {
+        val inUse = CameraState.create(
+            CameraState.Type.PENDING_OPEN,
+            CameraState.StateError.create(CameraState.ERROR_CAMERA_IN_USE),
+        )
+        assertEquals(CameraIssue.Unavailable, QrCameraSession.issueAfter(CameraIssue.NoCamera, inUse, scanning = true))
+        assertEquals(CameraIssue.Unavailable, QrCameraSession.issueAfter(null, inUse, scanning = true))
+        assertEquals(CameraIssue.Unavailable, QrCameraSession.issueAfter(CameraIssue.ScanningUnavailable, inUse, scanning = false))
+        // While CameraX opens the camera again the message stays; it goes only when the camera is open.
+        val reopening = listOf(CameraState.Type.PENDING_OPEN, CameraState.Type.OPENING, CameraState.Type.CLOSING, CameraState.Type.CLOSED)
+        for (type in reopening) {
+            val issue = QrCameraSession.issueAfter(CameraIssue.Unavailable, CameraState.create(type), scanning = true)
+            assertEquals(CameraIssue.Unavailable, issue, "$type")
+        }
     }
 
     /** The screen's lifecycle (a navigation entry or the activity), driven by the test on the main thread. */

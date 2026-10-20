@@ -42,8 +42,9 @@ import com.bittool.signer.core.l10n.R as L10n
  *   made in Settings starts the camera on return ([rememberCameraPermissionState]).
  * - The camera runs only while the screen is resumed and is released on every pause; the torch goes off with it. A
  *   camera that could not start (busy, blocked by policy, CameraX failure) is started again on every resume, as iOS
- *   builds a new camera with every activation; its message stays until the camera opens. The torch button is invisible (keeping its space, so the title stays centred) without a flash unit; tapping the
- *   preview focuses and meters there.
+ *   builds a new camera with every activation; its message stays until the camera opens. The torch button is
+ *   invisible (keeping its space, so the title stays centred) without a flash unit; tapping the preview focuses and
+ *   meters there.
  * - Every frame's QR values go through [QrScanFrameGate] in frame order on the main thread, with
  *   `SystemClock.elapsedRealtime()`: an accepted text reaches [onScan] **unchanged** (and clears the camera message);
  *   a rejection shows the [purpose]'s message under the hint; an identical outcome within 1 s is dropped. The gate

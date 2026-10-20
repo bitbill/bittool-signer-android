@@ -236,17 +236,8 @@ internal class QrCameraSession(
     }
 
     private fun onCameraState(cameraState: CameraState) {
-        when {
-            // A bound camera exists, so an error is "unavailable" even after an earlier attempt found none.
-            cameraState.error != null -> {
-                Log.w(TAG) { "camera error ${cameraState.error?.code}" }
-                state.issue = CameraIssue.Unavailable
-            }
-            cameraState.type == CameraState.Type.OPEN &&
-                (state.issue == CameraIssue.Unavailable || state.issue == CameraIssue.NoCamera) -> {
-                state.issue = if (analysis == null) CameraIssue.ScanningUnavailable else null
-            }
-        }
+        cameraState.error?.let { error -> Log.w(TAG) { "camera error ${error.code}" } }
+        state.issue = issueAfter(state.issue, cameraState, scanning = analysis != null)
     }
 
     fun setTorch(on: Boolean) {
@@ -293,6 +284,23 @@ internal class QrCameraSession(
         private const val TAG = "QrCamera"
         private const val ANALYSIS_THREAD_NAME = "bittool-signer-qr"
         private const val FOCUS_AUTO_CANCEL_SECONDS = 3L
+
+        /**
+         * The camera problem to show once the bound camera reports [cameraState], given the [current] one and whether
+         * the analysis stream is bound ([scanning]):
+         * - any error is [CameraIssue.Unavailable]: a camera is bound, so this also replaces a "no camera" left by an
+         *   earlier start;
+         * - opening clears the start problem it replaces (`Unavailable`, or `NoCamera` from an earlier start), leaving
+         *   [CameraIssue.ScanningUnavailable] when only the preview could be bound;
+         * - every other state keeps [current], so a message stays while CameraX opens the camera again.
+         */
+        internal fun issueAfter(current: CameraIssue?, cameraState: CameraState, scanning: Boolean): CameraIssue? = when {
+            cameraState.error != null -> CameraIssue.Unavailable
+            cameraState.type == CameraState.Type.OPEN &&
+                (current == CameraIssue.Unavailable || current == CameraIssue.NoCamera) ->
+                if (scanning) null else CameraIssue.ScanningUnavailable
+            else -> current
+        }
 
         /** 1080p 16:9, preferring the closest lower size when 1080p is not offered (iOS `hd1920x1080`). */
         fun resolutionSelector(): ResolutionSelector = ResolutionSelector.Builder()
