@@ -94,7 +94,7 @@ class EncryptedReceiptRepositoryTest {
     @Test
     fun anOversizedSealedFileIsRefusedBeforeDecrypting() = runTest {
         val repository = repository(this)
-        repository.file.parentFile.mkdirs()
+        dir.mkdirs()
         repository.file.writeBytes(ByteArray(EncryptedReceiptRepository.MAX_SEALED_BYTES + 1))
         assertInvalid { repository.read() }
         assertEquals(0, opens.get(), "The size bound applies before any decryption.")
@@ -104,7 +104,7 @@ class EncryptedReceiptRepositoryTest {
     @Test
     fun authenticContentThatBreaksAJournalRuleIsInvalid() = runTest {
         val repository = repository(this)
-        repository.file.parentFile.mkdirs()
+        dir.mkdirs()
         repository.file.writeBytes(sealer.seal("not json".encodeToByteArray()))
         assertInvalid { repository.read() }
         repository.write(List(ReceiptJournal.MAX_RECORDS + 1) { receipt() })

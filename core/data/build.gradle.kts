@@ -33,7 +33,6 @@ dependencies {
     implementation(projects.core.l10n)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.lifecycle.process)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.turbine)
     androidTestImplementation(libs.androidx.test.core)

@@ -32,6 +32,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.Test
@@ -58,7 +59,7 @@ class SignerStoreEngineTest {
     private fun params(vararg entries: Pair<String, Any>): JsonObject = JsonObject(
         entries.associate { (key, value) ->
             key to when (value) {
-                is JsonObject, is JsonArray, is JsonPrimitive -> value as kotlinx.serialization.json.JsonElement
+                is JsonElement -> value
                 is String -> JsonPrimitive(value)
                 is Number -> JsonPrimitive(value)
                 is Boolean -> JsonPrimitive(value)

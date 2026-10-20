@@ -118,4 +118,12 @@ interface LegalDocumentRepository {
 
     /** Notices split on blank lines, per file; "Third-party notices are included with the source distribution." when none. */
     suspend fun thirdPartyNotices(): List<NoticeSection>
+
+    companion object {
+        /**
+         * The single paragraph (in a section with an empty title) that [thirdPartyNotices] returns when no notices file is
+         * bundled: iOS `LicensesView`'s fallback, an iOS catalogue string (show it through `UiText.Ios`).
+         */
+        const val NOTICES_MISSING = "Third-party notices are included with the source distribution."
+    }
 }

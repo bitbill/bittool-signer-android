@@ -36,7 +36,7 @@ class AssetLegalDocumentRepository @Inject constructor(
 
     override suspend fun thirdPartyNotices(): List<NoticeSection> = withContext(io) {
         NOTICE_FILES.mapNotNull { path -> readText(path)?.let(::section) }
-            .ifEmpty { listOf(NoticeSection(title = "", paragraphs = listOf(NOTICES_MISSING))) }
+            .ifEmpty { listOf(NoticeSection(title = "", paragraphs = listOf(LegalDocumentRepository.NOTICES_MISSING))) }
     }
 
     private fun readText(path: String): String? = try {
@@ -50,9 +50,6 @@ class AssetLegalDocumentRepository @Inject constructor(
     companion object {
         /** The engine's notices (iOS byte-identical), then the Android app's own dependencies (gaps.md G8). */
         val NOTICE_FILES = listOf("legal/THIRD_PARTY_LICENSES.txt", "legal/THIRD_PARTY_LICENSES_ANDROID.txt")
-
-        /** iOS `LicensesView` fallback (an iOS catalogue string); the only paragraph when no notices file is bundled. */
-        const val NOTICES_MISSING = "Third-party notices are included with the source distribution."
 
         /**
          * One notices file: its first line is the title; the rest is split on `"\n\n"` like iOS (`SettingsTab.swift:359`)

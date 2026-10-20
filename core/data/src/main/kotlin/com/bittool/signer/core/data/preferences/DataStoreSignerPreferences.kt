@@ -14,8 +14,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.bittool.signer.core.common.coroutines.ApplicationScope
 import com.bittool.signer.core.common.coroutines.IoDispatcher
+import com.bittool.signer.core.common.coroutines.runCatchingCancellable
 import com.bittool.signer.core.common.harness.UiTestEnvironment
 import com.bittool.signer.core.common.harness.UiTestRun
+import com.bittool.signer.core.common.log.Log
 import com.bittool.signer.core.data.PreferenceValues
 import com.bittool.signer.core.data.SignerPreferences
 import com.bittool.signer.core.model.Appearance
@@ -51,8 +53,8 @@ import kotlinx.coroutines.sync.withLock
  *   [UiTestRun] is known by then.
  * - In a UI-test run the file is `UiTestRun.preferencesName` and the run's overrides are written inside that first load,
  *   before [values] is published: App Lock (resolving until [values] is non-null) never sees the pre-override value.
- * - A corrupt file is replaced by an empty one and an unreadable one reads as the defaults (like Ownbit
- *   `AppSettings`); iOS UserDefaults have no failure mode of their own.
+ * - A corrupt file is replaced by an empty one and a first read that fails with an I/O error reads as the defaults (like
+ *   Ownbit `AppSettings`); iOS UserDefaults have no failure mode of their own. Later read errors keep the last values.
  *
  * Setters await the write and publish the written values before returning.
  */
@@ -71,10 +73,11 @@ class DataStoreSignerPreferences @Inject constructor(
     private var dataStore: DataStore<Preferences>? = null
 
     init {
-        // A subscriber (App Lock, the theme) starts the first read; reading `values.value` alone does not.
+        // A subscriber (App Lock, the theme) starts the first read; reading `values.value` alone does not. A failure is
+        // logged and leaves `values` null: App Lock stays resolving (fail closed) instead of the process crashing.
         scope.launch {
             _values.subscriptionCount.first { it > 0 }
-            load()
+            runCatchingCancellable { load() }.onFailure { Log.e(TAG, it) { "The preferences could not be read" } }
         }
     }
 
@@ -86,16 +89,20 @@ class DataStoreSignerPreferences @Inject constructor(
 
     override suspend fun setOnboardingVersionCompleted(version: Int) = write { it[ONBOARDING_VERSION_COMPLETED] = version }
 
+    /** Called under [loading]. The DataStore is created once, even when a first read has to be retried. */
     private suspend fun firstLoad(): PreferenceValues {
         val run = uiTests.getOrNull()?.run
-        val store = PreferenceDataStoreFactory.create(
+        val store = dataStore ?: PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
             // A child of the process scope (never cancelled in the app; a test ends it to open the file again).
             scope = CoroutineScope(scope.coroutineContext + io + SupervisorJob(scope.coroutineContext[Job])),
             produceFile = { preferencesFile(context, run?.preferencesName ?: FILE_NAME) },
-        )
-        dataStore = store
-        var preferences = store.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }.first()
+        ).also { dataStore = it }
+        var preferences = try {
+            store.data.first()
+        } catch (e: IOException) {
+            emptyPreferences()
+        }
         if (run != null) {
             val overridden = preferences.toMutablePreferences().apply { applyOverrides(run) }
             if (overridden != preferences) {
@@ -109,9 +116,12 @@ class DataStoreSignerPreferences @Inject constructor(
         }
         val first = preferences.toValues()
         _values.value = first
-        // Keep following the file (DataStore emits after every edit; StateFlow drops equal values).
+        // Keep following the file (DataStore emits after every edit; StateFlow drops equal values). A later read error
+        // keeps the last published values, so a transient failure never switches App Lock off mid-session.
         scope.launch {
-            store.data.catch { if (it is IOException) emit(emptyPreferences()) else throw it }.collect { _values.value = it.toValues() }
+            store.data
+                .catch { Log.w(TAG, it) { "The preferences stopped updating" } }
+                .collect { _values.value = it.toValues() }
         }
         return first
     }
@@ -125,6 +135,7 @@ class DataStoreSignerPreferences @Inject constructor(
     companion object {
         /** The production preferences file (`files/datastore/bittool_signer_preferences.preferences_pb`). */
         const val FILE_NAME = "bittool_signer_preferences"
+        private const val TAG = "Preferences"
 
         val APPEARANCE = stringPreferencesKey("appearance")
         val APP_LOCK_ENABLED = booleanPreferencesKey("appLockEnabled.v1")

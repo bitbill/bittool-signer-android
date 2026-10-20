@@ -32,7 +32,7 @@ class FakeEngine : SignerEngine {
     val calls = CopyOnWriteArrayList<Pair<String, JsonObject>>()
     private val handlers = ConcurrentHashMap<EngineOperation, suspend (JsonObject) -> JsonObject>()
 
-    /** The signing chain of synthetic requests' plans (the request's own `chain`). */
+    /** The frames of the open scan session, or null when none is open (`scanAdd` then fails like the real host). */
     var scanSession: MutableList<String>? = null
     var scanHandler: suspend (String) -> JsonObject = { frame ->
         if (frame == COMPLETE_FRAME) {

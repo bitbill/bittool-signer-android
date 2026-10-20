@@ -7,12 +7,13 @@ import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.model.LegalDocumentParser
 
 /**
- * A configurable [LegalDocumentRepository] for tests (Wave 2). **Test double only.** A document without configured
- * blocks returns what the real repository returns for a missing asset (one paragraph [LegalDocumentParser.MISSING]).
+ * A configurable [LegalDocumentRepository] for tests (Wave 2). **Test double only.** Unconfigured content returns what
+ * the real repository returns for missing assets: one paragraph [LegalDocumentParser.MISSING] for a document, the
+ * single [LegalDocumentRepository.NOTICES_MISSING] section for the notices.
  */
 class FakeLegalDocumentRepository(
     @Volatile var documents: Map<LegalDocument, List<LegalBlock>> = emptyMap(),
-    @Volatile var notices: List<NoticeSection> = emptyList(),
+    @Volatile var notices: List<NoticeSection> = listOf(NoticeSection("", listOf(LegalDocumentRepository.NOTICES_MISSING))),
 ) : LegalDocumentRepository {
 
     override suspend fun blocks(document: LegalDocument): List<LegalBlock> =
