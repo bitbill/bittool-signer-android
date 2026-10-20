@@ -166,6 +166,8 @@ val LocalTokenIconSource: ProvidableCompositionLocal<TokenIconSource> = staticCo
 fun TokenIcon(iconId: String?, symbol: String, modifier: Modifier = Modifier, size: Dp = 40.dp) {
     val source = LocalTokenIconSource.current
     val image by produceState(initialValue = iconId?.let(TokenIconCache::peek), iconId, source) {
+        // A recycled row with a new ID never keeps the previous token's artwork.
+        value = iconId?.let(TokenIconCache::peek)
         if (iconId != null && value == null) value = TokenIconCache.load(source, iconId)
     }
     Box(

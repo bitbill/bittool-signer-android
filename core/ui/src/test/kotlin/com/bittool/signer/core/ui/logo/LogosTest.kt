@@ -3,6 +3,9 @@ package com.bittool.signer.core.ui.logo
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -86,5 +89,28 @@ class LogosTest {
         // A missing icon is not cached (a later attempt may succeed); a found one is read at most once per row.
         assertEquals(true, reads.get() <= 3)
         compose.onNodeWithContentDescription("DAI").assertContentDescriptionEquals("DAI")
+    }
+
+    @Test
+    fun aReusedIconNeverKeepsThePreviousTokensArtwork() {
+        val png = ByteArrayOutputStream().also { out ->
+            Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.PNG, 100, out)
+        }.toByteArray()
+        val source = TokenIconSource { id -> if (id == "aaaaaaaaaaaaaaaa") png else null }
+        var id by mutableStateOf("aaaaaaaaaaaaaaaa")
+        var symbol by mutableStateOf("USDC")
+        compose.setContent {
+            SignerTheme(false, false) {
+                CompositionLocalProvider(LocalTokenIconSource provides source) { TokenIcon(iconId = id, symbol = symbol) }
+            }
+        }
+        compose.waitUntil(timeoutMillis = 5_000) { TokenIconCache.peek("aaaaaaaaaaaaaaaa") != null }
+        compose.waitForIdle()
+        compose.onNodeWithText("USD", useUnmergedTree = true).assertDoesNotExist()
+        // The same composable now shows a token without artwork (a recycled list row).
+        id = "bbbbbbbbbbbbbbbb"
+        symbol = "WETH"
+        compose.waitForIdle()
+        compose.onNodeWithText("WET", useUnmergedTree = true).assertExists()
     }
 }
