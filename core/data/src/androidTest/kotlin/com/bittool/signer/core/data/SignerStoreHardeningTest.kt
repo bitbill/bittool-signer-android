@@ -1,8 +1,7 @@
 package com.bittool.signer.core.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.bittool.signer.core.data.doubles.HmacBip39Seed
-import com.bittool.signer.core.data.doubles.HmacPublicDataKey
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.doubles.PublicFixtures
 import com.bittool.signer.core.data.doubles.PublicFixtures.PHRASE
 import com.bittool.signer.core.data.doubles.PublicFixtures.SIGNER
@@ -50,7 +49,7 @@ class SignerStoreHardeningTest {
     private val calls get() = EngineCalls(engine)
 
     private suspend fun referenceIndex(): JsonObject {
-        val seed = PHRASE.asSecret { words -> "".asSecret { HmacBip39Seed().hex(words, it) } }
+        val seed = PHRASE.asSecret { words -> "".asSecret { DeviceCrypto.seed.hex(words, it) } }
         return calls.derivePublicIndex(seed)
     }
 
@@ -61,12 +60,13 @@ class SignerStoreHardeningTest {
             val repository = FilePublicWalletRepository(dir, Dispatchers.IO)
             val index = WalletPublicMetadata.parse(referenceIndex())
             val id = WalletId.random()
-            val key = HmacPublicDataKey()
+            // The production HMAC key in the Android Keystore; another device's key must not verify the file.
+            val key = assertNotNull(DeviceCrypto.keystoreDeviceKeys().publicDataKey(createIfMissing = true))
             repository.save(index, id, "Public", key)
             val good = repository.snapshot(id, key)
             assertEquals(PublicMetadataStatus.Ready, good.status)
             assertEquals("Public", good.displayName)
-            assertEquals(PublicMetadataStatus.Invalid, repository.snapshot(id, HmacPublicDataKey()).status)
+            assertEquals(PublicMetadataStatus.Invalid, repository.snapshot(id, InMemoryDeviceKeyStore().publicDataKey(true)).status)
             assertEquals(PublicMetadataStatus.Invalid, repository.snapshot(id, null).status)
             // Swap a displayed name inside the body: the MAC no longer verifies.
             val file = repository.file(id)

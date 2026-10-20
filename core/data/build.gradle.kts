@@ -12,8 +12,9 @@ android {
         noCompress += "pack"
     }
     sourceSets {
-        // Test doubles of the Wave-1 interfaces (vault, BIP39, journal cipher, QR encoder) shared by the JVM tests and
-        // the instrumented tests over the real engine.
+        // Shared test code: the engine decorator (ControlledSigningEngine, EngineGate), the public fixtures and vectors,
+        // and the crypto/encoder doubles of the JVM tests (StoreFixture). The instrumented tests run on the production
+        // crypto instead (androidTest RealStoreFixture) and use only the engine decorator and fixtures from here.
         getByName("test") {
             kotlin.directories += "src/testShared/kotlin"
             resources.directories += "src/testShared/resources"
@@ -38,4 +39,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.turbine)
+    // The production QrCodeEncoder (ZxingQrCodeEncoder) for the Connect prefetch in the real-stack store tests.
+    androidTestImplementation(projects.core.scanner)
 }

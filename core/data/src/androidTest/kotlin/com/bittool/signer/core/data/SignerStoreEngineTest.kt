@@ -2,8 +2,7 @@ package com.bittool.signer.core.data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bittool.signer.core.crypto.SecureRandomSource
-import com.bittool.signer.core.data.doubles.HmacBip39Seed
-import com.bittool.signer.core.data.doubles.JvmSecureRandomSource
+import com.bittool.signer.core.crypto.SystemSecureRandomSource
 import com.bittool.signer.core.data.doubles.PublicFixtures
 import com.bittool.signer.core.data.doubles.PublicFixtures.PHRASE
 import com.bittool.signer.core.data.doubles.PublicFixtures.SIGNER
@@ -41,7 +40,8 @@ import org.junit.runner.RunWith
 /**
  * Port of iOS `BitToolSignerTests.swift` (`EngineIntegrationTests`, 4 cases) plus the store-level engine vectors of
  * SecurityTests (zero-entropy mnemonic) and engine-contract.md §11.2 (V-PLAN goldens, a two-cosigner PSBT signed through
- * the store). Seeds come from the native seed path, as in production (the engine never receives a phrase).
+ * the store). Seeds come from the production native seed (`Pbkdf2Bip39Seed`; the engine never receives a phrase) and
+ * the store runs on the production crypto ([RealStoreFixture]).
  */
 @RunWith(AndroidJUnit4::class)
 class SignerStoreEngineTest {
@@ -49,7 +49,7 @@ class SignerStoreEngineTest {
     private val calls get() = EngineCalls(engine)
     private val referenceWallet = WalletId.parse("00112233-4455-6677-8899-aabbccddeeff")!!
 
-    private fun seed(phrase: String, passphrase: String = ""): CharArray = phrase.asSecret { words -> passphrase.asSecret { HmacBip39Seed().hex(words, it) } }
+    private fun seed(phrase: String, passphrase: String = ""): CharArray = phrase.asSecret { words -> passphrase.asSecret { DeviceCrypto.seed.hex(words, it) } }
 
     private suspend fun index(phrase: String = PHRASE, passphrase: String = ""): WalletPublicMetadata {
         val seed = seed(phrase, passphrase)
@@ -199,7 +199,7 @@ class SignerStoreEngineTest {
     @Test
     fun aZeroEntropyPhraseIsTheBip39VectorThroughTheStore() {
         // SecurityTests: entropy 00×16 → "abandon ×11 about", here through SignerStore.generateMnemonic.
-        val zero = object : SecureRandomSource by JvmSecureRandomSource() {
+        val zero = object : SecureRandomSource by SystemSecureRandomSource() {
             override fun entropyHex(wordCount: Int): CharArray = CharArray(wordCount / 3 * 8) { '0' }
             override fun asKotlinRandom(): Random = Random(0)
         }
