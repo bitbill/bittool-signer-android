@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android-only strings of :feature:onboarding (owner: W2-shell). English only until the translation pass
+  (DECISIONS §9.2). They replace the two iOS-specific lines of the introduction's third page (app-shell.md §6.2, §14):
+  every other line of Welcome and the introduction is an iOS catalogue string.
+-->
+<resources>
+    <!-- Introduction page 3 body. Replaces the iOS "For the strongest isolation, use a dedicated iPhone and keep its connections off." -->
+    <string name="onboarding_prepare_body">For the strongest isolation, use a dedicated phone and keep its connections off.</string>
+    <!--
+      Introduction page 3 point. Replaces the iOS "If iOS asks to allow wireless data, choose Don’t Allow: the app never
+      connects" (a mainland-China iOS prompt Android does not have). Like every point it has no final full stop.
+    -->
+    <string name="onboarding_no_internet_permission">BitTool Signer has no internet permission, so Android blocks every connection</string>
+</resources>

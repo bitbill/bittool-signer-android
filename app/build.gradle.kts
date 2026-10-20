@@ -1,4 +1,6 @@
+import com.android.build.api.artifact.SingleArtifact
 import java.util.Properties
+import java.util.zip.ZipFile
 
 plugins {
     alias(libs.plugins.bittool.android.application)
@@ -139,6 +141,15 @@ android {
     lint {
         checkDependencies = true
     }
+
+    testOptions {
+        unitTests.all { test ->
+            // Roborazzi screenshots of the shell (src/test/.../screenshot) record PNGs into app/build/outputs/roborazzi/
+            // for visual QA (no goldens are committed). `-Psigner.screenshots=false` skips them on a slow machine.
+            test.systemProperty("roborazzi.test.record", "true")
+            if (project.findProperty("signer.screenshots")?.toString() == "false") test.exclude("**/screenshot/**")
+        }
+    }
 }
 
 androidComponents {
@@ -166,6 +177,122 @@ tasks.matching { it.name.matches(Regex("pre(Apk|Play)ReleaseBuild")) }.configure
         partialRelease?.let { throw GradleException("Release signing is only partially configured; missing $it (local.properties or environment).") }
         partialUpload?.let { throw GradleException("Play upload signing is only partially configured; missing $it (local.properties or environment).") }
         logger.lifecycle("BitTool Signer release: $mode")
+    }
+}
+
+/**
+ * The merged manifest of every variant must request exactly the gaps.md G8 permission set (DECISIONS §6: no network
+ * permission; "the OS refuses every socket" is enforced by the build, not only by `tools:node="remove"`): a library
+ * added later cannot slip in a permission unnoticed, and a missing one (e.g. HIDE_OVERLAY_WINDOWS) fails as well.
+ * The report lists what the variant requests (`build/reports/permissions/<variant>.txt`).
+ */
+abstract class CheckMergedPermissions : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val mergedManifest: RegularFileProperty
+
+    @get:Input
+    abstract val expected: SetProperty<String>
+
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val xml = mergedManifest.get().asFile.readText()
+        val requested = Regex("""<uses-permission(?:-sdk-23)?\b[^>]*?android:name="([^"]+)"""")
+            .findAll(xml).map { it.groupValues[1] }.toSortedSet()
+        report.get().asFile.apply { parentFile.mkdirs() }.writeText(requested.joinToString("\n", postfix = "\n"))
+        val allowed = expected.get().toSortedSet()
+        if (requested != allowed) {
+            throw GradleException(
+                "Merged manifest permissions differ from the gaps.md G8 set. Unexpected: ${requested - allowed}; " +
+                    "missing: ${allowed - requested}.",
+            )
+        }
+    }
+}
+
+/**
+ * Release sanity after R8 (ARCHITECTURE §3 W2-shell): the debug UI-test harness (`app/src/debug`) must not exist in a
+ * release build, neither as a class in the R8 mapping nor as its intent-extra keys in the dex.
+ */
+abstract class CheckReleaseHasNoHarness : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val mapping: RegularFileProperty
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val apkDirectory: DirectoryProperty
+
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val forbidden = listOf("DebugUiTestHarness", "FixtureDeviceKeyStore", "FixtureBiometricAuthenticator", "DebugUiTestModule")
+        val mappingText = mapping.get().asFile.readText()
+        val inMapping = forbidden.filter { name -> Regex("""(?m)^\S*\b$name\b\S* -> """).containsMatchIn(mappingText) }
+        val apks = apkDirectory.get().asFile.walkTopDown().filter { it.isFile && it.extension == "apk" }.toList()
+        if (apks.isEmpty()) throw GradleException("No APK found in ${apkDirectory.get().asFile}")
+        val marker = "bts.uitest.".toByteArray(Charsets.US_ASCII)
+        val dexName = Regex("""classes\d*\.dex""")
+        val inDex = apks.flatMap { apk ->
+            ZipFile(apk).use { zip ->
+                zip.entries().asSequence()
+                    .filter { dexName.matches(it.name) }
+                    .filter { entry -> zip.getInputStream(entry).use { it.readBytes() }.contains(marker) }
+                    .map { "${apk.name}!${it.name}" }
+                    .toList()
+            }
+        }
+        report.get().asFile.apply { parentFile.mkdirs() }.writeText(
+            "harness classes in the R8 mapping: $inMapping\nharness intent extras in the dex: $inDex\n",
+        )
+        if (inMapping.isNotEmpty() || inDex.isNotEmpty()) {
+            throw GradleException("The debug UI-test harness reached a release build: classes $inMapping, dex $inDex")
+        }
+    }
+
+    private fun ByteArray.contains(needle: ByteArray): Boolean {
+        outer@ for (i in 0..size - needle.size) {
+            for (j in needle.indices) if (this[i + j] != needle[j]) continue@outer
+            return true
+        }
+        return false
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val cap = variant.name.replaceFirstChar(Char::uppercase)
+        val permissions = tasks.register<CheckMergedPermissions>("check${cap}Permissions") {
+            mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
+            // gaps.md G8: scanning, App Lock (androidx.biometric adds USE_FINGERPRINT for API < 28), the screenshot and
+            // screen-recording callbacks (API 34 / 35), hiding foreign overlays (G4), and androidx.core's signature
+            // permission for RECEIVER_NOT_EXPORTED receivers below API 33.
+            expected.addAll(
+                "android.permission.CAMERA",
+                "android.permission.USE_BIOMETRIC",
+                "android.permission.USE_FINGERPRINT",
+                "android.permission.DETECT_SCREEN_CAPTURE",
+                "android.permission.DETECT_SCREEN_RECORDING",
+                "android.permission.HIDE_OVERLAY_WINDOWS",
+            )
+            expected.add(variant.applicationId.map { "$it.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" })
+            report.set(layout.buildDirectory.file("reports/permissions/${variant.name}.txt"))
+        }
+        tasks.matching { it.name == "assemble$cap" || it.name == "bundle$cap" }.configureEach { dependsOn(permissions) }
+
+        if (variant.buildType == "release") {
+            val harness = tasks.register<CheckReleaseHasNoHarness>("check${cap}HasNoHarness") {
+                mapping.set(variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE))
+                apkDirectory.set(variant.artifacts.get(SingleArtifact.APK))
+                report.set(layout.buildDirectory.file("reports/release/${variant.name}-harness.txt"))
+            }
+            tasks.matching { it.name == "assemble$cap" }.configureEach { dependsOn(harness) }
+        }
     }
 }
 
@@ -201,8 +328,14 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.turbine)
+    // Not in the version catalogue (DECISIONS §8): record-only screenshots, the setup :core:designsystem uses.
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.32.2")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.32.2")
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

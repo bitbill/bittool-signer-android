@@ -2,11 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        The whole permission set of BitTool Signer (gaps.md G8). The merged manifest of every variant must equal it
+        (`check<Variant>Permissions`, run by every assemble/bundle): nothing else, and in particular no network access.
+    -->
     <!-- BitTool Signer is offline by construction: it declares no network permission, so the OS refuses every socket. -->
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <!-- Scanning signing requests and recovery-phrase QR codes. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- App Lock (androidx.biometric; it also merges USE_FINGERPRINT for API < 28). -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- API 34+ screenshot callback: recovery displays conceal after a screenshot (app-shell.md §15.8). -->
+    <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE" />
+    <!-- API 35+ screen-recording callback: the "recorded or mirrored" cover and session suspension. -->
+    <uses-permission android:name="android.permission.DETECT_SCREEN_RECORDING" />
+    <!-- API 31+: other apps' overlays are hidden while our windows are shown (gaps.md G4). -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
 
     <application
         android:name=".SignerApplication"
@@ -23,6 +36,12 @@
         android:theme="@style/Theme.BitToolSigner.Starting"
         tools:targetApi="36">
 
+        <!--
+            The only activity: no deep links, no other exported component. singleTask, so a launcher tap or the UI-test
+            relaunch resumes the task instead of stacking a second instance. Orientation, size, density, keyboard and
+            night-mode changes are handled without recreation (an App Lock or setup state never goes through a
+            recreation for them); a per-app language change recreates it, which is not a background visit.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
