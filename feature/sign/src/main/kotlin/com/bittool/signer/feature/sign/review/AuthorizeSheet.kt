@@ -15,8 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -49,6 +52,7 @@ import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.rememberOverlayBlocked
+import com.bittool.signer.feature.sign.common.windowTestTags
 import kotlinx.coroutines.delay
 
 /** iOS `.task { try? await Task.sleep(nanoseconds: 350_000_000); focused = true }`. */
@@ -100,7 +104,8 @@ internal fun AuthorizeSheet(
         }
         val toast = rememberStatusToastState()
         val blocked = rememberOverlayBlocked(toast)
-        Box {
+        // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
+        Box(windowTestTags()) {
             Column {
                 SheetHeader(title = stringResource(R.string.authorize_signature), onCancel = onCancel, cancelEnabled = !state.busy)
                 AuthorizeBody(state, password, submit, Modifier.weight(1f, fill = false))
@@ -139,8 +144,11 @@ internal fun ColumnScope.AuthorizeBody(
             if (runCatching { focus.requestFocus() }.isSuccess) keyboard?.show()
         }
     }
+    // Each failure once: a sheet rebuilt by a rotation shows the error again but does not buzz again.
+    var handledAttempt by rememberSaveable { mutableIntStateOf(state.attempt) }
     LaunchedEffect(state.attempt) {
-        if (state.attempt > 0) {
+        if (state.attempt > handledAttempt) {
+            handledAttempt = state.attempt
             haptics.reject()
             if (runCatching { focus.requestFocus() }.isSuccess) keyboard?.show()
         }

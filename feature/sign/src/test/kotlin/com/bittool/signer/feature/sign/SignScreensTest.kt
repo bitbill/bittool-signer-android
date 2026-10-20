@@ -1,7 +1,16 @@
 package com.bittool.signer.feature.sign
 
+import android.content.pm.ApplicationInfo
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.SemanticsPropertiesAndroid
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -19,6 +28,9 @@ import androidx.compose.ui.test.performTextInput
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.feature.sign.common.SignTags
+import com.bittool.signer.feature.sign.common.exposesTestTags
+import com.bittool.signer.feature.sign.home.PasteRequestSheet
+import com.bittool.signer.feature.sign.home.PasteUiState
 import com.bittool.signer.feature.sign.home.ScanHomeContent
 import com.bittool.signer.feature.sign.home.ScanHomeUiState
 import com.bittool.signer.feature.sign.result.SignatureResultContent
@@ -27,10 +39,13 @@ import com.bittool.signer.feature.sign.review.AuthorizeSheet
 import com.bittool.signer.feature.sign.review.RequestReviewContent
 import com.bittool.signer.feature.sign.review.RequestReviewUiState
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
@@ -174,6 +189,74 @@ class SignScreensTest {
         assertEquals("Public-Test-Password1!", signed)
         compose.onNodeWithTag(SignTags.AUTHORIZE_SIGN).assertIsNotEnabled()
         compose.onNodeWithText("The password decrypts this wallet for this signature only.").assertExists()
+    }
+
+    /** Whether the e2e suite (UiAutomator `By.res`) sees the node tagged [tag]: some semantics ancestor in its window maps tags. */
+    private fun publishesResourceId(tag: String) =
+        compose.onNode(
+            hasTestTag(tag) and hasAnyAncestor(SemanticsMatcher.expectValue(SemanticsPropertiesAndroid.TestTagsAsResourceId, true)),
+            useUnmergedTree = true,
+        )
+
+    private fun debuggable(on: Boolean) {
+        val info = RuntimeEnvironment.getApplication().applicationInfo
+        info.flags = if (on) info.flags or ApplicationInfo.FLAG_DEBUGGABLE else info.flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+    }
+
+    @Test
+    fun theSheetsPublishTheirOwnTestTagsInDebugBuilds() {
+        // Sheets are windows of their own: the root's testTagsAsResourceId does not reach them (gaps.md G1.8 needs
+        // signing.payload, signing.decode, "Wallet password" and authorize.sign by resource id).
+        debuggable(true)
+        try {
+            var paste by mutableStateOf(true)
+            compose.setContent {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    if (paste) {
+                        PasteRequestSheet(PasteUiState(), remember { TextFieldState() }, canSubmit = false, onDismiss = {}, onPasteFromClipboard = {}, onSubmit = {})
+                    } else {
+                        AuthorizeSheet(ReviewStates.authorize, onSign = { it.wipe() }, onCancel = {}, onDismissed = {})
+                    }
+                }
+            }
+            publishesResourceId(SignTags.PAYLOAD).assertExists()
+            publishesResourceId(SignTags.DECODE).assertExists()
+            paste = false
+            compose.waitForIdle()
+            publishesResourceId("Wallet password").assertExists()
+            publishesResourceId(SignTags.AUTHORIZE_SIGN).assertExists()
+        } finally {
+            debuggable(false)
+        }
+    }
+
+    @Test
+    fun releaseBuildsDoNotPublishTestTags() {
+        assertTrue(exposesTestTags(ApplicationInfo.FLAG_DEBUGGABLE or ApplicationInfo.FLAG_HAS_CODE))
+        assertFalse(exposesTestTags(ApplicationInfo.FLAG_HAS_CODE))
+    }
+
+    @Test
+    fun aReviewedRequestSlidesThePasteSheetAwayInsteadOfDroppingIt() {
+        var closing by mutableStateOf(false)
+        var dismissed = 0
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                PasteRequestSheet(
+                    PasteUiState(closing = closing),
+                    remember { TextFieldState("UR:BYTES/OK") },
+                    canSubmit = !closing,
+                    onDismiss = { dismissed++ },
+                    onPasteFromClipboard = {},
+                    onSubmit = {},
+                )
+            }
+        }
+        compose.onNodeWithTag(SignTags.PASTE_SHEET).assertExists()
+        assertEquals(0, dismissed)
+        closing = true
+        compose.waitForIdle()
+        assertEquals(1, dismissed, "the sheet animates away, then reports it left")
     }
 
     @Test

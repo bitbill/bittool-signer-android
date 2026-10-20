@@ -21,14 +21,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The paste sheet while it is presented (iOS `PasteRequestSheet` state, `Features/Sign/ScanTab.swift:263-325`). */
+/**
+ * The paste sheet while it is presented (iOS `PasteRequestSheet` state, `Features/Sign/ScanTab.swift:263-325`).
+ * [closing]: the request was reviewed, so the sheet slides away (iOS `dismiss()`); it reports back through
+ * [ScanHomeViewModel.dismissPaste] once it has left the screen.
+ */
 @Immutable
-data class PasteUiState(val busy: Boolean = false, val error: UiText? = null)
+data class PasteUiState(val busy: Boolean = false, val error: UiText? = null, val closing: Boolean = false)
 
 /**
  * Scan home (iOS `ScanHomeView` state, `ScanTab.swift:108-251`): [busy] while a file import is in flight (the option
@@ -48,8 +51,9 @@ data class ScanHomeUiState(
  * Every submission follows the iOS rules: ignored while busy, the error cleared, the security epoch captured; a failure
  * is shown only when the epoch is unchanged and it is not a cancellation (a late result after backgrounding is
  * silent), and busy ends with the call. A new security epoch ends busy at once (iOS `.onChange(of: securityEpoch)`).
- * Home is rebuilt on iOS after a review or signature, so its error and the paste sheet go away as soon as a request is
- * reviewed. The pasted text lives in [pasteText] (a request is public data; kept across rotation, never saved).
+ * Home is rebuilt on iOS after a review or signature, so its error goes and the paste sheet slides away
+ * ([PasteUiState.closing]) as soon as a request is reviewed. The pasted text lives in [pasteText] (a request is public
+ * data; kept across rotation, never saved).
  */
 @HiltViewModel
 class ScanHomeViewModel @Inject constructor(
@@ -73,11 +77,16 @@ class ScanHomeViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            store.state.map { it.review != null || it.hasSignedResponse }.distinctUntilChanged().filter { it }.collect {
-                // The request is under review: Home and its sheet are gone (iOS rebuilds them after Reject / Done).
-                pasteOperation++
-                pasteText.clearText()
-                _uiState.update { it.copy(error = null, paste = null) }
+            store.state.map { it.review != null || it.hasSignedResponse }.distinctUntilChanged().drop(1).collect { reviewed ->
+                if (reviewed) {
+                    // The request is under review: Home goes and its sheet slides away with it (iOS rebuilds both
+                    // after Reject / Done). The text stays until the sheet is off the screen.
+                    pasteOperation++
+                    _uiState.update { it.copy(error = null, paste = it.paste?.copy(busy = false, closing = true)) }
+                } else if (_uiState.value.paste?.closing == true) {
+                    // Home is back (Reject, Done) while a sheet never finished leaving (the page went first).
+                    dismissPaste()
+                }
             }
         }
     }
@@ -108,9 +117,9 @@ class ScanHomeViewModel @Inject constructor(
         pasteText.edit { replace(0, length, text) }
     }
 
-    /** Whether "Review Request" can be pressed: not busy and the text is not blank. */
+    /** Whether "Review Request" can be pressed: not busy, not leaving, and the text is not blank. */
     fun canSubmitPaste(state: PasteUiState): Boolean =
-        !state.busy && pasteText.text.toString().trimWhitespacesAndNewlines().isNotEmpty()
+        !state.busy && !state.closing && pasteText.text.toString().trimWhitespacesAndNewlines().isNotEmpty()
 
     /** "Review Request" (`signing.decode`, iOS `PasteRequestSheet.submit`). */
     fun submitPaste() {
@@ -123,10 +132,8 @@ class ScanHomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 store.importPayload(text)
-                if (operation == pasteOperation) {
-                    pasteText.clearText()
-                    _uiState.update { it.copy(paste = null) }
-                }
+                // iOS `payload = ""; dismiss()`: the sheet slides away, its text goes when it is off the screen.
+                if (operation == pasteOperation) _uiState.update { it.copy(paste = it.paste?.copy(closing = true)) }
             } catch (e: CancellationException) {
                 currentCoroutineContext().ensureActive()
             } catch (e: Exception) {

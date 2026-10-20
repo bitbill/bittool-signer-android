@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -123,6 +124,23 @@ class ScanFlowTest {
         assertFalse(tab.consumeScanRequest())
         router.onTabClicked(Tab.Scan)
         assertFalse(tab.consumeScanRequest(), "a reselection does not open it either")
+    }
+
+    @Test
+    fun theReviewIsAlreadyThereWhenTheCameraClosesAfterALongScan() = runTest {
+        // The Scan page leaves composition while the camera covers it. A scan taking longer than a moment must not
+        // leave the stage frozen at Home: the page that comes back shows the review at once (scan-sign.md §7).
+        val tab = ScanTabViewModel(store, router)
+        val page = backgroundScope.launch { tab.stage.collect {} }
+        runCurrent()
+        page.cancel()
+        advanceTimeBy(60_000)
+        store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+        runCurrent()
+        assertEquals(ScanStage.Review, tab.stage.value, "the stage a returning page starts from")
+        store.clearRequest()
+        runCurrent()
+        assertEquals(ScanStage.Home, tab.stage.value)
     }
 
     @Test

@@ -120,7 +120,10 @@ fun SignatureResultContent(
 ) {
     val shown = rememberLatest(state) { it.showsDetails || it.frames.isNotEmpty() }
     val haptics = rememberSignerHaptics()
+    // iOS `.symbolEffect(.bounce, value: appeared)` and `.sensoryFeedback(.success, trigger: appeared)`: once, when
+    // this signature first appears — not again after a rotation or a return to the tab.
     var appeared by rememberSaveable { mutableStateOf(false) }
+    val bounce = remember { !appeared }
     LaunchedEffect(Unit) {
         if (!appeared) {
             appeared = true
@@ -156,7 +159,7 @@ fun SignatureResultContent(
             verticalArrangement = Arrangement.spacedBy(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ResultHeader()
+            ResultHeader(bounce)
             if (shown.frames.isNotEmpty()) QrCodeView(frames = shown.frames, maxSide = 340.dp)
             shown.review?.let { RequestSummary(it) }
             if (shown.showsDetails) ResultDetails(shown, onExport)
@@ -167,12 +170,11 @@ fun SignatureResultContent(
 }
 
 @Composable
-private fun ResultHeader() {
+private fun ResultHeader(bounce: Boolean) {
     val colors = SignerTheme.colors
     val reduceMotion = SignerTheme.reduceMotion
     val scale = remember { Animatable(1f) }
-    if (!reduceMotion) {
-        // iOS `.symbolEffect(.bounce, value: appeared)`: once each time the page appears.
+    if (bounce && !reduceMotion) {
         LaunchedEffect(Unit) {
             scale.animateTo(
                 targetValue = 1f,

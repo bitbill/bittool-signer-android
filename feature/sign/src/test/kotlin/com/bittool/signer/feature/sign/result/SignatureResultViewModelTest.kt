@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -105,5 +106,20 @@ class SignatureResultViewModelTest {
         assertEquals(1, store.calls<FakeSignerStore.Call.ClearRequest>().size)
         assertEquals(false, store.state.value.hasSignedResponse)
         assertNull(vm.uiState.value.exportError)
+    }
+
+    @Test
+    fun aPageThatComesBackShowsTheCurrentSignature() = runTest {
+        // The result page leaves composition on another tab; coming back it must not start from a frozen value
+        // (the previous request's signature, or none).
+        val vm = SignatureResultViewModel(store, writer)
+        val page = backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+        page.cancel()
+        advanceTimeBy(60_000)
+        store.setState { it.copy(signatureFrames = listOf("UR:ETH-SIGNATURE/NEXT"), signatureText = "UR:ETH-SIGNATURE/NEXT") }
+        runCurrent()
+        assertEquals(listOf("UR:ETH-SIGNATURE/NEXT"), vm.uiState.value.frames)
+        assertEquals("UR:ETH-SIGNATURE/NEXT", vm.uiState.value.text)
     }
 }

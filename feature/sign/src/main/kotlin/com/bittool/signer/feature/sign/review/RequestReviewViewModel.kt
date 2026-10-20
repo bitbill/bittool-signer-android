@@ -114,8 +114,21 @@ class RequestReviewViewModel @Inject constructor(private val store: SignerStore)
     private val local = MutableStateFlow(LocalState())
     private var operation = 0L
 
+    /**
+     * Always current ([SharingStarted.Eagerly]): this ViewModel belongs to the Scan tab's entry and outlives the page,
+     * which leaves composition under the camera, on other tabs and between requests. A frozen `WhileSubscribed`
+     * value would make the page's first frame show the previous request (or none) when it comes back.
+     */
     val uiState: StateFlow<RequestReviewUiState> = combine(store.state, local, ::build)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), build(store.state.value, local.value))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, build(store.state.value, local.value))
+
+    /**
+     * "Match Again" is running. The store reviews the frozen request again from scratch, so the review is briefly
+     * gone (iOS `prepare` starts with `clearRequest()`); the Scan tab keeps this page meanwhile instead of flashing
+     * Home between two identical reviews (iOS rebuilds the page there).
+     */
+    val retrying: StateFlow<Boolean> = local.map { it.retrying }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     init {
         viewModelScope.launch {
@@ -128,9 +141,10 @@ class RequestReviewViewModel @Inject constructor(private val store: SignerStore)
         viewModelScope.launch {
             store.state.map { it.review?.requestHash }.distinctUntilChanged().drop(1).collect {
                 // Another request, or none (Reject, Done, deletion): iOS resets the consent on a new hash and discards
-                // the whole page state with the page, so nothing of the previous request carries over.
+                // the whole page state with the page, so nothing of the previous request carries over. A running
+                // "Match Again" passes through here twice (the store clears, then reviews the same request again).
                 operation++
-                local.value = LocalState()
+                local.update { LocalState(retrying = it.retrying) }
             }
         }
     }

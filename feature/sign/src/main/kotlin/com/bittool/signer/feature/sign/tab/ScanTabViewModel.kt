@@ -23,6 +23,12 @@ enum class ScanStage {
     Signature,
     ;
 
+    /**
+     * The page to draw: this stage, except that the review stays while "Match Again" runs — the store clears the
+     * request before reviewing the same one again, which would otherwise flash Home for an engine call.
+     */
+    fun shown(retrying: Boolean): ScanStage = if (retrying && this == Home) Review else this
+
     companion object {
         /** A finished signature first, then a request under review, else Home (iOS order). */
         fun of(state: SignerState): ScanStage = when {
@@ -49,10 +55,17 @@ class ScanTabViewModel @Inject constructor(
     private val router: AppRouter,
 ) : ViewModel() {
 
+    /**
+     * Kept current even while nothing collects it ([SharingStarted.Eagerly], an in-memory map of the store). The Scan
+     * page leaves composition whenever the camera covers it or another tab is shown; with `WhileSubscribed` the value
+     * would freeze there, so a page that comes back (the camera closing on a finished scan, a return to the tab)
+     * would first draw the stage it left — Home under the closing camera, cross-fading into the review — instead of
+     * the review "already rendered underneath" (scan-sign.md §7).
+     */
     val stage: StateFlow<ScanStage> = store.state
         .map(ScanStage::of)
         .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScanStage.of(store.state.value))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ScanStage.of(store.state.value))
 
     /** The router's request token; the screen reconciles it on appearance and on every change. */
     val scanRequest: StateFlow<Int> get() = router.scanRequest

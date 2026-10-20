@@ -8,6 +8,7 @@ import com.bittool.signer.core.model.signing.MatchingIssue
 import com.bittool.signer.feature.sign.SignFixtures
 import com.bittool.signer.feature.sign.SignFixtures.walletA
 import com.bittool.signer.feature.sign.SignFixtures.walletB
+import com.bittool.signer.feature.sign.tab.ScanStage
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -19,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -258,6 +260,48 @@ class RequestReviewViewModelTest {
     }
 
     @Test
+    fun matchAgainKeepsTheReviewOnScreenWhileTheStoreReviewsTheRequestAgain() = runTest {
+        // The store's retry starts with clearRequest(); the page must not flash Home between two identical reviews.
+        val vm = review()
+        reviewed(SignFixtures.bitcoinSend)
+        store.suspendSession()
+        runCurrent()
+        val gate = CompletableDeferred<Unit>()
+        store.onRetryMatching = {
+            store.clearRequest()
+            gate.await()
+            store.setState { it.copy(review = SignFixtures.bitcoinSend, plan = SignFixtures.plan("task-1" to walletA)) }
+        }
+        vm.retryMatching()
+        runCurrent()
+        assertNull(store.state.value.review, "the store has dropped the request for a moment")
+        assertTrue(vm.retrying.value)
+        assertTrue(vm.uiState.value.retrying, "still \"Matching…\"")
+        assertEquals(ScanStage.Review, ScanStage.of(store.state.value).shown(vm.retrying.value), "Home is not shown")
+        gate.complete(Unit)
+        runCurrent()
+        assertFalse(vm.retrying.value)
+        assertEquals(ScanStage.Review, ScanStage.of(store.state.value).shown(vm.retrying.value))
+        assertNotNull(vm.uiState.value.pending, "matched this time")
+    }
+
+    @Test
+    fun aRetryThatLosesTheRequestLetsHomeShow() = runTest {
+        val vm = review()
+        reviewed(SignFixtures.bitcoinSend)
+        store.suspendSession()
+        runCurrent()
+        store.onRetryMatching = {
+            store.clearRequest()
+            throw com.bittool.signer.core.model.AppIssue("The offline signing engine could not be started.")
+        }
+        vm.retryMatching()
+        runCurrent()
+        assertFalse(vm.retrying.value)
+        assertEquals(ScanStage.Home, ScanStage.of(store.state.value).shown(vm.retrying.value))
+    }
+
+    @Test
     fun noMatchingWalletCannotBeRetried() = runTest {
         val vm = review()
         store.setState { it.copy(review = SignFixtures.bitcoinSend, matchingIssue = MatchingIssue.Engine("No matching wallet")) }
@@ -279,5 +323,20 @@ class RequestReviewViewModelTest {
         assertNull(wallet.name, "shown as \"Wallet\"")
         assertNull(wallet.fingerprint, "shown as \"Setup required\"")
         assertEquals(walletA.uppercase, wallet.avatarIdentity)
+    }
+
+    @Test
+    fun aPageThatComesBackNeverStartsFromAnEarlierRequest() = runTest {
+        // The review page leaves composition under the camera and on other tabs; the ViewModel stays (it belongs to
+        // the Scan entry). Its state must follow the store meanwhile, or the next page's first frame shows the old one.
+        val vm = RequestReviewViewModel(store)
+        val page = backgroundScope.launch { vm.uiState.collect {} }
+        reviewed(SignFixtures.knownSpenderApproval, "task-1" to walletA)
+        page.cancel()
+        store.clearRequest()
+        advanceTimeBy(60_000)
+        reviewed(SignFixtures.bitcoinSend)
+        assertEquals(SignFixtures.bitcoinSend, vm.uiState.value.review)
+        assertNull(vm.uiState.value.tasks, "still matching: no task of the earlier plan")
     }
 }

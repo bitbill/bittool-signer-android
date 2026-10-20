@@ -56,8 +56,9 @@ class SignatureResultViewModel @Inject constructor(
 
     private val exportError = MutableStateFlow<UiText?>(null)
 
+    /** Always current ([SharingStarted.Eagerly]) for the same reason as `RequestReviewViewModel.uiState`. */
     val uiState: StateFlow<SignatureResultUiState> = combine(store.state, exportError, ::build)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), build(store.state.value, exportError.value))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, build(store.state.value, exportError.value))
 
     init {
         viewModelScope.launch {

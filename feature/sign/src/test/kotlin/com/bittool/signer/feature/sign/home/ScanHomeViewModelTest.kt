@@ -74,6 +74,11 @@ class ScanHomeViewModelTest {
             store.calls<FakeSignerStore.Call.ImportPayload>().map { it.text },
             "the text goes to the engine unchanged (it trims and splits lines itself)",
         )
+        val leaving = assertNotNull(vm.uiState.value.paste, "the sheet slides away instead of vanishing")
+        assertTrue(leaving.closing)
+        assertFalse(leaving.busy)
+        assertFalse(vm.canSubmitPaste(leaving), "nothing more is sent from a sheet on its way out")
+        vm.dismissPaste() // the sheet is off the screen
         assertNull(vm.uiState.value.paste)
         assertEquals("", vm.pasteText.text.toString())
     }
@@ -156,8 +161,26 @@ class ScanHomeViewModelTest {
         vm.type("UR:BYTES/OK")
         vm.submitPaste()
         runCurrent()
-        assertNull(vm.uiState.value.paste)
+        assertEquals(true, vm.uiState.value.paste?.closing, "the sheet slides away with Home")
         assertNull(vm.uiState.value.error, "Home is rebuilt after the review on iOS")
+    }
+
+    @Test
+    fun aReviewArrivingUnderAnOpenSheetSendsItAwayAndHomeNeverBringsItBack() = runTest {
+        val vm = home()
+        runCurrent()
+        vm.openPaste()
+        vm.type("UR:BYTES/TYPED")
+        // A request reviewed while the sheet is up (an import that was already on its way).
+        store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+        runCurrent()
+        assertEquals(true, vm.uiState.value.paste?.closing)
+        assertEquals("UR:BYTES/TYPED", vm.pasteText.text.toString(), "the leaving sheet keeps its text on screen")
+        // The page went before the sheet finished leaving; Reject brings Home back without that sheet.
+        store.clearRequest()
+        runCurrent()
+        assertNull(vm.uiState.value.paste)
+        assertEquals("", vm.pasteText.text.toString())
     }
 
     @Test

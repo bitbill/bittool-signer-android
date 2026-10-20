@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -44,12 +45,14 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
+import com.bittool.signer.feature.sign.common.windowTestTags
 
 /**
  * "Paste Request" (inventory row 49; iOS `PasteRequestSheet`, `Features/Sign/ScanTab.swift:263-325`): a full sheet with
  * "Cancel", the instruction, a monospaced editor (`signing.payload`, no autocorrect or capitalisation), "Paste from
  * Clipboard" (replaces the text), the import error, and "Review Request" (`signing.decode`) pinned above the keyboard,
- * enabled once the text is not blank. Every dismissal (Cancel, swipe, Back) discards the text.
+ * enabled once the text is not blank. Every dismissal (Cancel, swipe, Back) discards the text. Once the request is
+ * reviewed ([PasteUiState.closing]) the sheet slides away by itself, as iOS `dismiss()` does, instead of vanishing.
  */
 @Composable
 internal fun PasteRequestSheet(
@@ -61,16 +64,23 @@ internal fun PasteRequestSheet(
     onSubmit: () -> Unit,
 ) {
     SignerBottomSheet(onDismissRequest = onDismiss, secure = true, testTag = SignTags.PASTE_SHEET) {
-        SheetHeader(title = stringResource(R.string.paste_request), onCancel = { dismiss() })
-        PasteRequestBody(state, text, onPasteFromClipboard, Modifier.weight(1f, fill = false))
-        BottomActionBar {
-            PrimaryButton(
-                text = stringResource(R.string.review_request),
-                onClick = onSubmit,
-                busy = state.busy,
-                enabled = canSubmit,
-                modifier = Modifier.testTag(SignTags.DECODE),
-            )
+        val sheet = this
+        LaunchedEffect(state.closing) {
+            if (state.closing) sheet.dismiss()
+        }
+        // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
+        Column(windowTestTags()) {
+            SheetHeader(title = stringResource(R.string.paste_request), onCancel = { sheet.dismiss() })
+            PasteRequestBody(state, text, onPasteFromClipboard, Modifier.weight(1f, fill = false))
+            BottomActionBar {
+                PrimaryButton(
+                    text = stringResource(R.string.review_request),
+                    onClick = onSubmit,
+                    busy = state.busy,
+                    enabled = canSubmit,
+                    modifier = Modifier.testTag(SignTags.DECODE),
+                )
+            }
         }
     }
 }
