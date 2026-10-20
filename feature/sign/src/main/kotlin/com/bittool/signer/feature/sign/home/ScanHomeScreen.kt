@@ -55,7 +55,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
@@ -70,7 +69,7 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.symbolSize
 import kotlinx.coroutines.flow.Flow
@@ -182,7 +181,7 @@ fun ScanHomeContent(
                     modifier = Modifier.weight(1f),
                 )
             }
-            state.error?.let { Callout(text = it.asString(), tone = Tone.Danger, verbatim = true) }
+            state.error?.let { Callout(text = it, tone = Tone.Danger) }
             HowSigningWorks()
         }
     }

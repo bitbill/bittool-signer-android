@@ -24,7 +24,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
@@ -36,7 +35,7 @@ import com.bittool.signer.core.ui.review.ContractNotice
 import com.bittool.signer.core.ui.review.ReviewDetailsCard
 import com.bittool.signer.core.ui.review.ReviewSummaryCard
 import com.bittool.signer.core.ui.review.ReviewWarnings
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.text.rememberReviewText
 
 /**
@@ -73,7 +72,7 @@ internal fun SignedRequestContent(decode: DecodeState, onBack: () -> Unit, modif
         when (decode) {
             is DecodeState.Decoded -> SignedRequestBody(decode.review, insets)
             is DecodeState.Failed -> Box(Modifier.fillMaxSize().padding(insets).padding(SignerMetrics.pagePadding)) {
-                Callout(text = decode.message.asString(), tone = Tone.Warning, verbatim = true)
+                Callout(text = decode.message, tone = Tone.Warning)
             }
             DecodeState.Decoding, DecodeState.NotStored -> Box(Modifier.fillMaxSize().padding(insets), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(Modifier.size(28.dp), color = SignerTheme.colors.secondaryLabel, strokeWidth = 2.5.dp)

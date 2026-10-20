@@ -1,7 +1,6 @@
 package com.bittool.signer.feature.wallets.security
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +30,7 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
+import com.bittool.signer.core.ui.password.wipe
 import com.bittool.signer.feature.wallets.common.DestructiveButton
 import com.bittool.signer.feature.wallets.common.WalletIdentityCard
 import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
@@ -132,7 +132,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
 @Composable
 internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
     val password = remember { TextFieldState() }
-    DisposableEffect(password) { onDispose { password.clearText() } }
+    DisposableEffect(password) { onDispose { password.wipe() } }
     val focus = remember { FocusRequester() }
     LaunchedEffect(focus) {
         // Like the iOS alert, the field takes the keyboard at once (the dialog window attaches a frame later).
@@ -141,11 +141,11 @@ internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -
     }
     val delete = {
         val entered = SecretText.of(password.text)
-        password.clearText()
+        password.wipe()
         onDelete(entered)
     }
     val cancel = {
-        password.clearText()
+        password.wipe()
         onCancel()
     }
     SignerAlertDialog(

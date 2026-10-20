@@ -50,7 +50,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.Tone
@@ -69,7 +68,7 @@ import com.bittool.signer.core.ui.address.AddressText
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.core.ui.pairing.ChainPicker
 import com.bittool.signer.core.ui.pairing.ProfileMenu
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.text.localizedTitle
 import com.bittool.signer.feature.wallets.common.GroupedFooter
 import com.bittool.signer.feature.wallets.common.GroupedHeader
@@ -176,7 +175,7 @@ fun AddressesContent(uiState: AddressesUiState, actions: AddressesActions, modif
                     }
                 }
                 uiState.error != null -> item(key = "error", contentType = "error") {
-                    Callout(text = uiState.error.asString(), tone = Tone.Danger, verbatim = true, modifier = Modifier.readableWidth())
+                    Callout(text = uiState.error, tone = Tone.Danger, modifier = Modifier.readableWidth())
                 }
                 else -> item(key = "loading", contentType = "spinner") {
                     GroupedLazyRow(RowPosition.Single, Modifier.readableWidth()) { Spinner(Modifier.padding(vertical = 20.dp)) }

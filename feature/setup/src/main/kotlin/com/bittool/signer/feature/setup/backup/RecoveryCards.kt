@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,7 +72,7 @@ import com.bittool.signer.core.l10n.R as L10n
 internal fun RecoveryCardsSheet(words: RecoveryWords, hasPassphrase: Boolean, onReveal: () -> Unit, onDismiss: () -> Unit) {
     SignerBottomSheet(onDismissRequest = onDismiss, secure = true, testTag = "cards.sheet") {
         val sheet = this
-        OverlayGuardHost(fill = false, modifier = Modifier.semantics { testTagsAsResourceId = true }) {
+        OverlayGuardHost(fill = false) {
             Column(Modifier.fillMaxWidth()) {
                 SheetTitleBar(title = stringResource(L10n.string.recovery_cards), onDone = { sheet.dismiss() }, doneTag = "cards.done")
                 RecoveryCardsPage(words, hasPassphrase, rememberPrivacySession(), onReveal)

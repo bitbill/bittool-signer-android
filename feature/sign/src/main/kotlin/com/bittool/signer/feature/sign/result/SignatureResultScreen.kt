@@ -71,7 +71,7 @@ import com.bittool.signer.core.ui.logo.ChainLogo
 import com.bittool.signer.core.ui.logo.NetworkLogo
 import com.bittool.signer.core.ui.logo.TokenIcon
 import com.bittool.signer.core.ui.payload.PayloadDisclosure
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.text.localizedSummary
 import com.bittool.signer.core.ui.text.localizedTitle
 import com.bittool.signer.feature.sign.common.SignTags
@@ -164,7 +164,7 @@ fun SignatureResultContent(
             shown.review?.let { RequestSummary(it) }
             if (shown.showsDetails) ResultDetails(shown, onExport)
             Callout(text = stringResource(R.string.signing_doesnt_send_anything_your_other_wallet))
-            state.exportError?.let { Callout(text = it.asString(), tone = Tone.Danger, verbatim = true) }
+            state.exportError?.let { Callout(text = it, tone = Tone.Danger) }
         }
     }
 }

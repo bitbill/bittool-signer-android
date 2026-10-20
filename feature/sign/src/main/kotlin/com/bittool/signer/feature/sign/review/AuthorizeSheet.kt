@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.bittool.signer.core.designsystem.component.BottomActionBar
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
 import com.bittool.signer.core.designsystem.component.StatusToastHost
@@ -47,13 +45,12 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.password.wipe
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.rememberOverlayBlocked
-import com.bittool.signer.feature.sign.common.appExposesTestTags
-import com.bittool.signer.feature.sign.common.windowTestTags
 import kotlinx.coroutines.delay
 
 /** iOS `.task { try? await Task.sleep(nanoseconds: 350_000_000); focused = true }`. */
@@ -79,8 +76,9 @@ internal fun AuthorizeSheet(
     onDismissed: () -> Unit,
 ) {
     val password = remember { TextFieldState() }
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { password.clearText() }
-    DisposableEffect(password) { onDispose { password.clearText() } }
+    // wipe(): the text and its undo history, so no Ctrl+Z brings a cleared password back.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { password.wipe() }
+    DisposableEffect(password) { onDispose { password.wipe() } }
     val latestState by rememberUpdatedState(state)
     val latestOnSign by rememberUpdatedState(onSign)
     val submit: () -> Unit = remember(password) {
@@ -88,7 +86,7 @@ internal fun AuthorizeSheet(
             val current = latestState
             if (password.text.isNotEmpty() && !current.busy && !current.closing) {
                 val entered = SecretText.of(password.text)
-                password.clearText()
+                password.wipe()
                 latestOnSign(entered)
             }
         }
@@ -105,8 +103,8 @@ internal fun AuthorizeSheet(
         }
         val toast = rememberStatusToastState()
         val blocked = rememberOverlayBlocked(toast)
-        // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
-        Box(Modifier.windowTestTags(appExposesTestTags())) {
+        // A window of its own: SignerBottomSheet publishes its test tags as resource ids (e2e, gaps G1.8).
+        Box {
             Column {
                 SheetHeader(title = stringResource(R.string.authorize_signature), onCancel = onCancel, cancelEnabled = !state.busy)
                 AuthorizeBody(state, password, submit, Modifier.weight(1f, fill = false))
@@ -176,7 +174,7 @@ internal fun ColumnScope.AuthorizeBody(
         )
         val error = state.error
         if (error != null) {
-            Callout(text = error.asString(), tone = Tone.Danger, verbatim = true)
+            Callout(text = error, tone = Tone.Danger)
         } else {
             Text(
                 text = stringResource(R.string.the_password_decrypts_this_wallet_for_this_signature),

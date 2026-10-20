@@ -53,10 +53,10 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
+import com.bittool.signer.core.ui.password.secretTextMenu
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
 import com.bittool.signer.feature.setup.ui.iconSizeFor
-import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**

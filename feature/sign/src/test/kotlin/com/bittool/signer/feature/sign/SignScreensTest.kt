@@ -26,9 +26,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.exposesTestTags
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.feature.sign.common.SignTags
-import com.bittool.signer.feature.sign.common.exposesTestTags
 import com.bittool.signer.feature.sign.home.PasteRequestSheet
 import com.bittool.signer.feature.sign.home.PasteUiState
 import com.bittool.signer.feature.sign.home.ScanHomeContent

@@ -46,6 +46,7 @@ import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.StatusToastState
 import com.bittool.signer.core.designsystem.component.SwitchRow
+import com.bittool.signer.core.designsystem.component.ValueRow
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
@@ -205,11 +206,18 @@ private fun AppearanceSection(state: SettingsUiState, onThemeClick: () -> Unit, 
         header = stringResource(R.string.appearance),
         footer = stringResource(R.string.the_interface_language_what_a_signing_request_itself),
     ) {
+        // iOS menu pickers in a Form: the current choice against the chevron, in its own direction (endonyms).
         item(key = "theme", dividerInset = IconRowDividerInset) {
-            ChoiceRow(theme, SignerIcons.Contrast, themeValue, onThemeClick, Modifier.testTag(SettingsTags.APPEARANCE))
+            NavRow(
+                theme, SignerIcons.Contrast, onThemeClick, Modifier.testTag(SettingsTags.APPEARANCE),
+                value = themeValue, verbatimValue = true,
+            )
         }
         item(key = "language") {
-            ChoiceRow(language, SignerIcons.Language, languageValue, onLanguageClick, Modifier.testTag(SettingsTags.LANGUAGE))
+            NavRow(
+                language, SignerIcons.Language, onLanguageClick, Modifier.testTag(SettingsTags.LANGUAGE),
+                value = languageValue, verbatimValue = true,
+            )
         }
     }
 }
@@ -239,8 +247,8 @@ private fun AboutSection(version: String, onNavigate: (SignerRoute) -> Unit) {
     val terms = stringResource(R.string.terms_of_use)
     val privacy = stringResource(R.string.privacy_policy)
     GroupedSection(modifier = SectionFrame, header = stringResource(R.string.about)) {
-        item(key = "version") { ValueLine(versionLabel, version) }
-        item(key = "connections") { ValueLine(connections, none) }
+        item(key = "version") { ValueRow(versionLabel, version, verbatim = true) }
+        item(key = "connections") { ValueRow(connections, none, verbatim = true) }
         item(key = "openSource") {
             NavRow(openSource, null, { onNavigate(OpenSourceRoute) }, modifier = Modifier.testTag(SettingsTags.OPEN_SOURCE))
         }

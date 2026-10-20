@@ -40,6 +40,7 @@ import com.bittool.signer.core.designsystem.component.GroupedSection
 import com.bittool.signer.core.designsystem.component.IconRowDividerInset
 import com.bittool.signer.core.designsystem.component.NavRow
 import com.bittool.signer.core.designsystem.component.StatusPill
+import com.bittool.signer.core.designsystem.component.ValueRow
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.bold
@@ -214,12 +215,13 @@ private fun Metadata(state: ActivityDetailUiState, receipt: SigningReceipt, form
         fingerprint = stringResource(R.string.fingerprint),
         risk = stringResource(R.string.risk),
     )
+    // Record values (network and wallet names, the fingerprint, formatted dates) keep their own direction.
     GroupedSection(SectionFrame) {
-        item(key = "date") { ValueLine(labels.date, date) }
-        item(key = "network") { ValueLine(labels.network, network) }
-        if (wallet != null) item(key = "wallet") { ValueLine(labels.wallet, wallet) }
-        state.fingerprint?.let { fingerprint -> item(key = "fingerprint") { ValueLine(labels.fingerprint, fingerprint) } }
-        if (risk != null) item(key = "risk") { ValueLine(labels.risk, risk) }
+        item(key = "date") { ValueRow(labels.date, date, verbatim = true) }
+        item(key = "network") { ValueRow(labels.network, network, verbatim = true) }
+        if (wallet != null) item(key = "wallet") { ValueRow(labels.wallet, wallet, verbatim = true) }
+        state.fingerprint?.let { fingerprint -> item(key = "fingerprint") { ValueRow(labels.fingerprint, fingerprint, verbatim = true) } }
+        if (risk != null) item(key = "risk") { ValueRow(labels.risk, risk, verbatim = true) }
     }
 }
 
@@ -247,9 +249,10 @@ private fun InputSection(decode: DecodeState, json: String, reviewText: ReviewTe
             is DecodeState.Decoded -> {
                 decode.essentials.forEach { line ->
                     item(key = line.id) {
-                        ValueLine(
+                        ValueRow(
                             label = reviewText.phrase(line.label),
                             value = if (line.id == "action") actionText(line.value, reviewText, resources) else line.value,
+                            verbatim = true,
                         )
                     }
                 }
