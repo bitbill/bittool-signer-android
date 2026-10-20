@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -56,6 +57,7 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.security.RecoveryPrivacySession
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.ui.LinkButton
+import com.bittool.signer.feature.setup.ui.iconSizeFor
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -122,9 +124,18 @@ private fun RevealedPhrase(words: RecoveryWords, passphrase: String, onHide: () 
         RecoveryWordGrid(words)
         if (passphrase.isNotEmpty()) {
             SignerCard(padding = PaddingValues(14.dp), radius = SignerTheme.radius.callout) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(SignerIcons.Key, contentDescription = null, tint = colors.secondaryLabel, modifier = Modifier.size(14.dp))
-                    Text(stringResource(L10n.string.bip39_passphrase_back_up_separately), style = typography.caption.semibold(), color = colors.secondaryLabel)
+                // iOS `Label`: the glyph follows the text size and sits on the first line when the label wraps.
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val label = typography.caption.semibold()
+                    val glyph = iconSizeFor(label, 1.17f)
+                    val firstLine = with(LocalDensity.current) { label.lineHeight.toDp() }
+                    Icon(
+                        SignerIcons.Key,
+                        contentDescription = null,
+                        tint = colors.secondaryLabel,
+                        modifier = Modifier.padding(top = ((firstLine - glyph) / 2).coerceAtLeast(0.dp)).size(glyph),
+                    )
+                    Text(stringResource(L10n.string.bip39_passphrase_back_up_separately), style = label, color = colors.secondaryLabel)
                 }
                 Text(
                     text = passphrase,
@@ -180,7 +191,9 @@ internal fun RecoveryWordGrid(words: RecoveryWords, modifier: Modifier = Modifie
                     softWrap = false,
                     // Safety net only: the shared size already fits every word.
                     autoSize = TextAutoSize.StepBased(minFontSize = layout.wordSize * 0.9f, maxFontSize = layout.wordSize),
-                    modifier = Modifier.weight(1f),
+                    // As wide as the word, next to its number: a left-to-right word filling the cell would sit at the
+                    // far edge of the cell in a right-to-left layout, away from its number.
+                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
         }

@@ -36,20 +36,22 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.feature.setup.ui.SheetTitleBar
+import com.bittool.signer.feature.setup.ui.iconSizeFor
 import com.bittool.signer.core.l10n.R as L10n
 
 /** "Security Tips" (iOS `SecurityTipsButton`, `RecoveryBackupViews.swift:344-354`): full width, secondary, `backup.tips`. */
 @Composable
 internal fun SecurityTipsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = SignerTheme.colors
+    val style = SignerTheme.typography.subheadline
     TextButton(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().heightIn(min = SignerMetrics.minTouchTarget).testTag("backup.tips"),
         colors = ButtonDefaults.textButtonColors(contentColor = colors.secondaryLabel),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Info, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(stringResource(L10n.string.security_tips), style = SignerTheme.typography.subheadline)
+            Icon(Icons.Outlined.Info, contentDescription = null, modifier = Modifier.size(iconSizeFor(style, 1.2f)))
+            Text(stringResource(L10n.string.security_tips), style = style)
         }
     }
 }
@@ -108,7 +110,7 @@ private fun TipRow(tip: SecurityTip) {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp).semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Icon(tip.icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(24.dp))
+        Icon(tip.icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(iconSizeFor(typography.headline, 1.41f)))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(stringResource(tip.title), style = typography.headline, color = colors.label)
             Text(stringResource(tip.detail), style = typography.subheadline, color = colors.secondaryLabel)

@@ -55,6 +55,7 @@ import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
+import com.bittool.signer.feature.setup.ui.iconSizeFor
 import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -153,7 +154,7 @@ internal fun RecoveryPhraseStatus(analysis: PhraseAnalysis, modifier: Modifier =
     ) {
         Text(stringResource(L10n.string.recovery_phrase_2), style = typography.subheadline.semibold(), color = colors.label, modifier = Modifier.padding(end = 8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(16.dp))
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(iconSizeFor(typography.footnote, 1.23f)))
             BasicText(
                 text = statusText(analysis),
                 style = typography.footnote.copy(color = if (unknown) colors.dangerOnTint else colors.secondaryLabel),

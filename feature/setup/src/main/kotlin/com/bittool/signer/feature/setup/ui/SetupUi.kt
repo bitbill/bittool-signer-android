@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,22 +47,21 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.Callout
@@ -310,8 +310,9 @@ internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier) {
 }
 
 /**
- * An inline tinted text button with an optional leading icon (and a trailing direction arrow, mirrored right to left) (iOS `Button { Label(…) }` in subheadline semibold: "Hide
- * Recovery Phrase", "Hide QR Code", "Recovery Cards →", "Show the Phrase Again"). At least 48 dp high.
+ * An inline tinted text button with an optional leading icon and trailing direction arrow (iOS `Button { Label(…) }`
+ * in subheadline semibold: "Hide Recovery Phrase", "Hide QR Code", "Recovery Cards →", "Show the Phrase Again"). At
+ * least 48 dp high. Directional `SignerIcons` (the arrows) mirror themselves right to left: never flip them again here.
  */
 @Composable
 internal fun LinkButton(
@@ -323,6 +324,7 @@ internal fun LinkButton(
     enabled: Boolean = true,
 ) {
     val colors = SignerTheme.colors
+    val style = SignerTheme.typography.subheadline.semibold()
     TextButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = SignerMetrics.minTouchTarget),
@@ -331,16 +333,21 @@ internal fun LinkButton(
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (leadingIcon != null) Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(18.dp))
-            Text(text, style = SignerTheme.typography.subheadline.semibold(), textAlign = TextAlign.Center)
-            if (trailingIcon != null) {
-                // A direction arrow ("Recovery Cards →") points the reading direction.
-                val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-                Icon(trailingIcon, contentDescription = null, modifier = Modifier.size(14.dp).graphicsLayer { scaleX = if (rtl) -1f else 1f })
-            }
+            if (leadingIcon != null) Icon(leadingIcon, contentDescription = null, modifier = Modifier.size(iconSizeFor(style, 1.2f)))
+            Text(text, style = style, textAlign = TextAlign.Center)
+            // A direction arrow ("Recovery Cards →") points the reading direction: SignerIcons.ArrowForward auto-mirrors.
+            if (trailingIcon != null) Icon(trailingIcon, contentDescription = null, modifier = Modifier.size(iconSizeFor(style, 0.93f)))
         }
     }
 }
+
+/**
+ * The size of an icon beside text of [style]: [ratio] × its font size, so it grows with the font scale like the text
+ * (iOS SF Symbols follow Dynamic Type). At the default size it is the usual 14–24 dp.
+ */
+@Composable
+@ReadOnlyComposable
+internal fun iconSizeFor(style: TextStyle, ratio: Float): Dp = with(LocalDensity.current) { (style.fontSize * ratio).toDp() }
 
 /**
  * The title row of a setup sheet (iOS sheet `NavigationStack` with an inline title and a "Done" confirmation action):

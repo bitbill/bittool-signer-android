@@ -204,7 +204,8 @@ internal fun RecoveryCardView(words: RecoveryWords, card: Int, modifier: Modifie
                         maxLines = 1,
                         softWrap = false,
                         autoSize = TextAutoSize.StepBased(minFontSize = layout.wordSize * 0.9f, maxFontSize = layout.wordSize),
-                        modifier = Modifier.weight(1f),
+                        // Next to its number in both directions (see RecoveryWordGrid).
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                 } else {
                     Text(LEFT_OUT, style = wordStyle.copy(fontWeight = FontWeight.Normal), color = colors.tertiaryLabel, maxLines = 1)

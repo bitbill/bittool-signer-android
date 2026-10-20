@@ -76,10 +76,10 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
         Password("07-password"),
         PasswordReset("08-password-reset"),
         Done("09-done"),
-        Cards("10-recovery-cards"),
+        Cards("10-recovery-cards", everyLook = true),
         Tips("11-security-tips"),
         RecoveryPassword("12-recovery-phrase-password"),
-        RecoveryRevealed("13-recovery-phrase-revealed"),
+        RecoveryRevealed("13-recovery-phrase-revealed", everyLook = true),
 
         /** A back gesture that closes setup, held at 80 %: the shrinking surface (setup-backup §15.4). */
         ClosePreview("14-close-preview"),
