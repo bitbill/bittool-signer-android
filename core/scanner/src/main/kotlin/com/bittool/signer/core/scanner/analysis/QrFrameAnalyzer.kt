@@ -18,20 +18,26 @@ import java.nio.BufferUnderflowException
  *   "prefer readable" values; the caller posts them to the main thread for `QrScanFrameGate`.
  * - [enabled] false (the camera session was released while a frame was queued) skips the decoding work entirely.
  * - Battery: while codes are being read every frame is analysed (animated codes need every part); after
- *   [IDLE_AFTER_MILLIS] without any code, frames are analysed at most every [IDLE_FRAME_INTERVAL_MILLIS] (~15 fps)
- *   so a camera pointed at nothing does not keep a core busy. The first frame starts in the fast mode.
+ *   [IDLE_AFTER_MILLIS] without any code, analyses start at most every [IDLE_FRAME_INTERVAL_MILLIS] (~15 fps) and
+ *   never closer than twice the previous analysis took, so a camera pointed at nothing uses at most half a core
+ *   even on a phone whose empty-frame decode (both polarities) is slower than the frame interval: there the plain
+ *   interval would never skip a frame, because `KEEP_ONLY_LATEST` hands over the next frame as soon as one returns.
+ *   The first frame starts in the fast mode, and the first code read restores it.
  *
  * The image is always closed, also when decoding fails.
+ *
+ * @param decode the frame decoder ([QrFrameDecoder.decode] of an instance owned by this analyzer; replaced in tests).
  */
 internal class QrFrameAnalyzer(
     private val onValues: (List<String?>) -> Unit,
     private val enabled: () -> Boolean = { true },
     private val clock: () -> Long = SystemClock::elapsedRealtime,
+    private val decode: (luma: ByteArray, width: Int, height: Int) -> List<String?>? = QrFrameDecoder()::decode,
 ) : ImageAnalysis.Analyzer {
-    private val decoder = QrFrameDecoder()
     private var luma = ByteArray(0)
     private var lastReadAt: Long? = null
     private var lastAnalyzedAt: Long? = null
+    private var lastCostMillis = 0L
 
     override fun analyze(image: ImageProxy) {
         image.use {
@@ -39,18 +45,23 @@ internal class QrFrameAnalyzer(
             val now = clock()
             val lastRead = lastReadAt ?: now.also { lastReadAt = it }
             val lastAnalyzed = lastAnalyzedAt
-            if (now - lastRead > IDLE_AFTER_MILLIS && lastAnalyzed != null && now - lastAnalyzed < IDLE_FRAME_INTERVAL_MILLIS) {
-                return
-            }
+            val idleGap = maxOf(IDLE_FRAME_INTERVAL_MILLIS, 2 * lastCostMillis)
+            if (now - lastRead > IDLE_AFTER_MILLIS && lastAnalyzed != null && now - lastAnalyzed < idleGap) return
             lastAnalyzedAt = now
-            val width = image.width
-            val height = image.height
-            val plane = image.planes.firstOrNull() ?: return
-            val frame = copyLuma(plane, width, height) ?: return
-            val values = decoder.decode(frame, width, height) ?: return
+            val values = decodeFrame(image)
+            lastCostMillis = (clock() - now).coerceAtLeast(0)
+            if (values == null) return
             lastReadAt = now
             onValues(values)
         }
+    }
+
+    private fun decodeFrame(image: ImageProxy): List<String?>? {
+        val width = image.width
+        val height = image.height
+        val plane = image.planes.firstOrNull() ?: return null
+        val frame = copyLuma(plane, width, height) ?: return null
+        return decode(frame, width, height)
     }
 
     /**

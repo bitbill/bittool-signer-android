@@ -117,6 +117,51 @@ class QrFrameAnalyzerTest {
         analyzer.analyze(frame(code))
         assertEquals(3, received.size)
     }
+
+    @Test
+    fun onAPhoneSlowerThanTheFrameRateIdleAnalysisStaysUnderHalfACore() {
+        // An empty 1080p frame costs both polarities; say 80 ms on a low-end phone, more than the 66 ms idle interval.
+        // With KEEP_ONLY_LATEST the next frame is handed over as soon as an analysis returns, so a start-to-start
+        // interval alone would never skip one and the decoder would run back to back.
+        var clock = 0L
+        var codeInView = false
+        var busy = 0L
+        val reads = ArrayList<List<String?>>()
+        val slow = QrFrameAnalyzer(
+            onValues = { reads += it },
+            clock = { clock },
+            decode = { _, _, _ ->
+                clock += 80
+                busy += 80
+                if (codeInView) listOf("UR:BYTES/1-2/SLOW") else null
+            },
+        )
+        fun runFor(millis: Long) {
+            val end = clock + millis
+            while (clock < end) {
+                val before = clock
+                slow.analyze(FakeImageProxy(64, 48, FakePlane(ByteBuffer.wrap(ByteArray(64 * 48)), 64, 1)))
+                // Skipped: the next camera frame comes one frame period later; analysed: the latest frame at once.
+                if (clock == before) clock += 33 else clock += 1
+            }
+        }
+        runFor(2_000) // past the first second, which runs at full rate
+        val idleStart = clock
+        val busyBefore = busy
+        runFor(10_000)
+        val duty = (busy - busyBefore).toDouble() / (clock - idleStart)
+        assertTrue(duty <= 0.51, "idle duty cycle $duty")
+        assertTrue(duty >= 0.3, "idle analysis must keep looking for codes ($duty)")
+        // A code in view is found within one idle gap and then every frame is analysed again.
+        codeInView = true
+        runFor(400)
+        val first = reads.size
+        assertTrue(first >= 1)
+        val busyFast = busy
+        val fastStart = clock
+        runFor(2_000)
+        assertTrue((busy - busyFast).toDouble() / (clock - fastStart) > 0.95, "reading runs back to back")
+    }
 }
 
 private class FakePlane(private val buffer: ByteBuffer, private val rowStride: Int, private val pixelStride: Int) :
