@@ -2,12 +2,19 @@ package com.bittool.signer.feature.sign
 
 import android.content.pm.ApplicationInfo
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertiesAndroid
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -28,6 +35,7 @@ import androidx.compose.ui.test.performTextInput
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.window.exposesTestTags
 import com.bittool.signer.core.model.SecretText
+import com.bittool.signer.core.model.UiText
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.home.PasteRequestSheet
 import com.bittool.signer.feature.sign.home.PasteUiState
@@ -151,6 +159,33 @@ class SignScreensTest {
         compose.onNodeWithTag(SignTags.RETRY_MATCH).performClick()
         assertEquals(1, retries)
         compose.onNodeWithTag(SignTags.RISK).assertDoesNotExist()
+    }
+
+    /**
+     * Backlog B15: a failed "Match Again" shows the store's or engine's message (iOS `Text(retryError)`), so in a
+     * right-to-left interface English engine text keeps its own direction, like the match error above it.
+     */
+    @Test
+    fun aMatchAgainFailureKeepsItsOwnDirectionRightToLeft() {
+        val message = "The offline engine could not process this request."
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    RequestReviewContent(
+                        ReviewStates.interrupted.copy(retryError = UiText.Verbatim(message)),
+                        onReject = {},
+                        onToggleRisk = {},
+                        onRetry = {},
+                        onAuthorize = {},
+                    )
+                }
+            }
+        }
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText(message, useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        assertEquals(TextDirection.Content, layouts.single().layoutInput.style.textDirection)
+        assertEquals(ResolvedTextDirection.Ltr, layouts.single().getParagraphDirection(0))
     }
 
     @Test

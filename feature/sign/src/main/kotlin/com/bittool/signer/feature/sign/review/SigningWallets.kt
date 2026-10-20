@@ -131,7 +131,8 @@ private fun MatchingIssueBox(issue: MatchingIssue, state: RequestReviewUiState, 
                 )
             }
         }
-        state.retryError?.let { Text(it.asString(), style = typography.footnote, color = colors.dangerOnTint) }
+        // iOS `Text(retryError)`: the store's / engine's message, verbatim, so it keeps its own direction too.
+        state.retryError?.let { Text(it.asString(), style = typography.footnote.contentDirection(), color = colors.dangerOnTint) }
     }
 }
 
