@@ -35,6 +35,7 @@ import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.medium
@@ -43,7 +44,7 @@ import com.bittool.signer.core.security.RecoveryPrivacySession
 import com.bittool.signer.core.ui.qr.QrCardFrame
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.ui.LinkButton
-import com.bittool.signer.feature.setup.ui.overlayGuard
+import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -119,7 +120,7 @@ private fun ConcealedQrCode(onReveal: () -> Unit) {
     QrCardFrame(
         maxSide = QR_SIDE,
         modifier = Modifier
-            .then(overlayGuard())
+            .obscuredTouchGuard(LocalOverlayBlocked.current)
             .clickable(role = Role.Button, indication = ripple(bounded = false), interactionSource = null, onClick = onReveal)
             .semantics { contentDescription = description }
             .testTag("backup.qr.reveal"),

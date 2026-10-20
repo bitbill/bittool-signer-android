@@ -72,7 +72,6 @@ import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
-import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -91,12 +90,12 @@ internal val LocalRecoverySessions = staticCompositionLocalOf<RecoverySessionFac
     error("LocalRecoverySessions is not provided")
 }
 
-/** Called when a decisive control refused a touch that came through another app's overlay (ARCHITECTURE §4.8). */
+/**
+ * Called when a decisive control refused a touch that came through another app's overlay (ARCHITECTURE §4.8). The
+ * decisive controls (`setup.finish`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, `vaultManagement.submit`)
+ * pass it to `Modifier.obscuredTouchGuard`.
+ */
 internal val LocalOverlayBlocked = staticCompositionLocalOf<() -> Unit> { {} }
-
-/** The tapjacking guard of the decisive controls: `setup.finish`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, … */
-@Composable
-internal fun overlayGuard(): Modifier = Modifier.obscuredTouchGuard(LocalOverlayBlocked.current)
 
 /**
  * Hosts [content] with a toast that reports refused overlay touches (`security_overlay_blocked`, warning haptic), in the
@@ -142,6 +141,7 @@ internal fun SetupTopBar(
     modifier: Modifier = Modifier,
     navigationLabel: String = stringResource(if (navigation == SetupNavigation.Back) L10n.string.back else L10n.string.cancel),
     navigationTag: String = if (navigation == SetupNavigation.Back) NAV_BACK_TAG else CANCEL_TAG,
+    navigationEnabled: Boolean = true,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
@@ -159,7 +159,7 @@ internal fun SetupTopBar(
         modifier = modifier,
         navigationIcon = {
             if (navigation != SetupNavigation.None) {
-                IconButton(onClick = onNavigate, modifier = Modifier.testTag(navigationTag)) {
+                IconButton(onClick = onNavigate, enabled = navigationEnabled, modifier = Modifier.testTag(navigationTag)) {
                     Icon(
                         imageVector = if (navigation == SetupNavigation.Back) SignerIcons.ArrowBack else SignerIcons.Close,
                         contentDescription = navigationLabel,

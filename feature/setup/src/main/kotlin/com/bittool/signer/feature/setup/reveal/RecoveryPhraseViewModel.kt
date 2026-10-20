@@ -186,6 +186,5 @@ class RecoveryPhraseViewModel internal constructor(
     override fun onCleared() {
         clear()
         store.endSensitiveSession()
-        super.onCleared()
     }
 }

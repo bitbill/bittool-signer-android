@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -55,7 +56,7 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.security.RecoveryPrivacySession
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.ui.LinkButton
-import com.bittool.signer.feature.setup.ui.overlayGuard
+import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -200,7 +201,7 @@ internal fun ConcealedPhrase(count: Int, onReveal: () -> Unit, modifier: Modifie
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .then(overlayGuard())
+            .obscuredTouchGuard(LocalOverlayBlocked.current)
             .clip(SignerShapes.card)
             .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onReveal)
             .semantics { contentDescription = description }

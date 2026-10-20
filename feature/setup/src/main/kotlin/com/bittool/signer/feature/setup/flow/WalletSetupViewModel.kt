@@ -551,7 +551,6 @@ class WalletSetupViewModel @AssistedInject constructor(
         // iOS WalletSetupFlow `onDisappear`.
         clearSecrets()
         store.endSensitiveSession()
-        super.onCleared()
     }
 
     // -------------------------------------------------------------------------------------------------------------

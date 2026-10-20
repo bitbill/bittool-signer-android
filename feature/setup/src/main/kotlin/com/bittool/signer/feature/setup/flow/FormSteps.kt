@@ -102,7 +102,13 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     val lengthLabel = stringResource(L10n.string.recovery_phrase_length)
     SetupScaffold(
         topBar = { scroll ->
-            SetupTopBar(title = stringResource(L10n.string.new_wallet), navigation = SetupNavigation.Cancel, onNavigate = model::cancel, scrollBehavior = scroll)
+            SetupTopBar(
+                title = stringResource(L10n.string.new_wallet),
+                navigation = SetupNavigation.Cancel,
+                onNavigate = model::cancel,
+                navigationEnabled = !state.busy,
+                scrollBehavior = scroll,
+            )
         },
         step = 1,
         total = 4,
@@ -158,6 +164,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 title = stringResource(L10n.string.import_wallet),
                 navigation = SetupNavigation.Cancel,
                 onNavigate = model::cancel,
+                navigationEnabled = !state.busy,
                 scrollBehavior = scroll,
                 actions = {
                     IconButton(onClick = model::openScanner, enabled = !state.busy, modifier = Modifier.testTag("setup.scanRecovery")) {

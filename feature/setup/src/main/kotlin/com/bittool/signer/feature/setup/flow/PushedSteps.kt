@@ -52,6 +52,7 @@ import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -74,7 +75,7 @@ import com.bittool.signer.feature.setup.ui.ScrollCentering
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
-import com.bittool.signer.feature.setup.ui.overlayGuard
+import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -244,7 +245,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
                 },
                 busy = state.busy,
                 enabled = valid && !state.busy,
-                modifier = Modifier.then(overlayGuard()).testTag("setup.finish"),
+                modifier = Modifier.obscuredTouchGuard(LocalOverlayBlocked.current).testTag("setup.finish"),
             )
         },
     ) {

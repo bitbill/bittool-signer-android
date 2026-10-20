@@ -48,6 +48,7 @@ import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -60,7 +61,7 @@ import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.ui.LinkButton
 import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import com.bittool.signer.feature.setup.ui.SheetTitleBar
-import com.bittool.signer.feature.setup.ui.overlayGuard
+import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -225,7 +226,7 @@ private fun ConcealedCards(count: Int, onReveal: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .then(overlayGuard())
+            .obscuredTouchGuard(LocalOverlayBlocked.current)
             .clip(SignerShapes.card)
             .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onReveal)
             .semantics { contentDescription = description }

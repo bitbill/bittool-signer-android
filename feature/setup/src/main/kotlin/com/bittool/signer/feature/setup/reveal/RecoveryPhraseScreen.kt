@@ -43,6 +43,7 @@ import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.modifier.readableWidth
+import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.security.RecoverySessionFactory
@@ -55,13 +56,13 @@ import com.bittool.signer.feature.setup.ui.LocalRecoverySessions
 import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupTopBar
-import com.bittool.signer.feature.setup.ui.overlayGuard
+import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import kotlinx.coroutines.delay
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
  * The saved wallet's "Recovery Phrase" page (iOS `RecoveryPhraseSheet`; setup-backup §10): the wallet password, then the
- * same backup panel as setup. System Back is Cancel (consumed while unlocking).
+ * same backup panel as setup. System Back pops the page like Cancel (consumed while unlocking).
  */
 @Composable
 fun RecoveryPhraseScreen(onClose: () -> Unit, viewModel: RecoveryPhraseViewModel = hiltViewModel()) {
@@ -73,7 +74,9 @@ fun RecoveryPhraseScreen(onClose: () -> Unit, viewModel: RecoveryPhraseViewModel
             viewModel.eventFlow.collect { event -> if (event == RecoveryPhraseEvent.Close) latestClose() }
         }
     }
-    BackHandler(onBack = viewModel::back)
+    // Back while unlocking is consumed (iOS disables dismissal while busy); otherwise the NavHost pops the page with the
+    // predictive animation, and the ViewModel wipes the password and the phrase when the entry goes.
+    BackHandler(enabled = state.busy, onBack = viewModel::back)
     RecoveryPhraseContent(
         state = state,
         password = viewModel.password,
@@ -181,7 +184,7 @@ private fun PasswordForm(state: RecoveryPhraseUiState, password: TextFieldState,
             onClick = onUnlock,
             busy = state.busy,
             enabled = password.text.isNotEmpty() && !state.busy,
-            modifier = Modifier.padding(top = 6.dp).then(overlayGuard()).testTag("vaultManagement.submit"),
+            modifier = Modifier.padding(top = 6.dp).obscuredTouchGuard(LocalOverlayBlocked.current).testTag("vaultManagement.submit"),
         )
     }
 }
