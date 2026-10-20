@@ -28,9 +28,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isSensitiveData
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -113,10 +114,7 @@ fun PasswordField(
             state = state,
             modifier = modifier
                 .fillMaxWidth()
-                .semantics {
-                    contentDescription = placeholder
-                    isSensitiveData = revealable && revealed
-                }
+                .semantics { isSensitiveData = revealable && revealed }
                 .testTag(kind.english),
             enabled = enabled,
             textStyle = typography.body.ltr().copy(color = if (enabled) colors.label else colors.secondaryLabel),
@@ -141,9 +139,18 @@ fun PasswordField(
                         .padding(start = 14.dp, end = if (revealable) 2.dp else 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.weight(1f).padding(vertical = 14.dp), contentAlignment = Alignment.CenterStart) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(vertical = 14.dp)
+                            // The field's name, also once typed text hides the placeholder: a label node merged into the
+                            // field and read after its text, like a Material label. Not a content description, which
+                            // TalkBack would read (and traverse) instead of a revealed passphrase.
+                            .semantics { text = AnnotatedString(placeholder) },
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
                         if (state.text.isEmpty()) {
-                            // The field carries the name itself; the drawn placeholder is not read twice.
+                            // Drawn only; the label above is what is read.
                             Text(
                                 placeholder,
                                 style = typography.body,

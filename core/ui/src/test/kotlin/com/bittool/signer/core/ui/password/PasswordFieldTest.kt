@@ -132,10 +132,18 @@ class PasswordFieldTest {
             PasswordField(PasswordKind.NewPassword, remember { TextFieldState("Abc12345!") }, isNew = true)
             PasswordField(PasswordKind.ConfirmNewPassword, remember { TextFieldState() }, isNew = true)
         }
-        compose.onNodeWithTag(PasswordKind.NewPassword.english).assertContentDescriptionEquals("New password")
-        // Empty: named once, not by the description and the drawn placeholder both.
-        compose.onNodeWithTag(PasswordKind.ConfirmNewPassword.english).assertContentDescriptionEquals("Confirm new password")
-            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Text))
+        val labels = { node: androidx.compose.ui.semantics.SemanticsNode ->
+            node.config.getOrElse(SemanticsProperties.Text) { emptyList() }.map { label -> label.text }
+        }
+        // The title is a label merged into the field, read after its (masked) text.
+        compose.onNodeWithTag(PasswordKind.NewPassword.english)
+            .assert(SemanticsMatcher("named New password") { labels(it) == listOf("New password") })
+        // Empty: named once, not by the label and the drawn placeholder both.
+        compose.onNodeWithTag(PasswordKind.ConfirmNewPassword.english)
+            .assert(SemanticsMatcher("named Confirm new password once") { labels(it) == listOf("Confirm new password") })
+        // Never a content description: TalkBack reads (and steps through) a description instead of the field's own
+        // text, which would make a revealed passphrase impossible to check by ear.
+        compose.onNodeWithTag(PasswordKind.NewPassword.english).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
     }
 }
 

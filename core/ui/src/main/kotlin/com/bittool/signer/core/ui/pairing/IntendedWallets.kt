@@ -108,7 +108,8 @@ fun SubmitWalletLink(onClick: () -> Unit, modifier: Modifier = Modifier) {
  * A titled grid of wallet logos, names and platforms (iOS `WalletGroup`, `ConnectView.swift:654-681`): the [title] with
  * [icon] (subheadline semibold, secondary), then an adaptive grid — columns at least 140 dp wide (260 dp from extra
  * large text), 10 dp apart, rows 12 dp apart — of cells with the 30 dp logo, the name (subheadline, up to 2 lines,
- * shrinking to 85 %) and the platforms (caption2, secondary). Names and platforms are verbatim. One element per cell.
+ * shrinking to 85 %) and the platforms (caption2, secondary, the same). Names and platforms are verbatim. One element
+ * per cell.
  */
 @Composable
 fun WalletGroup(title: String, wallets: List<CompatibleWallet>, modifier: Modifier = Modifier, icon: ImageVector? = null) {
@@ -137,7 +138,14 @@ fun WalletGroup(title: String, wallets: List<CompatibleWallet>, modifier: Modifi
                             overflow = TextOverflow.Ellipsis,
                             autoSize = TextAutoSize.StepBased(minFontSize = nameStyle.fontSize * 0.85f, maxFontSize = nameStyle.fontSize),
                         )
-                        Text(wallet.platforms, style = typography.caption2, color = colors.secondaryLabel, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        val platformStyle = typography.caption2.copy(color = colors.secondaryLabel)
+                        BasicText(
+                            wallet.platforms,
+                            style = platformStyle,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            autoSize = TextAutoSize.StepBased(minFontSize = platformStyle.fontSize * 0.85f, maxFontSize = platformStyle.fontSize),
+                        )
                     }
                 }
             }

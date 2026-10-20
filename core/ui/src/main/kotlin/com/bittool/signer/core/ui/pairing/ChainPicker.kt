@@ -11,7 +11,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -110,13 +111,18 @@ fun ChainPicker(selection: Chain, onSelect: (Chain) -> Unit, modifier: Modifier 
                         ChainLogo(chain, size = 26.dp)
                     }
                     if (showNames) {
-                        Text(
+                        val nameStyle = if (selected) SignerTheme.typography.caption.bold() else SignerTheme.typography.caption.medium()
+                        // iOS `.lineLimit(1).minimumScaleFactor(0.8)`: "Bitcoin" shrinks a little before it is cut at
+                        // large (non-accessibility) text sizes on narrow phones.
+                        BasicText(
                             text = chain.displayName,
-                            style = if (selected) SignerTheme.typography.caption.bold() else SignerTheme.typography.caption.medium(),
-                            color = if (selected) colors.accentOnTint else colors.secondaryLabel,
+                            style = nameStyle.copy(
+                                color = if (selected) colors.accentOnTint else colors.secondaryLabel,
+                                textAlign = TextAlign.Center,
+                            ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
+                            autoSize = TextAutoSize.StepBased(minFontSize = nameStyle.fontSize * 0.8f, maxFontSize = nameStyle.fontSize),
                             // TalkBack reads the long name from the tile instead (iOS accessibilityLabel).
                             modifier = Modifier.semantics { hideFromAccessibility() },
                         )
