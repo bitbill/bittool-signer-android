@@ -75,6 +75,21 @@ class ShellNavigator(val navController: NavHostController) {
     /** The tab whose page is on screen, or null on a root-level page. */
     val shownTab: Tab? get() = navController.currentBackStackEntry?.destination?.tab()
 
+    /**
+     * The tab the shown page belongs to: [shownTab], or for a root-level page ("Submit a Wallet", pushed from Connect or
+     * Compatibility) the tab it was opened from, i.e. the nearest page below it that lies in a tab graph. That tab stays
+     * selected in the bar, so a tap on it is a reselection (iOS pops the stack the page was pushed onto).
+     */
+    val selectedTab: Tab?
+        get() = navController.currentBackStack.value.asReversed().firstNotNullOfOrNull { it.destination.tab() }
+
+    /** The page on screen is the root of Scan, Activity or Settings: system Back selects Wallets (ARCHITECTURE §2.3). */
+    val isAtOtherTabRoot: Boolean
+        get() {
+            val destination = navController.currentBackStackEntry?.destination ?: return false
+            return Tab.entries.any { it != Tab.Wallets && destination.hasRoute(it.root::class) }
+        }
+
     /** Shows [tab] with its own stack; nothing when it already shows. */
     fun showTab(tab: Tab) {
         if (shownTab != tab) {
@@ -90,10 +105,24 @@ class ShellNavigator(val navController: NavHostController) {
         }
     }
 
-    /** Reselecting the shown tab: back to its root (the root screen also scrolls to the top on `AppRouter.reselections`). */
+    /**
+     * Reselecting the selected tab: back to its root (the root screen also scrolls to the top on
+     * `AppRouter.reselections`), also from a root-level page opened from that tab.
+     */
     fun popToRoot(tab: Tab) {
-        if (shownTab != tab) return
+        if (selectedTab != tab) return
         navController.popBackStack(tab.root, inclusive = false)
+    }
+
+    /**
+     * System Back on the root of Scan, Activity or Settings: the Wallets tab, exactly as a tap on it, so Wallets comes
+     * back with the stack it was left with. (Letting the NavHost pop the tab graph instead shows Wallets' root while its
+     * saved stack stays behind, to reappear on a later tab switch.) Returns whether it handled Back.
+     */
+    fun backFromTabRoot(): Boolean {
+        if (!isAtOtherTabRoot) return false
+        showTab(Tab.Wallets)
+        return true
     }
 
     /**

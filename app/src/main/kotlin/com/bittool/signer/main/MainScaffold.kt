@@ -1,5 +1,6 @@
 package com.bittool.signer.main
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
@@ -103,16 +104,18 @@ fun MainScaffold(
     val entry by navController.currentBackStackEntryAsState()
     val routerTab by router.tab.collectAsState()
     val destination = entry?.destination
-    val selected = destination?.tab() ?: routerTab
+    val navigator = remember(navController) { ShellNavigator(navController) }
+    // The shown page's tab; on a root-level page the tab it was opened from (read through the observed entry).
+    val selected = entry?.let { navigator.selectedTab } ?: routerTab
     val showBar = destination?.isModal() != true && !WindowInsets.isImeVisible
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val transitions = remember(rtl) { NavTransitions(rtl) }
-    val navigator = remember(navController) { ShellNavigator(navController) }
-    // A tap is judged against the tab that is actually shown: the shown tab is a reselection (pop to its root), any
-    // other is shown at once (the router follows; its collector then finds nothing left to do).
+    // A tap is judged against the tab whose stack is actually shown (for a root-level page, the tab it was opened from):
+    // that tab is a reselection (pop to its root), any other is shown at once (the router follows; its collector then
+    // finds nothing left to do).
     val onTab: (Tab) -> Unit = remember(navigator, router) {
         { tab ->
-            if (navigator.shownTab == tab) {
+            if (navigator.selectedTab == tab) {
                 router.onTabShown(tab)
                 router.onTabClicked(tab)
             } else {
@@ -121,6 +124,8 @@ fun MainScaffold(
             }
         }
     }
+    // Read through the observed entry, so the Back handler below follows every destination change.
+    val atOtherTabRoot = entry != null && navigator.isAtOtherTabRoot
 
     BoxWithConstraints(modifier.fillMaxSize().testTag(MainTags.ROOT)) {
         val rail = maxWidth >= RailMinWidth
@@ -165,6 +170,12 @@ fun MainScaffold(
                     SignerNavigationBar(selected, showsScanBadge, onTab)
                 }
             }
+        }
+        // After the NavHost, so it is asked before the NavHost's own pop: Back on the root of Scan, Activity or Settings
+        // shows Wallets with its saved stack, like a tap on it (ARCHITECTURE §2.3).
+        BackHandler(enabled = atOtherTabRoot) {
+            router.selectTab(Tab.Wallets)
+            navigator.backFromTabRoot()
         }
         RouterGlue(navigator, router)
     }

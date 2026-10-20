@@ -191,6 +191,61 @@ class NavigationGlueTest {
         assertEquals(Tab.Wallets, router.tab.value)
     }
 
+    /**
+     * Review fix: Back on another tab's root used to let the NavHost pop that tab's graph, which showed Wallets' root
+     * while Wallets' saved stack stayed behind and reappeared on a later tab switch.
+     */
+    @Test
+    fun backFromATabRootBringsWalletsBackWithItsStack() {
+        show()
+        onUi { nav.navigate(WalletDetailRoute(wallet)) }
+        tap(Tab.Scan)
+        systemBack()
+        assertEquals(Tab.Wallets, router.tab.value)
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, WalletDetailRoute::class), stack())
+        compose.onNodeWithTag("wallet-detail").assertExists()
+
+        // Leaving the page by Back is final: a later switch does not bring it back.
+        systemBack()
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class), stack())
+        tap(Tab.Scan)
+        tap(Tab.Wallets)
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class), stack())
+
+        // From a tab that was opened on Wallets' root, Back lands on that root.
+        tap(Tab.Settings)
+        systemBack()
+        compose.onNodeWithTag("wallets-root").assertExists()
+        assertEquals(Tab.Wallets, router.tab.value)
+    }
+
+    /**
+     * Review fix: a root-level page ("Submit a Wallet") keeps the tab it was opened from selected, and a tap on that tab
+     * used to restore the very same stack (the page stayed) instead of popping to the tab's root.
+     */
+    @Test
+    fun reselectingTheTabOfARootLevelPagePopsToItsRoot() {
+        show()
+        tap(Tab.Settings)
+        onUi { nav.navigate(LanguageRoute) }
+        onUi { nav.navigate(SubmitWalletRoute) }
+        tap(Tab.Settings)
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, SettingsRoute::class), stack())
+        compose.onNodeWithTag("settings-root").assertExists()
+
+        // From Wallets (Connect › Submit a Wallet) the same holds for the Wallets tab.
+        tap(Tab.Wallets)
+        onUi {
+            nav.navigate(ConnectRoute.walletLevel(wallet))
+            nav.navigate(SubmitWalletRoute)
+        }
+        compose.onNodeWithTag(Tab.Wallets.testTag).assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+        tap(Tab.Wallets)
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class), stack())
+    }
+
+    private fun systemBack() = onUi { compose.activity.onBackPressedDispatcher.onBackPressed() }
+
     @Test
     fun submitAWalletKeepsTheCurrentTabSelected() {
         show()
