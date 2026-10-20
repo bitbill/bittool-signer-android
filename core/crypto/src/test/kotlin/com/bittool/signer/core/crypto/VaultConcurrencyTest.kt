@@ -12,6 +12,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -19,7 +21,8 @@ import org.junit.After
 import org.junit.Test
 
 /**
- * Commit boundaries under cancellation and main-safety of [com.bittool.signer.core.crypto.vault.DefaultWalletVault].
+ * Commit boundaries under cancellation, actor-like serialisation and main-safety of
+ * [com.bittool.signer.core.crypto.vault.DefaultWalletVault].
  *
  * iOS actor methods cannot be interrupted (`Core/WalletVault.swift:61-279`): once `create`, `changePassword`,
  * `resetPassword` or `delete` runs, it finishes and reports what it did. On Android the caller's coroutine can be
@@ -29,7 +32,7 @@ import org.junit.Test
  * arrives once the persistent write has started must not surface as "nothing happened", and one that arrives earlier
  * must leave nothing behind.
  */
-class VaultCancellationTest {
+class VaultConcurrencyTest {
     private val password = "Strong-Password1"
     private val dataDir = tempDataDir()
     private val files = VaultFiles(dataDir)
@@ -143,6 +146,24 @@ class VaultCancellationTest {
         job.join()
         assertTrue(changed, "the new password is in effect, so the change must not be reported as cancelled")
         vault.unlock(wallet.id, secret("Replacement-Password2")).close()
+    }
+
+    /** iOS `actor WalletVault`: "an unlock blocks a concurrent `list()` until it finishes" (vault-crypto.md §9). */
+    @Test
+    fun aListWaitsForAnUnlockInProgress(): Unit = runBlocking {
+        val keys = GatedDeviceKeyStore()
+        val vault = vault(dataDir, keys)
+        val wallet = vault.create("Serial", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        // No attempts file exists yet, so the first open is the vault's device layer, inside the unlock.
+        val gate = keys.hold("open")
+        val unlock = async(Dispatchers.Default) { vault.unlock(wallet.id, secret(password)).close() }
+        gate.awaitEntered()
+        val list = async(Dispatchers.Default) { vault.list() }
+        delay(300)
+        assertFalse(list.isCompleted, "a list must wait for the unlock that holds the vault")
+        gate.release()
+        assertEquals(listOf(wallet), list.await())
+        unlock.await()
     }
 
     @Test
