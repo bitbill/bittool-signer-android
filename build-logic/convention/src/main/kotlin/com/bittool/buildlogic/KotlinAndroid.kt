@@ -17,7 +17,6 @@ internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
         defaultConfig.apply {
             minSdk = SignerConfig.MIN_SDK
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            vectorDrawables.useSupportLibrary = true
         }
         compileOptions.apply {
             sourceCompatibility = JavaVersion.VERSION_17

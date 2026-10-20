@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import java.util.Properties
 
 plugins {
@@ -132,10 +133,6 @@ android {
 
     packaging {
         jniLibs { useLegacyPackaging = false }
-        resources {
-            // Test scripts the QuickJS wrapper AAR ships in its assets.
-            excludes += setOf("assets/test_*.js", "assets/test_*.mjs")
-        }
     }
 
     lint {
@@ -143,33 +140,55 @@ android {
     }
 }
 
+/**
+ * The QuickJS wrapper AAR ships its own test scripts as root-level assets (test_*.js / test_*.mjs). Nothing but the
+ * signer's assets belongs in the APK, and `ignoreAssetsPattern` does not reach dependency assets, so the merged
+ * assets are rewritten without them.
+ */
+abstract class StripQuickJsTestAssets : DefaultTask() {
+    @get:InputDirectory abstract val input: DirectoryProperty
+    @get:OutputDirectory abstract val output: DirectoryProperty
+
+    @TaskAction
+    fun run() {
+        val out = output.get().asFile
+        out.deleteRecursively()
+        input.get().asFile.copyRecursively(out)
+        out.listFiles { f -> f.isFile && f.name.matches(Regex("test_.*\\.m?js")) }?.forEach { it.delete() }
+    }
+}
+
 androidComponents {
     onVariants(selector().withBuildType("release").withFlavor("distribution" to "play")) { variant ->
         if (hasUploadKey) variant.signingConfig.setConfig(android.signingConfigs.getByName("upload"))
     }
-    // The QuickJS wrapper ships its own test scripts as assets; nothing but the engine belongs in the APK.
+    onVariants { variant ->
+        val strip = tasks.register<StripQuickJsTestAssets>("strip${variant.name.replaceFirstChar(Char::uppercase)}QuickJsTestAssets")
+        variant.artifacts.use(strip)
+            .wiredWithDirectories(StripQuickJsTestAssets::input, StripQuickJsTestAssets::output)
+            .toTransform(SingleArtifact.ASSETS)
+    }
 }
 
+// Release sanity checks. Plain values are copied into locals so the configuration cache never stores the script.
 tasks.matching { it.name.matches(Regex("pre(Apk|Play)ReleaseBuild")) }.configureEach {
+    val isPlay = name.contains("Play")
+    val partialRelease = if (!hasReleaseKey && missingReleaseKeys.size < releaseSigningKeys.size) {
+        missingReleaseKeys.joinToString { "signer.release.$it" }
+    } else null
+    val partialUpload = if (!hasUploadKey && missingUploadKeys.size < uploadSigningKeys.size) {
+        missingUploadKeys.joinToString { "signer.upload.$it" }
+    } else null
+    val mode = when {
+        hasUploadKey && isPlay -> "play signed with the Play upload key."
+        hasReleaseKey -> "signed with the release key."
+        allowDebugSigning -> "signed with the DEBUG key (-Psigner.allowDebugSigning) — local testing only."
+        else -> "UNSIGNED (no signer.release.* keys). Sign before distributing."
+    }
     doFirst {
-        if (!hasReleaseKey && missingReleaseKeys.size < releaseSigningKeys.size) {
-            throw GradleException(
-                "Release signing is only partially configured; missing " +
-                    missingReleaseKeys.joinToString { "signer.release.$it" } + " (local.properties or environment).",
-            )
-        }
-        if (!hasUploadKey && missingUploadKeys.size < uploadSigningKeys.size) {
-            throw GradleException(
-                "Play upload signing is only partially configured; missing " +
-                    missingUploadKeys.joinToString { "signer.upload.$it" } + " (local.properties or environment).",
-            )
-        }
-        when {
-            hasUploadKey && name.contains("Play") -> logger.lifecycle("BitTool Signer release: play signed with the Play upload key.")
-            hasReleaseKey -> logger.lifecycle("BitTool Signer release: signed with the release key.")
-            allowDebugSigning -> logger.warn("BitTool Signer release: signed with the DEBUG key (-Psigner.allowDebugSigning) — local testing only.")
-            else -> logger.warn("BitTool Signer release: UNSIGNED (no signer.release.* keys). Sign before distributing.")
-        }
+        partialRelease?.let { throw GradleException("Release signing is only partially configured; missing $it (local.properties or environment).") }
+        partialUpload?.let { throw GradleException("Play upload signing is only partially configured; missing $it (local.properties or environment).") }
+        logger.lifecycle("BitTool Signer release: $mode")
     }
 }
 

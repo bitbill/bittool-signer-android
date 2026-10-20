@@ -1,0 +1,8 @@
+# Shipped byte for byte: the engine's SHA-256 must equal the iOS release manifest; never normalise line endings.
+core/engine/src/main/assets/engine/signer.js binary
+core/data/src/main/assets/registry/* binary
+core/data/src/main/assets/legal/* -text
+core/crypto/src/main/assets/bip39/* -text
+*.pack binary
+gradlew text eol=lf
+*.bat text eol=crlf
