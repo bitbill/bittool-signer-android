@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.PasswordPolicy
 import com.bittool.signer.core.model.SecretText
@@ -31,7 +32,18 @@ data class SecurityPageUiState(
     /** Renewed by every suspension (background, App Lock, capture): typed passwords are cleared unless busy. */
     val securityEpoch: Long = 0,
     val gone: Boolean = false,
-)
+) {
+    internal companion object {
+        /** The page of [walletId] in [state] with the operation's [op] state (also the first frame's value). */
+        fun of(state: SignerState, op: WalletOperation.State, walletId: WalletId?) = SecurityPageUiState(
+            identity = walletId?.let { WalletIdentity.of(state, it) },
+            busy = op.busy,
+            error = op.error,
+            securityEpoch = state.securityEpoch,
+            gone = WalletIdentity.isGone(state, walletId),
+        )
+    }
+}
 
 /** One-off results of the wallet security pages. */
 sealed interface SecurityPageEvent {
@@ -49,15 +61,8 @@ class ChangePasswordViewModel @Inject constructor(
     private val operation = WalletOperation(viewModelScope) { store.state.value.securityEpoch }
     private val events = Channel<SecurityPageEvent>(Channel.BUFFERED)
 
-    val uiState: StateFlow<SecurityPageUiState> = combine(store.state, operation.state) { state, op ->
-        SecurityPageUiState(
-            identity = walletId?.let { WalletIdentity.of(state, it) },
-            busy = op.busy,
-            error = op.error,
-            securityEpoch = state.securityEpoch,
-            gone = WalletIdentity.isGone(state, walletId),
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SecurityPageUiState())
+    val uiState: StateFlow<SecurityPageUiState> = combine(store.state, operation.state) { state, op -> SecurityPageUiState.of(state, op, walletId) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SecurityPageUiState.of(store.state.value, operation.state.value, walletId))
 
     val pageEvents: Flow<SecurityPageEvent> = events.receiveAsFlow()
 

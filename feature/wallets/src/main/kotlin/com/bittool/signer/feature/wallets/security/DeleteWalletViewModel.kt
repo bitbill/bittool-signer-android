@@ -4,11 +4,13 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.security.AppAccessController
+import com.bittool.signer.core.security.AppAccessState
 import com.bittool.signer.feature.wallets.common.WalletArgs
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import com.bittool.signer.feature.wallets.common.WalletOperation
@@ -65,18 +67,23 @@ class DeleteWalletViewModel @Inject constructor(
 
     private val local = MutableStateFlow(Local())
 
-    val uiState: StateFlow<DeleteWalletUiState> = combine(store.state, access.state, operation.state, local) { state, accessState, op, l ->
-        DeleteWalletUiState(
-            identity = walletId?.let { WalletIdentity.of(state, it) },
-            confirmed = l.confirmed,
-            confirming = l.confirming,
-            askingPassword = l.askingPassword,
-            busy = op.busy,
-            error = op.error,
-            asksForBiometrics = accessState.isEnabled && accessState.biometricsAvailable,
-            gone = WalletIdentity.isGone(state, walletId),
+    val uiState: StateFlow<DeleteWalletUiState> = combine(store.state, access.state, operation.state, local, ::uiStateOf)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            uiStateOf(store.state.value, access.state.value, operation.state.value, local.value),
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DeleteWalletUiState())
+
+    private fun uiStateOf(state: SignerState, accessState: AppAccessState, op: WalletOperation.State, l: Local) = DeleteWalletUiState(
+        identity = walletId?.let { WalletIdentity.of(state, it) },
+        confirmed = l.confirmed,
+        confirming = l.confirming,
+        askingPassword = l.askingPassword,
+        busy = op.busy,
+        error = op.error,
+        asksForBiometrics = accessState.isEnabled && accessState.biometricsAvailable,
+        gone = WalletIdentity.isGone(state, walletId),
+    )
 
     val pageEvents: Flow<SecurityPageEvent> = events.receiveAsFlow()
 

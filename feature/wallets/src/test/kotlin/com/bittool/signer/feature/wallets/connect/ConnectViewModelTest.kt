@@ -177,8 +177,9 @@ class ConnectViewModelTest {
             }
         }
         val vm = wallet(store)
+        assertEquals(prepared, vm.uiState.value.wallet, "complete on the first frame, before any collection")
         val state = observe(vm.uiState)
-        assertEquals(prepared, state.value.wallet, "complete on the first frame")
+        assertEquals(prepared, state.value.wallet)
         assertSame(matrices, state.value.walletMatrices)
         assertEquals(prepared.text, state.value.copyText)
         advanceUntilIdle()

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
@@ -108,9 +109,13 @@ class ConnectViewModel @Inject constructor(
         }
     }
 
-    val uiState: StateFlow<ConnectUiState> = combine(model, store.state) { m, state ->
+    // The initial value is the full current state, so a prefetched Wallet Level code is on the page's first frame.
+    val uiState: StateFlow<ConnectUiState> = combine(model, store.state, ::uiStateOf)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), uiStateOf(model.value, store.state.value))
+
+    private fun uiStateOf(m: Model, state: SignerState): ConnectUiState {
         val id = walletId
-        ConnectUiState(
+        return ConnectUiState(
             level = m.level,
             options = m.options,
             coin = m.payload?.takeIf { m.loadedKey == m.options.requestKey },
@@ -121,7 +126,7 @@ class ConnectViewModel @Inject constructor(
             masterFingerprint = id?.let { state.publicMetadata(it)?.displayFingerprint },
             gone = WalletIdentity.isGone(state, id),
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConnectUiState(level = model.value.level, options = model.value.options))
+    }
 
     fun selectLevel(level: PairingLevel) = model.update { it.copy(level = level) }
 

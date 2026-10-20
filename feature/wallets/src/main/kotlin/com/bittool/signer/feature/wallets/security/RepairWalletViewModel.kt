@@ -33,15 +33,8 @@ class RepairWalletViewModel @Inject constructor(
     private val operation = WalletOperation(viewModelScope) { store.state.value.securityEpoch }
     private val events = Channel<SecurityPageEvent>(Channel.BUFFERED)
 
-    val uiState: StateFlow<SecurityPageUiState> = combine(store.state, operation.state) { state, op ->
-        SecurityPageUiState(
-            identity = walletId?.let { WalletIdentity.of(state, it) },
-            busy = op.busy,
-            error = op.error,
-            securityEpoch = state.securityEpoch,
-            gone = WalletIdentity.isGone(state, walletId),
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SecurityPageUiState())
+    val uiState: StateFlow<SecurityPageUiState> = combine(store.state, operation.state) { state, op -> SecurityPageUiState.of(state, op, walletId) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SecurityPageUiState.of(store.state.value, operation.state.value, walletId))
 
     val pageEvents: Flow<SecurityPageEvent> = events.receiveAsFlow()
 
