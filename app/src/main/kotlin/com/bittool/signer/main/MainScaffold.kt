@@ -129,21 +129,10 @@ fun MainScaffold(
 
     BoxWithConstraints(modifier.fillMaxSize().testTag(MainTags.ROOT)) {
         val rail = maxWidth >= RailMinWidth
-        val host: @Composable (Modifier) -> Unit = { hostModifier ->
-            NavHost(
-                navController = navController,
-                startDestination = WalletsGraph,
-                modifier = hostModifier,
-                enterTransition = { transitions.enter(this) },
-                exitTransition = { transitions.exit(this) },
-                popEnterTransition = { transitions.popEnter(this) },
-                popExitTransition = { transitions.popExit(this) },
-            ) {
-                destinations(navController)
-            }
-        }
-        if (rail) {
-            Row(Modifier.fillMaxSize()) {
+        // One layout for both forms, so the NavHost keeps its place in the composition when the window crosses the
+        // rail width (rotation, a resized window): moving it would rebuild every page and drop its remembered state.
+        Row(Modifier.fillMaxSize()) {
+            if (rail) {
                 AnimatedVisibility(
                     visible = showBar,
                     enter = slideInHorizontally(SignerMotion.smooth<IntOffset>(BAR_SECONDS)) { if (rtl) it else -it } +
@@ -153,21 +142,35 @@ fun MainScaffold(
                 ) {
                     SignerNavigationRail(selected, showsScanBadge, onTab)
                 }
-                val consumed = if (showBar) WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Start) else WindowInsets(0)
-                host(Modifier.weight(1f).fillMaxHeight().consumeWindowInsets(consumed))
             }
-        } else {
-            Column(Modifier.fillMaxSize()) {
-                val consumed = if (showBar) WindowInsets.navigationBars.only(WindowInsetsSides.Bottom) else WindowInsets(0)
-                host(Modifier.weight(1f).fillMaxWidth().consumeWindowInsets(consumed))
-                AnimatedVisibility(
-                    visible = showBar,
-                    enter = slideInVertically(SignerMotion.smooth<IntOffset>(BAR_SECONDS)) { it } +
-                        expandVertically(SignerMotion.smooth<IntSize>(BAR_SECONDS), expandFrom = Alignment.Top),
-                    exit = slideOutVertically(SignerMotion.smooth<IntOffset>(BAR_SECONDS)) { it } +
-                        shrinkVertically(SignerMotion.smooth<IntSize>(BAR_SECONDS), shrinkTowards = Alignment.Top),
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                // The bar's or rail's own insets are consumed for the pages, so their bottom bars do not pad twice.
+                val consumed = when {
+                    !showBar -> WindowInsets(0)
+                    rail -> WindowInsets.systemBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Start)
+                    else -> WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+                }
+                NavHost(
+                    navController = navController,
+                    startDestination = WalletsGraph,
+                    modifier = Modifier.weight(1f).fillMaxWidth().consumeWindowInsets(consumed),
+                    enterTransition = { transitions.enter(this) },
+                    exitTransition = { transitions.exit(this) },
+                    popEnterTransition = { transitions.popEnter(this) },
+                    popExitTransition = { transitions.popExit(this) },
                 ) {
-                    SignerNavigationBar(selected, showsScanBadge, onTab)
+                    destinations(navController)
+                }
+                if (!rail) {
+                    AnimatedVisibility(
+                        visible = showBar,
+                        enter = slideInVertically(SignerMotion.smooth<IntOffset>(BAR_SECONDS)) { it } +
+                            expandVertically(SignerMotion.smooth<IntSize>(BAR_SECONDS), expandFrom = Alignment.Top),
+                        exit = slideOutVertically(SignerMotion.smooth<IntOffset>(BAR_SECONDS)) { it } +
+                            shrinkVertically(SignerMotion.smooth<IntSize>(BAR_SECONDS), shrinkTowards = Alignment.Top),
+                    ) {
+                        SignerNavigationBar(selected, showsScanBadge, onTab)
+                    }
                 }
             }
         }

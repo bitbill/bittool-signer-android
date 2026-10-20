@@ -1,16 +1,24 @@
 package com.bittool.signer.main
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph
@@ -38,6 +46,7 @@ import com.bittool.signer.core.navigation.WalletsGraph
 import com.bittool.signer.core.navigation.WalletsRoute
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -245,6 +254,47 @@ class NavigationGlueTest {
     }
 
     private fun systemBack() = onUi { compose.activity.onBackPressedDispatcher.onBackPressed() }
+
+    /**
+     * Review fix: the NavHost sat in a different layout for the bar and the rail, so crossing 600 dp (rotating a phone,
+     * resizing a window; the activity is not recreated) rebuilt every page and dropped its remembered state.
+     */
+    @Test
+    @Config(qualifiers = "w900dp-h800dp")
+    fun crossingTheRailWidthKeepsThePagesState() {
+        var width by mutableStateOf(400.dp)
+        var created = 0
+        compose.setContent {
+            nav = rememberNavController()
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                Box(Modifier.width(width)) {
+                    MainScaffold(router = router, showsScanBadge = false, navController = nav) {
+                        navigation<WalletsGraph>(startDestination = WalletsRoute) {
+                            composable<WalletsRoute> {
+                                remember { created++ }
+                                Text("wallets-root", Modifier.testTag("wallets-root"))
+                            }
+                        }
+                        navigation<ScanGraph>(startDestination = ScanRoute) { page<ScanRoute>("scan-root") }
+                        navigation<ActivityGraph>(startDestination = ActivityRoute) { page<ActivityRoute>("activity-root") }
+                        navigation<SettingsGraph>(startDestination = SettingsRoute) { page<SettingsRoute>("settings-root") }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(1, created)
+        width = 700.dp
+        compose.waitForIdle()
+        // The rail: the tabs are stacked.
+        val wallets = compose.onNodeWithTag(Tab.Wallets.testTag).getUnclippedBoundsInRoot()
+        val settings = compose.onNodeWithTag(Tab.Settings.testTag).getUnclippedBoundsInRoot()
+        assertTrue(settings.top > wallets.top, "no navigation rail at 700 dp")
+        compose.onNodeWithTag("wallets-root").assertExists()
+        width = 400.dp
+        compose.waitForIdle()
+        assertEquals(1, created, "the page was rebuilt")
+    }
 
     @Test
     fun submitAWalletKeepsTheCurrentTabSelected() {
