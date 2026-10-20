@@ -3,7 +3,7 @@ package com.bittool.signer.di
 import android.content.Context
 import com.bittool.signer.BuildConfig
 import com.bittool.signer.appearance.AppearanceController
-import com.bittool.signer.build.SigningCertificate
+import com.bittool.signer.identity.SigningCertificate
 import com.bittool.signer.core.common.BuildInfo
 import com.bittool.signer.core.common.Distribution
 import com.bittool.signer.core.engine.EngineModule
