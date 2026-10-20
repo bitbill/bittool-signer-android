@@ -39,7 +39,7 @@ import com.bittool.signer.core.ui.pairing.IntendedWallets
 import com.bittool.signer.core.ui.pairing.ProfileMenu
 import com.bittool.signer.core.ui.payload.PayloadDisclosure
 import com.bittool.signer.core.ui.qr.QrLoadingPlaceholder
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.text.fingerprintNotes
 import com.bittool.signer.core.ui.text.localizedSummary
 import com.bittool.signer.core.ui.text.localizedTitle
@@ -157,7 +157,7 @@ private fun QrSection(uiState: ConnectUiState, onSelectOutputMode: (String) -> U
                         textAlign = TextAlign.Center,
                     )
                 }
-                is QrSlot.Failed -> Callout(text = shown.text.asString(), tone = Tone.Danger, verbatim = true)
+                is QrSlot.Failed -> Callout(text = shown.text, tone = Tone.Danger)
                 QrSlot.Loading -> QrLoadingPlaceholder(maxSide = COIN_QR_SIDE)
             }
         }

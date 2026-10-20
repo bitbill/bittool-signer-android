@@ -1,6 +1,5 @@
 package com.bittool.signer.feature.onboarding
 
-import android.content.pm.ApplicationInfo
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,7 +33,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -43,14 +41,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -274,22 +270,15 @@ private fun LegalLink(text: String, tag: String, onClick: () -> Unit) {
 /**
  * The bundled Terms of Use or Privacy Policy over Welcome (iOS `LegalDocumentSheet`): a full-height sheet with the
  * document's title and "Done" (`legal.done`), the text selectable and without links. English text by decision; the
- * title follows the app language like the button that opened it.
+ * title follows the app language like the button that opened it. The sheet publishes its test tags as resource ids
+ * itself (`SignerBottomSheet`), so UI tests find `legal.done`.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun LegalDocumentSheet(sheet: LegalSheet, onDismiss: () -> Unit) {
     val colors = SignerTheme.colors
-    val exposeTags = rememberExposesTestTags()
     SignerBottomSheet(onDismissRequest = onDismiss) {
         val sheetScope = this
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                // A sheet is its own window: the root's resource-id flag does not reach it (UI tests find `legal.done`).
-                .semantics { testTagsAsResourceId = exposeTags },
-        ) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight()) {
             Box(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 8.dp)) {
                 Text(
                     text = stringResource(if (sheet.document == LegalDocument.Terms) R.string.terms_of_use else R.string.privacy_policy),
@@ -311,13 +300,6 @@ internal fun LegalDocumentSheet(sheet: LegalSheet, onDismiss: () -> Unit) {
             )
         }
     }
-}
-
-/** Debuggable builds expose test tags as view resource names, so UiAutomator finds them (gaps.md G1.0). */
-@Composable
-private fun rememberExposesTestTags(): Boolean {
-    val context = LocalContext.current
-    return remember(context) { context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 }
 }
 
 /** Test tags of Welcome: the iOS accessibility identifiers. */

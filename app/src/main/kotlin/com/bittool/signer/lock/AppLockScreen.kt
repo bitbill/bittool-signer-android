@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,7 +68,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.brand.BrandTile
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
@@ -91,7 +89,8 @@ import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.password.wipe
+import com.bittool.signer.core.ui.text.Callout
 
 /**
  * The App Lock screen (iOS `AppLockView`, Features/Lock/AppLockView.swift:6-128; app-shell.md §11.9, §15.7), the content
@@ -108,7 +107,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
     LaunchedEffect(viewModel) {
         viewModel.fieldEvents.collect { event ->
             when (event) {
-                AppLockEvent.ClearPassword -> password.clearText()
+                AppLockEvent.ClearPassword -> password.wipe()
                 // A rejected password (ARCHITECTURE §4.5: warning haptic), then iOS `passwordFocused = true`: focus and
                 // keyboard (the lock window keeps the keyboard hidden otherwise).
                 AppLockEvent.FocusPassword -> {
@@ -127,7 +126,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
         onPauseOrDispose { viewModel.onResumedChanged(false) }
     }
     // iOS `.onDisappear { password = "" }`.
-    DisposableEffect(password) { onDispose { password.clearText() } }
+    DisposableEffect(password) { onDispose { password.wipe() } }
     AppLockContent(
         state = state,
         password = password,
@@ -139,7 +138,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
         onUnlock = {
             // The field is cleared before the check runs: a wrong password has to be typed again (UIT:789-795).
             val secret = SecretText.of(password.text)
-            password.clearText()
+            password.wipe()
             viewModel.unlock(secret)
         },
     )
@@ -216,7 +215,7 @@ fun AppLockContent(
                 val errorInView = remember { BringIntoViewRequester() }
                 // Announced when it appears or changes: the keyboard focus goes back to the field, TalkBack's does not.
                 Callout(
-                    text = error.asString(),
+                    text = error,
                     tone = Tone.Warning,
                     verbatim = true,
                     modifier = Modifier

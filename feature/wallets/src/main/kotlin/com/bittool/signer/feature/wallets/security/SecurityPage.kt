@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -33,7 +32,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
@@ -44,7 +42,8 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.UiText
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.password.wipe
+import com.bittool.signer.core.ui.text.Callout
 
 /**
  * The frame of the wallet security pages (iOS sheets with their own bar and a leading "Cancel"; modal routes on
@@ -111,9 +110,8 @@ internal fun SecurityError(error: UiText?, modifier: Modifier = Modifier) {
     val haptics = rememberSignerHaptics()
     LaunchedEffect(error) { haptics.reject() }
     Callout(
-        text = error.asString(),
+        text = error,
         tone = Tone.Danger,
-        verbatim = true,
         modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
     )
 }
@@ -131,7 +129,7 @@ internal fun FormFooter(text: String, modifier: Modifier = Modifier) {
 
 /**
  * The typed passwords of one security page, in composition memory only (`remember`, never saved: ARCHITECTURE §4.4).
- * [clear] empties every field.
+ * [clear] empties every field, undo history included.
  */
 @Stable
 internal class PasswordFields(count: Int) {
@@ -139,7 +137,7 @@ internal class PasswordFields(count: Int) {
 
     operator fun get(index: Int): TextFieldState = fields[index]
 
-    fun clear() = fields.forEach { it.clearText() }
+    fun clear() = fields.forEach { it.wipe() }
 }
 
 /**

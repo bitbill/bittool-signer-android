@@ -8,8 +8,15 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
@@ -32,6 +39,7 @@ import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.CompatibleWallets
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -154,6 +162,49 @@ class PairingControlsTest {
             .performClick()
         compose.onNodeWithText("Taproot").performClick()
         compose.runOnIdle { assertEquals("taproot", selection.id) }
+    }
+
+    /**
+     * Backlog B5: in a right-to-left interface the detail line "BIP84 · bc1q…" is still laid out left to right, so its
+     * ellipsis stays after "bc1q" (it used to move to the front: "…BIP84 · bc1q"). In the row and in the menu.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun theDetailKeepsItsEllipsisAtTheEndRightToLeft() {
+        val native = AccountProfiles.bitcoinSingle.first()
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column {
+                        ProfileMenu(
+                            title = "Address type",
+                            options = AccountProfiles.bitcoinSingle,
+                            selection = native,
+                            label = AccountProfile::title,
+                            detail = AccountProfile::detail,
+                            onSelect = {},
+                        )
+                    }
+                }
+            }
+        }
+        fun assertEllipsisLast(node: SemanticsNode) {
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            val text = layout.layoutInput.text.text
+            assertEquals("BIP84 · bc1q…", text)
+            assertEquals(TextDirection.Content, layout.layoutInput.style.textDirection, "laid out in its own direction")
+            assertEquals(ResolvedTextDirection.Ltr, layout.getParagraphDirection(0))
+            val ellipsis = layout.getBoundingBox(text.lastIndex)
+            val first = layout.getBoundingBox(0)
+            assertTrue(ellipsis.left > first.right, "the ellipsis is drawn after the text, not before it")
+        }
+        assertEllipsisLast(compose.onNodeWithText(native.detail, useUnmergedTree = true).fetchSemanticsNode())
+        compose.onNodeWithTag("profile.menu").performClick()
+        val inMenu = compose.onAllNodesWithText(native.detail, useUnmergedTree = true).fetchSemanticsNodes()
+        assertEquals(2, inMenu.size, "the row and the menu item")
+        inMenu.forEach(::assertEllipsisLast)
     }
 
     @Test

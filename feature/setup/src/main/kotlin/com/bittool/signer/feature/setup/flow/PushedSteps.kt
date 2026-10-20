@@ -75,7 +75,6 @@ import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
-import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -252,13 +251,13 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         SecretPair(
             first = {
                 PasswordField(
-                    PasswordKind.WalletPassword, fields.password, Modifier.secretTextMenu(),
+                    PasswordKind.WalletPassword, fields.password,
                     isNew = true, imeAction = ImeAction.Next, containerColor = Color.Transparent,
                 )
             },
             second = {
                 PasswordField(
-                    PasswordKind.ConfirmPassword, fields.confirmation, Modifier.secretTextMenu(),
+                    PasswordKind.ConfirmPassword, fields.confirmation,
                     isNew = true, imeAction = ImeAction.Done, containerColor = Color.Transparent,
                 )
             },

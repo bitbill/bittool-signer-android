@@ -32,7 +32,9 @@ import com.bittool.signer.core.designsystem.theme.ElevatedSurfaceLevel
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
+import com.bittool.signer.core.designsystem.window.appExposesTestTags
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
+import com.bittool.signer.core.designsystem.window.windowTestTags
 import kotlinx.coroutines.launch
 
 /**
@@ -61,7 +63,8 @@ data class DialogAction(
  * unlock; one already shown stays), its window hides foreign overlays (API 31+), and with [secure] the window is
  * `FLAG_SECURE` even where the activity is not (dialogs are separate windows: any dialog that can show a secret passes
  * `secure = true`). Modal: a tap outside does nothing; Back and the system dismiss call [onDismissRequest] (the cancel
- * action) unless [dismissOnBack] is false (busy).
+ * action) unless [dismissOnBack] is false (busy). In debuggable builds the window publishes its test tags as resource
+ * ids itself (`windowTestTags`): the root's flag does not reach a separate window.
  */
 @Composable
 fun SignerAlertDialog(
@@ -76,6 +79,7 @@ fun SignerAlertDialog(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     if (!rememberWindowGateReleased()) return
+    val exposeTestTags = appExposesTestTags()
     ElevatedSurfaceLevel {
         val colors = SignerTheme.colors
         val typography = SignerTheme.typography
@@ -83,7 +87,8 @@ fun SignerAlertDialog(
             onDismissRequest = onDismissRequest,
             confirmButton = { DialogButton(confirm, emphasized = true) },
             dismissButton = dismiss?.let { { DialogButton(it, emphasized = false) } },
-            modifier = modifier,
+            // Material applies the modifier to the content root inside the dialog's window.
+            modifier = modifier.windowTestTags(exposeTestTags),
             title = {
                 HideOverlayWindowsEffect()
                 Text(title, style = typography.title3.semibold(), color = colors.label)
@@ -146,7 +151,8 @@ interface SignerSheetScope : ColumnScope {
  * scrim nor Back closes it (iOS `interactiveDismissDisabled`).
  *
  * Same window rules as [SignerAlertDialog]: waits for `LocalWindowGateOpen`, hides foreign overlays on API 31+, and with
- * [secure] the sheet window is `FLAG_SECURE` (paste, authorize, recovery cards). [testTag] tags the sheet content.
+ * [secure] the sheet window is `FLAG_SECURE` (paste, authorize, recovery cards), and in debuggable builds the content
+ * publishes its test tags as resource ids. [testTag] tags the sheet content.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,6 +173,7 @@ fun SignerBottomSheet(
         confirmValueChange = { it != SheetValue.Hidden || canDismiss },
     )
     val scope = rememberCoroutineScope()
+    val exposeTestTags = appExposesTestTags()
     ElevatedSurfaceLevel {
         val colors = SignerTheme.colors
         ModalBottomSheet(
@@ -184,7 +191,12 @@ fun SignerBottomSheet(
             ),
         ) {
             HideOverlayWindowsEffect()
-            Column(Modifier.fillMaxWidth().then(testTag?.let { Modifier.testTag(it) } ?: Modifier)) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .windowTestTags(exposeTestTags)
+                    .then(testTag?.let { Modifier.testTag(it) } ?: Modifier),
+            ) {
                 val sheetScope = remember(this, state) {
                     SignerSheetScopeImpl(this) {
                         scope.launch { state.hide() }.invokeOnCompletion {

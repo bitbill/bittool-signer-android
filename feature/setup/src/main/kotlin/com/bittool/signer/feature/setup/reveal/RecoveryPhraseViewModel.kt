@@ -15,9 +15,9 @@ import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.navigation.RecoveryPhraseRoute
 import com.bittool.signer.core.security.RecoverySessionFactory
+import com.bittool.signer.core.ui.password.wipe
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.flow.WalletIdentity
-import com.bittool.signer.feature.setup.ui.wipe
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException

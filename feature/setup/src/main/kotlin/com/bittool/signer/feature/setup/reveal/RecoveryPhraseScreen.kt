@@ -57,7 +57,6 @@ import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
-import com.bittool.signer.feature.setup.ui.secretTextMenu
 import kotlinx.coroutines.delay
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -174,7 +173,7 @@ private fun PasswordForm(state: RecoveryPhraseUiState, password: TextFieldState,
             imeAction = ImeAction.Go,
             onSubmit = onUnlock,
             enabled = !state.busy,
-            modifier = Modifier.focusRequester(focus).secretTextMenu(),
+            modifier = Modifier.focusRequester(focus),
         )
         Text(
             stringResource(L10n.string.the_recovery_phrase_stays_hidden_until_you_choose_to),

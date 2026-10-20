@@ -29,12 +29,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -60,11 +57,12 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
-import com.bittool.signer.core.designsystem.component.Callout
+import com.bittool.signer.core.designsystem.component.NavIcon
+import com.bittool.signer.core.designsystem.component.NavIconTags
+import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.component.Tone
@@ -78,7 +76,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.security.RecoverySessionFactory
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import kotlin.math.roundToInt
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -128,9 +126,9 @@ internal enum class SetupNavigation {
 }
 
 /**
- * The page bar of the setup steps and the Recovery Phrase page: the styling of `SignerTopAppBar` (page colour, lifted
- * when content scrolls under it, inline `headline` title) with test tags on its navigation icon (`nav.back` /
- * `setup.cancel`), which the shared bar has no hook for.
+ * The page bar of the setup steps and the Recovery Phrase page: `SignerTopAppBar` (page colour, lifted when content
+ * scrolls under it, inline `headline` title) with the setup navigation: the mirrored back arrow (`nav.back`) or the
+ * first step's cross, read "Cancel" and tagged `setup.cancel`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,37 +143,20 @@ internal fun SetupTopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val colors = SignerTheme.colors
-    TopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = SignerTheme.typography.headline,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.semantics { heading() },
-            )
+    SignerTopAppBar(
+        title = title,
+        navigation = when (navigation) {
+            SetupNavigation.None -> NavIcon.None
+            SetupNavigation.Cancel -> NavIcon.Close
+            SetupNavigation.Back -> NavIcon.Back
         },
+        onNavigate = onNavigate,
         modifier = modifier,
-        navigationIcon = {
-            if (navigation != SetupNavigation.None) {
-                IconButton(onClick = onNavigate, enabled = navigationEnabled, modifier = Modifier.testTag(navigationTag)) {
-                    Icon(
-                        imageVector = if (navigation == SetupNavigation.Back) SignerIcons.ArrowBack else SignerIcons.Close,
-                        contentDescription = navigationLabel,
-                    )
-                }
-            }
-        },
         actions = actions,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colors.page,
-            scrolledContainerColor = if (colors.isDark) colors.card else MaterialTheme.colorScheme.surfaceContainerHigh,
-            navigationIconContentColor = colors.accent,
-            titleContentColor = colors.label,
-            actionIconContentColor = colors.accent,
-        ),
         scrollBehavior = scrollBehavior,
+        navigationTag = navigationTag,
+        navigationLabel = navigationLabel,
+        navigationEnabled = navigationEnabled,
     )
 }
 
@@ -185,7 +166,7 @@ internal fun CancelAction(enabled: Boolean, onClick: () -> Unit) {
     TextAction(stringResource(L10n.string.cancel), onClick = onClick, enabled = enabled, modifier = Modifier.testTag(CANCEL_TAG))
 }
 
-internal const val NAV_BACK_TAG = "nav.back"
+internal const val NAV_BACK_TAG = NavIconTags.BACK
 internal const val CANCEL_TAG = "setup.cancel"
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -302,11 +283,14 @@ private fun StepProgress(step: Int, total: Int, modifier: Modifier = Modifier) {
 // ---------------------------------------------------------------------------------------------------------------------
 // Small building blocks
 
-/** A footer error (iOS `Callout(verbatim: error, tone: .danger)`): engine text keeps its own direction. */
+/**
+ * A footer error (iOS `Callout(verbatim: error, tone: .danger)`): the shared `UiText` callout, so engine text keeps its
+ * own direction.
+ */
 @Composable
 internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier) {
     if (error == null) return
-    Callout(text = error.asString(), modifier = modifier.testTag("setup.error"), tone = Tone.Danger, verbatim = error is UiText.Verbatim)
+    Callout(text = error, modifier = modifier.testTag("setup.error"), tone = Tone.Danger)
 }
 
 /**

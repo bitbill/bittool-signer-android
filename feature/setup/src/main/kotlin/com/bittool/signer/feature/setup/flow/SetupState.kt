@@ -14,7 +14,7 @@ import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.util.isBlankSwift
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
 import com.bittool.signer.core.navigation.SetupIntent
-import com.bittool.signer.feature.setup.ui.wipe
+import com.bittool.signer.core.ui.password.wipe
 
 /** The pushed steps of a setup presentation (iOS `WalletSetupModel.Step`); the root (Create / Import form) is `[]`. */
 enum class SetupStep { Backup, Verify, Password, Done }

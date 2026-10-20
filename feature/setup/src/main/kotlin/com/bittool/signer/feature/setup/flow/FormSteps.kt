@@ -45,7 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -72,7 +71,9 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
+import com.bittool.signer.core.designsystem.window.appExposesTestTags
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
+import com.bittool.signer.core.designsystem.window.windowTestTags
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.model.util.Graphemes
@@ -87,7 +88,6 @@ import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
-import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -241,13 +241,13 @@ internal fun PassphraseOptions(usePassphrase: Boolean, model: WalletSetupViewMod
                     // A revealed passphrase is plain text: its menu, like the phrase editor's, sends nothing anywhere.
                     first = {
                         PasswordField(
-                            PasswordKind.Passphrase, fields.passphrase, Modifier.secretTextMenu(),
+                            PasswordKind.Passphrase, fields.passphrase,
                             isNew = true, revealable = true, imeAction = ImeAction.Next, containerColor = Color.Transparent,
                         )
                     },
                     second = {
                         PasswordField(
-                            PasswordKind.ConfirmPassphrase, fields.passphraseConfirmation, Modifier.secretTextMenu(),
+                            PasswordKind.ConfirmPassphrase, fields.passphraseConfirmation,
                             isNew = true, revealable = true, imeAction = ImeAction.Done, containerColor = Color.Transparent,
                         )
                     },
@@ -347,7 +347,8 @@ private fun RecoveryScannerDialog(error: UiText?, model: WalletSetupViewModel) {
         ),
     ) {
         HideOverlayWindowsEffect()
-        Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
+        // Its own window: it publishes its test tags itself (debuggable builds only).
+        Box(Modifier.fillMaxSize().windowTestTags(appExposesTestTags())) {
             QrScannerScreen(
                 title = stringResource(L10n.string.scan_recovery_qr),
                 hint = stringResource(L10n.string.scan_a_qr_code_containing_the_words_such_as_bittool),
@@ -378,7 +379,7 @@ internal fun BackupLanguageDialog(choices: List<Bip39Canonical>, onChoose: (Bip3
         onDismissRequest = onDismiss,
     ) {
         AccessibilitySensitive(active = true)
-        Column(Modifier.fillMaxWidth().semantics { testTagsAsResourceId = true }, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             for (reading in choices) {
                 SecondaryButton(
                     text = stringResource(L10n.string.x_x, reading.language.displayName, reading.words.take(3).joinToString(" ")),

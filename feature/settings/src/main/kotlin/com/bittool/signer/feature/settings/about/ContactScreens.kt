@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.GroupedSection
 import com.bittool.signer.core.designsystem.component.Tone
-import com.bittool.signer.feature.settings.ValueLine
+import com.bittool.signer.core.designsystem.component.ValueRow
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
@@ -53,7 +53,7 @@ fun ContactScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
         ) {
             item(key = "publisher") {
                 GroupedSection(SectionFrame) {
-                    item { ValueLine(publisherLabel, publisher, Modifier.testTag(ContactTags.PUBLISHER)) }
+                    item { ValueRow(publisherLabel, publisher, Modifier.testTag(ContactTags.PUBLISHER), verbatim = true) }
                 }
             }
             item(key = "email") {

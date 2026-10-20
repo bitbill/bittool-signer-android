@@ -30,7 +30,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
 import com.bittool.signer.core.designsystem.component.Tone
@@ -42,11 +41,9 @@ import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
-import com.bittool.signer.feature.sign.common.appExposesTestTags
-import com.bittool.signer.feature.sign.common.windowTestTags
 
 /**
  * "Paste Request" (inventory row 49; iOS `PasteRequestSheet`, `Features/Sign/ScanTab.swift:263-325`): a full sheet with
@@ -69,8 +66,8 @@ internal fun PasteRequestSheet(
         LaunchedEffect(state.closing) {
             if (state.closing) sheet.dismiss()
         }
-        // A sheet is a window of its own: its test tags need their own resource-id switch (e2e, gaps G1.8).
-        Column(Modifier.windowTestTags(appExposesTestTags())) {
+        // A window of its own: SignerBottomSheet publishes its test tags as resource ids (e2e, gaps G1.8).
+        Column {
             SheetHeader(title = stringResource(R.string.paste_request), onCancel = { sheet.dismiss() })
             PasteRequestBody(state, text, onPasteFromClipboard, Modifier.weight(1f, fill = false))
             BottomActionBar {
@@ -140,6 +137,6 @@ internal fun ColumnScope.PasteRequestBody(
             Icon(SignerIcons.Paste, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.paste_from_clipboard), style = typography.subheadline.semibold(), color = colors.accent)
         }
-        state.error?.let { Callout(text = it.asString(), tone = Tone.Danger, verbatim = true) }
+        state.error?.let { Callout(text = it, tone = Tone.Danger) }
     }
 }
