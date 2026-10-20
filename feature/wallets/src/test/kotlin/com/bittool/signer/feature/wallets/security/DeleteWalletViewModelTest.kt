@@ -7,6 +7,7 @@ import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.AppIssue
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.security.AppAccessController
 import com.bittool.signer.core.security.AppAccessState
 import com.bittool.signer.core.security.BiometricException
 import com.bittool.signer.core.security.testing.FakeAppAccessController
@@ -368,5 +369,40 @@ class DeleteWalletViewModelTest {
         vm.remove()
         advanceUntilIdle()
         assertEquals(1, store.calls<Call.RemoveWalletWithLostDeviceKey>().size, "the page itself stays usable")
+    }
+
+    @Test
+    fun aKeyCheckThatChangesThePageDuringTheBiometricPromptOpensNoDialog() = runTest(main.dispatcher) {
+        // The check started when the page opened answers only while the prompt is up: the switch was turned on for
+        // "I confirm I want to delete this wallet", the page now asks to remove a wallet that can't be unlocked.
+        val prompt = CompletableDeferred<Unit>()
+        val fake = FakeAppAccessController(appLockOn)
+        val access = object : AppAccessController by fake {
+            override suspend fun confirmSensitiveAction(reason: UiText) = prompt.await()
+        }
+        val answer = CompletableDeferred<Boolean>()
+        val store = WalletFixtures.store().apply { onIsDeviceKeyLost = { answer.await() } }
+        val vm = DeleteWalletViewModel(store, access, WalletFixtures.args())
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.confirming)
+
+        answer.complete(true)
+        advanceUntilIdle()
+        assertTrue(state.value.deviceKeyLost)
+        assertFalse(state.value.confirmed, "the switch confirmed the other statement")
+        prompt.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(state.value.confirming)
+        assertFalse(state.value.askingRemoval, "no dialog for a statement nobody confirmed")
+        assertFalse(state.value.askingPassword)
+
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.askingRemoval)
     }
 }

@@ -146,8 +146,12 @@ class DeleteWalletViewModel @Inject constructor(
             } catch (unavailable: Exception) {
                 // Biometrics unavailable or failed: the password (or the removal dialog) still decides.
             }
+            // A device-key answer that arrived during the prompt changed the page's statement and turned the switch off
+            // (checkDeviceKey): nothing was confirmed for the page as it is now, so no dialog opens.
             val lost = keyLost.value
-            local.update { it.copy(confirming = false, askingPassword = !lost, askingRemoval = lost) }
+            local.update {
+                if (it.confirmed) it.copy(confirming = false, askingPassword = !lost, askingRemoval = lost) else it.copy(confirming = false)
+            }
         }
     }
 
