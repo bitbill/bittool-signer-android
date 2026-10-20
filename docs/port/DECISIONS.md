@@ -138,3 +138,28 @@ progress for create/import/repair/sign and never call the engine from the main t
   the catalog, add it in the module's own `build.gradle.kts` with a full coordinate and say so in the report.
 - Commit with a descriptive message in the worktree before finishing; the orchestrator merges branches.
 - A task is done only when its modules compile and their tests pass; report anything stubbed, skipped or unverified.
+
+## 9. Answers to the open questions of gaps.md (binding)
+
+1. **Repository address.** The Open Source page shows the Android repository
+   `https://github.com/bitbill/bittool-signer-android` (`BuildConfig.REPOSITORY_URL`) as "this app's source", and names
+   the shared engine source (the iOS repository `https://github.com/bitbill/bittool-signer-ios`, `engine/`) as where
+   `signer.js` is built reproducibly. Text only; the app opens no browser.
+2. **The ~60 non-catalogue iOS strings (G6) are translated** into all 21 languages like every other string (Android-only
+   strings pass). Implementers add them in English to their `strings_<area>.xml` with the exact iOS English text.
+3. **Activity journal:** Keystore-encrypted `receipts.bin` (AES-GCM under a dedicated non-exportable Keystore key) in
+   `noBackupFilesDir`; same JSON content and retention rules as iOS `receipts.json`.
+4. **Screenshot wording:** keep the iOS state machines (they still fire when FLAG_SECURE is off in debug builds or an
+   OEM ignores it) and reword "Photos" for Android ("…delete it from your gallery and any synced copies…") as
+   Android-only strings.
+5. **Legal texts:** `apk` and `play` get Android versions of the Terms and Privacy Policy derived from the iOS texts
+   (App Store clauses replaced by Google Play / direct-download clauses), placed in the flavor source sets, and marked
+   for legal-owner review in the release checklist. Parser, structure and tests are shared.
+6. **Entropy:** bionic `arc4random_buf` (ChaCha20, kernel-seeded) is the engine's CSPRNG; Kotlin code uses
+   `SecureRandom`. Keep the Taproot "two signatures differ" vector.
+7. **Overlay and accessibility hardening (G4/G5): wanted.** `setHideOverlayWindows(true)` on API 31+ (permission
+   `HIDE_OVERLAY_WINDOWS`), `filterTouchesWhenObscured` on decisive buttons (Sign, reveal, delete, confirm), and
+   `setAccessibilityDataSensitive` (API 34+) on revealed recovery words and passwords.
+8. **`:e2e` module (G1–G3):** owned by the orchestrator during integration (shared Gradle files).
+9. **Third-party wallet round trips:** a pre-release acceptance item on physical devices; not automatable here.
+10. **README staleness:** follow the code (the air-gapped device guide lives in onboarding only).
