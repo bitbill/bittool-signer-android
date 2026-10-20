@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Strings of :core:ui (owner: W1-design). English only until the translation pass (DECISIONS §9.2).
+  The first group is the iOS English that is not in the 773-key catalogue (gaps.md G6; ARCHITECTURE §4.3 table): iOS draws
+  it untranslated, the Android port translates it. Brand and protocol tokens stay translatable="false" (DECISIONS §10).
+-->
+<resources>
+    <!-- WalletIdentityHeader: "Fingerprint %@" value when a wallet has no public index (setup-backup.md §9.3). -->
+    <string name="ui_setup_required">Setup required</string>
+    <!-- QrPayloadView.titleEnglish for hex / text payloads (PayloadDisclosure title; "Payload (JSON)" is a catalogue key). -->
+    <string name="ui_payload_hex">Payload (Hex)</string>
+    <string name="ui_payload_text">Payload (Text)</string>
+    <!-- QrPayloadView.summary parts: "Plain text · 170 bytes", "ur:crypto-account · CBOR · 170 bytes". %1$s is the grouped number. -->
+    <string name="ui_payload_bytes">%1$s bytes</string>
+    <string name="ui_payload_plain_text">Plain text</string>
+    <!-- ReviewDisplay.assetContractCaption default (scan-sign.md §11.3). -->
+    <string name="ui_nft_contract_not_verified">NFT contract (not verified)</string>
+    <!-- ReviewDisplay.boundedLines overflow line of a marketplace-order list. -->
+    <string name="ui_more_see_details">+%1$d more (see Details)</string>
+    <!-- TransactionReview.DEFAULT_TITLE, shown as the summary action line when the engine gives no title. -->
+    <string name="ui_review_request">Review request</string>
+    <!-- Connect / Addresses account presets (iOS AccountProfile titles, ConnectView.swift:3-22). -->
+    <string name="ui_profile_native_segwit" translatable="false">Native SegWit</string>
+    <string name="ui_profile_taproot" translatable="false">Taproot</string>
+    <string name="ui_profile_nested_segwit" translatable="false">Nested SegWit</string>
+    <string name="ui_profile_legacy">Legacy</string>
+    <string name="ui_profile_standard">Standard</string>
+    <string name="ui_profile_trust" translatable="false">Trust</string>
+    <!-- "Export as" choices (ConnectOptions.exportModes; "Wallet" is the catalogue key). -->
+    <string name="ui_export_account_xpub" translatable="false">Account XPUB</string>
+    <string name="ui_export_address">Address</string>
+    <!-- Chain.longName of EVM. -->
+    <string name="ui_chain_evm_long" translatable="false">Ethereum &amp; EVM</string>
+    <!-- Connect payload note (QrPayloadView.fingerprintNotes): %1$s decimal value, %2$s hex fingerprint. -->
+    <string name="ui_fingerprint_note">Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.</string>
+
+    <!-- Android-only. AddressIndexControl's two stepper buttons (iOS Stepper reads its own increment / decrement). -->
+    <string name="ui_decrease">Decrease</string>
+    <string name="ui_increase">Increase</string>
+</resources>

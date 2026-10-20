@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Converted from iOS Assets.xcassets/ChainBase.imageset/base.svg (design-system.md §8.2): the 27 x 27 rect at 18.5
+  with rx 1.9 becomes a rounded-rect path.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <path
+        android:fillColor="#FF0000FF"
+        android:pathData="M0,32 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M20.4,18.5 H43.6 A1.9,1.9 0 0,1 45.5,20.4 V43.6 A1.9,1.9 0 0,1 43.6,45.5 H20.4 A1.9,1.9 0 0,1 18.5,43.6 V20.4 A1.9,1.9 0 0,1 20.4,18.5 Z" />
+</vector>

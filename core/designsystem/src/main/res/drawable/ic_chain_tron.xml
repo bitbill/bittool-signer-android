@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Converted from iOS Assets.xcassets/ChainTron.imageset/tron.svg (design-system.md §8.2):
+  translate(32 32) scale(2.05) translate(-16.6 -16.8) becomes pivot 16.6,16.8, scale 2.05, translate 15.4,15.2.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <path
+        android:fillColor="#FFEB0029"
+        android:pathData="M0,32 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0 Z" />
+    <group
+        android:pivotX="16.6"
+        android:pivotY="16.8"
+        android:scaleX="2.05"
+        android:scaleY="2.05"
+        android:translateX="15.4"
+        android:translateY="15.2">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M21.932 9.913L7.5 7.257l7.595 19.112 10.583-12.894-3.746-3.562zm-.232 1.17l2.208 2.099-6.038 1.093 3.83-3.192zm-5.142 2.973l-6.364-5.278 10.402 1.914-4.038 3.364zm-.453.934l-1.038 8.58L9.472 9.487l6.633 5.502zm.96.455l6.687-1.21-7.67 9.343.983-8.133z" />
+    </group>
+</vector>
