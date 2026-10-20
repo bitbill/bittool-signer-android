@@ -89,7 +89,7 @@ fun SetupOverlay(
     ) {
         val current = shown.value ?: return@AnimatedVisibility
         key(current.id) {
-            SetupContainer(current, onIntroductionCompleted, onFinished, onCancelled, introduction, steps)
+            SetupContainer(current, leaving = presentation == null, onIntroductionCompleted, onFinished, onCancelled, introduction, steps)
         }
     }
 }
@@ -97,6 +97,7 @@ fun SetupOverlay(
 @Composable
 private fun SetupContainer(
     presentation: SetupPresentation,
+    leaving: Boolean,
     onIntroductionCompleted: () -> Unit,
     onFinished: (WalletRoute?) -> Unit,
     onCancelled: () -> Unit,
@@ -113,7 +114,7 @@ private fun SetupContainer(
             .testTag(RootTags.SETUP),
     ) {
         // Registered before the content's own handlers, so those take precedence; only a content without one ends here.
-        BackHandler(onBack = onCancelled)
+        BackHandler(enabled = !leaving, onBack = onCancelled)
         AnimatedContent(
             targetState = introductionDone,
             transitionSpec = {
@@ -136,6 +137,10 @@ private fun SetupContainer(
                 )
             }
         }
+        // While the layer slides away (finished or cancelled), Back belongs to nothing in it: a late Back must not
+        // cancel a finished setup and lose the page "Pair a Wallet" opens once the layer has gone. Registered when
+        // leaving starts, so it is the newest handler and is asked before the content's own ones.
+        if (leaving) BackHandler {}
     }
 }
 

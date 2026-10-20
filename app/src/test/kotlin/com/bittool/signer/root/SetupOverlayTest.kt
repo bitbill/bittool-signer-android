@@ -1,5 +1,7 @@
 package com.bittool.signer.root
 
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -8,7 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -31,7 +33,7 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SetupOverlayTest {
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     private var presentation by mutableStateOf<SetupPresentation?>(null)
     private val log = mutableListOf<String>()
@@ -55,6 +57,8 @@ class SetupOverlayTest {
                         Button(onClick = complete, modifier = Modifier.testTag("intro")) { Text("Get Started") }
                     },
                     steps = { p, finished, cancelled ->
+                        // Like the setup steps: Back on the first step cancels.
+                        BackHandler { cancelled() }
                         Column {
                             Text("steps ${p.intent}", Modifier.testTag("steps"))
                             Button(onClick = { finished(ConnectRoute.walletLevel(wallet)) }, modifier = Modifier.testTag("pair")) { Text("Pair") }
@@ -103,6 +107,31 @@ class SetupOverlayTest {
         compose.waitForIdle()
         assertEquals(listOf("finished ${ConnectRoute.walletLevel(wallet)}", "dismissed"), log)
         compose.onNodeWithTag(RootTags.SETUP).assertDoesNotExist()
+    }
+
+    /** Review fix: a Back while the finished overlay slid away cancelled it, so "Pair a Wallet" opened nothing. */
+    @Test
+    fun aBackWhileTheOverlayLeavesDoesNotCancelTheFinishedSetup() {
+        show()
+        presentation = SetupPresentation(id = 5, intent = SetupIntent.Create, showsIntroduction = false)
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithTag("pair").performClick()
+        compose.mainClock.advanceTimeByFrame()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertEquals(listOf("finished ${ConnectRoute.walletLevel(wallet)}", "dismissed"), log)
+    }
+
+    @Test
+    fun backOnTheContentCancels() {
+        show()
+        presentation = SetupPresentation(id = 6, intent = SetupIntent.Restore, showsIntroduction = false)
+        compose.waitForIdle()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        assertEquals(listOf("cancelled", "dismissed"), log)
     }
 
     @Test
