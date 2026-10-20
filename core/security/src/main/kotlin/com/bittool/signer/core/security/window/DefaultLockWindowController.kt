@@ -3,10 +3,10 @@ package com.bittool.signer.core.security.window
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
@@ -232,7 +233,7 @@ private class LockWindow(
         composeView.clearFocus()
         dialog.window?.let { WindowCompat.getInsetsController(it, it.decorView).hide(WindowInsetsCompat.Type.ime()) }
         val duration = if (ValueAnimator.areAnimatorsEnabled()) {
-            (DefaultLockWindowController.FADE_OUT_MILLIS * ValueAnimator.getDurationScale()).toLong()
+            (DefaultLockWindowController.FADE_OUT_MILLIS * animatorDurationScale()).toLong()
         } else {
             0L
         }
@@ -265,6 +266,13 @@ private class LockWindow(
         onRemoved(this)
     }
 
+    /** Developer options › Animator duration scale, which also scales the fade the animator draws. */
+    private fun animatorDurationScale(): Float = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ValueAnimator.getDurationScale()
+    } else {
+        Settings.Global.getFloat(activity.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
+    }
+
     /** iOS `source.endEditing(true)` before the lock window becomes key (AppLockView.swift:164). */
     private fun releaseActivityFocus() {
         val window = activity.window
@@ -293,7 +301,7 @@ private class LockWindow(
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             window.setWindowAnimations(0)
             window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-            window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             window.setSoftInputMode(

@@ -13,7 +13,10 @@ import com.bittool.signer.core.security.testing.FakeAppLifecycleMonitor
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,6 +71,32 @@ class AndroidBiometricAuthenticatorTest {
         val authenticator = AndroidBiometricAuthenticator(context, monitor)
         val error = assertFailsWith<BiometricException> { authenticator.authenticate(AppLockPrompts.unlock) }
         assertEquals(BiometricException.Kind.Unavailable, error.kind)
+    }
+
+    @Test
+    fun cancelEndsAShowingPromptAsASystemCancel() = runTest {
+        strongBiometrics(enrolled = true)
+        val monitor = FakeAppLifecycleMonitor()
+        monitor.foregroundActivity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
+        val authenticator = AndroidBiometricAuthenticator(context, monitor)
+        val prompt = async(start = CoroutineStart.UNDISPATCHED) { runCatching { authenticator.authenticate(AppLockPrompts.unlock) } }
+        assertFalse(prompt.isCompleted, "The prompt waits for the person")
+        authenticator.cancel() // the app went to the background
+        val ended = assertIs<BiometricCancellationException>(prompt.await().exceptionOrNull())
+        assertEquals(Reason.SystemCanceled, ended.reason)
+    }
+
+    @Test
+    fun aNewPromptReplacesTheShowingOne() = runTest {
+        strongBiometrics(enrolled = true)
+        val monitor = FakeAppLifecycleMonitor()
+        monitor.foregroundActivity = Robolectric.buildActivity(FragmentActivity::class.java).setup().get()
+        val authenticator = AndroidBiometricAuthenticator(context, monitor)
+        val first = async(start = CoroutineStart.UNDISPATCHED) { runCatching { authenticator.authenticate(AppLockPrompts.unlock) } }
+        val second = async(start = CoroutineStart.UNDISPATCHED) { runCatching { authenticator.authenticate(AppLockPrompts.unlock) } }
+        assertEquals(Reason.SystemCanceled, assertIs<BiometricCancellationException>(first.await().exceptionOrNull()).reason)
+        assertFalse(second.isCompleted)
+        second.cancel()
     }
 
     @Test

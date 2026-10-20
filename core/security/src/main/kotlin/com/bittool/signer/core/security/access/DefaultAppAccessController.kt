@@ -24,6 +24,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +52,8 @@ import kotlinx.coroutines.withContext
  *   lock would not be noticed.
  * - A wallet count of 0 reported before the read completes wins over a stale `true` (no lock that no password opens).
  * - The preference write of [setEnabled] is awaited before the state changes, so a failed write leaves App Lock as it
- *   was (iOS `UserDefaults` cannot fail); every write goes through one FIFO [Mutex], in call order.
+ *   was (iOS `UserDefaults` cannot fail); once the prompt has succeeded, the write and the state change run
+ *   non-cancellably together. Every write goes through one FIFO [Mutex], in call order.
  * - Time is [MonotonicClock] = `SystemClock.elapsedRealtime()`, which counts deep sleep like iOS
  *   `CLOCK_MONOTONIC_RAW` (:101-105; review fix F8): "`systemUptime` pauses during sleep, which would let a phone
  *   asleep for hours reopen unlocked."
@@ -137,19 +139,23 @@ internal class DefaultAppAccessController @Inject constructor(
             requireAuthentication(epoch)
             requireWalletForLock()
         }
-        try {
-            persist(enabled)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Log.w(TAG, e) { "App Lock preference could not be saved" }
-            throw SignerException(UiText.Resource(R.string.security_app_lock_save_failed), e)
+        // Past this point the decision is made (iOS writes synchronously): a caller that goes away mid-write must not
+        // leave the stored value and the published state disagreeing.
+        withContext(NonCancellable) {
+            try {
+                persist(enabled)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, e) { "App Lock preference could not be saved" }
+                throw SignerException(UiText.Resource(R.string.security_app_lock_save_failed), e)
+            }
+            // The last wallet may have been removed during the write; its own write of `false` is queued after ours.
+            if (enabled) requireWalletForLock()
+            isEnabled = enabled
+            isLocked = false
+            publish()
         }
-        // The last wallet may have been removed during the write; its own write of `false` is queued after ours.
-        if (enabled) requireWalletForLock()
-        isEnabled = enabled
-        isLocked = false
-        publish()
     }
 
     /** iOS `authenticateBiometrics()` (:142-147). */

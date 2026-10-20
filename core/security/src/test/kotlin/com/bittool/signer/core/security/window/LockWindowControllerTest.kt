@@ -84,6 +84,7 @@ class LockWindowControllerTest {
         assertTrue(lockWindow.isPresent)
         assertTrue(compositions > 0, "The lock screen content is composed")
         val attributes = checkNotNull(dialog.window).attributes
+        assertEquals(WindowManager.LayoutParams.TYPE_APPLICATION, attributes.type, "An application window of the activity")
         assertTrue(attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0)
         assertTrue(attributes.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND == 0)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, attributes.width)
@@ -170,6 +171,21 @@ class LockWindowControllerTest {
         assertFalse(dialog.isShowing)
         assertFalse(lockWindow.isPresent)
         assertTrue(gate.isOpen.value)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.O])
+    fun onTheMinimumApiTheLockWindowIsSecureAndFadesOut() {
+        val lockWindow = DefaultLockWindowController(policy())
+        lockWindow.show(activity) { BasicText("Locked") }
+        idle()
+        val dialog = lockDialog()
+        assertTrue(checkNotNull(dialog.window).attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0)
+        lockWindow.hide()
+        assertTrue(lockWindow.isPresent)
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(DefaultLockWindowController.FADE_OUT_MILLIS + 100))
+        assertFalse(dialog.isShowing)
+        assertFalse(lockWindow.isPresent)
     }
 
     @Test

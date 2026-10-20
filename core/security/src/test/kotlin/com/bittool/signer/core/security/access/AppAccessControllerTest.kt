@@ -428,6 +428,33 @@ class AppAccessControllerTest {
     }
 
     @Test
+    fun aCallerThatGoesAwayDuringTheWriteStillGetsAConsistentState() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        val gate = CompletableDeferred<Unit>()
+        fixture.preferences.writeGate = gate
+        val enabling = launch { fixture.access.setEnabled(true) }
+        runCurrent()
+        enabling.cancel() // Settings left while the preference was being written
+        gate.complete(Unit)
+        runCurrent()
+        assertTrue(fixture.preferences.stored.appLockEnabled)
+        assertTrue(fixture.state.isEnabled, "The published state matches what was stored")
+    }
+
+    @Test
+    fun aFailedEnablePromptIsPublishedAndTheNextAttemptClearsIt() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        fixture.biometric.shouldFail = true
+        assertFailsWith<BiometricException> { fixture.access.setEnabled(true) }
+        assertEquals(FakeBiometricAuthenticator.FAILURE_TEXT, fixture.state.error, "Published like iOS performAuthentication")
+        fixture.biometric.shouldFail = false
+        fixture.access.setEnabled(true)
+        assertNull(fixture.state.error)
+    }
+
+    @Test
     fun preferenceWritesKeepTheirCallOrder() = runTest {
         val fixture = makeAccess()
         fixture.access.updateWalletCount(1)
