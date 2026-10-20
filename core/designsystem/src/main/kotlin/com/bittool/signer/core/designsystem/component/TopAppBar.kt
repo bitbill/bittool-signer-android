@@ -13,6 +13,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -35,6 +36,24 @@ enum class NavIcon {
 
     /** Modal pages and full-screen flows: a cross labelled "Close". */
     Close,
+    ;
+
+    /** The icon's default test tag ([NavIconTags]); null for [None]. */
+    val testTag: String?
+        get() = when (this) {
+            None -> null
+            Back -> NavIconTags.BACK
+            Close -> NavIconTags.CLOSE
+        }
+}
+
+/**
+ * Test tags of the [SignerTopAppBar] navigation icon, Android-only e2e ids (gaps.md G1.0): the suite's `goBack` clicks
+ * `nav.back` instead of pressing Back, so discard dialogs stay testable.
+ */
+object NavIconTags {
+    const val BACK = "nav.back"
+    const val CLOSE = "nav.close"
 }
 
 /**
@@ -44,6 +63,10 @@ enum class NavIcon {
  * a second line at accessibility text sizes. Scrolled content lifts the bar to `surfaceContainerHigh` (light) /
  * `card` (dark) through [scrollBehavior]. [actions] hold `TextAction`s and icon buttons; [navigation] decides the
  * leading icon, [onNavigate] handles it.
+ *
+ * The navigation icon carries the test tag [navigationTag] (default [NavIcon.testTag]: `nav.back` / `nav.close`), is
+ * read as [navigationLabel] (default "Back" / "Close"; the first setup step's cross says "Cancel") and ignores taps
+ * while not [navigationEnabled] (busy).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,6 +78,9 @@ fun SignerTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     large: Boolean = false,
     scrollBehavior: TopAppBarScrollBehavior? = null,
+    navigationTag: String? = navigation.testTag,
+    navigationLabel: String? = null,
+    navigationEnabled: Boolean = true,
 ) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
@@ -66,13 +92,17 @@ fun SignerTopAppBar(
         actionIconContentColor = colors.accent,
     )
     val navigationIcon: @Composable () -> Unit = {
-        when (navigation) {
-            NavIcon.None -> Unit
-            NavIcon.Back -> IconButton(onClick = onNavigate) {
-                Icon(SignerIcons.ArrowBack, contentDescription = stringResource(R.string.back))
-            }
-            NavIcon.Close -> IconButton(onClick = onNavigate) {
-                Icon(SignerIcons.Close, contentDescription = stringResource(R.string.close))
+        if (navigation != NavIcon.None) {
+            IconButton(
+                onClick = onNavigate,
+                enabled = navigationEnabled,
+                modifier = navigationTag?.let { Modifier.testTag(it) } ?: Modifier,
+            ) {
+                Icon(
+                    imageVector = if (navigation == NavIcon.Back) SignerIcons.ArrowBack else SignerIcons.Close,
+                    contentDescription = navigationLabel
+                        ?: stringResource(if (navigation == NavIcon.Back) R.string.back else R.string.close),
+                )
             }
         }
     }

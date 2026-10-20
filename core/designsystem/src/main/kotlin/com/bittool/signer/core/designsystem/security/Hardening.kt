@@ -88,7 +88,9 @@ private class ObscuredTouchGuardNode(var onBlocked: () -> Unit) : Modifier.Node(
 
 /**
  * Whether [AccessibilitySensitive] marks views. `true` by default; `:app` may provide `false` in a debug UI-test run if
- * UiAutomator cannot read sensitive nodes (gaps.md G5.3). Never `false` in release.
+ * UiAutomator cannot read sensitive nodes (gaps.md G5.3). Never `false` in release. (Checked for G5.3: Android 14's
+ * `UiAutomationConnection` registers UiAutomation as an accessibility tool unless `FLAG_NOT_ACCESSIBILITY_TOOL` is
+ * passed, so `uiautomator dump` and UiAutomator tests see marked nodes without this switch.)
  */
 val LocalSensitiveDataMarking: ProvidableCompositionLocal<Boolean> = staticCompositionLocalOf { true }
 
@@ -102,8 +104,9 @@ val LocalSensitiveDataMarking: ProvidableCompositionLocal<Boolean> = staticCompo
  *
  * The pinned Compose also offers the per-node `Modifier.semantics { isSensitiveData = true }` (gaps G5.1 asked to
  * check): it hides that one node and its events from non-tool services. Components that draw a secret set it on the
- * secret's own node as well (the revealed passphrase field does), but the view-level marking stays the rule because it
- * also covers the text around a secret and every event of the window.
+ * secret's own node as well (every `PasswordField` does, which also reports bullets instead of a hidden password), but
+ * the view-level marking stays the rule because it also covers the text around a secret and every event of the window.
+ * UiAutomation connects as an accessibility tool on API 34+ (unless asked not to), so UI tests still see marked nodes.
  */
 @Composable
 fun AccessibilitySensitive(active: Boolean) {

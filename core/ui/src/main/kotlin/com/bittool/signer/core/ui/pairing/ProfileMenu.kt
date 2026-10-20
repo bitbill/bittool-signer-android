@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 
 /**
@@ -44,6 +45,10 @@ import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
  * accent on the end side; card colour, radius 14, padding 14 × 10. At accessibility text sizes the halves stack. The
  * whole row opens a menu anchored to it: each option's label with its detail as supporting text and a check on the
  * current one. TalkBack reads [title] with the value "label, detail"; tag `profile.menu`.
+ *
+ * Details are verbatim technical text ("BIP84 · bc1q…", "m/44'/501'/0'"), laid out in their own direction
+ * (`contentDirection`): in a right-to-left interface the trailing ellipsis stays after "bc1q" instead of moving to the
+ * front of the line.
  */
 @Composable
 fun <T> ProfileMenu(
@@ -83,7 +88,7 @@ fun <T> ProfileMenu(
         val titleBlock: @Composable () -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(title, style = typography.subheadline, color = colors.label)
-                Text(currentDetail, style = typography.caption, color = colors.secondaryLabel)
+                Text(currentDetail, style = typography.caption.contentDirection(), color = colors.secondaryLabel)
             }
         }
         val valueBlock: @Composable () -> Unit = {
@@ -112,7 +117,7 @@ fun <T> ProfileMenu(
                         text = {
                             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 Text(label(option), style = typography.body, color = colors.label)
-                                Text(detail(option), style = typography.footnote, color = colors.secondaryLabel)
+                                Text(detail(option), style = typography.footnote.contentDirection(), color = colors.secondaryLabel)
                             }
                         },
                         trailingIcon = if (isSelected) {

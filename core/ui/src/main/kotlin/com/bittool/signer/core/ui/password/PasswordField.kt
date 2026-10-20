@@ -1,6 +1,7 @@
 package com.bittool.signer.core.ui.password
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,10 +18,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +31,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.editableText
 import androidx.compose.ui.semantics.isSensitiveData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
@@ -80,15 +84,25 @@ enum class PasswordKind(val english: String, @StringRes val title: Int) {
  *   the first time (the iOS generated-password guard, which the app-wide exclusion already covers).
  * - Accessibility: the field is always named by its translated placeholder (iOS uses the title as the label), also
  *   once text is entered and the placeholder is no longer drawn.
+ * - Accessibility does not get the secret (gaps G5, iOS `.privacySensitive()`; backlog B1). The node has password
+ *   semantics and is always accessibility-data-sensitive, so on API 34+ only accessibility tools (TalkBack, Switch
+ *   Access, UiAutomator) are given it or its events at all; and the text it reports is masked with one bullet per
+ *   character, like a platform `EditText` with a password transformation, so not even a tool reads a hidden password
+ *   back (UI tests type through the keyboard and check the result elsewhere, never by reading the field).
  * - [revealable] (the passphrase only: a mistyped passphrase silently opens a different wallet) adds an eye button
- *   ("Show secret" / "Hide secret", tag `<english>.reveal`). Revealed text is hidden again as soon as the app pauses,
- *   and while shown both the view and the field's semantics node are marked accessibility-sensitive (gaps G5), so
- *   only accessibility tools (TalkBack, Switch Access) can read it.
+ *   ("Show secret" / "Hide secret", tag `<english>.reveal`). Revealed text is hidden again as soon as the app pauses;
+ *   while shown, the node reports the passphrase (as drawn, for TalkBack users) and the hosting view is marked
+ *   accessibility-sensitive too, so only accessibility tools can read it.
+ * - No undo (backlog B2): the field keeps no undo history (it is dropped after every edit, also after the caller's
+ *   `clearText()`) and swallows the undo / redo shortcuts, so Ctrl+Z never types a cleared secret back. Its text menu
+ *   offers Paste and Select All only ([secretTextMenu]: no Copy, Cut, Share, Autofill or other app's text action).
+ *   Callers clear a ViewModel-held state with [wipe] so the history goes at once, also while the field is off screen.
  * - [imeAction] and [onSubmit] wire the keyboard action (Done submits, Next moves on after [onSubmit]).
  * - The box: [containerColor] (the card colour by default; `raised` on a card) with radius 14 and padding 14, the
  *   translated placeholder in body, entered text laid out left to right.
  */
 @Suppress("UNUSED_PARAMETER") // isNew: see the KDoc, kept for the iOS call sites' intent.
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PasswordField(
     kind: PasswordKind,
@@ -106,16 +120,29 @@ fun PasswordField(
     var revealed by remember { mutableStateOf(false) }
     // iOS: re-hidden whenever the scene leaves `.active`.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { revealed = false }
-    AccessibilitySensitive(active = revealable && revealed)
+    val shown = revealable && revealed
+    AccessibilitySensitive(active = shown)
     ExcludeFromAutofill()
+    // No undo history, whoever edits the state: typing, the caller's clearText(), a paste.
+    LaunchedEffect(state) {
+        snapshotFlow { state.undoState.canUndo || state.undoState.canRedo }
+            .collect { hasHistory -> if (hasHistory) state.undoState.clearHistory() }
+    }
     val placeholder = stringResource(kind.title)
     NoPersonalizedLearning {
         BasicSecureTextField(
             state = state,
             modifier = modifier
                 .fillMaxWidth()
-                .semantics { isSensitiveData = revealable && revealed }
-                .testTag(kind.english),
+                // Outermost, so it overrides the text field's own semantics: the field reports bullets, not the
+                // secret (BasicSecureTextField reports its plain text to accessibility).
+                .semantics {
+                    isSensitiveData = true
+                    if (!shown) editableText = AnnotatedString(maskForAccessibility(state.text.length))
+                }
+                .testTag(kind.english)
+                .secretTextMenu()
+                .noUndoShortcuts(),
             enabled = enabled,
             textStyle = typography.body.ltr().copy(color = if (enabled) colors.label else colors.secondaryLabel),
             keyboardOptions = KeyboardOptions(
@@ -128,7 +155,7 @@ fun PasswordField(
                 onSubmit()
                 performDefaultAction()
             },
-            textObfuscationMode = if (revealable && revealed) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
+            textObfuscationMode = if (shown) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
             cursorBrush = SolidColor(colors.accent),
             decorator = { innerTextField ->
                 Row(
@@ -179,3 +206,9 @@ fun PasswordField(
         )
     }
 }
+
+/**
+ * What accessibility is told a hidden field holds: one bullet (U+2022, the drawn mask) per UTF-16 unit of the secret,
+ * so the cursor and selection indices it also reports stay inside the text. Pure.
+ */
+internal fun maskForAccessibility(length: Int): String = "•".repeat(length)
