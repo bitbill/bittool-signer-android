@@ -6,6 +6,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -39,11 +42,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -208,13 +213,18 @@ fun AppLockContent(
                 }
             }
             state.error?.let { error ->
+                val errorInView = remember { BringIntoViewRequester() }
                 // Announced when it appears or changes: the keyboard focus goes back to the field, TalkBack's does not.
                 Callout(
                     text = error.asString(),
                     tone = Tone.Warning,
                     verbatim = true,
-                    modifier = Modifier.testTag(AppLockTags.ERROR).semantics { liveRegion = LiveRegionMode.Polite },
+                    modifier = Modifier
+                        .testTag(AppLockTags.ERROR)
+                        .bringIntoViewRequester(errorInView)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
                 )
+                KeepInViewAboveKeyboard(errorInView, key = error)
             }
             Text(
                 text = stringResource(R.string.unlocking_the_app_never_authorizes_a_signature),
@@ -224,6 +234,21 @@ fun AppLockContent(
             )
         }
         StatusToastHost(toast)
+    }
+}
+
+/**
+ * The message under the card stays visible after a rejected password: the field is focused again and the keyboard
+ * would otherwise cover it (the scroll keeps only the focused field in view). Re-requested while the keyboard moves;
+ * isolated here, so only this node recomposes on every inset frame.
+ */
+@Composable
+private fun KeepInViewAboveKeyboard(requester: BringIntoViewRequester, key: Any) {
+    val keyboardHeight = WindowInsets.ime.getBottom(LocalDensity.current)
+    LaunchedEffect(key, keyboardHeight) {
+        // After the frame that laid the message (and the shrunk viewport) out.
+        withFrameNanos { }
+        requester.bringIntoView()
     }
 }
 
