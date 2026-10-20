@@ -2,6 +2,7 @@ package com.bittool.signer.core.security.window
 
 import android.animation.ValueAnimator
 import android.app.Activity
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Handler
@@ -71,10 +72,12 @@ internal interface LockWindowPresence {
  * - the whole screen, edge to edge (`MATCH_PARENT`, decor not fitting system windows, cutout `ALWAYS`/`SHORT_EDGES`,
  *   transparent bars, bar icons following the app's day/night configuration): the same frame as the activity window;
  *   the IME resizes it (`ADJUST_RESIZE`), and it is hidden when the window takes focus (`STATE_ALWAYS_HIDDEN`);
+ * - opaque from its first frame: the page background under the lock screen, like the iOS window's root
+ *   (`systemGroupedBackground`, AppLockView.swift:170), so nothing of the app shows through whatever the content draws;
  * - `FLAG_SECURE` unless the process runs the debug screenshot tour ([DefaultSecureWindowPolicy.captureAllowed]);
  * - no window animation and no dim: it appears in the same frame; on [hide] the content fades out over
  *   [FADE_OUT_MILLIS] (an allowed Android polish, §15.7: content is being revealed to someone who just authenticated),
- *   honouring the animator duration scale;
+ *   honouring the animator duration scale, while touches, focus and accessibility already pass to the app;
  * - Back (key or predictive gesture) moves the task to the back and never unlocks;
  * - its content runs under the activity's lifecycle and `ViewModelStore` (Hilt view models, "is the activity RESUMED"
  *   for the auto-prompt) but saves no state: secrets never reach a `Bundle`;
@@ -84,8 +87,8 @@ internal interface LockWindowPresence {
  * - autofill and content capture never see it.
  *
  * Each lock engagement gets a new window and so a new composition (iOS creates a new window per lock, which is what
- * makes the lock screen auto-prompt once per lock). A destroyed activity takes its window with it at once. Main thread
- * only.
+ * makes the lock screen auto-prompt once per lock); a window it replaces (still fading out, or of an older activity)
+ * is removed only after the new one is up. A destroyed activity takes its window with it at once. Main thread only.
  */
 @Singleton
 internal class DefaultLockWindowController @Inject constructor(
@@ -117,9 +120,11 @@ internal class DefaultLockWindowController @Inject constructor(
             return
         }
         // A window of another activity, or one fading out after the last unlock: a new lock gets a new window.
-        existing?.dismissNow()
         val host = requireNotNull(activity as? ComponentActivity) { "The lock window needs a ComponentActivity host" }
-        if (host.isFinishing || host.isDestroyed) return
+        if (host.isFinishing || host.isDestroyed) {
+            existing?.dismissNow()
+            return
+        }
         val window = LockWindow(
             activity = host,
             secure = !windowPolicy.captureAllowed,
@@ -129,9 +134,13 @@ internal class DefaultLockWindowController @Inject constructor(
         )
         current = window
         if (!window.show()) {
-            current = null
+            current = existing
             return
         }
+        // Only now that the new window covers the screen does the old one go: removing it first could leave a frame
+        // with nothing over the app, and would briefly report no lock window to the gate. Its removal is ignored
+        // ([current] is the new window).
+        existing?.dismissNow()
         _isShowing.value = true
         notifyPresence()
     }
@@ -187,6 +196,8 @@ private class LockWindow(
         setViewTreeLifecycleOwner(activity)
         setViewTreeViewModelStoreOwner(activity)
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+        // Opaque from the first frame, whatever the lock screen draws (fail closed); it fades out with the content.
+        setBackgroundColor(pageBackground(dark = activity.resources.configuration.isNight()))
     }
 
     private val dialog = ComponentDialog(activity, android.R.style.Theme_Translucent_NoTitleBar).apply {
@@ -201,7 +212,7 @@ private class LockWindow(
     init {
         val window = checkNotNull(dialog.window)
         configure(window, secure)
-        composeView.setContent { LockWindowContent(window) { content() } }
+        composeView.setContent { LockWindowContent(window, composeView) { content() } }
     }
 
     fun show(): Boolean {
@@ -241,6 +252,11 @@ private class LockWindow(
             dismissNow()
             return
         }
+        // The person has authenticated: while the copy fades, touches, focus and accessibility already belong to the
+        // app (a focusable, touch-modal window would swallow the first tap and keep the app from TalkBack until it goes).
+        dialog.window?.addFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        )
         composeView.animate().alpha(0f).setDuration(DefaultLockWindowController.FADE_OUT_MILLIS).setInterpolator(FAST_OUT_SLOW_IN).start()
         mainHandler.postDelayed(dismissAfterFade, duration)
     }
@@ -332,11 +348,15 @@ private class LockWindow(
     }
 }
 
-/** The lock screen content plus bar icons that follow the app's day/night configuration (AppCompat night mode). */
+/**
+ * The lock screen content over the page background, with bar icons, both following the app's day/night configuration
+ * (AppCompat night mode; the activity handles `uiMode` changes without recreation, so this recomposes).
+ */
 @Composable
-private fun LockWindowContent(window: Window, content: @Composable () -> Unit) {
+private fun LockWindowContent(window: Window, root: View, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     SideEffect {
+        root.setBackgroundColor(pageBackground(dark))
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = !dark
             isAppearanceLightNavigationBars = !dark
@@ -344,3 +364,16 @@ private fun LockWindowContent(window: Window, content: @Composable () -> Unit) {
     }
     content()
 }
+
+/**
+ * The iOS lock window's root background, `systemGroupedBackground` (AppLockView.swift:170; design-system.md §2
+ * `Palette.background`: `#F2F2F7` light, `#000000` dark). The window itself stays translucent so the unlock can fade to
+ * the app; this view background keeps the lock opaque even if the lock screen content leaves pixels unpainted.
+ */
+internal fun pageBackground(dark: Boolean): Int = if (dark) PAGE_BACKGROUND_DARK else PAGE_BACKGROUND_LIGHT
+
+private const val PAGE_BACKGROUND_LIGHT = 0xFFF2F2F7.toInt()
+private const val PAGE_BACKGROUND_DARK = 0xFF000000.toInt()
+
+private fun Configuration.isNight(): Boolean =
+    uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES

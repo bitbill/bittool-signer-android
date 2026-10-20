@@ -53,7 +53,9 @@ import kotlinx.coroutines.withContext
  * - A wallet count of 0 reported before the read completes wins over a stale `true` (no lock that no password opens).
  * - The preference write of [setEnabled] is awaited before the state changes, so a failed write leaves App Lock as it
  *   was (iOS `UserDefaults` cannot fail); once the prompt has succeeded, the write and the state change run
- *   non-cancellably together. Every write goes through one FIFO [Mutex], in call order.
+ *   non-cancellably together, and the grace rule already treats App Lock as on while the write runs (a background
+ *   visit of 120 s or more that fits into the write still locks). Every write goes through one FIFO [Mutex], in call
+ *   order.
  * - Time is [MonotonicClock] = `SystemClock.elapsedRealtime()`, which counts deep sleep like iOS
  *   `CLOCK_MONOTONIC_RAW` (:101-105; review fix F8): "`systemUptime` pauses during sleep, which would let a phone
  *   asleep for hours reopen unlocked."
@@ -84,6 +86,12 @@ internal class DefaultAppAccessController @Inject constructor(
 
     /** iOS `authenticationEpoch = UUID()` (:97): every new authentication and every cancellation renews it. */
     private var authenticationEpoch = 0L
+
+    /**
+     * Confirmed `setEnabled(true)` calls whose preference write has not finished: App Lock is already "on" for the
+     * grace rule while a wallet exists (iOS `isEnabled = true` right after the prompt, :138).
+     */
+    private var pendingEnables = 0
 
     private val resolution = CompletableDeferred<Unit>()
     private val preferenceWrites = Mutex()
@@ -142,18 +150,31 @@ internal class DefaultAppAccessController @Inject constructor(
         // Past this point the decision is made (iOS writes synchronously): a caller that goes away mid-write must not
         // leave the stored value and the published state disagreeing.
         withContext(NonCancellable) {
-            try {
+            // iOS turns the lock on in the same instant the prompt succeeds (:138). Here the write takes a moment, and a
+            // whole background visit can fit into it (a frozen cached process): the grace rule counts it already.
+            val failure = try {
+                if (enabled) pendingEnables += 1
                 persist(enabled)
-            } catch (e: CancellationException) {
-                throw e
+                null
             } catch (e: Exception) {
-                Log.w(TAG, e) { "App Lock preference could not be saved" }
-                throw SignerException(UiText.Resource(R.string.security_app_lock_save_failed), e)
+                e
+            } finally {
+                if (enabled) pendingEnables -= 1
+            }
+            if (failure != null) {
+                // App Lock stays as it was. A lock that only the pending enable engaged goes with it: with App Lock off
+                // neither biometrics nor a password would open it (both return at once unless enabled).
+                if (!isEnabled && pendingEnables == 0) isLocked = false
+                publish()
+                if (failure is CancellationException) throw failure
+                Log.w(TAG, failure) { "App Lock preference could not be saved" }
+                throw SignerException(UiText.Resource(R.string.security_app_lock_save_failed), failure)
             }
             // The last wallet may have been removed during the write; its own write of `false` is queued after ours.
             if (enabled) requireWalletForLock()
             isEnabled = enabled
-            isLocked = false
+            // Enabling keeps a lock that a long background visit during the write engaged (it was unlocked before).
+            if (!enabled) isLocked = false
             publish()
         }
     }
@@ -208,7 +229,8 @@ internal class DefaultAppAccessController @Inject constructor(
     /**
      * iOS `willEnterForeground()` (:177-189), idempotent (called on `onStart`, and again harmlessly). Stays unlocked only
      * when `since != null && now >= since && now - since < 120 s`; a clock that went backwards locks. "Preserve an
-     * already locked state even during a short background visit": this never unlocks.
+     * already locked state even during a short background visit": this never unlocks. An enable whose write is still
+     * running already counts as on ([pendingEnables]).
      */
     override fun willEnterForeground() {
         if (!isInBackground) return
@@ -216,7 +238,7 @@ internal class DefaultAppAccessController @Inject constructor(
         biometricsAvailable = biometric.isAvailable()
         val since = backgroundTime
         backgroundTime = null
-        if (isEnabled) {
+        if (isEnabled || (pendingEnables > 0 && (walletCount ?: 0) > 0)) {
             val now = clock.elapsedRealtimeMillis()
             val withinGrace = since != null && now >= since && now - since < BACKGROUND_GRACE_MILLIS
             if (!withinGrace) isLocked = true

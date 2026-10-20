@@ -7,9 +7,9 @@ import android.os.Looper
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.bittool.signer.core.common.log.Log
 import com.bittool.signer.core.l10n.resolve
 import com.bittool.signer.core.security.AppLifecycleMonitor
@@ -39,19 +39,36 @@ import kotlinx.coroutines.withContext
  * - Shown only on the RESUMED activity of [AppLifecycleMonitor.foregroundActivity]; otherwise
  *   [BiometricCancellationException] ([Reason.NotResumed]) at once. `BiometricPrompt.authenticate` silently does
  *   nothing after `onSaveInstanceState`, which would leave the caller suspended forever.
- * - One prompt at a time: a new request cancels the previous one. [cancel] (background, iOS `context.invalidate()`) and
- *   cancelling the calling coroutine both dismiss the prompt.
+ * - One prompt at a time: a new request ends the previous caller ([Reason.SystemCanceled]) and takes its prompt off
+ *   the screen. [cancel] (background, iOS `context.invalidate()`) and cancelling the calling coroutine do the same.
+ * - **Strictly sequential on the platform** ([BiometricPlatform]): androidx keeps one client callback per activity and
+ *   reports a cancelled prompt's end asynchronously. A new prompt is therefore handed to the platform only after the
+ *   previous one reported its end (at most [PREVIOUS_PROMPT_END_TIMEOUT_MILLIS]); otherwise it would not be shown, and
+ *   the previous prompt's late outcome — a success the person gave to another prompt — would complete it.
+ * - A prompt whose activity is destroyed (recreated for a configuration change the manifest does not handle, such as
+ *   attaching a keyboard) ends as [Reason.SystemCanceled]: its callback goes with the activity, and an unfinished
+ *   prompt would keep App Lock "authenticating" and refusing every other attempt.
  *
  * All prompt state is confined to the main thread.
  */
 @Singleton
-internal class AndroidBiometricAuthenticator @Inject constructor(
-    @ApplicationContext private val context: Context,
+internal class AndroidBiometricAuthenticator(
+    private val context: Context,
     private val lifecycle: AppLifecycleMonitor,
+    private val platform: BiometricPlatform,
 ) : BiometricAuthenticator {
 
+    @Inject
+    constructor(@ApplicationContext context: Context, lifecycle: AppLifecycleMonitor) :
+        this(context, lifecycle, BiometricPlatform.AndroidX)
+
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    /** The prompt whose caller is waiting for an outcome. */
     private var active: Session? = null
+
+    /** The last prompt handed to the platform, until the platform has nothing left of it. */
+    private var launched: Session? = null
 
     override fun isAvailable(): Boolean =
         BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
@@ -62,28 +79,18 @@ internal class AndroidBiometricAuthenticator @Inject constructor(
         if (activity == null || !activity.canShowPrompt()) throw BiometricCancellationException(Reason.NotResumed)
         // iOS evaluates `canEvaluatePolicy` before prompting and reports the unavailable text (:63-66).
         if (!isAvailable()) throw BiometricErrors.unavailable()
-        val info = promptInfo(prompt, activity.resources)
-        val session = Session()
-        val biometricPrompt = BiometricPrompt(activity, ContextCompat.getMainExecutor(activity), session.callback)
-        session.prompt = biometricPrompt
+        val session = Session(activity, promptInfo(prompt, activity.resources))
+        val previous = launched
         active = session
         try {
             suspendCancellableCoroutine { continuation ->
                 session.continuation = continuation
-                try {
-                    biometricPrompt.authenticate(info)
-                } catch (e: RuntimeException) {
-                    Log.w(TAG, e) { "BiometricPrompt refused to start" }
-                    session.finish(BiometricErrors.failed())
-                }
+                session.startAfter(previous)
             }
         } finally {
             if (active === session) active = null
-            // The caller was cancelled while the prompt was up: take it off the screen.
-            if (!session.finished) {
-                session.finished = true
-                biometricPrompt.cancelAuthentication()
-            }
+            // The caller was cancelled while the prompt was up (or still waiting): take it off the screen.
+            session.abandon()
         }
     }
 
@@ -94,44 +101,134 @@ internal class AndroidBiometricAuthenticator @Inject constructor(
         }
         val session = active ?: return
         active = null
-        session.finish(BiometricCancellationException(Reason.SystemCanceled))
-        session.prompt?.cancelAuthentication()
+        session.abandon()
     }
 
     private fun FragmentActivity.canShowPrompt(): Boolean =
         !isFinishing && !isDestroyed && lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) &&
             !supportFragmentManager.isStateSaved
 
-    /** One prompt's outcome: resumed exactly once, by the callback, by [cancel] or by the caller's cancellation. */
-    private class Session {
-        var prompt: BiometricPrompt? = null
-        var continuation: CancellableContinuation<Unit>? = null
-        var finished = false
+    /**
+     * One prompt: its caller's outcome (resumed exactly once: by the platform, by [abandon] or by the destroyed
+     * activity) and its platform life (from [start] until the platform reported an outcome, it never started, or its
+     * activity is gone — [ended]).
+     */
+    private inner class Session(activity: FragmentActivity, private val info: BiometricPrompt.PromptInfo) :
+        BiometricPlatform.Outcome {
 
-        val callback = object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                if (finished) return
+        var continuation: CancellableContinuation<Unit>? = null
+        private var host: FragmentActivity? = activity
+        private var handle: BiometricPlatform.Handle? = null
+        private var finished = false
+        private var started = false
+        private var cancelRequested = false
+        var ended = false
+            private set
+        private val endListeners = ArrayList<() -> Unit>(1)
+        private val startNow = Runnable { start() }
+        private val hostObserver = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                finish(BiometricCancellationException(Reason.SystemCanceled))
+                end()
+            }
+        }
+
+        init {
+            activity.lifecycle.addObserver(hostObserver)
+        }
+
+        /** Starts now, or once [previous] has ended (bounded: a platform that never reports must not block biometrics). */
+        fun startAfter(previous: Session?) {
+            if (previous == null || previous.ended) {
+                start()
+                return
+            }
+            previous.endListeners += { mainHandler.post(startNow) }
+            mainHandler.postDelayed(startNow, PREVIOUS_PROMPT_END_TIMEOUT_MILLIS)
+        }
+
+        private fun start() {
+            if (started) return
+            started = true
+            mainHandler.removeCallbacks(startNow)
+            val activity = host
+            if (finished || activity == null || !activity.canShowPrompt()) {
+                finish(BiometricCancellationException(Reason.NotResumed))
+                end()
+                return
+            }
+            // A prompt that just ended removes its fragment with a posted transaction; without flushing it, androidx
+            // would reuse the departing fragment, and this prompt's outcome would go with it.
+            try {
+                activity.supportFragmentManager.executePendingTransactions()
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, e) { "Pending fragment transactions could not run before the prompt" }
+            }
+            launched = this
+            handle = try {
+                platform.launch(activity, info, this)
+            } catch (e: RuntimeException) {
+                Log.w(TAG, e) { "BiometricPrompt refused to start" }
+                finish(BiometricErrors.failed())
+                end()
+                null
+            }
+        }
+
+        override fun succeeded() {
+            if (!finished) {
                 finished = true
                 continuation?.takeIf { it.isActive }?.resume(Unit)
             }
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                finish(BiometricErrors.forErrorCode(errorCode))
-            }
-
-            // One non-matching attempt is not terminal: the prompt stays up and lets the person try again.
-            override fun onAuthenticationFailed() = Unit
+            end()
         }
 
-        fun finish(error: Exception) {
+        override fun failed(errorCode: Int) {
+            finish(BiometricErrors.forErrorCode(errorCode))
+            end()
+        }
+
+        /**
+         * The caller is gone or replaced: ends it as a system cancel and takes the prompt off the screen (once; a prompt
+         * that already ended or never started has nothing to cancel).
+         */
+        fun abandon() {
+            finish(BiometricCancellationException(Reason.SystemCanceled))
+            if (!started) {
+                started = true
+                end()
+            } else if (!ended && !cancelRequested) {
+                cancelRequested = true
+                handle?.cancel()
+            }
+        }
+
+        private fun finish(error: Exception) {
             if (finished) return
             finished = true
             continuation?.takeIf { it.isActive }?.resumeWithException(error)
+        }
+
+        /** The platform has nothing left of this prompt: the next one may start. */
+        private fun end() {
+            if (ended) return
+            ended = true
+            mainHandler.removeCallbacks(startNow)
+            host?.lifecycle?.removeObserver(hostObserver)
+            host = null
+            handle = null
+            if (launched === this) launched = null
+            val listeners = endListeners.toList()
+            endListeners.clear()
+            listeners.forEach { it() }
         }
     }
 
     internal companion object {
         private const val TAG = "Biometric"
+
+        /** How long a new prompt waits for a cancelled one to report its end (normally a few tens of milliseconds). */
+        const val PREVIOUS_PROMPT_END_TIMEOUT_MILLIS = 1_000L
 
         /** The prompt as the person sees it, in the app language of [resources]. */
         fun promptInfo(prompt: BiometricPromptSpec, resources: Resources): BiometricPrompt.PromptInfo =

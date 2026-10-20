@@ -18,7 +18,10 @@ class BiometricCancellationException(val reason: Reason) : CancellationException
         /** `ERROR_USER_CANCELED`: Back, a tap outside, or the system's own cancel affordance. */
         UserCanceled,
 
-        /** `ERROR_CANCELED` or [BiometricAuthenticator.cancel] (background, a newer prompt): iOS `systemCancel`/`appCancel`. */
+        /**
+         * `ERROR_CANCELED`, [BiometricAuthenticator.cancel] (background), a newer prompt, or the activity showing it was
+         * destroyed: iOS `systemCancel`/`appCancel`.
+         */
         SystemCanceled,
 
         /** `ERROR_TIMEOUT`: the prompt timed out without a decision. */

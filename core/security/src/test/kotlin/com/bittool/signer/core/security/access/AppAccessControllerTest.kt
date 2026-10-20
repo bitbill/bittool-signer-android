@@ -17,6 +17,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
@@ -440,6 +441,90 @@ class AppAccessControllerTest {
         runCurrent()
         assertTrue(fixture.preferences.stored.appLockEnabled)
         assertTrue(fixture.state.isEnabled, "The published state matches what was stored")
+    }
+
+    // iOS turns App Lock on in the same instant the prompt succeeds (AppAccessController.swift:138); here the write takes
+    // a moment, and a whole background visit can fit into it (a cached process frozen with the write pending).
+
+    @Test
+    fun aLongBackgroundVisitDuringTheEnableWriteStillLocks() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        val gate = CompletableDeferred<Unit>()
+        fixture.preferences.writeGate = gate
+        val enabling = async { fixture.access.setEnabled(true) }
+        runCurrent()
+        val prompts = fixture.biometric.calls
+        fixture.access.didEnterBackground()
+        fixture.clock.advanceBy(AppAccessController.BACKGROUND_GRACE_MILLIS)
+        fixture.access.willEnterForeground()
+        gate.complete(Unit)
+        enabling.await()
+        assertEquals(1, prompts, "The prompt had succeeded; only the write was pending")
+        assertTrue(fixture.state.isEnabled)
+        assertTrue(fixture.state.isLocked, "120 s or more in the background with App Lock on needs authentication")
+        assertTrue(fixture.preferences.stored.appLockEnabled)
+    }
+
+    @Test
+    fun aShortBackgroundVisitDuringTheEnableWriteKeepsTheAppOpen() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        val gate = CompletableDeferred<Unit>()
+        fixture.preferences.writeGate = gate
+        val enabling = async { fixture.access.setEnabled(true) }
+        runCurrent()
+        fixture.access.didEnterBackground()
+        fixture.clock.advanceBy(AppAccessController.BACKGROUND_GRACE_MILLIS - 1)
+        fixture.access.willEnterForeground()
+        gate.complete(Unit)
+        enabling.await()
+        assertTrue(fixture.state.isEnabled)
+        assertFalse(fixture.state.isLocked)
+    }
+
+    @Test
+    fun aFailedEnableWriteNeverLeavesALockThatNothingOpens() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        val gate = CompletableDeferred<Unit>()
+        fixture.preferences.writeGate = gate
+        val enabling = async { runCatching { fixture.access.setEnabled(true) } }
+        runCurrent()
+        fixture.access.didEnterBackground()
+        fixture.clock.advanceBy(AppAccessController.BACKGROUND_GRACE_MILLIS)
+        fixture.access.willEnterForeground()
+        val lockedDuringTheWrite = fixture.state.isLocked
+        fixture.preferences.writeFailure = IOException("disk full")
+        gate.complete(Unit) // before any assertion: the write is non-cancellable and would outlive a failed test
+        assertTrue(lockedDuringTheWrite, "Counted as on while the write runs")
+        val failure = assertIs<SignerException>(enabling.await().exceptionOrNull())
+        assertEquals(UiText.Resource(R.string.security_app_lock_save_failed), failure.text)
+        assertFalse(fixture.state.isEnabled)
+        assertFalse(fixture.state.isLocked, "With App Lock off neither biometrics nor a password could open it")
+        assertFalse(fixture.state.showsLock)
+    }
+
+    @Test
+    fun theLastWalletRemovedDuringTheEnableWriteNeverLocks() = runTest {
+        val fixture = makeAccess()
+        fixture.access.updateWalletCount(1)
+        val gate = CompletableDeferred<Unit>()
+        fixture.preferences.writeGate = gate
+        val enabling = async { fixture.access.setEnabled(true) }
+        runCurrent()
+        fixture.access.updateWalletCount(0)
+        fixture.access.didEnterBackground()
+        fixture.clock.advanceBy(AppAccessController.BACKGROUND_GRACE_MILLIS)
+        fixture.access.willEnterForeground()
+        val lockedWithoutAWallet = fixture.state.isLocked
+        gate.complete(Unit) // before any assertion: the write is non-cancellable and would outlive a failed test
+        assertFalse(lockedWithoutAWallet, "No wallet password could open it")
+        assertFailsWith<CancellationException> { enabling.await() }
+        runCurrent()
+        assertFalse(fixture.state.isEnabled)
+        assertFalse(fixture.state.isLocked)
+        assertFalse(fixture.preferences.stored.appLockEnabled)
     }
 
     @Test

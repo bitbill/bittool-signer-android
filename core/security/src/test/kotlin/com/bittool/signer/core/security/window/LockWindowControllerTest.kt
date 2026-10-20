@@ -6,6 +6,7 @@ import android.app.Activity
 import android.app.Application
 import android.app.Dialog
 import android.content.pm.ApplicationInfo
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Looper
 import android.view.View
@@ -87,6 +88,10 @@ class LockWindowControllerTest {
         assertEquals(WindowManager.LayoutParams.TYPE_APPLICATION, attributes.type, "An application window of the activity")
         assertTrue(attributes.flags and WindowManager.LayoutParams.FLAG_SECURE != 0)
         assertTrue(attributes.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND == 0)
+        assertTrue(
+            attributes.flags and (WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE) == 0,
+            "While locked it takes every touch and the focus (touch-modal: the windows beneath are not reported to accessibility)",
+        )
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, attributes.width)
         assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, attributes.height)
         assertEquals(0, attributes.windowAnimations)
@@ -166,6 +171,12 @@ class LockWindowControllerTest {
         assertTrue(lockWindow.isPresent, "Still fading out")
         assertFalse(gate.isOpen.value, "Held windows wait for the fade-out")
         assertEquals(accessibilityBefore, activity.window.decorView.importantForAccessibility, "The app is readable again at once")
+        val fadingFlags = checkNotNull(dialog.window).attributes.flags
+        assertTrue(
+            fadingFlags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE != 0 &&
+                fadingFlags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE != 0,
+            "The fading copy no longer takes the first tap, the focus or the accessibility traversal",
+        )
 
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(DefaultLockWindowController.FADE_OUT_MILLIS + 100))
         assertFalse(dialog.isShowing)
@@ -223,6 +234,50 @@ class LockWindowControllerTest {
         assertTrue(lockWindow.isShowing.value)
         assertEquals(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS, activity.window.decorView.importantForAccessibility)
     }
+
+    @Test
+    fun aNewLockDuringTheFadeOutCoversTheScreenBeforeTheOldWindowGoes() {
+        val lockWindow = DefaultLockWindowController(policy())
+        val gate = DefaultWindowGate(lockWindow)
+        lockWindow.show(activity) { BasicText("Locked") }
+        gate.setOpen(false)
+        idle()
+        val first = lockDialog()
+        lockWindow.hide()
+        gate.setOpen(true) // :app reopens it after the unlock; it waits for the fade-out
+        val presence = mutableListOf<Boolean>()
+        lockWindow.addPresenceListener { presence += lockWindow.isPresent }
+        var gateOpened = false
+        lockWindow.addPresenceListener { gateOpened = gateOpened || gate.isOpen.value }
+
+        lockWindow.show(activity) { BasicText("Locked again") } // :app closes the gate only after this call
+        idle()
+        assertFalse(first.isShowing)
+        assertTrue(lockDialog().isShowing)
+        assertFalse(false in presence, "There is never a moment without a lock window")
+        assertFalse(gateOpened, "Windows held by the gate are never let through between the two lock windows")
+    }
+
+    @Test
+    fun theLockWindowIsOpaqueFromItsFirstFrameLikeTheIosWindow() {
+        val lockWindow = DefaultLockWindowController(policy())
+        lockWindow.show(activity) { /* a lock screen that paints nothing */ }
+        idle()
+        val root = lockRoot()
+        assertEquals(0xFFF2F2F7.toInt(), (root.background as ColorDrawable).color, "iOS systemGroupedBackground (light)")
+        assertEquals(1f, root.alpha)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.VANILLA_ICE_CREAM], qualifiers = "night")
+    fun inDarkModeTheLockWindowIsBlack() {
+        val lockWindow = DefaultLockWindowController(policy())
+        lockWindow.show(activity) { }
+        idle()
+        assertEquals(0xFF000000.toInt(), (lockRoot().background as ColorDrawable).color)
+    }
+
+    private fun lockRoot(): View = checkNotNull(lockDialog().findViewById<ViewGroup>(android.R.id.content)).getChildAt(0)
 
     @Test
     fun aDestroyedActivityTakesItsLockWindowWithIt() {
