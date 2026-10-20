@@ -53,6 +53,9 @@ class CommonTest {
     fun buildInfoShowsTheIosStyleVersion() {
         val info = BuildInfo("com.bittool.signer", "1.0.0", 1_000_003, Distribution.GooglePlay, isDebug = false, repositoryUrl = "x")
         assertEquals("1.0.0 (3)", info.displayVersion)
+        // The default build number 1 (app/build.gradle.kts, DECISIONS §10): "1.0.0 (1)" like iOS, also in a debug build.
+        assertEquals("1.0.0 (1)", info.copy(versionName = "1.0.0-debug", versionCode = 1_000_001).displayVersion)
+        assertEquals(1, info.copy(versionCode = 1_000_001).buildNumber)
         assertEquals("1.0.0 (0)", info.copy(versionName = "1.0.0-debug", versionCode = 1_000_000).displayVersion)
         assertEquals(Distribution.DirectApk, Distribution.fromFlavor("apk"))
         assertEquals(Distribution.GooglePlay, Distribution.fromFlavor("play"))

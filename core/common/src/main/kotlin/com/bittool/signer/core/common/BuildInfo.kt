@@ -43,8 +43,9 @@ data class BuildInfo(
 
     /**
      * iOS `"\(short) (\(build))"` — Settings › About › Version, Open Source › App version and the rebuild step ("check
-     * out the tag for version %@"). iOS 1.0.0 shows "1.0.0 (1)" (`CURRENT_PROJECT_VERSION = 1`); with the default
-     * `-Psigner.buildNumber=0` Android shows "1.0.0 (0)" — W2-shell decides the default build number (1 for parity).
+     * out the tag for version %@"), without the debug suffix. The build number defaults to 1 (`-Psigner.buildNumber`,
+     * DECISIONS.md §10), so Android 1.0.0 shows "1.0.0 (1)" like iOS 1.0.0 (`CURRENT_PROJECT_VERSION = 1`); a re-issue
+     * of the same version with `-Psigner.buildNumber=2` shows "1.0.0 (2)".
      */
     val displayVersion: String get() = "${versionName.removeSuffix("-debug")} ($buildNumber)"
 }
