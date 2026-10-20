@@ -37,4 +37,18 @@ acquire() {
 }
 
 acquire
+
+# Instrumented tests share the one emulator: they also take the single device lock.
+if printf '%s\n' "$@" | grep -qiE 'connected|AndroidTest|install'; then
+  DEVICE_LOCK=/tmp/bittool-signer-device-lock
+  waited=0
+  while ! mkdir "$DEVICE_LOCK" 2>/dev/null; do
+    pid=$(cat "$DEVICE_LOCK/pid" 2>/dev/null || true)
+    if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then rm -rf "$DEVICE_LOCK"; continue; fi
+    sleep 5; waited=$((waited+5))
+    [ $((waited % 60)) -eq 0 ] && echo "[gradle-slot] waiting for the emulator (${waited}s)…" >&2
+  done
+  echo $$ > "$DEVICE_LOCK/pid"
+  trap 'rm -rf "$SLOT" "$DEVICE_LOCK"' EXIT
+fi
 "$@"
