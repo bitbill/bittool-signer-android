@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings of :feature:settings (owner: W2-activity-settings). English only until the translation pass
+    (DECISIONS.md §9.2). Exact iOS English where iOS shows the text without a catalogue entry (gaps.md G6), Android-only
+    wording otherwise. Protocol tokens, brand and entity names are translatable="false".
+-->
+<resources>
+    <!-- LegalDocumentParser.MISSING (LegalDocumentView.swift:67): a bundled legal text could not be read. -->
+    <string name="settings_document_missing">This document is missing from the app bundle.</string>
+    <!-- iOS system ContentUnavailableView.search title (not in the app catalogue). -->
+    <string name="settings_no_results">No Results for “%1$s”</string>
+    <!-- iOS system ContentUnavailableView.search description. -->
+    <string name="settings_no_results_hint">Check the spelling or try a new search.</string>
+    <!-- Android-only: label of the clear button in the network search field. -->
+    <string name="settings_clear_search">Clear search</string>
+
+    <!-- Open Source › This build (activity-settings.md §14.8). -->
+    <string name="settings_distribution">Distribution</string>
+    <string name="settings_distribution_apk">Direct download (APK)</string>
+    <string name="settings_distribution_play" translatable="false">Google Play</string>
+    <string name="settings_signing_certificate">Signing certificate</string>
+    <!--
+        Android-only replacement of the iOS Open Source callout, whose "published under one repository" is not true on
+        Android: the app and the signing engine are two repositories (DECISIONS.md §9.1).
+    -->
+    <string name="settings_open_source_intro">BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.</string>
+    <!-- Android-only: label of the engine repository in "Rebuild it yourself" (DECISIONS.md §9.1). -->
+    <string name="settings_engine_source">Signing engine source</string>
+    <!-- The repository signer.js is built from (DECISIONS.md §9.1): the shared engine in the iOS repository. -->
+    <string name="settings_engine_repository" translatable="false">https://github.com/bitbill/bittool-signer-ios</string>
+
+    <!-- Compatibility › Formats "QR formats" values: protocol tokens, verbatim on iOS (SettingsTab.swift:175-188). -->
+    <string name="settings_formats_bitcoin" translatable="false">crypto-account (account xpub), crypto-psbt, BBQR, Base64 PSBT</string>
+    <string name="settings_formats_evm" translatable="false">crypto-hdkey (EIP-4527), eth-sign-request / eth-signature</string>
+    <string name="settings_formats_tron" translatable="false">Address QR (any index), tron-sign-request / tron-signature</string>
+    <string name="settings_formats_solana" translatable="false">crypto-multi-accounts, sol-sign-request / sol-signature</string>
+    <!-- Compatibility › Wallet Level "QR format": the protocol token stays, the English tail is translated (gaps.md G6). -->
+    <string name="settings_wallet_level_token" translatable="false">bittool-signer-wallet v1 (ur:bytes, canonical CBOR)</string>
+    <string name="settings_wallet_level_format">%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR</string>
+
+    <!-- Contact Us / Submit a Wallet data (SettingsTab.swift:119-120, SubmitWalletView.swift:6-7). -->
+    <string name="settings_publisher_name" translatable="false">BITTOOL PTE. LTD.</string>
+    <string name="settings_support_email" translatable="false">support@bittool.com</string>
+    <!-- The e-mail subject: deliberately English in every language (activity-settings.md §7). -->
+    <string name="settings_submit_subject" translatable="false">Add supported wallet</string>
+</resources>

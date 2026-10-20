@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Strings of :feature:activity (owner: W2-activity-settings). English only until the translation pass
+    (DECISIONS.md §9.2). iOS draws the first four in English in every language (gaps.md G6, ActivityTab.swift:139,145,
+    AppStore.swift:452); the rest are Android-only.
+-->
+<resources>
+    <!-- Activity detail "Wallet" value, and the row subtitle, when the signing wallet no longer exists (ActivityTab.swift:139). -->
+    <string name="activity_deleted_wallet">Deleted wallet</string>
+    <!-- Activity detail "Risk" value for a high-risk request (ActivityTab.swift:145). -->
+    <string name="activity_risk_high">High</string>
+    <!-- Activity detail "Risk" value for a request that showed warnings (ActivityTab.swift:145). -->
+    <string name="activity_risk_warnings_shown">Warnings shown</string>
+    <!-- The stored result of a task that was not the plan's last one (AppStore.swift:452), shown in the status pill. -->
+    <string name="activity_partial_signature_created">Partial signature created</string>
+    <!-- Android-only: title of the Activity tab while the encrypted record cannot be read (SignerState.activityUnreadable). -->
+    <string name="activity_unreadable_title">Activity Unavailable</string>
+    <!-- Android-only: export failure when the chosen document provider gives no reason of its own. -->
+    <string name="activity_export_failed">The file could not be saved.</string>
+    <!-- Suggested file name of "Export as File" (iOS default file name bittool-signer-signature + .txt). -->
+    <string name="activity_export_file_name" translatable="false">bittool-signer-signature.txt</string>
+</resources>
