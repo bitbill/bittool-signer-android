@@ -104,7 +104,8 @@ fun <T> ProfileMenu(
             }
         }
         if (expanded && rememberWindowGateReleased()) {
-            DropdownMenu(expanded = true, onDismissRequest = { expanded = false }) {
+            // design-system §9.2: menus on the (elevated) card colour, not Material's surfaceContainer (= the page).
+            DropdownMenu(expanded = true, onDismissRequest = { expanded = false }, containerColor = colors.elevatedCard) {
                 options.forEach { option ->
                     val isSelected = option == selection
                     DropdownMenuItem(

@@ -51,6 +51,7 @@ import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
+import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AddressFormatter
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
@@ -158,7 +159,12 @@ fun CopyableAddress(
                 },
             )
         }
-        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
+        if (menu && rememberWindowGateReleased()) DropdownMenu(
+            expanded = true,
+            onDismissRequest = { menu = false },
+            containerColor = SignerTheme.colors.elevatedCard,
+        ) {
             DropdownMenuItem(
                 text = { Text(menuLabel) },
                 leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },

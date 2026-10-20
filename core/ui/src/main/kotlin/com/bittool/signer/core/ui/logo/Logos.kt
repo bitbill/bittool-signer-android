@@ -19,9 +19,11 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -165,10 +167,11 @@ val LocalTokenIconSource: ProvidableCompositionLocal<TokenIconSource> = staticCo
 @Composable
 fun TokenIcon(iconId: String?, symbol: String, modifier: Modifier = Modifier, size: Dp = 40.dp) {
     val source = LocalTokenIconSource.current
-    val image by produceState(initialValue = iconId?.let(TokenIconCache::peek), iconId, source) {
-        // A recycled row with a new ID never keeps the previous token's artwork.
-        value = iconId?.let(TokenIconCache::peek)
-        if (iconId != null && value == null) value = TokenIconCache.load(source, iconId)
+    // The state is keyed by the ID, so a recycled row drawing a new token never shows the previous token's artwork,
+    // not even for the frame before the loader restarts (a `produceState` keeps its old value until then).
+    var image by remember(iconId) { mutableStateOf(iconId?.let(TokenIconCache::peek)) }
+    LaunchedEffect(iconId, source) {
+        if (iconId != null && image == null) image = TokenIconCache.load(source, iconId)
     }
     Box(
         modifier = modifier

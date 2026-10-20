@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -112,5 +113,35 @@ class LogosTest {
         symbol = "WETH"
         compose.waitForIdle()
         compose.onNodeWithText("WET", useUnmergedTree = true).assertExists()
+    }
+
+    /** Not even the first frame after the switch may draw the previous token's artwork (a wrong logo on a review). */
+    @Test
+    fun theFirstFrameOfAReusedIconAlreadyDropsThePreviousArtwork() {
+        val png = ByteArrayOutputStream().also { out ->
+            Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888).compress(Bitmap.CompressFormat.PNG, 100, out)
+        }.toByteArray()
+        val never = kotlinx.coroutines.CompletableDeferred<ByteArray?>()
+        val source = TokenIconSource { id -> if (id == "cccccccccccccccc") png else never.await() }
+        var id by mutableStateOf("cccccccccccccccc")
+        var symbol by mutableStateOf("USDC")
+        compose.setContent {
+            SignerTheme(false, false) {
+                CompositionLocalProvider(LocalTokenIconSource provides source) { TokenIcon(iconId = id, symbol = symbol) }
+            }
+        }
+        compose.waitUntil(timeoutMillis = 5_000) { TokenIconCache.peek("cccccccccccccccc") != null }
+        compose.waitForIdle()
+        compose.onNodeWithText("USD", useUnmergedTree = true).assertDoesNotExist()
+        compose.mainClock.autoAdvance = false
+        compose.runOnIdle {
+            id = "dddddddddddddddd"
+            symbol = "WETH"
+            Snapshot.sendApplyNotifications()
+        }
+        // Exactly one frame: the recomposition with the new ID, before any effect it launches has run.
+        compose.mainClock.advanceTimeByFrame()
+        compose.onNodeWithText("WET", useUnmergedTree = true).assertExists()
+        compose.mainClock.autoAdvance = true
     }
 }

@@ -27,6 +27,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.isSensitiveData
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -67,14 +71,18 @@ enum class PasswordKind(val english: String, @StringRes val title: Int) {
  *
  * - The text lives in [state], which the caller creates with `remember { TextFieldState() }` (never the saveable
  *   `rememberTextFieldState()`), and clears right after submitting and on `ON_STOP` (ARCHITECTURE §4.4).
- * - Keyboard: password keyboard, no capitalisation, no autocorrect, no personalised learning (incognito IME); the
- *   field and its window are excluded from Autofill and no `contentType` is set, so no password manager offers to
- *   save or generate anything. iOS keeps `.password` AutoFill for existing passwords; DECISIONS §6 excludes Autofill
- *   app-wide on Android. [isNew] documents a secret being set for the first time (the iOS generated-password guard,
- *   which the app-wide exclusion already covers).
+ * - Keyboard: password keyboard, no capitalisation, no autocorrect, no personalised learning (incognito IME). The
+ *   window hosting the field is excluded from Autofill (`ExcludeFromAutofill`) while it is shown, so no password
+ *   manager offers to save or generate anything; `BasicSecureTextField` itself always reports
+ *   `ContentType.Password`, which is why the exclusion sits on the host view. iOS keeps `.password` AutoFill for
+ *   existing passwords; DECISIONS §6 excludes Autofill app-wide on Android. [isNew] documents a secret being set for
+ *   the first time (the iOS generated-password guard, which the app-wide exclusion already covers).
+ * - Accessibility: the field is always named by its translated placeholder (iOS uses the title as the label), also
+ *   once text is entered and the placeholder is no longer drawn.
  * - [revealable] (the passphrase only: a mistyped passphrase silently opens a different wallet) adds an eye button
  *   ("Show secret" / "Hide secret", tag `<english>.reveal`). Revealed text is hidden again as soon as the app pauses,
- *   and while shown the view is marked accessibility-sensitive (gaps G5).
+ *   and while shown both the view and the field's semantics node are marked accessibility-sensitive (gaps G5), so
+ *   only accessibility tools (TalkBack, Switch Access) can read it.
  * - [imeAction] and [onSubmit] wire the keyboard action (Done submits, Next moves on after [onSubmit]).
  * - The box: [containerColor] (the card colour by default; `raised` on a card) with radius 14 and padding 14, the
  *   translated placeholder in body, entered text laid out left to right.
@@ -105,6 +113,10 @@ fun PasswordField(
             state = state,
             modifier = modifier
                 .fillMaxWidth()
+                .semantics {
+                    contentDescription = placeholder
+                    isSensitiveData = revealable && revealed
+                }
                 .testTag(kind.english),
             enabled = enabled,
             textStyle = typography.body.ltr().copy(color = if (enabled) colors.label else colors.secondaryLabel),
@@ -131,7 +143,14 @@ fun PasswordField(
                 ) {
                     Box(Modifier.weight(1f).padding(vertical = 14.dp), contentAlignment = Alignment.CenterStart) {
                         if (state.text.isEmpty()) {
-                            Text(placeholder, style = typography.body, color = colors.tertiaryLabel, maxLines = 1)
+                            // The field carries the name itself; the drawn placeholder is not read twice.
+                            Text(
+                                placeholder,
+                                style = typography.body,
+                                color = colors.tertiaryLabel,
+                                maxLines = 1,
+                                modifier = Modifier.clearAndSetSemantics {},
+                            )
                         }
                         innerTextField()
                     }

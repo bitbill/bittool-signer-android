@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
@@ -162,12 +163,15 @@ fun AddressIndexControl(
                 .testTag("connect.tronIndex"),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // A step at a bound changes nothing and is not reported (each reported change is a new pairing request).
             RepeatingStepButton(SignerIcons.Remove, stringResource(R.string.ui_decrease), enabled = index > 0) {
-                currentOnChange(AddressIndexInput.step(currentIndex, -1))
+                val next = AddressIndexInput.step(currentIndex, -1)
+                if (next != currentIndex) currentOnChange(next)
             }
             Box(Modifier.size(width = 0.5.dp, height = 18.dp).background(colors.opaqueSeparator))
             RepeatingStepButton(SignerIcons.Add, stringResource(R.string.ui_increase), enabled = index < AddressIndexInput.MAX) {
-                currentOnChange(AddressIndexInput.step(currentIndex, +1))
+                val next = AddressIndexInput.step(currentIndex, +1)
+                if (next != currentIndex) currentOnChange(next)
             }
         }
     }
@@ -203,39 +207,48 @@ fun AddressIndexControl(
     }
 }
 
-/** One stepper button: a step on tap, then a step every 80 ms after 400 ms held (the iOS stepper auto-repeats). */
+/**
+ * One stepper button: a step on tap, then a step every 80 ms after 400 ms held (the iOS stepper auto-repeats). The
+ * gesture outlives [enabled] turning false at a bound (the repeat just stops), so the pressed highlight always ends
+ * with the finger, however the gesture ends.
+ */
 @Composable
 private fun RepeatingStepButton(icon: ImageVector, label: String, enabled: Boolean, onStep: () -> Unit) {
     val colors = SignerTheme.colors
     val step by rememberUpdatedState(onStep)
+    val canStep by rememberUpdatedState(enabled)
     var pressed by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier
             .size(44.dp)
             .clip(CircleShape)
-            .background(if (pressed) colors.fill else colors.tertiaryFill.copy(alpha = 0f))
+            .background(if (pressed && enabled) colors.fill else Color.Transparent)
             .semantics {
                 role = Role.Button
                 contentDescription = label
                 if (enabled) onClick { step(); true } else disabled()
             }
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
+            .pointerInput(Unit) {
                 coroutineScope {
                     awaitEachGesture {
-                        awaitFirstDown().consume()
+                        val down = awaitFirstDown()
+                        if (!canStep) return@awaitEachGesture
+                        down.consume()
                         pressed = true
-                        step()
-                        val repeat = launch {
-                            delay(REPEAT_DELAY_MILLIS)
-                            while (isActive) {
-                                step()
-                                delay(REPEAT_INTERVAL_MILLIS)
+                        try {
+                            step()
+                            val repeat = launch {
+                                delay(REPEAT_DELAY_MILLIS)
+                                while (isActive && canStep) {
+                                    step()
+                                    delay(REPEAT_INTERVAL_MILLIS)
+                                }
                             }
+                            waitForUpOrCancellation()?.consume()
+                            repeat.cancel()
+                        } finally {
+                            pressed = false
                         }
-                        waitForUpOrCancellation()?.consume()
-                        repeat.cancel()
-                        pressed = false
                     }
                 }
             },

@@ -88,12 +88,17 @@ class PasswordFieldTest {
         val eye = compose.onNodeWithTag(PasswordKind.Passphrase.revealTag)
         eye.assertContentDescriptionEquals("Show secret")
         compose.onNodeWithTag(PasswordKind.Passphrase.english).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password))
+        val field = compose.onNodeWithTag(PasswordKind.Passphrase.english)
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.IsSensitiveData, false))
         eye.performClick()
         eye.assertContentDescriptionEquals("Hide secret")
         compose.runOnIdle { assertTrue(view.isAccessibilityDataSensitive, "a visible passphrase is accessibility-sensitive") }
+        // The node itself too: only accessibility tools (TalkBack) are given the revealed text.
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.IsSensitiveData, true))
         compose.runOnIdle { lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE) }
         eye.assertContentDescriptionEquals("Show secret")
         compose.runOnIdle { assertFalse(view.isAccessibilityDataSensitive) }
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.IsSensitiveData, false))
         assertEquals("correct horse", state.text.toString(), "hiding keeps what was typed")
     }
 
@@ -115,6 +120,22 @@ class PasswordFieldTest {
         content { PasswordField(PasswordKind.WalletPassword, state) }
         compose.onNodeWithTag(PasswordKind.WalletPassword.english).performTextInput("Abc12345!")
         compose.runOnIdle { assertEquals("Abc12345!", state.text.toString()) }
+    }
+
+    /**
+     * iOS `SecureField(title, …)` keeps its title as the VoiceOver label. Two filled fields ("New password" and
+     * "Confirm new password") must stay distinguishable once their placeholders are no longer drawn.
+     */
+    @Test
+    fun aFilledFieldIsStillNamedByItsTitle() {
+        content {
+            PasswordField(PasswordKind.NewPassword, remember { TextFieldState("Abc12345!") }, isNew = true)
+            PasswordField(PasswordKind.ConfirmNewPassword, remember { TextFieldState() }, isNew = true)
+        }
+        compose.onNodeWithTag(PasswordKind.NewPassword.english).assertContentDescriptionEquals("New password")
+        // Empty: named once, not by the description and the drawn placeholder both.
+        compose.onNodeWithTag(PasswordKind.ConfirmNewPassword.english).assertContentDescriptionEquals("Confirm new password")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Text))
     }
 }
 

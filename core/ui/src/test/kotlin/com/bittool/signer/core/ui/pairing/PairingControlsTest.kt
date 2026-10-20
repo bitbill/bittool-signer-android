@@ -15,6 +15,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -22,6 +23,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.Density
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.AccountProfile
@@ -33,6 +36,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /** Connect / Addresses controls (wallets-pairing.md §3.6–§3.8, §3.10). */
 @RunWith(RobolectricTestRunner::class)
@@ -77,6 +81,37 @@ class PairingControlsTest {
         compose.onNodeWithTag("connect.tronIndex.field").performTextReplacement("99999999999")
         compose.runOnIdle { assertEquals(AddressIndexInput.MAX, index) }
         compose.onNodeWithContentDescription("Increase").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled))
+    }
+
+    /**
+     * Holding a stepper button repeats (iOS `Stepper`), stops at the bound without reporting the same index again (each
+     * report is a new pairing request), and the pressed highlight ends with the finger even though the button became
+     * disabled under it.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun holdingAStepperRepeatsAndStopsCleanlyAtTheBound() {
+        var index by mutableLongStateOf(3L)
+        val reported = mutableListOf<Long>()
+        content {
+            AddressIndexControl(index, { reported += it; index = it }, AccountProfiles.TRON_PATH_PREFIX)
+        }
+        val decrease = compose.onNodeWithContentDescription("Decrease")
+        val idle = decrease.captureToImage().toPixelMap()
+        val probe = idle.width / 6 to idle.height / 2 // inside the circle, clear of the glyph
+        compose.mainClock.autoAdvance = false
+        decrease.performTouchInput { down(center) }
+        compose.mainClock.advanceTimeBy(2_000)
+        decrease.performTouchInput { up() }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        assertEquals(listOf(2L, 1L, 0L), reported, "one step per repeat, nothing past or at the bound")
+        decrease.assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled))
+        val after = decrease.captureToImage().toPixelMap()
+        assertEquals(idle[probe.first, probe.second], after[probe.first, probe.second], "the pressed highlight is gone")
+        // The other button still works.
+        compose.onNodeWithContentDescription("Increase").performClick()
+        compose.runOnIdle { assertEquals(1L, index) }
     }
 
     @Test
