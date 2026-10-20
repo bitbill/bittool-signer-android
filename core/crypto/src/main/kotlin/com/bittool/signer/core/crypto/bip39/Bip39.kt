@@ -2,6 +2,7 @@ package com.bittool.signer.core.crypto.bip39
 
 import com.bittool.signer.core.model.SignerException
 import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
 
 /**
  * The ten BIP39 wordlists (vault-crypto.md §13.1, iOS `Models/BIP39Wordlist.swift`). Files are byte-identical copies
@@ -165,7 +166,90 @@ interface Bip39 {
      */
     fun wordsFromSeedQr(text: String): List<String>?
 
+    /**
+     * What a scanned recovery QR puts into the import editor (iOS `WalletSetupFlow.swift:217-229`; additive, W1-crypto):
+     * a Standard SeedQR becomes its English words joined by single spaces; otherwise text with at least one valid
+     * reading in any language ([interpretations], ambiguity counts) — e.g. BitTool Signer's own phrase QR, the canonical
+     * words joined by spaces — is returned trimmed of white space and newlines; anything else is null, for which setup
+     * shows "This QR code does not contain a recovery phrase." Setup then marks the text as scanned, so an unedited
+     * scan is accepted with [validatedCanonical] without asking for the language.
+     */
+    fun recoveryPhraseFromQr(text: String): String? {
+        wordsFromSeedQr(text)?.let { return it.joinToString(" ") }
+        val readings = try {
+            interpretations(text)
+        } catch (_: Bip39Error) {
+            return null
+        }
+        return if (readings.isNotEmpty()) text.trimWhitespacesAndNewlines() else null
+    }
+
+    /**
+     * The suggestion bar above the keyboard for [draft] (iOS `RecoveryPhraseAssistant`,
+     * `Features/Setup/RecoveryPhraseViews.swift:273-312`; additive, W1-crypto). Uses the detected language's list, or
+     * English: Chinese → [Bip39Candidates.ChineseHint]; no suggestions for the partial word, or it is already a word
+     * whose only suggestion is itself → [Bip39Candidates.TypeAWord] (no partial word), [Bip39Candidates.NoMatch]
+     * (partial word that is not a word) or [Bip39Candidates.Hidden] (a complete word); else up to [limit] canonical
+     * (accented) words as chips ("Insert %@"), inserted with [insertingCandidate].
+     */
+    fun candidates(draft: RecoveryPhraseDraft, limit: Int = 5): Bip39Candidates {
+        val language = draft.language
+        if (language?.isChinese == true) return Bip39Candidates.ChineseHint
+        val list = wordlist(language ?: Bip39Language.English)
+        val partial = draft.partialWord
+        val suggestions = partial?.let { list.suggestions(it, limit) }.orEmpty()
+        val completed = partial?.let { list.contains(it) } ?: false
+        if (suggestions.isEmpty() || (completed && suggestions.size == 1)) {
+            return when {
+                completed -> Bip39Candidates.Hidden
+                partial == null -> Bip39Candidates.TypeAWord
+                else -> Bip39Candidates.NoMatch
+            }
+        }
+        return Bip39Candidates.Words(suggestions)
+    }
+
     companion object {
         val SUPPORTED_LENGTHS: Set<Int> = setOf(12, 15, 18, 21, 24)
+
+        /**
+         * [text] with its trailing word replaced by [word] and a space (iOS `complete(with:)`, the regex
+         * `[^\s,，、]+$` with ICU's `\s` = `[\t\n\f\r\p{Z}]`); unchanged when the text does not end inside a word.
+         * Additive (W1-crypto).
+         */
+        fun insertingCandidate(text: String, word: String): String {
+            var start = text.length
+            while (start > 0) {
+                val cp = Character.codePointBefore(text, start)
+                if (isIcuRegexSpace(cp) || cp == ','.code || cp == 0xFF0C || cp == 0x3001) break
+                start -= Character.charCount(cp)
+            }
+            if (start == text.length) return text
+            return text.substring(0, start) + word + " "
+        }
+
+        private fun isIcuRegexSpace(cp: Int): Boolean = cp == 0x09 || cp == 0x0A || cp == 0x0C || cp == 0x0D ||
+            when (Character.getType(cp)) {
+                Character.SPACE_SEPARATOR.toInt(), Character.LINE_SEPARATOR.toInt(), Character.PARAGRAPH_SEPARATOR.toInt() -> true
+                else -> false
+            }
     }
+}
+
+/** The suggestion bar's content for the word being typed ([Bip39.candidates]); strings are iOS catalogue keys. */
+sealed interface Bip39Candidates {
+    /** "Each Chinese word is one character" */
+    data object ChineseHint : Bip39Candidates
+
+    /** "Type a word to see suggestions" (no partial word). */
+    data object TypeAWord : Bip39Candidates
+
+    /** "No matching word" */
+    data object NoMatch : Bip39Candidates
+
+    /** The partial word is already a complete word and nothing longer starts with it: the bar stays empty. */
+    data object Hidden : Bip39Candidates
+
+    /** Chips in list order, canonical spelling (accents included); accessibility label "Insert %@". */
+    data class Words(val words: List<String>) : Bip39Candidates
 }
