@@ -182,8 +182,8 @@ internal fun RecoveryCardView(words: RecoveryWords, card: Int, modifier: Modifie
                     .fillMaxSize()
                     .background(if (shown) colors.raised else colors.raised.copy(alpha = 0.45f), CardCellShape)
                     .padding(horizontal = 8.dp, vertical = 10.dp)
-                    .clearAndSetSemantics { contentDescription = label }
-                    .testTag("cards.card.$card.word.$position"),
+                    .testTag("cards.card.$card.word.$position")
+                    .clearAndSetSemantics { contentDescription = label },
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

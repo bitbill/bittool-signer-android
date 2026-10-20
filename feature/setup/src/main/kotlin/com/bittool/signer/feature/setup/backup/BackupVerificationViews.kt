@@ -150,11 +150,12 @@ private fun Blank(
             .background(background)
             .border(borderWidth, borderColor, CellShape)
             .padding(horizontal = 8.dp)
+            // The tag sits outside the cleared node so UiAutomator and the tests still find it.
+            .testTag("verification.slot.$position")
             .clearAndSetSemantics {
                 contentDescription = label
                 stateDescription = value
-            }
-            .testTag("verification.slot.$position"),
+            },
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
