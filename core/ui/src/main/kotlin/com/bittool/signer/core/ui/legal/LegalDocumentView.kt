@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.model.LegalBlock
 import com.bittool.signer.core.model.LegalDocumentParser
 
@@ -31,7 +32,9 @@ import com.bittool.signer.core.model.LegalDocumentParser
  * A bundled legal document (iOS `LegalDocumentView`, `Features/Settings/LegalDocumentView.swift:13-58`;
  * activity-settings §10): the version line (footnote, secondary), headings (headline, 8 dp extra above, marked as
  * headings), bullets ("•" + callout) and paragraphs (callout), 12 dp apart, selectable, within the readable width.
- * `**bold**` spans render bold. No links: the app opens no browser. Lazy, so long documents scroll smoothly.
+ * `**bold**` spans render bold. No links: the app opens no browser. Lazy, so long documents scroll smoothly. The
+ * documents are English in every language (by decision), so each block keeps its own direction in a right-to-left
+ * interface (`contentDirection`).
  *
  * [missingText] replaces the English `LegalDocumentParser.MISSING` block (the repository returns it when a bundled file
  * cannot be read) with its translation, which the settings feature owns. [contentPadding] adds the screen's insets.
@@ -57,18 +60,18 @@ fun LegalDocumentView(
             val itemModifier = Modifier.readableWidth().padding(horizontal = SignerMetrics.pagePadding)
             SelectionContainer(itemModifier) {
                 when (block.kind) {
-                    LegalBlock.Kind.Version -> Text(styled, style = typography.footnote, color = colors.secondaryLabel)
+                    LegalBlock.Kind.Version -> Text(styled, style = typography.footnote.contentDirection(), color = colors.secondaryLabel)
                     LegalBlock.Kind.Heading -> Text(
                         styled,
-                        style = typography.headline,
+                        style = typography.headline.contentDirection(),
                         color = colors.label,
                         modifier = Modifier.padding(top = 8.dp).semantics { heading() },
                     )
                     LegalBlock.Kind.Bullet -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("•", style = typography.callout, color = colors.secondaryLabel)
-                        Text(styled, style = typography.callout, color = colors.label)
+                        Text(styled, style = typography.callout.contentDirection(), color = colors.label)
                     }
-                    LegalBlock.Kind.Paragraph -> Text(styled, style = typography.callout, color = colors.label)
+                    LegalBlock.Kind.Paragraph -> Text(styled, style = typography.callout.contentDirection(), color = colors.label)
                 }
             }
         }

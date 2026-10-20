@@ -128,3 +128,12 @@ fun TextStyle.rounded(): TextStyle = this
  * hashes, paths, payloads, fingerprints, counters. Breaks only at spaces (the group separators), never hyphenates.
  */
 fun TextStyle.ltr(): TextStyle = copy(textDirection = TextDirection.Ltr, lineBreak = LineBreak.Simple)
+
+/**
+ * Lays each paragraph out in the direction of its own first strong character, whatever the interface language: for
+ * verbatim text that is not translated — engine warnings, decoded values, names from the registry, the English-only
+ * legal documents. Compose otherwise forces the interface direction on every paragraph, so in Arabic an English
+ * warning's full stop and brackets move to the wrong end (".every token of this contract"). Never for translated
+ * strings: an Arabic sentence that starts with a Latin product name would be laid out left to right.
+ */
+fun TextStyle.contentDirection(): TextStyle = copy(textDirection = TextDirection.Content)

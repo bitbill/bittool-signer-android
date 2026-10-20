@@ -1,7 +1,19 @@
 package com.bittool.signer.core.ui.review
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.component.Callout
+import com.bittool.signer.core.model.LegalBlock
+import com.bittool.signer.core.ui.legal.LegalDocumentView
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -97,6 +109,37 @@ class ReviewComponentsTest {
         compose.onNodeWithText(long.value).assertExists()
         compose.onNodeWithText("Show Less").performClick()
         compose.onNodeWithText(ReviewPresentation.collapsedValue(long.value)).assertExists()
+    }
+
+    /**
+     * In a right-to-left interface, untranslated text (engine warnings, decoded values, the English legal documents)
+     * keeps its own direction, so an English sentence's full stop stays at its end; translated text keeps the
+     * interface direction.
+     */
+    @Test
+    fun verbatimEnglishKeepsItsOwnDirectionInARightToLeftInterface() {
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column {
+                        ReviewWarnings(listOf("UNLIMITED approval for USDT."))
+                        ReviewDetailsCard(listOf(ReviewField(0, "Method", "transfer (ERC-20).")), rememberReviewText())
+                        LegalDocumentView(listOf(LegalBlock(0, LegalBlock.Kind.Paragraph, "You alone hold your keys.")), Modifier.height(80.dp))
+                        Callout("تم إنشاء التوقيع.")
+                    }
+                }
+            }
+        }
+        fun direction(text: String): ResolvedTextDirection {
+            val node = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            return layouts.single().getParagraphDirection(0)
+        }
+        assertEquals(ResolvedTextDirection.Ltr, direction("UNLIMITED approval for USDT."))
+        assertEquals(ResolvedTextDirection.Ltr, direction("transfer (ERC-20)."))
+        assertEquals(ResolvedTextDirection.Ltr, direction("You alone hold your keys."))
+        assertEquals(ResolvedTextDirection.Rtl, direction("تم إنشاء التوقيع."))
     }
 
     @Test

@@ -53,6 +53,7 @@ import com.bittool.signer.core.designsystem.theme.SignerRadius
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.bold
+import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.rounded
@@ -152,7 +153,7 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
             display?.note?.let { note ->
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FirstLineIcon(SignerIcons.ShieldCheck, colors.success, typography.footnote.semibold(), size = 16.dp)
-                    Text(note, style = typography.footnote.semibold(), color = colors.successOnTint)
+                    Text(note, style = typography.footnote.semibold().contentDirection(), color = colors.successOnTint)
                 }
             }
             ReviewPresentation.feeLine(display)?.let { fee ->
@@ -339,7 +340,7 @@ private fun FlowBox(sections: List<ReviewFlowSection>) {
                     }
                     SelectionContainer {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            section.lines.forEach { line -> Text(flowLine(line, resources), style = typography.callout, color = colors.label) }
+                            section.lines.forEach { line -> Text(flowLine(line, resources), style = typography.callout.contentDirection(), color = colors.label) }
                         }
                     }
                 }
@@ -408,7 +409,7 @@ fun ContractNotice(contract: ReviewContract, modifier: Modifier = Modifier, comp
                 FirstLineIcon(kind.icon, color, typography.caption.semibold(), size = 14.dp)
                 Text(title, style = typography.caption.semibold(), color = colors.onTint(color), textAlign = TextAlign.Center)
             }
-            if (detail != null) Text(detail, style = typography.caption, color = colors.secondaryLabel, textAlign = TextAlign.Center)
+            if (detail != null) Text(detail, style = typography.caption.contentDirection(), color = colors.secondaryLabel, textAlign = TextAlign.Center)
             if (contract.everyChain) EveryChainNote(TextAlign.Center)
         }
         return
@@ -425,7 +426,7 @@ fun ContractNotice(contract: ReviewContract, modifier: Modifier = Modifier, comp
         FirstLineIcon(kind.icon, color, typography.subheadline.semibold())
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, style = typography.subheadline.semibold(), color = colors.label)
-            if (detail != null) Text(detail, style = typography.subheadline, color = colors.secondaryLabel)
+            if (detail != null) Text(detail, style = typography.subheadline.contentDirection(), color = colors.secondaryLabel)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(stringResource(contract.role.addressCaption), style = typography.caption2.semibold(), color = colors.secondaryLabel)
                 AddressText(contract.address, style = typography.footnote)
@@ -501,7 +502,7 @@ fun ReviewWarnings(
 ) {
     if (warnings.isEmpty()) return
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        warnings.forEach { warning -> Callout(text = warning, tone = if (isSevere(warning)) Tone.Danger else Tone.Warning) }
+        warnings.forEach { warning -> Callout(text = warning, tone = if (isSevere(warning)) Tone.Danger else Tone.Warning, verbatim = true) }
     }
 }
 
@@ -515,7 +516,8 @@ fun ReviewWarnings(
  * - **collapsible** (over 280 characters or 6 lines) — the first 280 characters and "…" until "Show All";
  * - **text** — monospaced when it looks technical (`0x…`, `m/…`, long hex, several lines), else subheadline.
  *
- * Values are verbatim and left to right when monospaced. Expansion state survives configuration changes per field.
+ * Values are verbatim: left to right when monospaced, otherwise in their own direction (an English value keeps its
+ * punctuation in place in Arabic). Expansion state survives configuration changes per field.
  */
 @Composable
 fun ReviewDetailsCard(fields: List<ReviewField>, reviewText: ReviewText, modifier: Modifier = Modifier) {
@@ -572,7 +574,7 @@ private fun DetailRow(field: ReviewField, reviewText: ReviewText) {
                 val technical = ReviewPresentation.looksTechnical(field.value)
                 Text(
                     text = field.value,
-                    style = if (technical) typography.footnote.monospaced().ltr() else typography.subheadline,
+                    style = if (technical) typography.footnote.monospaced().ltr() else typography.subheadline.contentDirection(),
                     color = colors.label,
                 )
             }

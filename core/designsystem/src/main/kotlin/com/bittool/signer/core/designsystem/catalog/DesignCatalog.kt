@@ -195,7 +195,7 @@ private fun CalloutSection() = Padded {
     Callout(stringResource(R.string.your_watch_only_wallet_shows_the_unsigned_request_as_a), tone = Tone.Info)
     Callout(stringResource(R.string.signature_created), tone = Tone.Success)
     // Engine warnings are shown verbatim; this one stands in for an engine-authored sample.
-    Callout("UNLIMITED approval: the spender can move every token of this contract.", tone = Tone.Danger)
+    Callout("UNLIMITED approval: the spender can move every token of this contract.", tone = Tone.Danger, verbatim = true)
     Callout(
         text = stringResource(R.string.your_encrypted_wallet_files_are_unchanged_unlock_this),
         title = stringResource(R.string.wallets_unavailable),
