@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  BitTool Signer mark (design/Brand/BitToolSigner-Mark.svg, design-system.md §1.2): a ring (centre 512,511.5, radius
+  288..372, even-odd) united with a solid node (r 94.8 at 828.5,511.5) on a 1024 grid. White; tint it for other uses.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="88dp"
+    android:height="88dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M140,511.5 a372,372 0 1,0 744,0 a372,372 0 1,0 -744,0 Z M224,511.5 a288,288 0 1,0 576,0 a288,288 0 1,0 -576,0 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M733.7,511.5 a94.8,94.8 0 1,0 189.6,0 a94.8,94.8 0 1,0 -189.6,0 Z" />
+</vector>

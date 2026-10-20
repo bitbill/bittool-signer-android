@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Converted from iOS Assets.xcassets/ChainSolana.imageset/solana.svg (design-system.md §8.2):
+  translate(32 32) scale(0.094) translate(-198.85 -155.85) becomes pivot 198.85,155.85, scale 0.094,
+  translate -166.85,-123.85. The three bars share one path and the userSpaceOnUse gradient, whose coordinates stay in
+  the group's local space (the canvas carries the group transform for both the path and its shader).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0,32 a32,32 0 1,0 64,0 a32,32 0 1,0 -64,0 Z" />
+    <group
+        android:pivotX="198.85"
+        android:pivotY="155.85"
+        android:scaleX="0.094"
+        android:scaleY="0.094"
+        android:translateX="-166.85"
+        android:translateY="-123.85">
+        <path android:pathData="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7zM64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8zM333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:endX="141.21"
+                    android:endY="383.29"
+                    android:startX="360.88"
+                    android:startY="-37.46"
+                    android:type="linear">
+                    <item
+                        android:color="#FF14F195"
+                        android:offset="0" />
+                    <item
+                        android:color="#FF9945FF"
+                        android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+      gaps.md G4.1: every window the design system opens (SignerAlertDialog, SignerBottomSheet) calls
+      Window.setHideOverlayWindows(true) on API 31+, which needs this normal-protection permission (granted at install,
+      no prompt). Declared here so the components are self-contained; it merges into :app (allowlisted in gaps.md G8).
+    -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+</manifest>
