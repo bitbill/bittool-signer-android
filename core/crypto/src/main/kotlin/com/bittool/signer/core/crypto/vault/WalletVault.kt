@@ -42,6 +42,13 @@ import com.bittool.signer.core.model.WalletId
  * Secret arguments are owned by the caller (it wipes them); the vault copies to byte arrays and wipes its copies.
  * Errors: [VaultError] subclasses only (plus `CancellationException`); unexpected exceptions of [list] are
  * [VaultError.StorageFailure], of a load [VaultError.MalformedVault].
+ *
+ * Cancellation (iOS actor calls cannot be interrupted): a call cancelled before its persistent write throws
+ * `CancellationException` and changes nothing but the retry counter (an unlock has already counted its attempt); once
+ * the write of [create], [changePassword], [resetPassword] (with its counter reset) or [delete] has started, it
+ * completes and the call returns normally (or with that write's own error) even if the caller was cancelled
+ * meanwhile. A `CancellationException` from these four therefore always means that no wallet, password or file was
+ * changed. Main-safe: every file and Keystore call runs on the injected dispatchers.
  */
 interface WalletVault {
     /**

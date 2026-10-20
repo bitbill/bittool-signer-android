@@ -5,6 +5,7 @@ import com.bittool.signer.core.crypto.bip39.Bip39WordlistSource
 import com.bittool.signer.core.crypto.bip39.DefaultBip39
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.DefaultWalletVault
+import com.bittool.signer.core.crypto.vault.DeviceKeyStore
 import com.bittool.signer.core.model.SecretText
 import java.io.File
 import java.nio.file.Files
@@ -31,6 +32,6 @@ fun tempDataDir(prefix: String = "bittool-signer-test-"): File = Files.createTem
  */
 fun vault(
     dataDir: File,
-    keys: InMemoryDeviceKeyStore = InMemoryDeviceKeyStore(),
+    keys: DeviceKeyStore = InMemoryDeviceKeyStore(),
     clock: FakeWallClock = FakeWallClock(),
 ): DefaultWalletVault = DefaultWalletVault(dataDir, keys, SystemSecureRandomSource(), clock, Dispatchers.Default, Dispatchers.IO)

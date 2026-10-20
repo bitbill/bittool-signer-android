@@ -350,6 +350,8 @@ class WalletVaultTest {
         assertFailsWith<VaultError.InvalidName> { store.create(" \n ", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random()) }
         assertFailsWith<VaultError.InvalidName> { store.create("x".repeat(41), secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random()) }
         store.create("👍🏽".repeat(40), secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random()) // 40 graphemes
+        // A lone surrogate (impossible in Swift) would be stored as "?" and not read back as the returned name.
+        assertFailsWith<VaultError.InvalidName> { store.create("Wallet \uD83D", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random()) }
         val weak = assertFailsWith<VaultError.InvalidPassword> {
             store.create("Weak", secret(ABANDON_PHRASE), secret(""), secret("alllowercase"), WalletId.random())
         }

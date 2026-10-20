@@ -26,6 +26,8 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -37,9 +39,17 @@ import kotlinx.coroutines.withContext
  * is performed by [deviceKeys] (a non-exportable Keystore key per wallet) instead of with raw key bytes.
  *
  * Every public method runs under one [Mutex] (actor serialisation: an unlock blocks a concurrent [list]); file I/O
- * runs on [io], the KDF on [cpu]. Blocking steps that must stay together (key generation → outer layer → atomic
- * write) run inside one dispatcher block with no suspension point in between, so a cancellation can never separate a
- * new Keystore key from its file. No password, phrase or key is kept between calls; every byte copy is wiped.
+ * and every [DeviceKeyStore] call (Keystore and `KeyguardManager` are binder IPC) run on [io], the KDF on [cpu], so
+ * the vault is main-safe. No password, phrase or key is kept between calls; every byte copy is wiped.
+ *
+ * Cancellation: work before a persistent write is cancellable (a cancelled call changes nothing, except that an
+ * unlock has already counted its attempt, vault-crypto.md §17.6). The persistent write itself and everything that
+ * belongs to it ([commit]) is one non-cancellable step, and once it has started the method returns normally even if
+ * the caller was cancelled meanwhile. iOS actor methods cannot be interrupted at all; here a cancellation that arrives
+ * during the commit must not be reported as "nothing happened", because `SignerStore` treats a failed `create` as
+ * uncommitted (it removes the new public sidecar) and runs its own post-commit steps (`resetPassword`, `delete`) only
+ * after a normal return (SignerStore KDoc: "A background transition during the commit must not invite a second
+ * import").
  */
 @Singleton
 class DefaultWalletVault @Inject constructor(
@@ -86,20 +96,23 @@ class DefaultWalletVault @Inject constructor(
         password: SecretText,
         id: WalletId,
     ): VaultMetadata = mutex.withLock {
-        val trimmed = VaultMetadata.validName(name) ?: throw VaultError.InvalidName()
+        // A lone UTF-16 surrogate cannot exist in a Swift string and would be stored as "?", so the header would not
+        // read back as the name returned here.
+        val trimmed = VaultMetadata.validName(name)?.takeUnless { hasUnpairedSurrogate(it.toCharArray()) }
+            ?: throw VaultError.InvalidName()
         withContext(io) {
             tidyOnce()
             if (Files.exists(vaultFile(id).toPath(), LinkOption.NOFOLLOW_LINKS)) throw VaultError.StorageFailure()
+            requireNewPassword(password)
+            requireSecretBounds(mnemonic, passphrase)
+            if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
         }
-        requireNewPassword(password)
-        requireSecretBounds(mnemonic, passphrase)
-        if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
         // Millisecond precision keeps creation order stable for wallets added in quick succession (`:100-101`).
         val metadata = VaultMetadata(id, trimmed, clock.currentTimeMillis())
         val salt = random.bytes(VaultFormat.SALT_BYTES)
         val headerBytes = VaultFormat.encodeHeader(metadata, salt)
         val inner = sealPasswordLayer(mnemonic, passphrase, password, salt, headerBytes)
-        withContext(io) {
+        commit {
             // vault-crypto.md §17.3: the Keystore key must exist before the outer layer, so the iOS order changes to
             // policy → PBKDF2 + inner layer → new key (refused when the alias exists) → outer layer → atomic write,
             // and any failure after the key exists deletes it: never a key without a file or a file without a key.
@@ -141,14 +154,17 @@ class DefaultWalletVault @Inject constructor(
             if (passphrase.utf8Size() > MAX_PASSPHRASE_BYTES) {
                 throw VaultError.InvalidPassword(UiText.Ios("The BIP39 passphrase exceeds 1,024 UTF-8 bytes."))
             }
-            val metadata = withContext(io) { load(id) }.header.metadata
-            if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
+            val metadata = withContext(io) {
+                load(id).header.metadata.also { if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired() }
+            }
             requireSecretBounds(mnemonic, passphrase)
-            reencrypt(id, metadata, mnemonic, passphrase, newPassword)
-            // The password the counter was throttling is gone (`:175, 186`); best effort like iOS `try?`.
-            try {
-                withContext(io) { attempts.write(id, AttemptCounter.State.Cleared) }
-            } catch (_: VaultError) {
+            reencrypt(id, metadata, mnemonic, passphrase, newPassword) {
+                // Part of the same commit: the password the counter was throttling is gone (`:175, 186`); best
+                // effort like iOS `try?`.
+                try {
+                    attempts.write(id, AttemptCounter.State.Cleared)
+                } catch (_: VaultError) {
+                }
             }
         }
     }
@@ -157,7 +173,7 @@ class DefaultWalletVault @Inject constructor(
         mutex.withLock {
             // Authentication is required even if a UI session is already unlocked (`:196`).
             unlockLocked(id, password).close()
-            withContext(io) {
+            commit {
                 try {
                     Files.delete(vaultFile(id).toPath())
                 } catch (e: IOException) {
@@ -188,9 +204,11 @@ class DefaultWalletVault @Inject constructor(
 
     /** iOS `unlock(id:password:)` (`:135-152`) in the order of the [WalletVault.unlock] KDoc. */
     private suspend fun unlockLocked(id: WalletId, password: SecretText): VaultSecret {
-        val vault = withContext(io) { load(id) }
-        if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
-        val previous = withContext(io) { attempts.read(id) }
+        val (vault, previous) = withContext(io) {
+            val vault = load(id)
+            if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
+            vault to attempts.read(id)
+        }
         val now = clock.currentTimeMillis()
         AttemptCounter.lockedSeconds(previous, now)?.let { throw VaultError.TemporarilyLocked(it) }
         // Persist the attempt before costly decryption: killing and relaunching the process cannot reset the counter.
@@ -251,21 +269,40 @@ class DefaultWalletVault @Inject constructor(
         }
     }
 
-    /** New salt and nonces, same header metadata and device key, atomic replace (a failure keeps the old file). */
+    /**
+     * New salt and nonces, same header metadata and device key, atomic replace (a failure keeps the old file). The KDF
+     * is cancellable; the outer layer, the write and [alsoCommit] are one [commit].
+     */
     private suspend fun reencrypt(
         id: WalletId,
         metadata: VaultMetadata,
         mnemonic: SecretText,
         passphrase: SecretText,
         password: SecretText,
+        alsoCommit: () -> Unit = {},
     ) {
         val salt = random.bytes(VaultFormat.SALT_BYTES)
         val headerBytes = VaultFormat.encodeHeader(metadata, salt)
         val inner = sealPasswordLayer(mnemonic, passphrase, password, salt, headerBytes)
-        withContext(io) {
+        commit {
             val outer = deviceKeys.seal(id, inner, VaultFormat.deviceAad(headerBytes))
             writeVault(id, VaultFormat.encodeContainer(headerBytes, outer))
+            alsoCommit()
         }
+    }
+
+    /**
+     * Runs a persistent change on [io] as one step that cancellation cannot interrupt or misreport: a caller cancelled
+     * before it starts gets a `CancellationException` and nothing is written; once it has started it completes, and
+     * its result (or its own failure) is returned even if the caller was cancelled meanwhile. A plain
+     * `withContext(io)` would not do: it discards a completed block's result and throws on resumption when the caller
+     * was cancelled (prompt cancellation), and `NonCancellable + io` switches dispatchers, so it does the same. The
+     * outer `withContext(NonCancellable)` keeps the caller's dispatcher and therefore never checks for cancellation on
+     * exit (kotlinx.coroutines `withContext` KDoc).
+     */
+    private suspend fun <T> commit(block: () -> T): T {
+        currentCoroutineContext().ensureActive()
+        return withContext(NonCancellable) { withContext(io) { block() } }
     }
 
     /** PBKDF2 + the inner AES-GCM layer over the secret JSON (wiped). */
