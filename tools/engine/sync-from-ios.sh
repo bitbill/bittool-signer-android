@@ -22,7 +22,8 @@ if [ "$sha $bytes" != "$want" ]; then
   exit 1
 fi
 cp "$SRC" "$DST"
-sed -i '' -E "s/(const val EXPECTED_SHA256 = \")[0-9a-f]{64}(\")/\1$sha\2/; s/(const val EXPECTED_BYTES = )[0-9_]+/\1$bytes/" "$KT"
+grouped=$(python3 -c "import sys; print(f'{int(sys.argv[1]):_}')" "$bytes")
+sed -i '' -E "s/(const val EXPECTED_SHA256 = \")[0-9a-f]{64}(\")/\1$sha\2/; s/(const val EXPECTED_BYTES = )[0-9_]+/\1$grouped/" "$KT"
 cmp "$SRC" "$DST"
 echo "signer.js synced from iOS: $sha ($bytes bytes)"
 echo "Next: tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest"
