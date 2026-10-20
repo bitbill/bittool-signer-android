@@ -24,6 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
@@ -199,7 +200,7 @@ class DefaultWalletVault @Inject constructor(
         if (chars.isEmpty() || password.utf8Size() > MAX_PASSWORD_BYTES || hasUnpairedSurrogate(chars)) {
             throw VaultError.AuthenticationFailed()
         }
-        val cleartext = withContext(cpu) {
+        val cleartext = secretWork(cpu) {
             val job = coroutineContext[Job]
             val passwordBytes = utf8Bytes(chars)
             val key = try {
@@ -236,8 +237,28 @@ class DefaultWalletVault @Inject constructor(
         return secret
     }
 
+    /**
+     * [withContext] for work that returns a secret: when the caller is cancelled after [block] produced its result,
+     * `withContext` discards the value, so it is wiped here instead of being left to the garbage collector.
+     */
+    private suspend fun secretWork(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> ByteArray): ByteArray {
+        var produced: ByteArray? = null
+        try {
+            return withContext(dispatcher) { block().also { produced = it } }
+        } catch (e: CancellationException) {
+            produced?.wipe()
+            throw e
+        }
+    }
+
     /** New salt and nonces, same header metadata and device key, atomic replace (a failure keeps the old file). */
-    private suspend fun reencrypt(id: WalletId, metadata: VaultMetadata, mnemonic: SecretText, passphrase: SecretText, password: SecretText) {
+    private suspend fun reencrypt(
+        id: WalletId,
+        metadata: VaultMetadata,
+        mnemonic: SecretText,
+        passphrase: SecretText,
+        password: SecretText,
+    ) {
         val salt = random.bytes(VaultFormat.SALT_BYTES)
         val headerBytes = VaultFormat.encodeHeader(metadata, salt)
         val inner = sealPasswordLayer(mnemonic, passphrase, password, salt, headerBytes)

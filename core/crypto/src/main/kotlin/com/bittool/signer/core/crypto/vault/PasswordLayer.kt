@@ -4,6 +4,7 @@ import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.kdf.Pbkdf2
 import com.bittool.signer.core.model.util.wipe
 import java.security.GeneralSecurityException
+import java.util.concurrent.CancellationException
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
@@ -20,6 +21,8 @@ internal class PasswordLayer(private val random: SecureRandomSource) {
     /** Derives the key; [checkpoint] lets a cancelled caller stop the Kotlin fallback early. Caller wipes the result. */
     fun deriveKey(password: ByteArray, salt: ByteArray, iterations: Int, checkpoint: () -> Unit): ByteArray = try {
         Pbkdf2.hmacSha256(password, salt, iterations, KEY_BYTES, checkpoint)
+    } catch (e: CancellationException) {
+        throw e // a CancellationException is an IllegalStateException: never report it as a KDF failure
     } catch (e: IllegalStateException) {
         throw VaultError.KeyDerivationFailure(e)
     }

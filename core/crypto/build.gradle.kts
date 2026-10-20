@@ -7,6 +7,8 @@ plugins {
 android {
     namespace = "com.bittool.signer.core.crypto"
     defaultConfig {
+        // Hilt's test application, so CryptoModuleTest injects the real production bindings.
+        testInstrumentationRunner = "com.bittool.signer.core.crypto.HiltTestRunner"
         ndk {
             // The same ABIs as :core:engine and :app (arm64 and 32-bit ARM phones, x86_64 emulators / Chromebooks).
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
@@ -30,4 +32,6 @@ dependencies {
     androidTestImplementation(libs.kotlin.test)
     // nativeSeedDerivesTheSameWalletAsTheEngine and the engine `wordlist` parity test (ARCHITECTURE.md §3 W1-crypto).
     androidTestImplementation(projects.core.engine)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
 }

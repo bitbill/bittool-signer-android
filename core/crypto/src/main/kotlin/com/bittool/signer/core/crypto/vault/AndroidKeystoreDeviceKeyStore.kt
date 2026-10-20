@@ -125,6 +125,8 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
     }
 
     override fun delete(id: WalletId) = synchronized(lock) {
+        // The public-data key is never deleted, not even with the last wallet (vault-crypto.md §7.2).
+        if (id == PUBLIC_DATA_KEY_ID) throw VaultError.DeviceKeyUnavailable()
         val alias = alias(id)
         try {
             val store = Keystore.open()
@@ -167,7 +169,8 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
 
     /** The AES key of an existing wallet; absent or unreadable is [VaultError.DeviceKeyUnavailable]. */
     private fun walletKey(id: WalletId): SecretKey = try {
-        Keystore.secretKey(Keystore.open(), alias(id)) ?: throw VaultError.DeviceKeyUnavailable()
+        Keystore.secretKey(Keystore.open(), alias(id))?.takeIf { it.algorithm == AES }
+            ?: throw VaultError.DeviceKeyUnavailable()
     } catch (e: VaultError) {
         throw e
     } catch (e: GeneralSecurityException) {
@@ -223,6 +226,7 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
 
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val HMAC = "HmacSHA256"
+        private const val AES = "AES"
         private const val IV_BYTES = 12
         private const val TAG_BYTES = 16
     }

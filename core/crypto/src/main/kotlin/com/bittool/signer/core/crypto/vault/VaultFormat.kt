@@ -117,7 +117,8 @@ internal object VaultFormat {
         val metadata = json.obj("metadata") ?: return null
         val id = WalletId.parse(metadata.str("id")) ?: return null
         val name = metadata.str("name") ?: return null
-        val createdAt = (metadata["createdAt"] as? JsonPrimitive)?.takeIf { !it.isString }?.let { parseReferenceSeconds(it.content) } ?: return null
+        val createdAt = (metadata["createdAt"] as? JsonPrimitive)?.takeIf { !it.isString }
+            ?.let { parseReferenceSeconds(it.content) } ?: return null
         return VaultHeader(version, kdf, iterations, salt, VaultMetadata(id, name, createdAt))
     }
 

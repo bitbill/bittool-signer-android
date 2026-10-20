@@ -55,7 +55,8 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
             throw VaultError.AuthenticationFailed()
         }
         try {
-            val key = Keystore.secretKey(Keystore.open(), ALIAS) ?: throw VaultError.AuthenticationFailed()
+            val key = Keystore.secretKey(Keystore.open(), ALIAS)?.takeIf { it.algorithm == AES }
+                ?: throw VaultError.AuthenticationFailed()
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(TAG_BYTES * 8, sealed, HEADER.size, IV_BYTES))
             cipher.updateAAD(HEADER)
@@ -75,7 +76,7 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
 
     private fun keyForSealing(): SecretKey = try {
         val store = Keystore.open()
-        Keystore.secretKey(store, ALIAS) ?: run {
+        Keystore.secretKey(store, ALIAS)?.takeIf { it.algorithm == AES } ?: run {
             if (keyWorked || Keystore.contains(store, ALIAS)) throw VaultError.DeviceKeyUnavailable()
             Keystore.generateAes(store, ALIAS, policy, allowStrongBox = false)
         }
@@ -100,5 +101,6 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
         /** 4 + 1 + 12 + 16 = 33, the margin `ReceiptRepository` adds to its read bound. */
         const val OVERHEAD = 5 + IV_BYTES + TAG_BYTES
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
+        private const val AES = "AES"
     }
 }
