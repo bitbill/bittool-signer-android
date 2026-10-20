@@ -25,3 +25,16 @@ QA round 1 adds device findings in `docs/qa/round1-*.md`. ✅ = fixed and review
 | B18 | app | Android Terms / Privacy texts (apk, play) are drafts awaiting legal review. | W2-shell |
 | B19 | release | Refresh `THIRD_PARTY_LICENSES_ANDROID.txt` from the final dependency set (include vendored QuickJS, MIT). | W1-data |
 | B20 | core:l10n | Every `strings_<area>.xml` is English only: translation pass into the 20 other languages. | all |
+
+## Found by the backlog reviewers (open)
+
+| # | Owner | Item |
+|---|---|---|
+| B21 | feature:setup | Re-importing the phrase of a wallet whose device key is lost switches setup into Reset Password, which then fails with "device key unavailable…". Detect the lost key and point the user to "Remove This Wallet" (B9) instead. |
+| B22 | feature:wallets | Delete Wallet first renders the normal page, then switches to "This Wallet Can’t Be Unlocked" after the key check (~1 s on a device): show a neutral loading state until the check answers. |
+| B23 | core:crypto | `TestKeystore` is a public production-source object building weaker test-policy keys; guard it (`@VisibleForTesting` + lint, or move it behind a test-only artifact). |
+| B24 | app | `FixtureDeviceKeyStore` keeps `isKeyLost = false`, so e2e can never reach the lost-key removal; add a harness switch. |
+| B25 | app | `UnableToContinueDialog` shows store/engine error text in the interface direction; iOS shows it as given (`contentDirection()`). |
+| B26 | core:designsystem / core:ui | `DropdownMenu` popups (ProfileMenu, App Lock wallet menu…) do not publish test tags as resource ids. |
+| B27 | core:ui | Verify that PasswordField's semantics for autofill (`InputText`, `FillableData`) never carry the plain password (relies on the app-wide autofill exclusion today). |
+| B28 | app | Pre-existing lint error: RestrictedApi in `SignerNavigation.kt:84`. |
