@@ -41,6 +41,7 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.review.DecodeStatus
 import com.bittool.signer.feature.sign.common.SignTags
+import com.bittool.signer.feature.sign.common.symbolSize
 
 /**
  * The pinned bar of the review (iOS `signBar`, `Features/Sign/RequestReviewView.swift:186-206`): with a task to sign,
@@ -140,7 +141,7 @@ internal fun RiskAcknowledgement(
                 imageVector = if (ticked) SignerIcons.CheckBoxFilled else SignerIcons.CheckBoxBlank,
                 contentDescription = null,
                 tint = if (ticked) colors.warning else colors.secondaryLabel,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(symbolSize(24.dp, typography.title3)),
             )
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

@@ -32,6 +32,7 @@ import com.bittool.signer.core.designsystem.component.FirstLineIcon
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.StatusPill
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -115,7 +116,7 @@ private fun MatchingIssueBox(issue: MatchingIssue, state: RequestReviewUiState, 
         if (state.canRetry) {
             Row(
                 modifier = Modifier
-                    .heightIn(min = 44.dp)
+                    .heightIn(min = SignerMetrics.minTouchTarget)
                     .clickable(enabled = !state.retrying, role = Role.Button, onClick = onRetry)
                     .testTag(SignTags.RETRY_MATCH),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),

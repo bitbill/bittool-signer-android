@@ -72,6 +72,7 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.sign.common.SignTags
+import com.bittool.signer.feature.sign.common.symbolSize
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
@@ -140,7 +141,11 @@ fun ScanHomeContent(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val scope = rememberCoroutineScope()
     LaunchedEffect(scrollToTop) {
-        scrollToTop.collect { scope.launch { scrollState.animateScrollTo(0) } }
+        scrollToTop.collect {
+            // A programmatic scroll does not reach the bar's nested scroll: expand the large title as well.
+            scrollBehavior.state.heightOffset = 0f
+            scope.launch { scrollState.animateScrollTo(0) }
+        }
     }
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection).testTag(SignTags.HOME),
@@ -224,7 +229,7 @@ private fun ScanCard(onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(SignerIcons.Camera, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(20.dp))
+                Icon(SignerIcons.Camera, contentDescription = null, tint = colors.onAccent, modifier = Modifier.size(symbolSize(20.dp, typography.body)))
                 Text(stringResource(R.string.open_camera), style = typography.body.semibold(), color = colors.onAccent, textAlign = TextAlign.Center)
             }
         }
@@ -285,7 +290,7 @@ private fun OptionTile(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
         ) {
-            Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(26.dp))
+            Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(symbolSize(26.dp, SignerTheme.typography.title2)))
             Text(title, style = SignerTheme.typography.subheadline.semibold(), color = colors.label, textAlign = TextAlign.Center)
         }
     }
