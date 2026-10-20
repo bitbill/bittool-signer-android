@@ -179,6 +179,29 @@ class FilePublicWalletRepositoryTest {
     }
 
     @Test
+    fun aBodyIsReadOnlyFromStrictlyPaddedBase64() = runTest {
+        // Foundation `Data(base64Encoded:)` (PublicWalletRepository.swift:86) refuses unpadded text, whitespace and other
+        // alphabets. The JDK decoder accepts unpadded text, so the repository checks the length itself.
+        assertEquals("a", FilePublicWalletRepository.decodeBase64("YQ==")?.decodeToString())
+        assertNull(FilePublicWalletRepository.decodeBase64("YQ"))
+        assertNull(FilePublicWalletRepository.decodeBase64("Y Q="))
+        assertNull(FilePublicWalletRepository.decodeBase64("YQ-_"))
+        assertNull(FilePublicWalletRepository.decodeBase64("YQ==\n"))
+        val repository = repository(this)
+        val id = WalletId.random()
+        // One of three consecutive name lengths gives a body whose encoding ends in padding.
+        val envelope = listOf("Padded", "Paddedx", "Paddedxx").firstNotNullOf { name ->
+            repository.save(index, id, name, key)
+            parseJsonObject(repository.file(id).readBytes())!!.takeIf { it.str("body")!!.endsWith("=") }
+        }
+        assertEquals(PublicMetadataStatus.Ready, repository.snapshot(id, key).status)
+        // The same bytes under a valid MAC, but written without the padding.
+        val unpadded = envelope.str("body")!!.trimEnd('=')
+        repository.file(id).writeText(JsonObject(envelope + ("body" to JsonPrimitive(unpadded))).canonicalJson())
+        assertEquals(PublicMetadataStatus.Invalid, repository.snapshot(id, key).status)
+    }
+
+    @Test
     fun staleStagingFilesAreTidiedOnFirstUse() = runTest {
         val publicDir = File(dir, "PublicWallets").apply { mkdirs() }
         val stale = File(publicDir, ".pending-ABC")

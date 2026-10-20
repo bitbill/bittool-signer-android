@@ -114,6 +114,21 @@ class EncryptedReceiptRepositoryTest {
     }
 
     @Test
+    fun aJournalWriteInterruptedBeforeItsRenameLeavesNothingBehind() = runTest {
+        // A process that died between staging and renaming leaves a `.pending-*` copy next to the journal.
+        val repository = repository(this)
+        repository.write(listOf(receipt()))
+        val original = repository.file.readBytes()
+        val stale = File(dir, ".pending-0D5C7E52-6B0B-4E4B-9F1D-3C7D2B7B9A10").apply { writeBytes(ByteArray(64)) }
+        val sibling = File(dir, "Vaults").apply { mkdirs() }
+        val relaunched = repository(this)
+        assertEquals(1, relaunched.read().size)
+        assertFalse(stale.exists(), "The leftover staging file is removed on first use.")
+        assertTrue(repository.file.readBytes().contentEquals(original), "The journal itself is untouched.")
+        assertTrue(sibling.isDirectory)
+    }
+
+    @Test
     fun aSymlinkIsNotFollowed() = runTest {
         val repository = repository(this)
         repository.write(listOf(receipt()))

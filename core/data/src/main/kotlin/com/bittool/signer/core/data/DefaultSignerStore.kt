@@ -91,7 +91,8 @@ import kotlinx.serialization.json.JsonPrimitive
  *   repositories' I/O dispatcher;
  * - after every suspension an operation re-checks the epochs it captured ([requireSession]) and throws
  *   [CancellationException] when they changed, so a late result never repopulates state after a suspend, a lock, a
- *   capture or a replaced request;
+ *   capture or a replaced request. Work iOS does synchronously on the main actor (freezing a signature result,
+ *   stretching a BIP39 seed) is a suspension point here, so it is followed by the same check;
  * - the commit points run under [NonCancellable] (SignerStore KDoc "Commits are success boundaries").
  *
  * Android differences (documented, deliberate):
@@ -387,7 +388,7 @@ class DefaultSignerStore @Inject constructor(
                 if (passphrase.utf8Size() > MAX_PASSPHRASE_BYTES) throw AppIssue("The BIP39 passphrase exceeds 1,024 UTF-8 bytes.")
                 // The vault always stores the canonical words the seed is derived from.
                 canonical(mnemonic).useAndWipe { words ->
-                    val raw = derivePublicIndex(words, passphrase)
+                    val raw = derivePublicIndex(words, passphrase, epoch)
                     requireSession(epoch)
                     val index = WalletPublicMetadata.parse(raw)
                     reload()
@@ -432,7 +433,7 @@ class DefaultSignerStore @Inject constructor(
     override suspend fun existingWallet(mnemonic: SecretText, passphrase: SecretText): WalletId? = withContext(main) {
         // AppStore.swift:484-491. Public derivation only: no vault read, no password, no secret returned.
         val epoch = current.securityEpoch
-        val raw = canonical(mnemonic).useAndWipe { derivePublicIndex(it, passphrase) }
+        val raw = canonical(mnemonic).useAndWipe { derivePublicIndex(it, passphrase, epoch) }
         requireSession(epoch)
         val key = WalletPublicMetadata.parse(raw).walletKeyId
         val loaded = current
@@ -447,7 +448,7 @@ class DefaultSignerStore @Inject constructor(
                 ?: throw AppIssue("This wallet needs repair before its password can be reset.")
             val epoch = current.securityEpoch
             canonical(mnemonic).useAndWipe { words ->
-                val raw = derivePublicIndex(words, passphrase)
+                val raw = derivePublicIndex(words, passphrase, epoch)
                 requireSession(epoch)
                 val derived = WalletPublicMetadata.parse(raw)
                 if (derived.walletKeyId != existing.walletKeyId) throw AppIssue("This recovery phrase belongs to a different wallet.")
@@ -467,7 +468,7 @@ class DefaultSignerStore @Inject constructor(
         val sensitive = sensitiveEpoch
         val raw = withSecret(walletId, password) { secret ->
             requireSession(epoch)
-            derivePublicIndex(secret.mnemonic, secret.passphrase)
+            derivePublicIndex(secret.mnemonic, secret.passphrase, epoch)
         }
         requireSession(epoch)
         requireSensitive(sensitive)
@@ -725,6 +726,10 @@ class DefaultSignerStore @Inject constructor(
                 throw AppIssue("Request changed. Review the transaction again.")
             }
             val frozenResult = withContext(default) { freeze(result) }
+            // iOS freezes on the main actor (`AppStore.swift:432`), so nothing interleaves before the publish below. Here
+            // the freeze suspends: a suspend, Reject or new request meanwhile must discard this result, or an earlier
+            // task's signature would be marked completed (and chained as `previousResult`) after the session ended.
+            requireSession(epoch, signingRequest)
             val finalTask = current.pendingTasks.size == 1
             var frames = emptyList<String>()
             var text = ""
@@ -783,6 +788,9 @@ class DefaultSignerStore @Inject constructor(
         requireSession(epoch, requestId)
         val seed = withContext(default) { bip39Seed.hex(secret.mnemonic, secret.passphrase) }
         try {
+            // Deriving the seed suspends (iOS derives it synchronously right after this check): a session that ended
+            // meanwhile never sends the seed to the engine.
+            requireSession(epoch, requestId)
             engineCall { engine.signPlanTask(request, plan.raw, task.id, seed, riskAcknowledged, previousResult) }
         } finally {
             seed.wipe()
@@ -865,10 +873,15 @@ class DefaultSignerStore @Inject constructor(
         return withContext(default) { SecretText.of(bip39.validatedCanonical(mnemonic.view()).phrase) }
     }
 
-    /** `derivePublicIndex {seed}` with the native BIP39 seed; the seed is wiped right after the call. */
-    private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText): JsonObject {
+    /**
+     * `derivePublicIndex {seed}` with the native BIP39 seed; the seed is wiped right after the call. Deriving the seed
+     * suspends (iOS computes it synchronously), so the caller's security [epoch] is checked again before the seed is
+     * sent: after a suspend it never reaches the engine. Callers still check after the engine call.
+     */
+    private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText, epoch: Long): JsonObject {
         val seed = withContext(default) { bip39Seed.hex(mnemonic, passphrase) }
         return try {
+            requireSession(epoch)
             engineCall { engine.derivePublicIndex(seed) }
         } finally {
             seed.wipe()

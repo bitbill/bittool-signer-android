@@ -40,6 +40,9 @@ class AssetReferenceDataRepository @Inject constructor(
 
     private val assets = context.assets
     private val mutex = Mutex()
+
+    /** Read without the lock on the fast path, so it is published with a volatile write. */
+    @Volatile
     private var cached: ReferenceData? = null
 
     override suspend fun load(): ReferenceData = cached ?: mutex.withLock {

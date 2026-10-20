@@ -593,6 +593,106 @@ class DefaultSignerStoreTest {
         assertEquals(listOf(second.id.toString(), first.id.toString()), state.receipts.map { it.walletId })
     }
 
+    /** A two-wallet plan (task-0 for [first], task-1 for [second]); every result echoes its task. */
+    private fun JvmStore.useTwoTaskPlan(first: WalletId, second: WalletId) {
+        engine.on(EngineOperation.ResolveSigningPlan) {
+            FakeEngine.plan(
+                it.obj("request")!!,
+                listOf(
+                    FakeEngine.task("task-0", first.toString(), indexFor().walletKeyId),
+                    FakeEngine.task("task-1", second.toString(), indexFor("Public alternate test wallet").walletKeyId),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun anEarlierTaskFinishedAfterASuspendIsDiscarded() = JvmStore.run(separateDefault = true) {
+        // Android-only window: the result is frozen off the main thread before it is published (iOS freezes it on the
+        // main actor, AppStore.swift:432-444). A suspend during the freeze must discard the partial signature like any
+        // late result (scan-sign.md §18): nothing is marked signed, chained, or recorded.
+        store.reload()
+        val first = create("First")
+        val second = create("Second", passphrase = "Public alternate test wallet", password = "Other-Password2")
+        useTwoTaskPlan(first.id, second.id)
+        store.prepare(request())
+        val gate = EngineGate()
+        engine.on(EngineOperation.SignPlanTask) { gate.pause(); FakeEngine.sign(it) }
+        val signing = test.async { runCatching { sign("task-0") } }
+        gate.waitUntilStarted()
+        default.holdAfter(0)
+        gate.release()
+        test.runCurrent()
+        assertEquals(1, default.waiting, "The result is being frozen.")
+        store.suspendSession()
+        default.release()
+        assertIs<CancellationException>(signing.await().exceptionOrNull())
+        assertTrue(state.completedTaskIds.isEmpty(), "A late partial signature is not marked signed.")
+        assertTrue(state.receipts.isEmpty(), "…nor recorded in Activity.")
+        assertFalse(state.busy)
+        // The review and the plan stay, so the person signs the same task again with the password.
+        assertEquals(listOf("task-0", "task-1"), state.pendingTasks.map { it.id })
+        engine.on(EngineOperation.SignPlanTask) { FakeEngine.sign(it) }
+        sign("task-0")
+        assertNull(engine.calls.last { it.first == "signPlanTask" }.second["previousResult"], "The discarded result is never chained.")
+        assertEquals(listOf("task-1"), state.pendingTasks.map { it.id })
+        assertEquals(1, state.receipts.size)
+    }
+
+    @Test
+    fun anEarlierTaskFinishedAfterARejectIsNotPublishedIntoTheClearedRequest() = JvmStore.run(separateDefault = true) {
+        store.reload()
+        val first = create("First")
+        val second = create("Second", passphrase = "Public alternate test wallet", password = "Other-Password2")
+        useTwoTaskPlan(first.id, second.id)
+        store.prepare(request())
+        val gate = EngineGate()
+        engine.on(EngineOperation.SignPlanTask) { gate.pause(); FakeEngine.sign(it) }
+        val signing = test.async { runCatching { sign("task-0") } }
+        gate.waitUntilStarted()
+        default.holdAfter(0)
+        gate.release()
+        test.runCurrent()
+        assertEquals(1, default.waiting)
+        store.clearRequest()
+        default.release()
+        assertIs<CancellationException>(signing.await().exceptionOrNull())
+        assertNull(state.review)
+        assertTrue(state.completedTaskIds.isEmpty())
+        assertTrue(state.receipts.isEmpty(), "A rejected request leaves no Activity record.")
+    }
+
+    @Test
+    fun aSeedDerivedAfterASuspendNeverReachesTheEngine() = JvmStore.run(separateDefault = true) {
+        // Android-only window: the BIP39 seed is stretched off the main thread between the unlock and the engine call
+        // (iOS derives it synchronously right after its session check, AppStore.swift:465-468).
+        store.reload()
+        val wallet = create()
+        store.prepare(request())
+        val task = state.pendingTasks.single()
+        default.holdAfter(1) // the vault unlock passes, the seed derivation after it waits
+        val signing = test.async { runCatching { sign(task.id) } }
+        test.runCurrent()
+        assertEquals(1, default.waiting, "The seed is being derived.")
+        store.suspendSession()
+        default.release()
+        assertIs<CancellationException>(signing.await().exceptionOrNull())
+        assertEquals(0, engine.count("signPlanTask"), "The seed of an ended session is never sent.")
+        assertTrue(vault.issuedSecrets.last().mnemonic.isEmpty(), "The unlocked secret was wiped.")
+        assertFalse(state.busy)
+        // Repair re-derives the index from the vault's secret the same way.
+        val derivations = engine.count("derivePublicIndex")
+        default.holdAfter(1)
+        val repairing = test.async { runCatching { PASSWORD.asSecret { store.completeSetup(wallet.id, it) } } }
+        test.runCurrent()
+        assertEquals(1, default.waiting)
+        store.suspendSession()
+        default.release()
+        assertIs<CancellationException>(repairing.await().exceptionOrNull())
+        assertEquals(derivations, engine.count("derivePublicIndex"))
+        assertTrue(vault.issuedSecrets.last().mnemonic.isEmpty())
+    }
+
     @Test
     fun aReloadThatChangesTheCollectionInvalidatesOnlyAnUnsignedPlan() = JvmStore.run {
         store.reload()

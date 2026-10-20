@@ -190,11 +190,18 @@ class FilePublicWalletRepository @Inject constructor(
         internal fun validName(name: String): Boolean =
             name.trimWhitespacesAndNewlines().isNotEmpty() && !Graphemes.exceeds(name, 40)
 
-        /** Strict standard base64 (Foundation `Data(base64Encoded:)` rejects whitespace and bad padding). */
-        private fun decodeBase64(text: String): ByteArray? = try {
-            Base64.getDecoder().decode(text)
-        } catch (e: IllegalArgumentException) {
-            null
+        /**
+         * Strict standard base64, as Foundation `Data(base64Encoded:)` reads it (`PublicWalletRepository.swift:86`):
+         * whitespace, other alphabets and bad padding are refused (the JDK decoder does that), and so is missing padding,
+         * which the JDK decoder would accept.
+         */
+        internal fun decodeBase64(text: String): ByteArray? {
+            if (text.length % 4 != 0) return null
+            return try {
+                Base64.getDecoder().decode(text)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
         }
 
         private fun invalidData() = AppIssue("Invalid public wallet data.")

@@ -36,10 +36,13 @@ import kotlinx.coroutines.withContext
  *   only the explicit "Clear Activity" replaces it).
  *
  * The plaintext is wiped after sealing and after decoding. Operations are serialised by one [Mutex] and run on [io].
+ * The journal is the only file [AtomicFiles] stages directly in `@SignerDataDir` (the vault and the sidecars stage in
+ * their own folders, which their owners tidy), so the first operation removes `.pending-*` leftovers there: a process
+ * that died between staging and renaming would otherwise leave up to 2 MiB behind for good.
  */
 @Singleton
 class EncryptedReceiptRepository @Inject constructor(
-    @SignerDataDir dataDir: File,
+    @SignerDataDir private val dataDir: File,
     private val cipher: JournalCipher,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : ReceiptRepository {
@@ -48,38 +51,45 @@ class EncryptedReceiptRepository @Inject constructor(
     val file: File = File(dataDir, SignerFiles.RECEIPTS_FILE)
 
     private val mutex = Mutex()
+    private var tidied = false
 
-    override suspend fun read(): List<SigningReceipt> = mutex.withLock {
-        withContext(io) {
-            val sealed = try {
-                AtomicFiles.readBounded(file, MAX_SEALED_BYTES)
-            } catch (e: Exception) {
-                throw invalid(e)
-            } ?: return@withContext emptyList()
-            val plaintext = try {
-                cipher.open(sealed)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                throw invalid(e)
-            }
-            try {
-                ReceiptJournal.decode(plaintext)
-            } finally {
-                plaintext.wipe()
-            }
+    override suspend fun read(): List<SigningReceipt> = locked {
+        val sealed = try {
+            AtomicFiles.readBounded(file, MAX_SEALED_BYTES)
+        } catch (e: Exception) {
+            throw invalid(e)
+        } ?: return@locked emptyList()
+        val plaintext = try {
+            cipher.open(sealed)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw invalid(e)
+        }
+        try {
+            ReceiptJournal.decode(plaintext)
+        } finally {
+            plaintext.wipe()
         }
     }
 
-    override suspend fun write(records: List<SigningReceipt>) = mutex.withLock {
+    override suspend fun write(records: List<SigningReceipt>) = locked {
+        val plaintext = ReceiptJournal.encode(records)
+        val sealed = try {
+            cipher.seal(plaintext)
+        } finally {
+            plaintext.wipe()
+        }
+        AtomicFiles.write(file, sealed)
+    }
+
+    private suspend fun <T> locked(block: () -> T): T = mutex.withLock {
         withContext(io) {
-            val plaintext = ReceiptJournal.encode(records)
-            val sealed = try {
-                cipher.seal(plaintext)
-            } finally {
-                plaintext.wipe()
+            if (!tidied) {
+                tidied = true
+                AtomicFiles.deleteStalePending(dataDir)
             }
-            AtomicFiles.write(file, sealed)
+            block()
         }
     }
 
