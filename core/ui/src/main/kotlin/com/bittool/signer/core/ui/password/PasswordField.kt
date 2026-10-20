@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
+import com.bittool.signer.core.designsystem.security.LocalSensitiveDataMarking
 import com.bittool.signer.core.designsystem.security.NoPersonalizedLearning
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -88,7 +89,8 @@ enum class PasswordKind(val english: String, @StringRes val title: Int) {
  *   semantics and is always accessibility-data-sensitive, so on API 34+ only accessibility tools (TalkBack, Switch
  *   Access, UiAutomator) are given it or its events at all; and the text it reports is masked with one bullet per
  *   character, like a platform `EditText` with a password transformation, so not even a tool reads a hidden password
- *   back (UI tests type through the keyboard and check the result elsewhere, never by reading the field).
+ *   back (UI tests type through the keyboard and check the result elsewhere, never by reading the field). The node
+ *   marking honours `LocalSensitiveDataMarking` (the debug UI-test switch of gaps G5.3); the bullets never depend on it.
  * - [revealable] (the passphrase only: a mistyped passphrase silently opens a different wallet) adds an eye button
  *   ("Show secret" / "Hide secret", tag `<english>.reveal`). Revealed text is hidden again as soon as the app pauses;
  *   while shown, the node reports the passphrase (as drawn, for TalkBack users) and the hosting view is marked
@@ -121,6 +123,8 @@ fun PasswordField(
     // iOS: re-hidden whenever the scene leaves `.active`.
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { revealed = false }
     val shown = revealable && revealed
+    // The node-level marking follows the same G5.3 switch as the view-level one; the bullets below do not.
+    val markSensitive = LocalSensitiveDataMarking.current
     AccessibilitySensitive(active = shown)
     ExcludeFromAutofill()
     // No undo history, whoever edits the state: typing, the caller's clearText(), a paste.
@@ -137,7 +141,7 @@ fun PasswordField(
                 // Outermost, so it overrides the text field's own semantics: the field reports bullets, not the
                 // secret (BasicSecureTextField reports its plain text to accessibility).
                 .semantics {
-                    isSensitiveData = true
+                    isSensitiveData = markSensitive
                     if (!shown) editableText = AnnotatedString(maskForAccessibility(state.text.length))
                 }
                 .testTag(kind.english)

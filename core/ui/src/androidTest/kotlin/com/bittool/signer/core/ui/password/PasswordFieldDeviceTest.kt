@@ -22,9 +22,12 @@ import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestRule
 import org.junit.runner.RunWith
+import org.junit.runners.model.Statement
 import org.w3c.dom.Element
 
 /**
@@ -35,12 +38,28 @@ import org.w3c.dom.Element
  * accessibility-data-sensitive marking does not hide it from the dump; that services which are not tools get no node at
  * all is covered by the Robolectric `PasswordFieldTest`.)
  *
- * It injects a tap and key events: run it on a device nobody else is using. Before each injection it checks that the
- * test's own window has the focus and stops otherwise, so it never types into another app.
+ * It injects a tap and key events into whichever window has the focus (`input` is device-wide) and takes the one
+ * UiAutomation connection that QA tours and other UI tests on the same device also need, so it is **opt-in**: a plain
+ * `connectedDebugAndroidTest` skips it. Run it only on a device nobody else is using:
+ * `tools/gradle-slot.sh ./gradlew :core:ui:connectedDebugAndroidTest
+ * -Pandroid.testInstrumentationRunnerArguments.bts.injectInput=true`. Before each injection it also checks that the
+ * test's own window has the focus and stops otherwise (that check and the injection are not atomic).
  */
 @RunWith(AndroidJUnit4::class)
 class PasswordFieldDeviceTest {
-    @get:Rule
+    /** Outermost, so a run that did not opt in does not even bring the test activity to the front. */
+    @get:Rule(order = 0)
+    val onlyWhenAskedFor = TestRule { base, _ ->
+        object : Statement() {
+            override fun evaluate() {
+                val optedIn = InstrumentationRegistry.getArguments().getString(OPT_IN_ARGUMENT) == "true"
+                assumeTrue("injects device-wide input: pass $OPT_IN_ARGUMENT=true on a device nobody else uses", optedIn)
+                base.evaluate()
+            }
+        }
+    }
+
+    @get:Rule(order = 1)
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     /** Shell access only: no accessibility connection of its own, so `uiautomator dump` can register its own. */
@@ -131,6 +150,8 @@ class PasswordFieldDeviceTest {
         ParcelFileDescriptor.AutoCloseInputStream(shell.executeShellCommand(command)).use { it.readBytes().decodeToString() }
 
     private companion object {
+        /** The instrumentation argument that opts in to device-wide input injection. */
+        const val OPT_IN_ARGUMENT = "bts.injectInput"
         const val FIELD_ID = "Wallet password"
         const val DUMP = "/data/local/tmp/bts-password-field.xml"
 

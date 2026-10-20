@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.core.app.ApplicationProvider
+import com.bittool.signer.core.designsystem.security.LocalSensitiveDataMarking
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import kotlin.test.assertEquals
@@ -158,6 +159,28 @@ class PasswordFieldTest {
         } finally {
             asAccessibilityTool(false)
         }
+    }
+
+    /**
+     * The debug UI-test switch of gaps G5.3 (`LocalSensitiveDataMarking`) covers the field's own node marking too, so a
+     * harness that has to turn the marking off is not left with password fields its UiAutomator cannot see. The bullets
+     * do not depend on it: what was typed never reaches accessibility.
+     */
+    @Test
+    fun theSensitiveMarkingSwitchCoversTheNodeButNeverTheMask() {
+        val state = TextFieldState()
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalSensitiveDataMarking provides false) {
+                    PasswordField(PasswordKind.WalletPassword, state)
+                }
+            }
+        }
+        val field = compose.onNodeWithTag(PasswordKind.WalletPassword.english)
+        field.performTextInput(SECRET)
+        field.assert(SemanticsMatcher.expectValue(SemanticsProperties.IsSensitiveData, false))
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password))
+            .assert(editableTextIs("•".repeat(SECRET.length)))
     }
 
     /**

@@ -87,8 +87,9 @@ private class ObscuredTouchGuardNode(var onBlocked: () -> Unit) : Modifier.Node(
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
- * Whether [AccessibilitySensitive] marks views. `true` by default; `:app` may provide `false` in a debug UI-test run if
- * UiAutomator cannot read sensitive nodes (gaps.md G5.3). Never `false` in release. (Checked for G5.3: Android 14's
+ * Whether [AccessibilitySensitive] marks views, and components mark their own secret nodes (`isSensitiveData`, e.g.
+ * every `PasswordField`). `true` by default; `:app` may provide `false` in a debug UI-test run if UiAutomator cannot
+ * read sensitive nodes (gaps.md G5.3). Never `false` in release. (Checked for G5.3: Android 14's
  * `UiAutomationConnection` registers UiAutomation as an accessibility tool unless `FLAG_NOT_ACCESSIBILITY_TOOL` is
  * passed, so `uiautomator dump` and UiAutomator tests see marked nodes without this switch.)
  */

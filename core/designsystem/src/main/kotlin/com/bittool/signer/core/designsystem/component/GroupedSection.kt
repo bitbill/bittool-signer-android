@@ -131,8 +131,9 @@ fun GroupedSection(
  * A label with its value against the trailing edge in secondary (iOS `LabeledContent`, [LabelValueLayout]); at
  * accessibility text sizes the value moves under the label so neither is cut. One accessibility element. A [verbatim]
  * value (a version, a network or wallet name, a fingerprint, a decoded value: text that is not translated) is laid out
- * in its own direction (`contentDirection`), so in a right-to-left interface "1.0.0 (1)" or "Ethereum (Mainnet)" keeps
- * its brackets; a translated value keeps the interface direction.
+ * in its own direction (`contentDirection`), so in a right-to-left interface "Ethereum (Mainnet)" keeps its bracket at
+ * the end; a translated value keeps the interface direction. Text without any strong character (a bare version such
+ * as "1.0.0 (1)") has no direction of its own and still follows the interface.
  */
 @Composable
 fun ValueRow(label: String, value: String, modifier: Modifier = Modifier, verbatim: Boolean = false) {
