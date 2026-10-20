@@ -2,6 +2,7 @@ package com.bittool.signer.core.ui.payload
 
 import android.content.ClipboardManager
 import android.content.Context
+import android.os.TransactionTooLargeException
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -79,5 +81,24 @@ class PayloadDisclosureTest {
         compose.onNodeWithText("Copied").assertExists()
         val clipboard = ApplicationProvider.getApplicationContext<Context>().getSystemService(ClipboardManager::class.java)
         assertEquals(huge, clipboard.primaryClip!!.getItemAt(0).text.toString())
+    }
+
+    /** A payload the clipboard service refuses (one binder transaction, ~1 MB) is not confirmed as copied. */
+    @Test
+    fun aPayloadTheSystemRefusesIsNotConfirmed() {
+        SignerClipboard.write = { _, _ -> throw RuntimeException(TransactionTooLargeException("data parcel size 2097152 bytes")) }
+        try {
+            compose.setContent {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    PayloadDisclosure(title = "Payload (Text)", text = "psbt", tag = "signature.payload")
+                }
+            }
+            compose.onNodeWithTag("signature.payloadToggle").performClick()
+            compose.onNodeWithTag("signature.payloadCopy").performClick()
+            compose.onNodeWithText("Copy Payload").assertExists()
+            compose.onNodeWithText("Copied").assertDoesNotExist()
+        } finally {
+            SignerClipboard.resetForTesting()
+        }
     }
 }

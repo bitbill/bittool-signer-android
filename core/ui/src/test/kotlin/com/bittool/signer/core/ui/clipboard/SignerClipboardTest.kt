@@ -51,6 +51,16 @@ class SignerClipboardTest {
         assertFalse(SignerClipboard.hasPending)
     }
 
+    /** A clip over the binder limit is refused by the service: reported, nothing scheduled, no crash. */
+    @Test
+    fun aClipTheSystemRefusesIsReportedAndNothingIsScheduled() {
+        SignerClipboard.write = { _, _ -> throw RuntimeException(android.os.TransactionTooLargeException()) }
+        assertFalse(SignerClipboard.copy(context, "x".repeat(2_000_000)))
+        assertFalse(SignerClipboard.hasPending)
+        SignerClipboard.resetForTesting()
+        assertTrue(SignerClipboard.copy(context, "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu"))
+    }
+
     @Test
     fun aNewerCopyByTheUserIsNeverCleared() {
         SignerClipboard.copy(context, "0x9858EfFD232B4033E47d90003D41EC34EcaEda94")

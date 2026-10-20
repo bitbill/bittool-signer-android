@@ -118,7 +118,8 @@ internal fun hashGroups(value: String): String = AddressFormatter.groups(value.u
  * An address with a copy button (iOS `CopyableAddress`, `Design/AddressText.swift:79-109`): [AddressText] filling the
  * width and a 30 dp copy glyph (48 dp target) that turns into a check mark for 1.5 s after copying, with the success
  * haptic; labels "Copy address" → "Copied". A long press offers "Copy Address" (no check mark, no haptic, like the iOS
- * context menu). No toast. Copies through [SignerClipboard] (expires after 120 s). [onCopied] runs after a button copy.
+ * context menu). No toast. Copies through [SignerClipboard] (expires after 120 s). [onCopied] runs after a button copy
+ * that the system accepted.
  */
 @Composable
 fun CopyableAddress(
@@ -143,7 +144,7 @@ fun CopyableAddress(
             modifier = Modifier
                 .fillMaxWidth()
                 .pointerInput(Unit) { detectTapGestures(onLongPress = { menu = true }) }
-                .semantics { customActions = listOf(CustomAccessibilityAction(menuLabel) { SignerClipboard.copy(context, address); true }) },
+                .semantics { customActions = listOf(CustomAccessibilityAction(menuLabel) { SignerClipboard.copy(context, address) }) },
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.Top,
         ) {
@@ -152,10 +153,11 @@ fun CopyableAddress(
                 copied = copied,
                 label = stringResource(if (copied) R.string.copied else R.string.copy_address_2),
                 onClick = {
-                    SignerClipboard.copy(context, address)
-                    copied = true
-                    haptics.success()
-                    onCopied()
+                    if (SignerClipboard.copy(context, address)) {
+                        copied = true
+                        haptics.success()
+                        onCopied()
+                    }
                 },
             )
         }
@@ -200,9 +202,10 @@ fun CopyableText(
             copied = copied,
             label = if (copied) stringResource(R.string.copied) else copyLabel,
             onClick = {
-                SignerClipboard.copy(context, text)
-                copied = true
-                onCopied()
+                if (SignerClipboard.copy(context, text)) {
+                    copied = true
+                    onCopied()
+                }
             },
         )
     }

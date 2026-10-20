@@ -69,16 +69,28 @@ object SignerClipboard {
     /** The copy waiting to expire. Holds the application's clipboard service, never an activity. */
     private class Pending(val manager: ClipboardManager, val label: String, val timestamp: Long?, val dueAt: Long)
 
-    /** Copies [text] under [label], marked sensitive, and schedules its removal after [expiresAfter]. Main thread. */
+    /**
+     * Copies [text] under [label], marked sensitive, and schedules its removal after [expiresAfter]. Main thread.
+     *
+     * Returns false when the system refused the clip, and the caller then does not confirm a copy. The clip travels to
+     * the clipboard service in one binder transaction (about 1 MB for the whole process), so a very large payload — a
+     * signed PSBT of many inputs, up to the engine's 2 MiB response — fails there with a `RuntimeException` instead of
+     * being copied; iOS has no such limit.
+     */
     @MainThread
-    fun copy(context: Context, text: String, label: String = LABEL, expiresAfter: Duration = DEFAULT_EXPIRY) {
+    fun copy(context: Context, text: String, label: String = LABEL, expiresAfter: Duration = DEFAULT_EXPIRY): Boolean {
         val app = context.applicationContext
-        val manager = app.getSystemService(ClipboardManager::class.java) ?: return
+        val manager = app.getSystemService(ClipboardManager::class.java) ?: return false
         val clip = ClipData.newPlainText(label, text)
         clip.description.extras = PersistableBundle().apply {
             putBoolean(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) ClipDescription.EXTRA_IS_SENSITIVE else EXTRA_IS_SENSITIVE, true)
         }
-        manager.setPrimaryClip(clip)
+        try {
+            write(manager, clip)
+        } catch (refused: RuntimeException) {
+            // TransactionTooLargeException (wrapped) or a SecurityException from an OEM clipboard: nothing was copied.
+            return false
+        }
         // The service stamps the clip when it stores it; the copy is made from a tap, so the app has focus to read it.
         val written = describe(manager)?.timestamp
         val delay = expiresAfter.inWholeMilliseconds.coerceAtLeast(0)
@@ -86,7 +98,12 @@ object SignerClipboard {
         handler.removeCallbacks(expire)
         handler.postDelayed(expire, delay)
         observeForeground()
+        return true
     }
+
+    /** Hands the clip to the clipboard service (tests replace it to simulate a refusal). */
+    @VisibleForTesting
+    internal var write: (ClipboardManager, ClipData) -> Unit = { manager, clip -> manager.setPrimaryClip(clip) }
 
     private val expire = Runnable { clearIfExpired() }
 
@@ -150,6 +167,7 @@ object SignerClipboard {
         pending = null
         clock = SystemClock::elapsedRealtime
         describe = { runCatching { it.primaryClipDescription }.getOrNull() }
+        write = { manager, clip -> manager.setPrimaryClip(clip) }
     }
 
     /** `ClipDescription.EXTRA_IS_SENSITIVE` before API 33 (the platform reads the same key). */

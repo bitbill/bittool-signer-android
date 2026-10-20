@@ -143,8 +143,8 @@ private fun PayloadBody(text: String, notes: List<String>, tag: String) {
             modifier = Modifier
                 .heightIn(min = 44.dp)
                 .clickable(role = Role.Button) {
-                    SignerClipboard.copy(context, text)
-                    copied = true
+                    // A payload too large for the clipboard is not confirmed as copied.
+                    if (SignerClipboard.copy(context, text)) copied = true
                 }
                 .testTag(tag + "Copy"),
             verticalAlignment = Alignment.CenterVertically,
