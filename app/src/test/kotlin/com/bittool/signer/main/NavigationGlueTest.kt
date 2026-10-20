@@ -16,8 +16,8 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -319,8 +319,9 @@ class NavigationGlueTest {
     @Test
     fun theScanBadgeSaysARequestIsWaiting() {
         show(badge = true)
-        compose.onNodeWithText("1", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag(Tab.Scan.testTag)
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "A signing request is waiting"))
+            // TalkBack reads the label and the state, not a bare "1" before them.
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Text, listOf(AnnotatedString("Scan"))))
     }
 }

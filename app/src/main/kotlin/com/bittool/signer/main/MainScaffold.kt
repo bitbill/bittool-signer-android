@@ -42,6 +42,7 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,12 +50,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -249,7 +253,14 @@ private fun TabIcon(tab: Tab, showsScanBadge: Boolean) {
     if (tab == Tab.Scan && showsScanBadge) {
         val colors = SignerTheme.colors
         val count = formatInteger(1, currentLocale())
-        BadgedBox(badge = { Badge(containerColor = colors.danger, contentColor = Color.White) { Text(count) } }) {
+        BadgedBox(
+            badge = {
+                Badge(containerColor = colors.danger, contentColor = Color.White) {
+                    // The item's state says what it means ("A signing request is waiting"); the digit is not read.
+                    TabBarText { Text(count, Modifier.clearAndSetSemantics {}) }
+                }
+            },
+        ) {
             Icon(tab.icon, contentDescription = null)
         }
     } else {
@@ -260,12 +271,29 @@ private fun TabIcon(tab: Tab, showsScanBadge: Boolean) {
 @Composable
 private fun TabLabel(tab: Tab, selected: Boolean) {
     val typography = SignerTheme.typography
-    Text(
-        text = stringResource(tab.title),
-        style = if (selected) typography.caption.semibold() else typography.caption,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
+    TabBarText {
+        Text(
+            text = stringResource(tab.title),
+            style = if (selected) typography.caption.semibold() else typography.caption,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * The bar has a fixed height, so its text grows with the font size only up to [TabBarMaxFontScale] (iOS keeps tab bar
+ * labels at a fixed size too): at 200 % the labels would touch the bar's edge and the badge would leave the bar.
+ */
+@Composable
+private fun TabBarText(content: @Composable () -> Unit) {
+    val density = LocalDensity.current
+    val capped = density.fontScale.coerceAtMost(TabBarMaxFontScale)
+    if (capped == density.fontScale) {
+        content()
+    } else {
+        CompositionLocalProvider(LocalDensity provides Density(density.density, capped), content = content)
+    }
 }
 
 /** The e2e tag of the tab, and on Scan the waiting request as the item's state ("A signing request is waiting"). */
@@ -301,5 +329,6 @@ object MainTags {
 }
 
 private val RailMinWidth: Dp = 600.dp
+private const val TabBarMaxFontScale = 1.5f
 private val Hairline: Dp = 0.5.dp
 private const val BAR_SECONDS = 0.3
