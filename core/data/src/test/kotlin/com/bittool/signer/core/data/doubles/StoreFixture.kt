@@ -19,11 +19,13 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 
 /**
- * Builds `DefaultSignerStore`s over one storage directory, the way iOS tests build `AppStore(vault:engine:
- * storageDirectory:)`. **Integration swap point:** the Wave-1 doubles ([InMemoryWalletVault], [EnglishBip39],
- * [HmacBip39Seed], [JvmSecureRandomSource], [AesGcmJournalCipher], [FakeQrCodeEncoder]) are constructor defaults; the
- * orchestrator's rerun with the real W1-crypto / W1-scanner bindings passes those instead (the vault double's probes
- * then need the vault files instead).
+ * Builds `DefaultSignerStore`s over one storage directory for the **JVM** store tests (`src/test`), the way iOS tests
+ * build `AppStore(vault:engine:storageDirectory:)`, on the crypto and encoder doubles of this source set
+ * ([InMemoryWalletVault], [EnglishBip39], [HmacBip39Seed], [JvmSecureRandomSource], [AesGcmJournalCipher],
+ * [FakeQrCodeEncoder]) as constructor defaults. The instrumented store tests never use it: they run on the production
+ * `:core:crypto` and `:core:scanner` implementations through androidTest `RealStoreFixture` / `DeviceStore`, so these
+ * doubles are not compiled into the instrumented-test APK (only the engine decorator and the public fixtures of
+ * `src/testShared` are shared).
  *
  * [store] is the first store; [relaunch] creates another one over the same files, vault and Keystore stand-ins (an app
  * relaunch).
@@ -79,6 +81,3 @@ class StoreFixture(
     /** The journal file the store writes. */
     val journalFile: File get() = receiptRepository.file
 }
-
-/** Runs [block] with a copy of [this] as a secret and wipes it afterwards. */
-inline fun <R> String.asSecret(block: (SecretText) -> R): R = SecretText.of(this).use(block)

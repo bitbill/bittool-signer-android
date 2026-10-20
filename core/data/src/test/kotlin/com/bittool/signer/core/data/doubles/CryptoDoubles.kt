@@ -35,10 +35,11 @@ import kotlin.random.Random
 import kotlin.random.asKotlinRandom
 
 /*
- * Wave-1 test doubles of the `:core:crypto` and `:core:scanner` interfaces `DefaultSignerStore` consumes
+ * JVM test doubles of the `:core:crypto` and `:core:scanner` interfaces `DefaultSignerStore` consumes
  * (ARCHITECTURE.md §3 W1-data: "an English-only Bip39 and a Mac("HmacSHA512") Bip39Seed in test code, a fake
- * encoder"). They follow the KDoc contracts closely enough for the store's tests; the Integration rerun swaps them for
- * the real W1-crypto / W1-scanner bindings (see StoreFixture).
+ * encoder"). They follow the KDoc contracts closely enough for the store's JVM tests (StoreFixture); the instrumented
+ * tests run on the real `:core:crypto` / `:core:scanner` implementations instead (androidTest `RealStoreFixture`), so
+ * these doubles live in `src/test` only.
  */
 
 /** `SecureRandomSource` over `java.security.SecureRandom` (vault-crypto.md §3). */
