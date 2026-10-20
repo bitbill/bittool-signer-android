@@ -22,14 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -68,11 +64,13 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
+import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.monospacedDigit
 import com.bittool.signer.core.model.QrEncodingException
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.internal.QrWindowEffects
@@ -181,7 +179,7 @@ fun QrCodeView(
                 .aspectRatio(1f)
                 .dropShadow(PlateShape, PlateShadow)
                 .clip(PlateShape)
-                .background(Color.White)
+                .background(SignerTheme.colors.qrPlate)
                 .testTag(QrCodeViewTags.PLATE)
                 .semantics {
                     if (ready) {
@@ -264,13 +262,14 @@ private fun QrImage(image: ImageBitmap) {
     }
 }
 
-/** `QRCodeView.swift:74-93`: bordered circle play/pause, progress (hidden from TalkBack), "i/n" counter. */
+/**
+ * `QRCodeView.swift:74-93`: bordered circle play/pause (tonal accent), progress in the accent over `fill` (hidden from
+ * TalkBack), "i/n" counter in caption digits, secondary label.
+ */
 @Composable
 private fun QrPlaybackControls(index: Int, count: Int, paused: Boolean, onTogglePause: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val counterStyle = MaterialTheme.typography.labelMedium.copy(
-        fontSize = 12.sp,
-        fontFeatureSettings = "tnum",
+    val colors = SignerTheme.colors
+    val counterStyle = SignerTheme.typography.caption.monospacedDigit().copy(
         textDirection = TextDirection.Ltr,
         textAlign = TextAlign.Center,
     )
@@ -293,7 +292,7 @@ private fun QrPlaybackControls(index: Int, count: Int, paused: Boolean, onToggle
                 label = "qrPlayPause",
             ) { isPaused ->
                 Icon(
-                    imageVector = if (isPaused) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                    imageVector = if (isPaused) SignerIcons.Play else SignerIcons.Pause,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
                 )
@@ -305,15 +304,15 @@ private fun QrPlaybackControls(index: Int, count: Int, paused: Boolean, onToggle
                 .width(140.dp)
                 .height(4.dp)
                 .clearAndSetSemantics { },
-            color = colors.primary,
-            trackColor = colors.surfaceVariant,
+            color = colors.accent,
+            trackColor = colors.fill,
             gapSize = 0.dp,
             drawStopIndicator = {},
         )
         Text(
             text = stringResource(L10n.string.x_x_2, index + 1, count),
             style = counterStyle,
-            color = colors.onSurfaceVariant,
+            color = colors.secondaryLabel,
             maxLines = 1,
             softWrap = false,
             // Readable by TalkBack as on iOS (not a live region, so it is never announced by itself).

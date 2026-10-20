@@ -18,10 +18,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.theme.SignerColors
+import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.scanning.QrScanFrameGate
 import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.scanner.CameraPermissionStatus
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -170,5 +173,29 @@ class QrScannerContentTest {
         update(chrome(torchAvailable = true, torchOn = true))
         compose.onNodeWithContentDescription("Turn off flashlight").assertIsDisplayed()
         compose.onNodeWithText("Scan Request").assertIsDisplayed()
+    }
+
+    @Test
+    fun theScannerDrawsWithTheDarkDesignSystemPaletteInALightApp() {
+        // iOS forces the dark scheme in the scanner subtree only (QRScannerView.swift:48); the colours are the design
+        // system's tokens (Brand.mint, ink, the dark labels and orange), not a private copy (docs/qa/backlog.md B11).
+        var appPalette: SignerColors? = null
+        var cameraPalette: SignerColors? = null
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                appPalette = SignerTheme.colors
+                QrScannerContent(
+                    chrome = chrome(),
+                    onToggleTorch = {},
+                    onOpenSettings = {},
+                    onReset = {},
+                    onClose = {},
+                    camera = { cameraPalette = SignerTheme.colors },
+                )
+            }
+        }
+        compose.waitForIdle()
+        assertSame(SignerColors.Light, appPalette)
+        assertSame(SignerColors.Dark, cameraPalette)
     }
 }

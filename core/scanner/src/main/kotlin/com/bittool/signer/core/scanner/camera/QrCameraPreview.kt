@@ -26,7 +26,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
-import com.bittool.signer.core.scanner.internal.ScannerPalette
+import com.bittool.signer.core.designsystem.theme.SignerTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -49,7 +49,7 @@ internal fun QrCameraPreview(
     val previewView = remember(context) { QrCameraSession.previewView(context) }
 
     DisposableEffect(hostLifecycle, previewView, state) {
-        val session = QrCameraSession(context, hostLifecycle, previewView, state) { latestOnValues(it) }
+        val session = QrCameraSession(context, hostLifecycle, previewView, state, onValues = { latestOnValues(it) })
         session.start()
         onDispose { session.release() }
     }
@@ -81,11 +81,12 @@ internal fun QrCameraPreview(
     }
 }
 
-/** A mint ring that settles on the tapped point and fades (~0.8 s). */
+/** A ring in the theme's `mint` that settles on the tapped point and fades (~0.8 s). */
 @Composable
 private fun FocusRing(center: Offset, tap: Int) {
     val scale = remember { Animatable(1.3f) }
     val alpha = remember { Animatable(0f) }
+    val mint = SignerTheme.colors.mint
     LaunchedEffect(tap) {
         scale.snapTo(1.3f)
         alpha.snapTo(1f)
@@ -95,7 +96,7 @@ private fun FocusRing(center: Offset, tap: Int) {
     Canvas(Modifier.fillMaxSize()) {
         if (alpha.value <= 0f) return@Canvas
         drawCircle(
-            color = ScannerPalette.Mint.copy(alpha = alpha.value),
+            color = mint.copy(alpha = alpha.value),
             radius = 30.dp.toPx() * scale.value,
             center = center,
             style = Stroke(width = 2.dp.toPx()),
