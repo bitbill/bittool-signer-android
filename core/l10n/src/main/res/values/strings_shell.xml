@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android-only strings of :app (owner: W2-shell). English only until the translation pass (DECISIONS §9.2). Every other
+  text of the shell (stages, tabs, lock screen, cover, alerts) is an iOS catalogue string or one of the App Lock set in
+  strings_security.xml.
+-->
+<resources>
+    <!--
+      TalkBack state of the Scan tab while its badge "1" is shown (a reviewed request waits and is not signed yet).
+      iOS VoiceOver reads the badge count itself; Android says what it means.
+    -->
+    <string name="shell_scan_badge_description">A signing request is waiting</string>
+</resources>

@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.BitToolSigner" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- The page colour: what shows behind the IME and predictive-back animations (MainActivity re-applies it after
+             every appearance switch, it is resolved once per window). -->
         <item name="android:windowBackground">@color/launch_background</item>
+        <!-- Also the colour of the plain page the system shows for the FLAG_SECURE task snapshot (Recents): AppCompat's
+             dark default is a grey #303030 (Ownbit 5.0). -->
+        <item name="android:colorBackground">@color/launch_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- The bar icon colours the app sets in code (enableEdgeToEdge + SignerTheme). androidx splashscreen re-applies
+             these theme values when the system splash hands over; without them a cold start could leave white icons on
+             the light page. -->
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">@bool/light_system_bars</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
     </style>
 
+    <!-- The system splash (design-system.md §9.9): the brand tile, 96 dp, at the centre of the page colour, which follows
+         the in-app appearance on API 31+ (UiModeManager application night mode) and the cached choice below that.
+         MainActivity keeps it until the first stage and the App Lock state are known; LaunchView continues it. -->
     <style name="Theme.BitToolSigner.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/launch_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_mark</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
         <item name="postSplashScreenTheme">@style/Theme.BitToolSigner</item>
     </style>
+
+    <bool name="light_system_bars">true</bool>
 </resources>

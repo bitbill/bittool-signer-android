@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  System splash icon (windowSplashScreenAnimatedIcon): the brand tile of `splash_tile.xml`. An animated-vector with a
+  no-op animation only so that Android 12+ draws it as a vector (a plain drawable is rasterised once at the icon view
+  size, Ownbit `splash_icon.xml`); nothing moves.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/splash_tile">
+    <target android:name="tile">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="1"
+                android:propertyName="translateX"
+                android:valueFrom="96"
+                android:valueTo="96"
+                android:valueType="floatType" />
+        </aapt:attr>
+    </target>
+</animated-vector>
