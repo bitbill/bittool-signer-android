@@ -48,7 +48,6 @@ import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.SymbolHero
-import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
@@ -76,6 +75,7 @@ import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
+import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -250,8 +250,18 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         },
     ) {
         SecretPair(
-            first = { PasswordField(PasswordKind.WalletPassword, fields.password, isNew = true, imeAction = ImeAction.Next, containerColor = Color.Transparent) },
-            second = { PasswordField(PasswordKind.ConfirmPassword, fields.confirmation, isNew = true, imeAction = ImeAction.Done, containerColor = Color.Transparent) },
+            first = {
+                PasswordField(
+                    PasswordKind.WalletPassword, fields.password, Modifier.secretTextMenu(),
+                    isNew = true, imeAction = ImeAction.Next, containerColor = Color.Transparent,
+                )
+            },
+            second = {
+                PasswordField(
+                    PasswordKind.ConfirmPassword, fields.confirmation, Modifier.secretTextMenu(),
+                    isNew = true, imeAction = ImeAction.Done, containerColor = Color.Transparent,
+                )
+            },
             color = SignerTheme.colors.card,
             shape = SignerShapes.callout,
         )
@@ -276,15 +286,13 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
 /**
  * The last page (iOS `SetupCompleteStep`, `WalletSetupFlow.swift:402-452`; setup-backup §6.5): the success hero, the
  * created (or reset) wallet and "Pair a Wallet" / "Done". No way back: Back means "Done". The success haptic plays when
- * it appears.
+ * the commit lands ([SetupEvent.Saved]), not each time this page is composed (a rotation would repeat it).
  */
 @Composable
 internal fun SetupCompleteStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
-    val haptics = rememberSignerHaptics()
     val created = state.created
-    LaunchedEffect(Unit) { if (created != null) haptics.success() }
     val title = when {
         state.didResetPassword -> L10n.string.password_reset
         state.intent == SetupIntent.Create -> L10n.string.wallet_created

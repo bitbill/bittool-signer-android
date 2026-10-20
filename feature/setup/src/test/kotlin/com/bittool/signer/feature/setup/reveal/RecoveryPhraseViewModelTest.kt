@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.setup.reveal
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.testing.FakeSignerStore
@@ -120,6 +121,55 @@ class RecoveryPhraseViewModelTest {
         model.close()
         assertNull(model.uiState.value.revealed)
         assertTrue(model.password.text.isEmpty())
+        assertEquals(listOf<RecoveryPhraseEvent>(RecoveryPhraseEvent.Close), events)
+    }
+
+    /**
+     * Backgrounding discards the decrypted phrase so that whoever picks the phone up needs the password again. The
+     * submitted password must not survive in the field's undo history: Ctrl+Z on a hardware keyboard would type it
+     * back in, and "Continue" would reveal the phrase without anyone knowing the password.
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    @Test
+    fun undoCannotBringBackThePasswordAfterThePhraseWasDiscarded() = runTest(dispatcher) {
+        val model = model()
+        model.password.setTextAndPlaceCursorAtEnd("Public-Test-Password1!")
+        model.unlock()
+        assertNotNull(model.uiState.value.revealed)
+        assertFalse(model.password.undoState.canUndo, "the submitted password leaves no undo history")
+        store.suspendSession()
+        assertNull(model.uiState.value.revealed)
+        model.password.undoState.undo()
+        assertTrue(model.password.text.isEmpty(), "undo brings nothing back")
+
+        model.password.setTextAndPlaceCursorAtEnd("Typed-Then-Backgrounded1!")
+        store.suspendSession()
+        assertFalse(model.password.undoState.canUndo, "a password typed but not submitted is gone for good too")
+    }
+
+    /**
+     * "Done" / "Cancel" wipe everything first (iOS `clear(); dismiss()`), but the page leaving shows neither the phrase
+     * nor the password form again: no form flashing up during the slide-down, and no keyboard raised by its delayed
+     * focus. A background while it leaves keeps it that way; a second tap sends nothing more.
+     */
+    @Test
+    fun doneWipesThePhraseAndThePageLeavesWithoutTheForm() = runTest(dispatcher) {
+        store.onReveal = { _, _ -> VaultSecret(SecretText.of(Phrases.VECTOR_12), SecretText.empty()) }
+        val model = model()
+        val events = mutableListOf<RecoveryPhraseEvent>()
+        backgroundScope.launch(dispatcher) { model.eventFlow.toList(events) }
+        model.password.setTextAndPlaceCursorAtEnd("Public-Test-Password1!")
+        model.unlock()
+        assertNotNull(model.uiState.value.revealed)
+        model.close()
+        assertTrue(model.uiState.value.closing)
+        assertNull(model.uiState.value.revealed)
+        store.suspendSession()
+        assertTrue(model.uiState.value.closing, "still leaving after a background")
+        model.close()
+        model.password.setTextAndPlaceCursorAtEnd("Public-Test-Password1!")
+        model.unlock()
+        assertEquals(1, store.calls<Call.Reveal>().size, "nothing is unlocked on the way out")
         assertEquals(listOf<RecoveryPhraseEvent>(RecoveryPhraseEvent.Close), events)
     }
 

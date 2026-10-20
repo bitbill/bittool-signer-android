@@ -1,7 +1,6 @@
 package com.bittool.signer.feature.setup.flow
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import com.bittool.signer.core.crypto.bip39.Bip39Canonical
@@ -15,6 +14,7 @@ import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.util.isBlankSwift
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
 import com.bittool.signer.core.navigation.SetupIntent
+import com.bittool.signer.feature.setup.ui.wipe
 
 /** The pushed steps of a setup presentation (iOS `WalletSetupModel.Step`); the root (Create / Import form) is `[]`. */
 enum class SetupStep { Backup, Verify, Password, Done }
@@ -162,15 +162,17 @@ class SetupFields internal constructor() {
     /** The passphrase drives the "not included" warnings of the QR code and the cards only while the option is on. */
     fun hasPassphrase(usePassphrase: Boolean): Boolean = usePassphrase && passphrase.text.isNotEmpty()
 
+    /** Empties both password fields, undo history included (no Ctrl+Z brings a cleared password back). */
     internal fun clearPasswords() {
-        password.clearText()
-        confirmation.clearText()
+        password.wipe()
+        confirmation.wipe()
     }
 
+    /** Empties every secret field, undo history included. The name is not a secret and stays. */
     internal fun clearSecrets() {
-        phrase.clearText()
-        passphrase.clearText()
-        passphraseConfirmation.clearText()
+        phrase.wipe()
+        passphrase.wipe()
+        passphraseConfirmation.wipe()
         clearPasswords()
     }
 

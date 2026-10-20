@@ -81,6 +81,7 @@ internal fun SetupFlow(
                     SetupEvent.Close -> latestCancelled()
                     is SetupEvent.Finish -> latestFinished(event.route)
                     SetupEvent.VerificationRejected -> haptics.reject()
+                    SetupEvent.Saved -> haptics.success()
                 }
             }
         }

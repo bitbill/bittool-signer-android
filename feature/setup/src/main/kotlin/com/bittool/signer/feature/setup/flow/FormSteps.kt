@@ -87,6 +87,7 @@ import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
+import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -237,8 +238,19 @@ internal fun PassphraseOptions(usePassphrase: Boolean, model: WalletSetupViewMod
         ) {
             Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SecretPair(
-                    first = { PasswordField(PasswordKind.Passphrase, fields.passphrase, isNew = true, revealable = true, imeAction = ImeAction.Next, containerColor = Color.Transparent) },
-                    second = { PasswordField(PasswordKind.ConfirmPassphrase, fields.passphraseConfirmation, isNew = true, revealable = true, imeAction = ImeAction.Done, containerColor = Color.Transparent) },
+                    // A revealed passphrase is plain text: its menu, like the phrase editor's, sends nothing anywhere.
+                    first = {
+                        PasswordField(
+                            PasswordKind.Passphrase, fields.passphrase, Modifier.secretTextMenu(),
+                            isNew = true, revealable = true, imeAction = ImeAction.Next, containerColor = Color.Transparent,
+                        )
+                    },
+                    second = {
+                        PasswordField(
+                            PasswordKind.ConfirmPassphrase, fields.passphraseConfirmation, Modifier.secretTextMenu(),
+                            isNew = true, revealable = true, imeAction = ImeAction.Done, containerColor = Color.Transparent,
+                        )
+                    },
                     color = SignerTheme.colors.raised,
                     shape = SignerShapes.control,
                 )

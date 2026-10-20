@@ -3,6 +3,7 @@ package com.bittool.signer.feature.setup.phrase
 import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
+import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,9 @@ import com.bittool.signer.core.crypto.bip39.Bip39Candidates
 import com.bittool.signer.core.crypto.bip39.Bip39Language
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
 import com.bittool.signer.feature.setup.SetupTestHost
+import com.bittool.signer.feature.setup.offers
+import com.bittool.signer.feature.setup.processTextKey
+import com.bittool.signer.feature.setup.textMenuFilters
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -69,6 +73,29 @@ class PhraseEditorTest {
         }
         compose.onNodeWithTag(EDITOR_TAG).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentType))
         compose.onNodeWithTag(EDITOR_TAG).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Password))
+    }
+
+    /**
+     * The editor's text menu holds nothing that hands the typed words to someone else: no Copy / Cut (the clipboard),
+     * no Autofill, none of the platform's PROCESS_TEXT actions ("Translate", "Search", any installed app's text
+     * action) and no smart-selection action, which start another app with the selected words (iOS turns Writing Tools
+     * off on this editor). Paste and Select All stay. Checked on the filter the editor really carries, against every
+     * kind of item Compose adds to a text field's menu.
+     */
+    @Test
+    fun theTextMenuOffersNoActionThatSendsTheWordsOutOfTheApp() {
+        val state = TextFieldState("legal winner thank year")
+        compose.setContent { SetupTestHost(factory) { RecoveryPhraseEditor(state, onFocusChanged = {}) } }
+        val filters = compose.onNodeWithTag(EDITOR_TAG).textMenuFilters()
+        assertTrue(filters.isNotEmpty(), "the editor filters its text menu")
+        assertTrue(offers(filters, TextContextMenuKeys.PasteKey), "Paste stays (as on iOS)")
+        assertTrue(offers(filters, TextContextMenuKeys.SelectAllKey))
+        assertFalse(offers(filters, TextContextMenuKeys.CopyKey), "no Copy: recovery words never reach the clipboard")
+        assertFalse(offers(filters, TextContextMenuKeys.CutKey))
+        assertFalse(offers(filters, TextContextMenuKeys.AutofillKey))
+        assertFalse(offers(filters, processTextKey(0)), "no PROCESS_TEXT action (Translate, Search…) receives the words")
+        assertFalse(offers(filters, processTextKey(3)))
+        assertFalse(offers(filters, Any()), "nor any other platform item, such as the smart-selection assistant action")
     }
 
     @Test

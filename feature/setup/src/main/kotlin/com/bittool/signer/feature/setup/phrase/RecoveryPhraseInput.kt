@@ -18,8 +18,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.contextmenu.data.TextContextMenuKeys
-import androidx.compose.foundation.text.contextmenu.modifier.filterTextContextMenuComponents
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -57,6 +55,7 @@ import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
+import com.bittool.signer.feature.setup.ui.secretTextMenu
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -67,8 +66,9 @@ import com.bittool.signer.core.l10n.R as L10n
  * Input traits (port of iOS `RecoveryInputViewTests`): a text keyboard (CJK input methods must stay usable, so no
  * password type and no "no suggestions" flag), no capitalisation, no autocorrection, no personalised learning
  * (incognito keyboard), no autofill content type and the hosting window excluded from Autofill. Pasting works through
- * the system menu; Copy and Cut are left out of it, so typed recovery words never reach the clipboard (ARCHITECTURE
- * §4.4; iOS offers them). The text is never masked. While it holds text the view is accessibility-sensitive (gaps G5), and a
+ * the system menu, which offers only Paste and Select All ([secretTextMenu]): typed recovery words never reach the
+ * clipboard (ARCHITECTURE §4.4; iOS offers Copy) nor another app's text action such as "Translate". The text is never
+ * masked. While it holds text the view is accessibility-sensitive (gaps G5), and a
  * screenshot raises the "may contain" warning without clearing anything. Named "Recovery phrase" for TalkBack, tagged
  * `recovery.input.visible`.
  */
@@ -87,7 +87,7 @@ internal fun RecoveryPhraseEditor(state: TextFieldState, onFocusChanged: (Boolea
             modifier = modifier
                 .fillMaxWidth()
                 .onFocusChanged { onFocusChanged(it.isFocused) }
-                .filterTextContextMenuComponents { it.key !in ClipboardWritingItems }
+                .secretTextMenu()
                 .testTag(EDITOR_TAG),
             textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
             keyboardOptions = KeyboardOptions(
@@ -233,6 +233,4 @@ private fun SuggestionChip(word: String, onClick: () -> Unit) {
 
 internal const val EDITOR_TAG = "recovery.input.visible"
 
-/** Context-menu items that would put recovery words on the clipboard (or offer Autofill). */
-private val ClipboardWritingItems = setOf(TextContextMenuKeys.CopyKey, TextContextMenuKeys.CutKey, TextContextMenuKeys.AutofillKey)
 private val EDITOR_MIN_HEIGHT = 132.dp

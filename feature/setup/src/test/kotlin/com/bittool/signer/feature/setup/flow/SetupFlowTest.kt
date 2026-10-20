@@ -26,9 +26,12 @@ import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.feature.setup.Phrases
 import com.bittool.signer.feature.setup.SeededRandomSource
 import com.bittool.signer.feature.setup.SetupTestHost
+import com.bittool.signer.feature.setup.isSecretTextMenu
 import com.bittool.signer.feature.setup.testBip39
+import com.bittool.signer.feature.setup.textMenuFilters
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import org.junit.Rule
 import org.junit.Test
@@ -185,6 +188,26 @@ class SetupFlowTest {
         back()
         compose.onNodeWithText("Discard this wallet?").assertExists()
         compose.onNodeWithText("The words you entered will be erased from this screen.").assertExists()
+    }
+
+    /**
+     * A revealed passphrase is plain text, and Compose offers every text field's selection to the clipboard and to
+     * other apps' text actions ("Translate"…): the passphrase and password fields keep Paste and Select All only.
+     */
+    @Test
+    fun theSecretFieldsOfferNoTextActionThatSendsTheirTextElsewhere() {
+        flow(SetupIntent.Restore)
+        compose.onNodeWithTag("setup.usePassphrase").performScrollTo().performClick()
+        for (kind in listOf(PasswordKind.Passphrase, PasswordKind.ConfirmPassphrase)) {
+            assertTrue(isSecretTextMenu(compose.onNodeWithTag(kind.english).textMenuFilters()), kind.english)
+        }
+        compose.onNodeWithTag("setup.usePassphrase").performScrollTo().performClick()
+        compose.onNodeWithTag("recovery.input.visible").performTextInput(FakeSignerStore.PUBLIC_FIXTURE_12)
+        compose.onNodeWithTag("setup.import").performClick()
+        assertStep(2, 2)
+        for (kind in listOf(PasswordKind.WalletPassword, PasswordKind.ConfirmPassword)) {
+            assertTrue(isSecretTextMenu(compose.onNodeWithTag(kind.english).textMenuFilters()), kind.english)
+        }
     }
 
     /** iOS `PassphraseFieldTests.setupShowsTheEyeOnBothPassphraseFields`. */

@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.setup.flow
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -585,25 +586,118 @@ class WalletSetupViewModelTest {
 
     @Test
     fun cancelAsksBeforeDiscardingDraftSecrets() = runTest(dispatcher) {
+        val empty = started(SetupIntent.Restore)
+        val closed = events(empty)
+        // The confirmation fields do not count as draft secrets.
+        empty.type(empty.fields.passphraseConfirmation, "x")
+        empty.type(empty.fields.confirmation, "x")
+        assertFalse(empty.hasDraftSecrets())
+        empty.cancel()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Close), closed)
+
         val model = started(SetupIntent.Restore)
         val events = events(model)
-        // The confirmation fields do not count as draft secrets.
-        model.type(model.fields.passphraseConfirmation, "x")
-        model.type(model.fields.confirmation, "x")
-        assertFalse(model.hasDraftSecrets())
-        model.cancel()
-        assertEquals(listOf<SetupEvent>(SetupEvent.Close), events)
-
         model.type(model.fields.phrase, "abandon")
         model.cancel()
         assertTrue(model.state.confirmDiscard)
         model.keepEditing()
         assertFalse(model.state.confirmDiscard)
         assertEquals("abandon", model.fields.phrase.text.toString())
+        assertTrue(events.isEmpty())
         model.cancel()
         model.discard()
         assertTrue(model.fields.phrase.text.isEmpty())
-        assertEquals(listOf<SetupEvent>(SetupEvent.Close, SetupEvent.Close), events)
+        assertEquals(listOf<SetupEvent>(SetupEvent.Close), events)
+    }
+
+    /**
+     * The overlay stays on screen, and touchable, while it animates away: a Back, a second tap or "Discard" in that
+     * moment must not send a second outcome, which would replace "Pair a Wallet"'s route (`AppRouter.finishSetup`
+     * keeps the last one) or turn a finished setup into a cancelled one.
+     */
+    @Test
+    fun aPresentationHasExactlyOneOutcome() = runTest(dispatcher) {
+        val model = started()
+        val events = events(model)
+        model.reachPasswordStep()
+        model.setPasswords()
+        model.createWallet()
+        val created = assertNotNull(model.state.created)
+        model.finish(pairWallet = true)
+        model.back()
+        model.finish(pairWallet = false)
+        model.cancel()
+        model.discard()
+        assertEquals(
+            listOf<SetupEvent>(SetupEvent.Finish(ConnectRoute.walletLevel(created.id))),
+            events.filter { it is SetupEvent.Finish || it == SetupEvent.Close },
+            "Connect still opens after the overlay is gone",
+        )
+
+        val discarded = started(SetupIntent.Restore)
+        val outcomes = events(discarded)
+        discarded.type(discarded.fields.phrase, "abandon")
+        discarded.cancel()
+        discarded.discard()
+        discarded.back()
+        discarded.cancel()
+        discarded.discard()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Close), outcomes)
+        assertFalse(discarded.state.confirmDiscard, "no second confirmation opens while the overlay leaves")
+    }
+
+    /** The success haptic (iOS `.sensoryFeedback(.success)` on `created`) is asked for once, when the commit lands. */
+    @Test
+    fun theSuccessHapticIsAskedForOnceWhenTheWalletIsSaved() = runTest(dispatcher) {
+        val model = started()
+        val events = events(model)
+        model.reachPasswordStep()
+        model.setPasswords()
+        assertTrue(events.none { it == SetupEvent.Saved })
+        model.createWallet()
+        assertEquals(1, events.count { it == SetupEvent.Saved })
+
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onExistingWallet = { _, _ -> existing.id }
+        val reset = started(SetupIntent.Restore)
+        val resetEvents = events(reset)
+        reset.type(reset.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        reset.startImport()
+        reset.setPasswords("Recovered-Test-Password3!")
+        reset.resetPassword()
+        assertTrue(reset.state.didResetPassword)
+        assertEquals(1, resetEvents.count { it == SetupEvent.Saved })
+    }
+
+    /**
+     * `TextFieldState.clearText()` records the deletion as an undoable edit: Ctrl+Z (a hardware keyboard) would bring a
+     * cleared secret back into its field. Every clearing of a secret also forgets its undo history.
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    @Test
+    fun clearedSecretsCannotBeBroughtBackWithUndo() = runTest(dispatcher) {
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.setUsePassphrase(true)
+        model.type(model.fields.passphrase, "extra")
+        model.type(model.fields.passphraseConfirmation, "extra")
+        model.startImport()
+        model.setPasswords()
+
+        store.suspendSession()
+        for (field in listOf(model.fields.password, model.fields.confirmation)) {
+            assertFalse(field.undoState.canUndo, "backgrounding cleared the password for good")
+            field.undoState.undo()
+            assertTrue(field.text.isEmpty())
+        }
+
+        model.clearSecrets()
+        for (field in listOf(model.fields.phrase, model.fields.passphrase, model.fields.passphraseConfirmation)) {
+            assertFalse(field.undoState.canUndo, "a discarded draft is gone for good")
+            field.undoState.undo()
+            assertTrue(field.text.isEmpty())
+        }
     }
 
     @Test
@@ -635,9 +729,17 @@ class WalletSetupViewModelTest {
         model.createWallet()
         val created = assertNotNull(model.state.created)
         model.finish(pairWallet = true)
-        model.back()
-        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(ConnectRoute.walletLevel(created.id)), SetupEvent.Finish(null)), events)
+        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(ConnectRoute.walletLevel(created.id))), events.filterIsInstance<SetupEvent.Finish>())
         assertFalse(model.canPop(), "there is no way back from Done")
+
+        // Back on Done is "Done".
+        val other = started()
+        val otherEvents = events(other)
+        other.reachPasswordStep()
+        other.setPasswords()
+        other.createWallet()
+        other.back()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(null)), otherEvents.filterIsInstance<SetupEvent.Finish>())
     }
 
     @Test

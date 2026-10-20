@@ -56,6 +56,12 @@ sealed interface SetupEvent {
 
     /** The backup check was answered wrongly (reject haptic, ARCHITECTURE §4.5). */
     data object VerificationRejected : SetupEvent
+
+    /**
+     * The wallet was created, or its password reset: the success haptic (iOS `.sensoryFeedback(.success)` when
+     * `created` becomes non-nil). Sent once, when the commit lands, not whenever the Done page is composed again.
+     */
+    data object Saved : SetupEvent
 }
 
 /**
@@ -122,6 +128,13 @@ class WalletSetupViewModel @AssistedInject constructor(
     private var scannedPhrase: String? = null
 
     private var nameSeeded = false
+
+    /**
+     * Set once [SetupEvent.Close] or [SetupEvent.Finish] went out: a presentation has exactly one outcome. The overlay
+     * stays on screen (and touchable) while it animates away, so without this a Back or a second tap during that
+     * animation would send another outcome, e.g. replace "Pair a Wallet"'s Connect route by `null`.
+     */
+    private var ended = false
     private var operationCounter = 0L
     private var operation = 0L
     private var generationJob: Job? = null
@@ -378,6 +391,7 @@ class WalletSetupViewModel @AssistedInject constructor(
             try {
                 val wallet = store.createWallet(name, mnemonicCopy, passphrase, password)
                 _state.update { it.copy(created = wallet) }
+                events.trySend(SetupEvent.Saved)
                 clearSecrets()
                 setPath(_state.value.path + SetupStep.Done)
             } finally {
@@ -400,6 +414,7 @@ class WalletSetupViewModel @AssistedInject constructor(
                 store.resetPassword(walletId, mnemonicCopy, passphrase, password)
                 val wallet = store.state.value.wallet(walletId)
                 _state.update { it.copy(created = wallet, didResetPassword = true) }
+                events.trySend(SetupEvent.Saved)
                 clearSecrets()
                 setPath(_state.value.path + SetupStep.Done)
             } finally {
@@ -443,15 +458,15 @@ class WalletSetupViewModel @AssistedInject constructor(
      * otherwise the presentation ends. Ignored while busy.
      */
     fun cancel() {
-        if (_state.value.busy) return
-        if (hasDraftSecrets()) _state.update { it.copy(confirmDiscard = true) } else events.trySend(SetupEvent.Close)
+        if (_state.value.busy || ended) return
+        if (hasDraftSecrets()) _state.update { it.copy(confirmDiscard = true) } else end(SetupEvent.Close)
     }
 
     /** "Discard": the secrets are erased, then the presentation ends. */
     fun discard() {
         _state.update { it.copy(confirmDiscard = false) }
         clearSecrets()
-        events.trySend(SetupEvent.Close)
+        end(SetupEvent.Close)
     }
 
     fun keepEditing() = _state.update { it.copy(confirmDiscard = false) }
@@ -463,7 +478,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     fun back() {
         val state = _state.value
         when {
-            state.busy -> Unit
+            state.busy || ended -> Unit
             state.step == SetupStep.Done -> finish(pairWallet = false)
             state.path.isNotEmpty() -> pop()
             else -> cancel()
@@ -493,7 +508,14 @@ class WalletSetupViewModel @AssistedInject constructor(
         val state = _state.value
         val created = state.created
         val route = if (pairWallet && created != null && !state.didResetPassword) ConnectRoute.walletLevel(created.id) else null
-        events.trySend(SetupEvent.Finish(route))
+        end(SetupEvent.Finish(route))
+    }
+
+    /** Sends the presentation's one outcome; later ones are dropped ([ended]). */
+    private fun end(outcome: SetupEvent) {
+        if (ended) return
+        ended = true
+        events.trySend(outcome)
     }
 
     // -------------------------------------------------------------------------------------------------------------

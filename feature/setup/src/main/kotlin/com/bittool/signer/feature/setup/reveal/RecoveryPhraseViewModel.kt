@@ -1,7 +1,6 @@
 package com.bittool.signer.feature.setup.reveal
 
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -18,6 +17,7 @@ import com.bittool.signer.core.navigation.RecoveryPhraseRoute
 import com.bittool.signer.core.security.RecoverySessionFactory
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.flow.WalletIdentity
+import com.bittool.signer.feature.setup.ui.wipe
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -51,8 +51,13 @@ data class RecoveryPhraseUiState(
     val revealed: RevealedPhrase? = null,
     /** `SignerState.securityEpoch`: the panel is rebuilt (and the phrase discarded) when it changes. */
     val securityEpoch: Long = 0,
+    /**
+     * Cancel / Done closed the page: everything is wiped and the page is leaving. It shows neither the phrase nor the
+     * password form again on its way out (no form flash, no keyboard raised by the form's delayed focus).
+     */
+    val closing: Boolean = false,
 ) {
-    override fun toString(): String = "RecoveryPhraseUiState(busy=$busy, revealed=${revealed != null})"
+    override fun toString(): String = "RecoveryPhraseUiState(busy=$busy, revealed=${revealed != null}, closing=$closing)"
 }
 
 /** One-off results of the page. */
@@ -121,8 +126,7 @@ class RecoveryPhraseViewModel internal constructor(
                 val gone = walletId == null || (!signer.isLoading && signer.walletLoadSucceeded && signer.wallet(walletId) == null)
                 if (gone && !closedForMissingWallet) {
                     closedForMissingWallet = true
-                    clear()
-                    events.trySend(RecoveryPhraseEvent.Close)
+                    close()
                 }
             }
         }
@@ -131,9 +135,9 @@ class RecoveryPhraseViewModel internal constructor(
     /** "Continue" (or the keyboard action): unlocks with the typed password, which is cleared at once. */
     fun unlock() {
         val id = walletId ?: return
-        if (password.text.isEmpty() || _state.value.busy) return
+        if (password.text.isEmpty() || _state.value.busy || _state.value.closing) return
         val entered = SecretText.of(password.text)
-        password.clearText()
+        password.wipe()
         val operation = ++token
         val epoch = store.state.value.securityEpoch
         _state.update { it.copy(busy = true, error = null) }
@@ -160,9 +164,11 @@ class RecoveryPhraseViewModel internal constructor(
         }
     }
 
-    /** Cancel / Done: everything is cleared, then the page closes (iOS `clear(); dismiss()`). */
+    /** Cancel / Done: everything is cleared, then the page closes (iOS `clear(); dismiss()`). Once only. */
     fun close() {
+        if (_state.value.closing) return
         clear()
+        _state.update { it.copy(closing = true) }
         events.trySend(RecoveryPhraseEvent.Close)
     }
 
@@ -172,15 +178,18 @@ class RecoveryPhraseViewModel internal constructor(
         close()
     }
 
-    /** iOS `clear()`: cancels the operation, empties the password and drops the decrypted phrase. */
+    /**
+     * iOS `clear()`: cancels the operation, empties the password (and its undo history: Ctrl+Z must not bring back the
+     * password that unlocked a phrase backgrounding discarded) and drops the decrypted phrase.
+     */
     fun clear() {
         token++
         job?.cancel()
         job = null
-        password.clearText()
+        password.wipe()
         secret?.close()
         secret = null
-        _state.update { RecoveryPhraseUiState() }
+        _state.update { RecoveryPhraseUiState(closing = it.closing) }
     }
 
     override fun onCleared() {

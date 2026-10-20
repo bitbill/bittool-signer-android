@@ -57,6 +57,7 @@ import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
+import com.bittool.signer.feature.setup.ui.secretTextMenu
 import kotlinx.coroutines.delay
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -135,18 +136,21 @@ internal fun RecoveryPhraseContent(
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
                         state.identity?.let { WalletIdentityHeader(name = it.name, fingerprint = it.fingerprint, avatarIdentity = it.avatarIdentity, size = 44.dp) }
-                        if (revealed != null) {
-                            // Backgrounding discards the phrase anyway; the key also resets the panel's own state.
-                            key(state.securityEpoch) {
-                                RecoveryBackupPanel(
-                                    words = revealed.words,
-                                    displayedPassphrase = revealed.passphrase,
-                                    hasPassphrase = revealed.hasPassphrase,
-                                )
+                        when {
+                            // Wiped and leaving: the page slides away without the phrase and without the form.
+                            state.closing -> Unit
+                            revealed != null -> {
+                                // Backgrounding discards the phrase anyway; the key also resets the panel's own state.
+                                key(state.securityEpoch) {
+                                    RecoveryBackupPanel(
+                                        words = revealed.words,
+                                        displayedPassphrase = revealed.passphrase,
+                                        hasPassphrase = revealed.hasPassphrase,
+                                    )
+                                }
+                                Callout(stringResource(L10n.string.anyone_with_these_words_can_take_your_funds_write_them), tone = Tone.Warning)
                             }
-                            Callout(stringResource(L10n.string.anyone_with_these_words_can_take_your_funds_write_them), tone = Tone.Warning)
-                        } else {
-                            PasswordForm(state, password, onUnlock)
+                            else -> PasswordForm(state, password, onUnlock)
                         }
                     }
                 }
@@ -170,7 +174,7 @@ private fun PasswordForm(state: RecoveryPhraseUiState, password: TextFieldState,
             imeAction = ImeAction.Go,
             onSubmit = onUnlock,
             enabled = !state.busy,
-            modifier = Modifier.focusRequester(focus),
+            modifier = Modifier.focusRequester(focus).secretTextMenu(),
         )
         Text(
             stringResource(L10n.string.the_recovery_phrase_stays_hidden_until_you_choose_to),
