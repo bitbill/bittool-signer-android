@@ -5,9 +5,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,10 +28,10 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
+import com.bittool.signer.core.designsystem.component.FirstLineIcon
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.SymbolHero
@@ -91,6 +92,8 @@ fun OnboardingPager(
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState { OnboardingPages.size }
+    // One per page, hoisted so the bar knows when the shown page continues under it (large text, short windows).
+    val scrollStates = List(OnboardingPages.size) { rememberScrollState() }
     val scope = rememberCoroutineScope()
     val currentOnCancel by rememberUpdatedState(onCancel)
     val currentOnComplete by rememberUpdatedState(onComplete)
@@ -113,9 +116,12 @@ fun OnboardingPager(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             key = { it },
         ) { index ->
-            OnboardingPageView(OnboardingPages[index])
+            OnboardingPageView(OnboardingPages[index], scrollStates[index])
         }
-        BottomActionBar(maxWidth = SignerMetrics.narrowWidth) {
+        BottomActionBar(
+            maxWidth = SignerMetrics.narrowWidth,
+            canScrollUnder = scrollStates[pagerState.currentPage].canScrollForward,
+        ) {
             PageIndicator(
                 pagerState = pagerState,
                 modifier = Modifier
@@ -160,7 +166,7 @@ private fun OnboardingTopBar(showsBack: Boolean, onCancel: () -> Unit, onBack: (
  * the text is larger than the window (font scale 2).
  */
 @Composable
-private fun OnboardingPageView(page: OnboardingPage) {
+private fun OnboardingPageView(page: OnboardingPage, scrollState: ScrollState) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -168,7 +174,7 @@ private fun OnboardingPageView(page: OnboardingPage) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp)
@@ -200,17 +206,25 @@ private fun OnboardingPageView(page: OnboardingPage) {
             SignerCard {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     page.points.forEach { point ->
-                        Row(verticalAlignment = Alignment.Top) {
-                            Box(Modifier.width(24.dp).heightIn(min = 20.dp), contentAlignment = Alignment.Center) {
-                                Icon(point.icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
+                        // The symbol is the point's identity (iOS `Point.id`), not its translated text.
+                        key(point.id) {
+                            Row(verticalAlignment = Alignment.Top) {
+                                // Centred on the first line, like the iOS `Label` icon, also with large text.
+                                FirstLineIcon(
+                                    icon = point.icon,
+                                    tint = colors.accent,
+                                    style = typography.subheadline,
+                                    size = 20.dp,
+                                    modifier = Modifier.width(24.dp),
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    text = stringResource(point.text),
+                                    style = typography.subheadline,
+                                    color = colors.label,
+                                    modifier = Modifier.weight(1f),
+                                )
                             }
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                text = stringResource(point.text),
-                                style = typography.subheadline,
-                                color = colors.label,
-                                modifier = Modifier.weight(1f),
-                            )
                         }
                     }
                 }

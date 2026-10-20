@@ -1,11 +1,16 @@
 package com.bittool.signer.root
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,28 +54,37 @@ fun PrivacyCover(visible: Boolean, captured: Boolean, modifier: Modifier = Modif
  */
 @Composable
 fun LoadFailureScreen(retrying: Boolean, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
+    BoxWithConstraints(
         modifier
             .fillMaxSize()
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .testTag(RootTags.LOAD_FAILURE),
-        contentAlignment = Alignment.Center,
     ) {
-        EmptyState(
-            icon = SignerIcons.StorageAlert,
-            title = stringResource(R.string.wallets_unavailable),
-            description = stringResource(R.string.your_encrypted_wallet_files_are_unchanged_unlock_this),
-            action = {
-                PrimaryButton(
-                    text = stringResource(R.string.try_again),
-                    icon = SignerIcons.Refresh,
-                    busy = retrying,
-                    enabled = !retrying,
-                    onClick = onRetry,
-                    modifier = Modifier.widthIn(max = 280.dp).testTag(RootTags.RETRY),
-                )
-            },
-        )
+        // Centred when it fits; scrolls on a short window or with large text instead of cutting "Try Again" off.
+        val viewport = maxHeight
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = viewport),
+            contentAlignment = Alignment.Center,
+        ) {
+            EmptyState(
+                icon = SignerIcons.StorageAlert,
+                title = stringResource(R.string.wallets_unavailable),
+                description = stringResource(R.string.your_encrypted_wallet_files_are_unchanged_unlock_this),
+                action = {
+                    PrimaryButton(
+                        text = stringResource(R.string.try_again),
+                        icon = SignerIcons.Refresh,
+                        busy = retrying,
+                        enabled = !retrying,
+                        onClick = onRetry,
+                        modifier = Modifier.widthIn(max = 280.dp).testTag(RootTags.RETRY),
+                    )
+                },
+            )
+        }
     }
 }
 

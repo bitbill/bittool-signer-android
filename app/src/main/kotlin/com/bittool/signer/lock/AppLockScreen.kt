@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -48,10 +47,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
@@ -71,6 +72,7 @@ import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.haptics.HapticKind
+import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
@@ -97,14 +99,19 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
     val password = remember { TextFieldState() }
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val haptics = rememberSignerHaptics()
     LaunchedEffect(viewModel) {
         viewModel.fieldEvents.collect { event ->
             when (event) {
                 AppLockEvent.ClearPassword -> password.clearText()
-                // iOS `passwordFocused = true`: focus and keyboard (the lock window keeps the keyboard hidden otherwise).
-                AppLockEvent.FocusPassword -> runCatching {
-                    focus.requestFocus()
-                    keyboard?.show()
+                // A rejected password (ARCHITECTURE §4.5: warning haptic), then iOS `passwordFocused = true`: focus and
+                // keyboard (the lock window keeps the keyboard hidden otherwise).
+                AppLockEvent.FocusPassword -> {
+                    haptics.warning()
+                    runCatching {
+                        focus.requestFocus()
+                        keyboard?.show()
+                    }
                 }
             }
         }
@@ -154,9 +161,10 @@ fun AppLockContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                // The insets (bars, cutout and the IME) shrink the scrolling viewport itself, so the focused password
+                // field is kept above the keyboard; padding inside the scroll would leave it behind the IME.
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 28.dp)
                 .padding(bottom = 24.dp)
                 .readableWidth(SignerMetrics.lockWidth),
@@ -200,7 +208,13 @@ fun AppLockContent(
                 }
             }
             state.error?.let { error ->
-                Callout(text = error.asString(), tone = Tone.Warning, verbatim = true, modifier = Modifier.testTag(AppLockTags.ERROR))
+                // Announced when it appears or changes: the keyboard focus goes back to the field, TalkBack's does not.
+                Callout(
+                    text = error.asString(),
+                    tone = Tone.Warning,
+                    verbatim = true,
+                    modifier = Modifier.testTag(AppLockTags.ERROR).semantics { liveRegion = LiveRegionMode.Polite },
+                )
             }
             Text(
                 text = stringResource(R.string.unlocking_the_app_never_authorizes_a_signature),
