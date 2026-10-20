@@ -1,0 +1,10 @@
+{
+  "language": "ja",
+  "overrides": {
+    "Return": {
+      "ios": "改行",
+      "value": "返送",
+      "reason": "“改行” (line break) is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

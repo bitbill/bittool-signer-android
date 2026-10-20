@@ -1,0 +1,10 @@
+{
+  "language": "fr",
+  "overrides": {
+    "Return": {
+      "ios": "Retour",
+      "value": "Renvoyer",
+      "reason": "“Retour” reads as “Back” (it is this catalogue’s translation of “Back”) and is the keyboard key’s name."
+    }
+  }
+}

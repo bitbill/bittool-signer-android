@@ -1,0 +1,6 @@
+{
+  "Return": {
+    "where": "Scan › “How signing works”, title of step 4 (iOS `BitToolSigner/Features/Sign/ScanTab.swift:133`, `StepRow(number: 4, title: \"Return\", …)`), after “Scan”, “Review” and “Authorize”; its detail line is “Scan the signature back. Your other wallet broadcasts it.”",
+    "meaning": "The fourth step of signing: send (return) the signature back to the other wallet, which broadcasts it. A verb or noun of returning something, like the other three step titles; not the keyboard key and not “Back” navigation."
+  }
+}

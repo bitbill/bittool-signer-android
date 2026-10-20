@@ -1,0 +1,10 @@
+{
+  "language": "ko",
+  "overrides": {
+    "Return": {
+      "ios": "줄바꿈",
+      "value": "반환",
+      "reason": "“줄바꿈” (line break) is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

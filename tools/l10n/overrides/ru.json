@@ -1,0 +1,10 @@
+{
+  "language": "ru",
+  "overrides": {
+    "Return": {
+      "ios": "Ввод",
+      "value": "Вернуть",
+      "reason": "“Ввод” (input) is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "language": "id",
+  "overrides": {
+    "Return": {
+      "ios": "Return",
+      "value": "Kembalikan",
+      "reason": "Left in English, the keyboard key’s name; the other step titles are translated."
+    }
+  }
+}
