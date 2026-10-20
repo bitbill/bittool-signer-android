@@ -118,7 +118,14 @@ class DefaultWalletVault @Inject constructor(
             // and any failure after the key exists deletes it: never a key without a file or a file without a key.
             deviceKeys.create(id)
             try {
-                val outer = deviceKeys.seal(id, inner, VaultFormat.deviceAad(headerBytes))
+                val outer = try {
+                    deviceKeys.seal(id, inner, VaultFormat.deviceAad(headerBytes))
+                } catch (e: VaultError.DeviceKeyUnavailable) {
+                    // The key was generated a moment ago, so this is not a lost device key ("Restore your recovery
+                    // phrase…"): iOS reports a failed device-layer seal as `encryptionFailure`
+                    // (`Core/VaultCrypto.swift:163-173`); key generation failures stay `deviceKeyUnavailable` (`:28-34`).
+                    throw VaultError.EncryptionFailure(e)
+                }
                 writeVault(id, VaultFormat.encodeContainer(headerBytes, outer))
             } catch (e: Throwable) {
                 try {

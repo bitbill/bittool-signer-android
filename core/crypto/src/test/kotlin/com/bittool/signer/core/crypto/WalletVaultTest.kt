@@ -331,7 +331,11 @@ class WalletVaultTest {
         val store = vault(dataDir, keys)
         val id = WalletId.random()
         keys.failNextSeal = true
-        assertFailsWith<VaultError.DeviceKeyUnavailable> { store.create("Fails", secret(ABANDON_PHRASE), secret(""), secret(password), id) }
+        // iOS: a failed device-layer seal is "The encrypted wallet could not be created.", not a lost device key.
+        val failed = assertFailsWith<VaultError.EncryptionFailure> {
+            store.create("Fails", secret(ABANDON_PHRASE), secret(""), secret(password), id)
+        }
+        assertEquals(UiText.Ios("The encrypted wallet could not be created."), failed.text)
         assertFalse(keys.containsKey(id))
         assertFalse(files.vault(id).exists())
         assertTrue(store.list().isEmpty())
