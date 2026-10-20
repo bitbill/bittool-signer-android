@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -26,16 +27,24 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.StatusToastState
+import com.bittool.signer.core.designsystem.component.Tone
+import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.ui.text.asString
 
 /**
  * The frame of the wallet security pages (iOS sheets with their own bar and a leading "Cancel"; modal routes on
@@ -71,8 +80,11 @@ internal fun SecurityPage(
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             Column(
+                // The bar insets already in [padding] are consumed first, so the keyboard adds only what it covers
+                // beyond them (the navigation bar is not counted twice while the keyboard is up).
                 modifier = Modifier
                     .fillMaxSize()
+                    .consumeWindowInsets(padding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(padding)
@@ -85,6 +97,25 @@ internal fun SecurityPage(
             StatusToastHost(toast)
         }
     }
+}
+
+/**
+ * The page's failure (iOS `Callout(verbatim: error, tone: .danger)` of the security sheets: "The password is
+ * incorrect.", the vault back-off, "Enter this wallet’s password."): engine and vault text verbatim, announced by
+ * TalkBack as it appears (the person's focus is still on the button they tapped) and felt with the reject haptic
+ * (ARCHITECTURE §4.5, wrong password). A repeated failure is a new error: the operation clears the old one first.
+ */
+@Composable
+internal fun SecurityError(error: UiText?, modifier: Modifier = Modifier) {
+    if (error == null) return
+    val haptics = rememberSignerHaptics()
+    LaunchedEffect(error) { haptics.reject() }
+    Callout(
+        text = error.asString(),
+        tone = Tone.Danger,
+        verbatim = true,
+        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }
 
 /** A footnote under a form group (the iOS section footer). */

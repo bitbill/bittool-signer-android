@@ -1,9 +1,19 @@
 package com.bittool.signer.feature.wallets
 
+import android.view.HapticFeedbackConstants
+import android.view.View
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
@@ -11,27 +21,36 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.ConnectOptions
 import com.bittool.signer.core.model.PairingLevel
 import com.bittool.signer.core.model.SecretText
+import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import com.bittool.signer.feature.wallets.connect.ConnectActions
 import com.bittool.signer.feature.wallets.connect.ConnectContent
 import com.bittool.signer.feature.wallets.connect.ConnectUiState
+import com.bittool.signer.feature.wallets.detail.RenameWalletDialog
 import com.bittool.signer.feature.wallets.detail.WalletDetailActions
 import com.bittool.signer.feature.wallets.detail.WalletDetailContent
+import com.bittool.signer.feature.wallets.detail.WalletDetailScreen
 import com.bittool.signer.feature.wallets.detail.WalletDetailUiState
+import com.bittool.signer.feature.wallets.detail.WalletDetailViewModel
 import com.bittool.signer.feature.wallets.list.WalletsActions
 import com.bittool.signer.feature.wallets.list.WalletsContent
 import com.bittool.signer.feature.wallets.list.WalletsUiState
@@ -39,11 +58,18 @@ import com.bittool.signer.feature.wallets.security.DeletePasswordDialog
 import com.bittool.signer.feature.wallets.security.DeleteWalletActions
 import com.bittool.signer.feature.wallets.security.DeleteWalletContent
 import com.bittool.signer.feature.wallets.security.DeleteWalletUiState
+import com.bittool.signer.feature.wallets.security.PasswordFields
+import com.bittool.signer.feature.wallets.security.RepairWalletContent
+import com.bittool.signer.feature.wallets.security.SecurityPageUiState
+import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 /** Screen contracts the e2e suite relies on (gaps.md G1.13–G1.16 test tags) and the iOS enabling rules. */
@@ -237,5 +263,107 @@ class WalletsUiTest {
         compose.onNodeWithText("Watch and sign by QR").performScrollTo().assertExists()
         compose.onNodeWithTag("connect.payloadToggle").performScrollTo().performClick()
         compose.onNodeWithText("Fingerprints are stored as 32-bit numbers: 1942346250 is fingerprint 73C5DA0A.").performScrollTo().assertExists()
+    }
+
+    /** iOS `.statusToast("Password Changed", …)` after `ChangePasswordSheet(onChanged:)` (wallets-pairing.md §5). */
+    @Test
+    fun aChangedPasswordShowsPasswordChangedOnce() {
+        var due by mutableStateOf(true)
+        var shown = 0
+        val viewModel = WalletDetailViewModel(WalletFixtures.store(), WalletFixtures.args())
+        compose.mainClock.autoAdvance = false
+        content {
+            WalletDetailScreen(
+                actions = WalletDetailActions(),
+                onClose = {},
+                passwordChanged = due,
+                onPasswordChangedShown = {
+                    due = false
+                    shown++
+                },
+                viewModel = viewModel,
+            )
+        }
+        compose.mainClock.advanceTimeBy(200)
+        compose.onNodeWithText("Password Changed").assertExists()
+        compose.mainClock.advanceTimeBy(5_000)
+        assertEquals(1, shown)
+        compose.onNodeWithText("Password Changed").assertDoesNotExist()
+    }
+
+    /**
+     * Tapping the Wallets tab while it is shown (iOS: the tab bar scrolls the stack's root to the top) brings the first
+     * card back and expands the large "Wallets" title, which a programmatic scroll alone would leave collapsed.
+     */
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Test
+    fun reselectingTheTabScrollsToTheFirstCardAndExpandsTheTitle() {
+        val reselections = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+        lateinit var bar: TopAppBarState
+        lateinit var list: LazyListState
+        val many = (1..12).map { identities.first().copy(id = WalletId(UUID(0L, it.toLong())), name = "Wallet " + it) }
+        content {
+            bar = rememberTopAppBarState()
+            list = rememberLazyListState()
+            WalletsContent(WalletsUiState(many, loaded = true), WalletsActions(), listState = list, topBarState = bar, scrollToTop = reselections)
+        }
+        repeat(4) { compose.onNodeWithTag("wallets.list").performTouchInput { swipeUp() } }
+        compose.runOnIdle {
+            assertTrue(list.firstVisibleItemIndex > 0, "scrolled down")
+            assertTrue(bar.collapsedFraction > 0.99f, "the large title collapsed")
+        }
+        reselections.tryEmit(Unit)
+        compose.waitForIdle()
+        compose.runOnIdle {
+            assertEquals(0, list.firstVisibleItemIndex)
+            assertEquals(0, list.firstVisibleItemScrollOffset)
+            assertEquals(0f, bar.heightOffset, "the large title is expanded again")
+        }
+    }
+
+    /**
+     * "Rename Wallet" (`WalletDetailView.swift:117-125`): the field is pre-filled and TalkBack reads the name being
+     * edited, with "Wallet name" as its label — never a content description in place of the text. Save follows the
+     * trimmed text.
+     */
+    @Test
+    fun theRenameFieldReadsTheNameItEditsAndSaveNeedsAName() {
+        val saved = mutableListOf<String>()
+        content { RenameWalletDialog(currentName = "Public fixture 1", onSave = { saved += it }, onCancel = {}) }
+        compose.onNodeWithTag("rename.name")
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentDescription))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.EditableText, androidx.compose.ui.text.AnnotatedString("Public fixture 1")))
+            .assert(hasText("Wallet name"))
+        compose.onNodeWithTag("rename.name").performTextClearance()
+        compose.onNodeWithTag("rename.name").performTextInput("   ")
+        compose.onNodeWithTag("rename.save").assertIsNotEnabled()
+        compose.onNodeWithTag("rename.name").performTextInput("Travel Signer")
+        compose.onNodeWithTag("rename.save").assertIsEnabled().performClick()
+        assertEquals(listOf("   Travel Signer"), saved, "the store trims and validates the name")
+    }
+
+    /**
+     * A refused password on a security page (iOS danger `Callout`, verbatim vault text) is announced to TalkBack, whose
+     * focus is still on the submit button, and played with the reject haptic (ARCHITECTURE §4.5: wrong password).
+     */
+    @Test
+    fun aRefusedPasswordIsAnnouncedAndFelt() {
+        lateinit var view: View
+        var state by mutableStateOf(SecurityPageUiState(identity = identities.first()))
+        content {
+            view = LocalView.current
+            RepairWalletContent(
+                uiState = state,
+                fields = remember { PasswordFields(1) },
+                toast = rememberStatusToastState(),
+                onSubmit = {},
+                onCancel = {},
+            )
+        }
+        compose.runOnIdle { assertTrue(Shadows.shadowOf(view).lastHapticFeedbackPerformed() != HapticFeedbackConstants.REJECT, "nothing before a failure") }
+        state = state.copy(error = UiText.Ios("The password is incorrect."))
+        compose.onNodeWithText("The password is incorrect.")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+        compose.runOnIdle { assertEquals(HapticFeedbackConstants.REJECT, Shadows.shadowOf(view).lastHapticFeedbackPerformed()) }
     }
 }

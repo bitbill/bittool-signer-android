@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.wallets.list
 
+import androidx.compose.animation.core.animate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +30,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +64,7 @@ import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
+import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospaced
@@ -73,6 +78,10 @@ import com.bittool.signer.core.ui.wallet.WalletAvatar
 import com.bittool.signer.core.ui.wallet.isolate
 import com.bittool.signer.feature.wallets.common.IconAction
 import com.bittool.signer.feature.wallets.common.WalletIdentity
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.launch
 
 /** Callbacks of the Wallets tab: pushes onto the Wallets stack (the NavHost glue owns the [androidx.navigation.NavController]). */
 data class WalletsActions(
@@ -96,8 +105,6 @@ fun WalletsScreen(
     viewModel: WalletsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val listState = rememberLazyListState()
-    LaunchedEffect(viewModel) { viewModel.reselections.collect { listState.animateScrollToItem(0) } }
     WalletsContent(
         uiState = uiState,
         actions = WalletsActions(
@@ -107,20 +114,35 @@ fun WalletsScreen(
             onScan = viewModel::scan,
             onAddWallet = viewModel::addWallet,
         ),
-        listState = listState,
+        scrollToTop = viewModel.reselections,
     )
 }
 
+/**
+ * The tab content. Every emission of [scrollToTop] (the Wallets tab tapped while shown) scrolls the list back to the
+ * first card and expands the large "Wallets" title again, like an iOS tab bar tap. A programmatic scroll does not go
+ * through nested scrolling, so the collapsed bar is expanded explicitly.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WalletsContent(
     uiState: WalletsUiState,
     actions: WalletsActions,
     modifier: Modifier = Modifier,
-    listState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+    listState: LazyListState = rememberLazyListState(),
+    topBarState: TopAppBarState = rememberTopAppBarState(),
+    scrollToTop: Flow<*> = emptyFlow<Unit>(),
 ) {
     val colors = SignerTheme.colors
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topBarState)
+    LaunchedEffect(scrollToTop, listState, topBarState) {
+        scrollToTop.collect {
+            coroutineScope {
+                launch { listState.animateScrollToItem(0) }
+                launch { topBarState.expand() }
+            }
+        }
+    }
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = colors.page,
@@ -149,7 +171,7 @@ fun WalletsContent(
         val direction = LocalLayoutDirection.current
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().testTag("wallets.list"),
             contentPadding = PaddingValues(
                 start = padding.calculateStartPadding(direction) + SignerMetrics.pagePadding,
                 end = padding.calculateEndPadding(direction) + SignerMetrics.pagePadding,
@@ -170,6 +192,14 @@ fun WalletsContent(
             item(key = "footer", contentType = "footer") { KeysFooter() }
         }
     }
+}
+
+/** Expands a collapsed large top bar (exit-until-collapsed) without bounce. */
+@OptIn(ExperimentalMaterial3Api::class)
+internal suspend fun TopAppBarState.expand() {
+    val from = heightOffset
+    if (from != 0f) animate(from, 0f, animationSpec = SignerMotion.smooth(0.35)) { value, _ -> heightOffset = value }
+    contentOffset = 0f
 }
 
 /** Toolbar "Add Wallet" menu (inventory row 27, `WalletsTab.swift:36-43`), tag `wallets.add`. */

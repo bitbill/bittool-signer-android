@@ -115,20 +115,6 @@ class WalletsViewModelsTest {
     }
 
     @Test
-    fun aPasswordChangeLeavesAToastFlagThatIsShownOnce() = runTest(main.dispatcher) {
-        val handle = WalletFixtures.args()
-        val vm = WalletDetailViewModel(WalletFixtures.store(), handle)
-        val state = observe(vm.uiState)
-        assertFalse(state.value.passwordChanged)
-        handle[WalletDetailViewModel.PASSWORD_CHANGED_KEY] = true
-        advanceUntilIdle()
-        assertTrue(state.value.passwordChanged)
-        vm.passwordChangedShown()
-        advanceUntilIdle()
-        assertFalse(state.value.passwordChanged)
-    }
-
-    @Test
     fun theAddedDateIsTheAbbreviatedDateOnly() {
         assertEquals("Oct 1, 2026", formatAddedDate(WalletFixtures.CREATED_AT, Locale.US, ZoneOffset.UTC))
     }

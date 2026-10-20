@@ -10,8 +10,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
@@ -34,11 +36,11 @@ import com.bittool.signer.feature.wallets.addresses.AddressesScreen
 import com.bittool.signer.feature.wallets.connect.ConnectScreen
 import com.bittool.signer.feature.wallets.detail.WalletDetailActions
 import com.bittool.signer.feature.wallets.detail.WalletDetailScreen
-import com.bittool.signer.feature.wallets.detail.WalletDetailViewModel
 import com.bittool.signer.feature.wallets.list.WalletsScreen
 import com.bittool.signer.feature.wallets.security.ChangePasswordScreen
 import com.bittool.signer.feature.wallets.security.DeleteWalletScreen
 import com.bittool.signer.feature.wallets.security.RepairWalletScreen
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Registers every `:feature:wallets` destination inside `:app`'s `navigation<WalletsGraph>(startDestination =
@@ -66,6 +68,7 @@ fun NavGraphBuilder.walletsDestinations(navController: NavController) {
         popEnterTransition = { stayUnderModal() },
     ) { entry ->
         val walletId = entry.toRoute<WalletDetailRoute>().walletId
+        val passwordChanged by PasswordChangedResult.pending(entry).collectAsStateWithLifecycle()
         WalletDetailScreen(
             actions = WalletDetailActions(
                 onBack = dropUnlessResumed { navController.popBackStack() },
@@ -78,6 +81,8 @@ fun NavGraphBuilder.walletsDestinations(navController: NavController) {
                 onRepair = dropUnlessResumed { navController.navigate(RepairWalletRoute(walletId)) },
             ),
             onClose = { navController.close(entry) },
+            passwordChanged = passwordChanged,
+            onPasswordChangedShown = { PasswordChangedResult.consume(entry) },
         )
     }
 
@@ -105,7 +110,7 @@ fun NavGraphBuilder.walletsDestinations(navController: NavController) {
         ChangePasswordScreen(
             onChanged = {
                 // iOS `ChangePasswordSheet(onChanged:)`: the wallet page shows "Password Changed" once this page is gone.
-                navController.previousBackStackEntry?.savedStateHandle?.set(WalletDetailViewModel.PASSWORD_CHANGED_KEY, true)
+                PasswordChangedResult.report(navController, from = entry)
                 navController.close(entry)
             },
             onCancel = { navController.close(entry) },
@@ -137,6 +142,35 @@ fun NavGraphBuilder.walletsDestinations(navController: NavController) {
             onCancel = { navController.close(entry) },
             onClose = { navController.close(entry) },
         )
+    }
+}
+
+/**
+ * The Change Password page's result for the wallet page under it (iOS `ChangePasswordSheet(onChanged:)` →
+ * `passwordChanged = true` → the "Password Changed" toast): a non-secret Boolean in the wallet page's **back-stack
+ * entry** `SavedStateHandle`, read by the destination glue and handed to the screen.
+ *
+ * Not the wallet page ViewModel's `SavedStateHandle`: Navigation gives every ViewModel of an entry its own handle (keyed
+ * by the ViewModel), distinct from `NavBackStackEntry.savedStateHandle`, so a flag set on the entry never reaches it.
+ */
+internal object PasswordChangedResult {
+    const val KEY = "wallets.passwordChanged"
+
+    /** Marks the wallet page under [from] (the Change Password entry, still on top of the stack). */
+    fun report(navController: NavController, from: NavBackStackEntry) {
+        if (navController.currentBackStackEntry?.id != from.id) return
+        navController.previousBackStackEntry
+            ?.takeIf { it.destination.hasRoute(WalletDetailRoute::class) }
+            ?.savedStateHandle
+            ?.set(KEY, true)
+    }
+
+    /** Whether [entry] (a wallet page) has a "Password Changed" toast due. */
+    fun pending(entry: NavBackStackEntry): StateFlow<Boolean> = entry.savedStateHandle.getStateFlow(KEY, false)
+
+    /** The toast was shown. */
+    fun consume(entry: NavBackStackEntry) {
+        entry.savedStateHandle[KEY] = false
     }
 }
 

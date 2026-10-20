@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -22,8 +23,9 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -36,7 +38,6 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
-import androidx.compose.runtime.withFrameNanos
 
 /**
  * "Rename Wallet" (inventory row 29, `WalletDetailView.swift:117-125`): a text field pre-filled with the current name
@@ -85,10 +86,11 @@ private fun WalletNameField(state: TextFieldState, onDone: () -> Unit) {
     NoPersonalizedLearning {
         BasicTextField(
             state = state,
+            // No content description: on an editable node TalkBack would read it instead of the name being edited.
+            // The placeholder is the field's label node below, read after the text (as `PasswordField` does).
             modifier = Modifier
                 .fillMaxWidth()
                 .focusRequester(focus)
-                .semantics { contentDescription = placeholder }
                 .testTag("rename.name"),
             textStyle = typography.body.copy(color = colors.label),
             keyboardOptions = KeyboardOptions(
@@ -105,7 +107,8 @@ private fun WalletNameField(state: TextFieldState, onDone: () -> Unit) {
                         .fillMaxWidth()
                         .heightIn(min = 52.dp)
                         .background(colors.raised, SignerShapes.control)
-                        .padding(horizontal = 14.dp, vertical = 14.dp),
+                        .padding(horizontal = 14.dp, vertical = 14.dp)
+                        .semantics { text = AnnotatedString(placeholder) },
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     if (state.text.isEmpty()) {

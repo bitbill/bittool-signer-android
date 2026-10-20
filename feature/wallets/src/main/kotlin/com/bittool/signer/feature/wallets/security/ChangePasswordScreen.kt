@@ -14,10 +14,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.StatusToastState
-import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.l10n.R
@@ -25,7 +23,6 @@ import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.password.PasswordRequirements
-import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.wallets.common.WalletIdentityCard
 import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
 
@@ -96,7 +93,7 @@ internal fun ChangePasswordContent(
             PasswordField(PasswordKind.ConfirmNewPassword, confirmation, isNew = true, imeAction = ImeAction.Done, enabled = !uiState.busy)
             PasswordRequirements(new.text, confirmation.text, Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp))
         }
-        uiState.error?.let { Callout(text = it.asString(), tone = Tone.Danger, verbatim = true) }
+        SecurityError(uiState.error)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             PrimaryButton(
                 text = stringResource(R.string.change_password),

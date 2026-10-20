@@ -33,14 +33,12 @@ data class WalletDetailUiState(
     val renaming: Boolean = false,
     /** "Unable to Rename" with this message. */
     val renameError: UiText? = null,
-    /** A "Password Changed" toast is due (set by the Change Password page when it closes after a success). */
-    val passwordChanged: Boolean = false,
 )
 
 @HiltViewModel
 class WalletDetailViewModel @Inject constructor(
     private val store: SignerStore,
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val walletId: WalletId? = WalletArgs.walletId(savedStateHandle)
@@ -49,16 +47,8 @@ class WalletDetailViewModel @Inject constructor(
 
     private val local = MutableStateFlow(Local())
 
-    val uiState: StateFlow<WalletDetailUiState> = combine(
-        store.state,
-        local,
-        savedStateHandle.getStateFlow(PASSWORD_CHANGED_KEY, false),
-    ) { state, local, changed -> uiStateOf(state, local, changed) }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5_000),
-            uiStateOf(store.state.value, local.value, savedStateHandle[PASSWORD_CHANGED_KEY] ?: false),
-        )
+    val uiState: StateFlow<WalletDetailUiState> = combine(store.state, local, ::uiStateOf)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), uiStateOf(store.state.value, local.value))
 
     /** The upper-case master fingerprint to copy (the header button), or null without public data (button disabled). */
     fun fingerprintToCopy(): String? = walletId?.let { store.state.value.publicMetadata(it)?.displayFingerprint }
@@ -85,12 +75,7 @@ class WalletDetailViewModel @Inject constructor(
 
     fun dismissRenameError() = local.update { it.copy(renameError = null) }
 
-    /** The "Password Changed" toast was shown. */
-    fun passwordChangedShown() {
-        savedStateHandle[PASSWORD_CHANGED_KEY] = false
-    }
-
-    private fun uiStateOf(state: SignerState, local: Local, changed: Boolean): WalletDetailUiState {
+    private fun uiStateOf(state: SignerState, local: Local): WalletDetailUiState {
         val identity = walletId?.let { WalletIdentity.of(state, it) }
         return WalletDetailUiState(
             walletId = walletId,
@@ -98,15 +83,6 @@ class WalletDetailViewModel @Inject constructor(
             gone = WalletIdentity.isGone(state, walletId),
             renaming = local.renaming && identity != null,
             renameError = local.renameError,
-            passwordChanged = changed,
         )
-    }
-
-    companion object {
-        /**
-         * The wallet page's entry flag the Change Password page sets on its way out after a success (iOS
-         * `ChangePasswordSheet(onChanged:)` → `passwordChanged = true`). A Boolean: nothing secret.
-         */
-        const val PASSWORD_CHANGED_KEY = "wallets.passwordChanged"
     }
 }

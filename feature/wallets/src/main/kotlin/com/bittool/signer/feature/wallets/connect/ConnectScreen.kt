@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -130,8 +131,10 @@ fun ConnectContent(uiState: ConnectUiState, toast: StatusToastState, actions: Co
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             Column(
+                // As on the security pages: the keyboard (TRON index) adds only what it covers beyond the bar insets.
                 modifier = Modifier
                     .fillMaxSize()
+                    .consumeWindowInsets(padding)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(padding)

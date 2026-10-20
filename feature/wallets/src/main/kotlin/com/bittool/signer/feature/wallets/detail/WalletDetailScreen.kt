@@ -87,23 +87,28 @@ data class WalletDetailActions(
  * The wallet page (inventory rows 28–31, iOS `WalletDetailView`, wallets-pairing.md §5): identity header, duplicate and
  * repair notices, the four chains and Wallet Level under "Pair", receive addresses, security, rename and delete. Closes
  * itself when the wallet leaves the list.
+ *
+ * [passwordChanged] is the Change Password page's result (read by the destination glue from this page's back-stack
+ * entry): the "Password Changed" toast shows once, then [onPasswordChangedShown] clears it.
  */
 @Composable
 fun WalletDetailScreen(
     actions: WalletDetailActions,
     onClose: () -> Unit,
+    passwordChanged: Boolean = false,
+    onPasswordChangedShown: () -> Unit = {},
     viewModel: WalletDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val toast = rememberStatusToastState()
     val context = LocalContext.current
     val copied = stringResource(R.string.copied)
-    val passwordChanged = stringResource(R.string.password_changed)
+    val passwordChangedText = stringResource(R.string.password_changed)
     LaunchedEffect(uiState.gone) { if (uiState.gone) onClose() }
-    LaunchedEffect(uiState.passwordChanged) {
-        if (uiState.passwordChanged) {
-            toast.show(passwordChanged)
-            viewModel.passwordChangedShown()
+    LaunchedEffect(passwordChanged) {
+        if (passwordChanged) {
+            toast.show(passwordChangedText)
+            onPasswordChangedShown()
         }
     }
     WalletDetailContent(

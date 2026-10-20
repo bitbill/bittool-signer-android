@@ -31,7 +31,6 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
-import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.wallets.common.DestructiveButton
 import com.bittool.signer.feature.wallets.common.WalletIdentityCard
 import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
@@ -110,7 +109,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
                 )
             }
         }
-        uiState.error?.let { Callout(text = it.asString(), tone = Tone.Danger, verbatim = true) }
+        SecurityError(uiState.error)
         DestructiveButton(
             text = stringResource(R.string.delete_wallet),
             icon = SignerIcons.Delete,
