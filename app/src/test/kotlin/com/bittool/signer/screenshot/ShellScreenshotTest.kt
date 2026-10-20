@@ -109,6 +109,19 @@ class ShellScreenshotTest(private val look: Look) {
 
     @Test
     fun tabsWithAWaitingRequest() {
+        renderTabs()
+        capture("tabs")
+    }
+
+    /** Wide windows (tablets, landscape) get the navigation rail: the iPad layout. */
+    @Test
+    @Config(qualifiers = "w900dp-h600dp-xhdpi")
+    fun tabsOnAWideWindow() {
+        renderTabs()
+        capture("tabs-wide")
+    }
+
+    private fun renderTabs() {
         render {
             MainScaffold(
                 router = remember { AppRouter() },
@@ -121,7 +134,6 @@ class ShellScreenshotTest(private val look: Look) {
                 },
             )
         }
-        capture("tabs")
     }
 
     @Composable

@@ -34,7 +34,11 @@ import com.bittool.signer.shell.ShellLaunchHooks
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import javax.inject.Inject
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -68,6 +72,11 @@ class MainActivity : AppCompatActivity() {
 
     /** Whether this activity has put up the lock window for the current lock. */
     private var lockShown = false
+
+    /** Whether App Lock is still reading its preference (the lock window then shows the launch view). */
+    private val resolving: StateFlow<Boolean> by lazy {
+        access.state.map { it.resolving }.stateIn(lifecycleScope, SharingStarted.Eagerly, access.state.value.resolving)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         launch = ShellLaunchHooks.configure(this, intent)
@@ -136,6 +145,7 @@ class MainActivity : AppCompatActivity() {
                         appearance = appearance.appearance,
                         phase = lifecycleMonitor.phase,
                         captured = lifecycleMonitor.isCaptured,
+                        resolving = resolving,
                         exposeTestTags = exposeTestTags,
                     )
                 }

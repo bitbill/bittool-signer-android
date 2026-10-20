@@ -47,7 +47,13 @@ class PrivacyCoverTest {
         val captured = MutableStateFlow(false)
         val seenDark = mutableListOf<Boolean>()
         compose.setContent {
-            LockWindowRoot(appearance = appearance, phase = phase, captured = captured, exposeTestTags = true) {
+            LockWindowRoot(
+                appearance = appearance,
+                phase = phase,
+                captured = captured,
+                resolving = MutableStateFlow(false),
+                exposeTestTags = true,
+            ) {
                 seenDark += SignerTheme.isDark
             }
         }

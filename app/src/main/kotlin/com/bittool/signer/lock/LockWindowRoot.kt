@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bittool.signer.core.designsystem.brand.LaunchView
 import com.bittool.signer.core.model.Appearance
 import com.bittool.signer.core.security.ScenePhase
 import com.bittool.signer.core.ui.theme.SignerTheme
@@ -20,6 +21,9 @@ import kotlinx.coroutines.flow.StateFlow
  * (it follows a Theme change live, iOS `PrivacyShieldTests`), and the privacy cover above it while the activity is not
  * resumed or the screen is recorded (iOS draws its shield window above the lock window). It is its own window, so it
  * sets its own test-tag exposure. Not inside the window gate: the lock screen is what the gate waits for.
+ *
+ * While App Lock's preference is still being read ([resolving], a cold start) the window is up (fail closed) but shows
+ * the launch view, identical to the system splash, so a launch with App Lock off never flashes a lock screen.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -27,15 +31,17 @@ fun LockWindowRoot(
     appearance: StateFlow<Appearance>,
     phase: StateFlow<ScenePhase>,
     captured: StateFlow<Boolean>,
+    resolving: StateFlow<Boolean>,
     exposeTestTags: Boolean,
     content: @Composable () -> Unit = { AppLockScreen() },
 ) {
     val theme by appearance.collectAsStateWithLifecycle()
     val scenePhase by phase.collectAsStateWithLifecycle()
     val recorded by captured.collectAsStateWithLifecycle()
+    val stillResolving by resolving.collectAsStateWithLifecycle()
     SignerTheme(appearance = theme) {
         Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = exposeTestTags }) {
-            content()
+            if (stillResolving) LaunchView() else content()
             PrivacyCover(visible = scenePhase != ScenePhase.Active || recorded, captured = recorded)
         }
     }

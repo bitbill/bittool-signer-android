@@ -101,7 +101,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
         viewModel.fieldEvents.collect { event ->
             when (event) {
                 AppLockEvent.ClearPassword -> password.clearText()
-                // iOS `passwordFocused = true`: the field takes the focus with the keyboard (the lock window hides it by default).
+                // iOS `passwordFocused = true`: focus and keyboard (the lock window keeps the keyboard hidden otherwise).
                 AppLockEvent.FocusPassword -> runCatching {
                     focus.requestFocus()
                     keyboard?.show()
@@ -317,17 +317,25 @@ private fun WalletPicker(state: AppLockUiState, onSelect: (WalletId) -> Unit) {
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(label, style = typography.body, color = colors.label)
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = value,
-                style = typography.body,
-                color = colors.accent,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.End,
-                modifier = Modifier.weight(1f),
-            )
+            if (SignerTheme.isAccessibilityTextSize) {
+                // Large text: the label above the choice, so a wallet name is not cut down to a few letters.
+                Column(Modifier.weight(1f).padding(vertical = 10.dp)) {
+                    Text(label, style = typography.subheadline, color = colors.secondaryLabel)
+                    Text(value, style = typography.body, color = colors.accent)
+                }
+            } else {
+                Text(label, style = typography.body, color = colors.label)
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = value,
+                    style = typography.body,
+                    color = colors.accent,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(1f),
+                )
+            }
             Spacer(Modifier.width(4.dp))
             Icon(SignerIcons.UnfoldMore, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
         }
