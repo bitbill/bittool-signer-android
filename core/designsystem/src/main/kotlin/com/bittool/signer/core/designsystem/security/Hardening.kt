@@ -129,21 +129,28 @@ internal val SensitiveMarking = RefCountedViewAttribute(
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
- * Keeps the Android Autofill framework away from every field of the hosting view while composed: the view gets
+ * Keeps the Android Autofill framework away from every field of the hosting composition while composed: the host gets
  * `importantForAutofill = IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS`, so no "Save password?", generated-password or
  * fill offer reaches a secret field (a generated BIP39 passphrase would silently be a different wallet; design-system
  * §9.13 item 6). Compose ≥ 1.8 reports fields through semantics, so secret fields also never set a `contentType`.
- * Reference-counted per view; inside a dialog it applies to the dialog's view.
+ *
+ * The flag goes on the **parent** of the Compose view (the `ComposeView`, or a dialog's layout): `AndroidComposeView`
+ * reports `IMPORTANT_FOR_AUTOFILL_YES` whatever is set on it, while `View.isImportantForAutofill()` honours an
+ * excluding ancestor. Reference-counted per host; inside a dialog or sheet it applies to that window's host.
  */
 @Composable
 fun ExcludeFromAutofill(enabled: Boolean = true) {
     val view = LocalView.current
     DisposableEffect(view, enabled) {
         if (!enabled) return@DisposableEffect onDispose {}
-        AutofillExclusion.acquire(view)
-        onDispose { AutofillExclusion.release(view) }
+        val host = autofillHost(view)
+        AutofillExclusion.acquire(host)
+        onDispose { AutofillExclusion.release(host) }
     }
 }
+
+/** The view whose autofill importance governs a composition: the Compose view's parent when it has one. */
+internal fun autofillHost(composeView: View): View = composeView.parent as? View ?: composeView
 
 internal val AutofillExclusion = RefCountedViewAttribute(
     read = { it.importantForAutofill },

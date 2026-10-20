@@ -187,6 +187,8 @@ fun NavRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp))
+        // At accessibility text sizes the value moves under the title instead of squeezing it.
+        val stackValue = SignerTheme.isAccessibilityTextSize
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
@@ -198,9 +200,10 @@ fun NavRow(
                 },
             )
             if (subtitle != null) Text(subtitle, style = typography.footnote, color = colors.secondaryLabel)
+            if (value != null && stackValue) Text(value, style = typography.body, color = colors.secondaryLabel)
         }
-        if (value != null) {
-            Text(value, style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.End, modifier = Modifier.weight(0.6f, fill = false))
+        if (value != null && !stackValue) {
+            Text(value, style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.End, maxLines = 2)
         }
         if (showChevron) {
             Icon(SignerIcons.ChevronRight, contentDescription = null, tint = colors.tertiaryLabel, modifier = Modifier.size(20.dp))

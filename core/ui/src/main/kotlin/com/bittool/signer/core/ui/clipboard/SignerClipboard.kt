@@ -44,7 +44,8 @@ object SignerClipboard {
     private var pending: Pending? = null
     private var observing = false
 
-    private class Pending(val context: Context, val label: String, val timestamp: Long?, val dueAt: Long)
+    /** The copy waiting to expire. Holds the application's clipboard service, never an activity. */
+    private class Pending(val manager: ClipboardManager, val label: String, val timestamp: Long?, val dueAt: Long)
 
     /** Copies [text] under [label], marked sensitive, and schedules its removal after [expiresAfter]. Main thread. */
     @MainThread
@@ -58,7 +59,7 @@ object SignerClipboard {
         manager.setPrimaryClip(clip)
         val written = runCatching { manager.primaryClipDescription?.timestamp }.getOrNull()
         val due = SystemClock.uptimeMillis() + expiresAfter.inWholeMilliseconds
-        pending = Pending(app, label, written, due)
+        pending = Pending(manager, label, written, due)
         handler.removeCallbacks(expire)
         handler.postAtTime(expire, due)
         observeForeground()
@@ -74,7 +75,7 @@ object SignerClipboard {
     fun clearIfExpired() {
         val current = pending ?: return
         if (SystemClock.uptimeMillis() < current.dueAt) return
-        val manager = current.context.getSystemService(ClipboardManager::class.java) ?: return
+        val manager = current.manager
         val description = runCatching { manager.primaryClipDescription }.getOrNull()
         if (description == null) {
             // Unreadable while unfocused (Android 10+) or empty: retry on the next foreground unless it is empty now.

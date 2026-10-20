@@ -5,7 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.l10n.resolve
@@ -28,15 +29,12 @@ import java.util.Locale
  */
 @Composable
 @ReadOnlyComposable
-fun UiText.asString(): String {
-    LocalConfiguration.current
-    return resolve(LocalContext.current.resources)
-}
+fun UiText.asString(): String = resolve(LocalResources.current)
 
 /** The [ReviewText] of the current language: draw-time translation of engine English (scan-sign.md §17). */
 @Composable
 fun rememberReviewText(): ReviewText {
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val configuration = LocalConfiguration.current
     return remember(resources, configuration) { resources.reviewText() }
 }
@@ -44,7 +42,7 @@ fun rememberReviewText(): ReviewText {
 /** The locale of the current composition's resources (number grouping, iOS `formatted()`). */
 @Composable
 @ReadOnlyComposable
-fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0) ?: Locale.getDefault()
+fun currentLocale(): Locale = LocalLocale.current.platformLocale
 
 /** A whole number grouped in [locale] ("30,000"); Arabic uses Latin digits through the `-u-nu-latn` app locale. */
 fun formatInteger(value: Long, locale: Locale): String = NumberFormat.getIntegerInstance(locale).format(value)
@@ -96,10 +94,7 @@ fun QrPayloadView.localizedTitle(): String = when (format) {
  */
 @Composable
 @ReadOnlyComposable
-fun QrPayloadView.localizedSummary(): String {
-    val resources = LocalContext.current.resources
-    return payloadSummary(this, resources, currentLocale())
-}
+fun QrPayloadView.localizedSummary(): String = payloadSummary(this, LocalResources.current, currentLocale())
 
 internal fun payloadSummary(view: QrPayloadView, resources: Resources, locale: Locale): String {
     val bytes = resources.getString(R.string.ui_payload_bytes, formatInteger(view.byteCount, locale))

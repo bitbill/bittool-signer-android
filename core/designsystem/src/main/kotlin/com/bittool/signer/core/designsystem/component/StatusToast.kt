@@ -113,7 +113,7 @@ fun StatusToastHost(state: StatusToastState, modifier: Modifier = Modifier, bott
             contentKey = { it?.id },
             label = "statusToast",
         ) { shown ->
-            if (shown != null) ToastCapsule(shown.message, shown.icon)
+            if (shown != null) ToastCapsule(shown.message, icon = shown.icon)
         }
     }
 }
@@ -124,7 +124,7 @@ private fun toastTransition(): ContentTransform =
 
 /** The toast capsule itself (also used by the design catalog). */
 @Composable
-fun ToastCapsule(message: String, icon: ImageVector = SignerIcons.CheckCircleFilled, modifier: Modifier = Modifier) {
+fun ToastCapsule(message: String, modifier: Modifier = Modifier, icon: ImageVector = SignerIcons.CheckCircleFilled) {
     val colors = SignerTheme.colors
     val surface = if (colors.isDark) colors.elevatedCard else colors.card
     val decorated = if (colors.isDark) {

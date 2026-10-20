@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -116,7 +117,8 @@ fun ChainPicker(selection: Chain, onSelect: (Chain) -> Unit, modifier: Modifier 
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.clearAndSetSemantics {},
+                            // TalkBack reads the long name from the tile instead (iOS accessibilityLabel).
+                            modifier = Modifier.semantics { hideFromAccessibility() },
                         )
                     }
                 }

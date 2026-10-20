@@ -168,9 +168,9 @@ private fun SignerButton(
 internal fun ShrinkingLabel(
     text: String,
     style: TextStyle,
+    modifier: Modifier = Modifier,
     maxLines: Int = 1,
     minScale: Float = 0.8f,
-    modifier: Modifier = Modifier,
     textAlign: TextAlign = TextAlign.Center,
 ) {
     val size = style.fontSize

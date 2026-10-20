@@ -172,7 +172,7 @@ class SignerColors(
             warning = Color(0xFFFF9F0A),
             warningOnTint = Color(0xFFFF9F0A),
             danger = Color(0xFFFF453A),
-            dangerOnTint = Color(0xFFFF6961),
+            dangerOnTint = Color(0xFFFF7A72), // #FF6961 of the spec is 4.3 : 1 on the 14 % tint over #2C2C2E
             strengthMid = Color(0xFFFFD60A),
             segmentThumb = Color(0xFF636366),
             mint = scannerMint,

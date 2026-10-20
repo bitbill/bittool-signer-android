@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -101,7 +101,7 @@ import com.bittool.signer.core.ui.text.reviewActionLine
 fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifier: Modifier = Modifier) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     val display = review.display
     SignerCard(
         modifier = modifier,
@@ -276,7 +276,7 @@ private fun SummaryIcon(review: TransactionReview) {
 private fun AssetBox(display: ReviewDisplay) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     RaisedBox {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             val contract = display.assetContract
@@ -324,7 +324,7 @@ private fun AssetBox(display: ReviewDisplay) {
 private fun FlowBox(sections: List<ReviewFlowSection>) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
-    val resources = LocalContext.current.resources
+    val resources = LocalResources.current
     RaisedBox {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             sections.forEachIndexed { index, section ->

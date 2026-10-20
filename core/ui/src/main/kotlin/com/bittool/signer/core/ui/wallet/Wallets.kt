@@ -147,7 +147,14 @@ fun WalletIdentityHeader(
 }
 
 /** Wraps [value] in Unicode first-strong isolates (FSI … PDI) so its direction does not leak into the sentence. */
-fun isolate(value: String): String = "⁨$value⁩"
+fun isolate(value: String): String = buildString {
+    append(FIRST_STRONG_ISOLATE)
+    append(value)
+    append(POP_DIRECTIONAL_ISOLATE)
+}
+
+private val FIRST_STRONG_ISOLATE = Char(0x2068)
+private val POP_DIRECTIONAL_ISOLATE = Char(0x2069)
 
 /**
  * The bundled logo of a compatible wallet (iOS `WalletAppIcon`, `Features/Wallets/ConnectView.swift:683-699`): the

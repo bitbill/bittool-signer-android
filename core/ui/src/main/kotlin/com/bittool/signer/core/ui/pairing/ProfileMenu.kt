@@ -22,14 +22,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -67,12 +68,17 @@ fun <T> ProfileMenu(
             .clip(SignerShapes.control)
             .background(colors.card)
             .clickable { expanded = true }
+            // One element: the title, the current value, and the action that opens the menu (iOS ProfileMenu).
             .clearAndSetSemantics {
                 role = Role.DropdownList
                 contentDescription = title
                 stateDescription = "$currentLabel, $currentDetail"
+                testTag = "profile.menu"
+                onClick {
+                    expanded = true
+                    true
+                }
             }
-            .testTag("profile.menu")
             .padding(horizontal = 14.dp, vertical = 10.dp)
         val titleBlock: @Composable () -> Unit = {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {

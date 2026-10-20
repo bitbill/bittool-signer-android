@@ -115,7 +115,7 @@ fun StatusPill(text: String, icon: ImageVector, color: Color = SignerTheme.color
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, tint = textColor, modifier = Modifier.size(14.dp))
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
         Text(
             text = text,
             style = SignerTheme.typography.caption.semibold(),

@@ -282,6 +282,7 @@ private fun BottomBarSection() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ChainArtworkSection() = Padded {
     val logos = listOf(
@@ -290,7 +291,7 @@ private fun ChainArtworkSection() = Padded {
         DesignR.drawable.ic_chain_solana,
     )
     listOf(16.dp, 28.dp, 60.dp).forEach { size ->
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             logos.forEach { Image(painterResource(it), contentDescription = null, modifier = Modifier.size(size)) }
         }
     }

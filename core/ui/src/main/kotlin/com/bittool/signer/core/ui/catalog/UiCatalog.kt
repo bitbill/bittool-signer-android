@@ -1,5 +1,6 @@
 package com.bittool.signer.core.ui.catalog
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.LayoutDirection
@@ -70,6 +74,8 @@ import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.password.PasswordRequirements
 import com.bittool.signer.core.ui.payload.PayloadDisclosure
+import com.bittool.signer.core.ui.qr.QrCardFrame
+import com.bittool.signer.core.ui.qr.QrLoadingPlaceholder
 import com.bittool.signer.core.ui.review.ContractCategoryGlyph
 import com.bittool.signer.core.ui.review.ContractNotice
 import com.bittool.signer.core.ui.review.NftGlyph
@@ -157,6 +163,7 @@ val UiCatalogSections: List<CatalogSection> = listOf(
     CatalogSection("Wallet identity") { WalletSection() },
     CatalogSection("Passwords") { PasswordSection() },
     CatalogSection("Pairing controls") { PairingSection() },
+    CatalogSection("QR card frame") { QrFrameSection() },
     CatalogSection("Payload disclosure") { PayloadSection() },
     CatalogSection("Review summary") { ReviewSection() },
     CatalogSection("NFT review") { NftReviewSection() },
@@ -247,6 +254,26 @@ private fun PairingSection() = Padded {
     var index by remember { mutableLongStateOf(0L) }
     AddressIndexControl(index = index, onIndexChange = { index = it }, pathPrefix = AccountProfiles.TRON_PATH_PREFIX)
     IntendedWallets(wallets = CompatibleWallets.wallets(Chain.Bitcoin, "native", "accountXpub"), onSubmitWallet = {}, chain = Chain.Bitcoin)
+}
+
+@Composable
+private fun QrFrameSection() = Padded {
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Box(Modifier.weight(1f)) {
+            QrCardFrame(maxSide = 160.dp) {
+                // Stand-in modules: the real code comes from :core:scanner's QrCodeView.
+                Canvas(Modifier.fillMaxSize()) {
+                    val cell = size.minDimension / 7f
+                    for (x in 0 until 7) for (y in 0 until 7) {
+                        val ring = x == 0 || y == 0 || x == 6 || y == 6
+                        val core = x in 2..4 && y in 2..4
+                        if (ring || core) drawRect(Color.Black, Offset(x * cell, y * cell), Size(cell, cell))
+                    }
+                }
+            }
+        }
+        Box(Modifier.weight(1f)) { QrLoadingPlaceholder(maxSide = 160.dp) }
+    }
 }
 
 @Composable
