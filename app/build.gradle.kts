@@ -75,6 +75,8 @@ android {
         applicationId = "com.bittool.signer"
         versionCode = signerVersionCode
         versionName = signerVersionName
+        // The engine library is built for these ABIs only (no 32-bit x86): ship no other ABI so nothing loads half a set.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
         buildConfigField("String", "REPOSITORY_URL", "\"https://github.com/bitbill/bittool-signer-android\"")
     }
 
