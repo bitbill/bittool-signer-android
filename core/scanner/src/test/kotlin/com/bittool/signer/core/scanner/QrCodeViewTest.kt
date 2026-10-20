@@ -13,14 +13,17 @@ import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.window.Dialog
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.testing.urFrame
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.shadows.ShadowDialog
 
 /** iOS `QRCodeView` behaviour (`Design/QRCodeView.swift:29-111`; scan-sign.md §15.1) plus the Android window effects. */
 @RunWith(RobolectricTestRunner::class)
@@ -138,6 +141,23 @@ class QrCodeViewTest {
         compose.waitForIdle()
         assertEquals(0, window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
+    }
+
+    @Test
+    fun insideADialogTheDialogsOwnWindowStaysOn() {
+        // A sheet or a full-screen dialog is a separate window above the activity (wallets-pairing.md §13.9 item 8).
+        var visible by mutableStateOf(true)
+        val single = listOf("UR:BYTES/IN-A-DIALOG")
+        compose.setContent {
+            if (visible) Dialog(onDismissRequest = {}) { QrCodeView(frames = single, initial = prepared(single)) }
+        }
+        compose.waitForIdle()
+        val dialogWindow = assertNotNull(ShadowDialog.getLatestDialog()?.window)
+        assertTrue(dialogWindow.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
+        assertEquals(0, compose.activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        visible = false
+        compose.waitForIdle()
+        assertEquals(0, dialogWindow.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     @Test
