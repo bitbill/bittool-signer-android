@@ -23,7 +23,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PathMeasure
@@ -34,7 +33,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
-import com.bittool.signer.core.scanner.internal.ScannerPalette
+import com.bittool.signer.core.designsystem.theme.SignerTheme
 import kotlin.math.min
 
 /**
@@ -42,8 +41,9 @@ import kotlin.math.min
  * `ViewfinderOverlay` + `Brackets`, `QRScannerView.swift:139-203`; scan-sign.md §6.5, design-system.md §5.23).
  *
  * - Window: `side = min(width − 64, height × 0.5, 340)` dp, centred and lifted 20 dp; cut-out radius 28 dp.
- * - Dim: black at 55 % while the camera is authorised ([active]), 80 % otherwise (asking, denied).
- * - Brackets: 5 dp mint strokes, round caps, arm 16 % of the side, quadratic corners of radius 26 dp; pulsing
+ * - Dim: the theme's `scannerScrim` (black at 55 %) while the camera is authorised ([active]), the same black at 80 %
+ *   otherwise (asking, denied).
+ * - Brackets: 5 dp strokes in the theme's `mint` (`Brand.mint`), round caps, arm 16 % of the side, quadratic corners of radius 26 dp; pulsing
  *   0.985 ↔ 1.015 with a 1.2 s ease-in-out, repeating and reversing. With animations removed they stay at 0.985,
  *   exactly where iOS leaves them under Reduce Motion.
  * - Progress ring while `progress > 0`: the window inset by 6 dp, radius 28 dp, traced clockwise from the top-left
@@ -60,7 +60,10 @@ internal fun ViewfinderOverlay(
     animationsEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val dim by animateFloatAsState(if (active) 0.55f else 0.8f, tween(200), label = "viewfinderDim")
+    val colors = SignerTheme.colors
+    val scrim = colors.scannerScrim
+    val mint = colors.mint
+    val dim by animateFloatAsState(if (active) scrim.alpha else INACTIVE_DIM, tween(200), label = "viewfinderDim")
     val pulse: State<Float> = if (animationsEnabled) {
         rememberInfiniteTransition(label = "viewfinderPulse").animateFloat(
             initialValue = PULSE_MIN,
@@ -95,15 +98,15 @@ internal fun ViewfinderOverlay(
                 val ringStroke = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                 val ringSegment = Path()
                 onDrawBehind {
-                    drawPath(dimPath, Color.Black.copy(alpha = dim))
+                    drawPath(dimPath, scrim.copy(alpha = dim))
                     scale(pulse.value, pivot = window.center) {
-                        drawPath(brackets, ScannerPalette.Mint, style = bracketStroke)
+                        drawPath(brackets, mint, style = bracketStroke)
                     }
                     val shown = ring.value
                     if (shown > 0f && ringLength > 0f) {
                         ringSegment.reset()
                         ringMeasure.getSegment(0f, ringLength * shown, ringSegment, true)
-                        drawPath(ringSegment, ScannerPalette.Mint.copy(alpha = 0.9f), style = ringStroke)
+                        drawPath(ringSegment, mint.copy(alpha = 0.9f), style = ringStroke)
                     }
                 }
             },
@@ -174,6 +177,9 @@ internal fun ringPath(rect: Rect, radius: Float): Path {
         close()
     }
 }
+
+/** The dim while the camera is not authorised (iOS `Color.black.opacity(0.8)`). */
+private const val INACTIVE_DIM = 0.8f
 
 private const val PULSE_MIN = 0.985f
 private const val PULSE_MAX = 1.015f

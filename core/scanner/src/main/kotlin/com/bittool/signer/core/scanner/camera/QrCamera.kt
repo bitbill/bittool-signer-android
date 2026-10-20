@@ -83,7 +83,13 @@ internal class QrCameraState {
  *   scene is active) and is closed, torch included, on every pause;
  * - continuous autofocus (CameraX default) plus tap-to-focus/metering that auto-cancels after 3 s;
  * - torch availability from `hasFlashUnit()`, its state from `torchState`; turned off on pause and on release;
- * - errors map to [CameraIssue]; a camera that recovers (back to OPEN without error) clears `Unavailable`.
+ * - errors map to [CameraIssue]; a camera that opens (OPEN without error) clears the start problem it replaces
+ *   (`Unavailable`, or `NoCamera` from an earlier attempt);
+ * - a start that bound no camera (no camera, CameraX could not initialise, enumeration or binding failed) is made
+ *   again on the next resume. iOS builds a new capture session on every activation (`QRScannerView.swift:29`), so a
+ *   camera that was busy or blocked when the scanner opened works once the user comes back; a camera that was bound
+ *   needs no restart, because CameraX reopens it itself when [ResumedLifecycleOwner] resumes. The problem stays shown
+ *   while the new attempt runs, so it does not flicker away and back when the camera still fails.
  *
  * Decoded values reach [onValues] on the main thread, never after [release].
  */
@@ -94,6 +100,8 @@ internal class QrCameraSession(
     private val previewView: PreviewView,
     private val state: QrCameraState,
     private val onValues: (List<String?>) -> Unit,
+    /** CameraX's process-wide provider; tests replace it with one that fails or never answers. */
+    private val awaitProvider: suspend (Context) -> ProcessCameraProvider = { ProcessCameraProvider.awaitInstance(it) },
 ) {
     private val owner = ResumedLifecycleOwner(hostLifecycle)
     private val mainExecutor = ContextCompat.getMainExecutor(context)
@@ -110,33 +118,60 @@ internal class QrCameraSession(
     private var analysis: ImageAnalysis? = null
     private var useCases: Array<UseCase> = emptyArray()
 
+    /** A start is waiting for CameraX's provider. */
+    private var starting = false
+
+    /** The last start ended without a bound camera: the next resume starts again. */
+    private var startFailed = false
+
     private val torchObserver = Observer<Int> { state.torchOn = it == TorchState.ON }
     private val cameraStateObserver = Observer<CameraState> { onCameraState(it) }
 
-    /** iOS forces the torch off whenever the scene is not active (`QRScannerView.swift:58`). */
-    private val pauseObserver = LifecycleEventObserver { _, event ->
-        if (event == Lifecycle.Event.ON_PAUSE && state.torchOn) camera?.cameraControl?.enableTorch(false)
+    private val hostObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            // iOS forces the torch off whenever the scene is not active (`QRScannerView.swift:58`).
+            Lifecycle.Event.ON_PAUSE -> if (state.torchOn) camera?.cameraControl?.enableTorch(false)
+            // iOS starts a new camera with every activation; only a start that bound nothing needs it here.
+            Lifecycle.Event.ON_RESUME -> if (startFailed) attemptStart()
+            else -> Unit
+        }
     }
 
     fun start() {
         state.session = this
+        // Registered first: the events it replays to catch up with the host find no failed start to redo.
+        hostLifecycle.addObserver(hostObserver)
+        attemptStart()
+    }
+
+    private fun attemptStart() {
+        if (released || starting || camera != null) return
+        startFailed = false
         if (!context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
-            state.issue = CameraIssue.NoCamera
+            fail(CameraIssue.NoCamera)
             return
         }
-        hostLifecycle.addObserver(pauseObserver)
+        starting = true
         scope.launch {
             val cameraProvider = try {
-                ProcessCameraProvider.awaitInstance(context)
+                awaitProvider(context)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.w(TAG, e) { "CameraX initialisation failed" }
-                state.issue = CameraIssue.Unavailable
+                fail(CameraIssue.Unavailable)
                 return@launch
+            } finally {
+                starting = false
             }
             if (!released) bind(cameraProvider)
         }
+    }
+
+    /** Ends a start that bound no camera: shows [issue] and retries on the next resume. */
+    private fun fail(issue: CameraIssue) {
+        state.issue = issue
+        startFailed = true
     }
 
     private fun bind(cameraProvider: ProcessCameraProvider) {
@@ -149,11 +184,11 @@ internal class QrCameraSession(
             }
         } catch (e: CameraInfoUnavailableException) {
             Log.w(TAG, e) { "camera enumeration failed" }
-            state.issue = CameraIssue.Unavailable
+            fail(CameraIssue.Unavailable)
             return
         }
         if (selector == null) {
-            state.issue = CameraIssue.NoCamera
+            fail(CameraIssue.NoCamera)
             return
         }
         val resolution = resolutionSelector()
@@ -179,12 +214,12 @@ internal class QrCameraSession(
                 }
             } catch (e2: RuntimeException) {
                 Log.w(TAG, e2) { "preview cannot be bound" }
-                state.issue = CameraIssue.Unavailable
+                fail(CameraIssue.Unavailable)
                 return
             }
         } catch (e: RuntimeException) {
             Log.w(TAG, e) { "camera binding failed" }
-            state.issue = CameraIssue.Unavailable
+            fail(CameraIssue.Unavailable)
             return
         }
         camera = bound
@@ -202,11 +237,13 @@ internal class QrCameraSession(
 
     private fun onCameraState(cameraState: CameraState) {
         when {
+            // A bound camera exists, so an error is "unavailable" even after an earlier attempt found none.
             cameraState.error != null -> {
                 Log.w(TAG) { "camera error ${cameraState.error?.code}" }
-                if (state.issue != CameraIssue.NoCamera) state.issue = CameraIssue.Unavailable
+                state.issue = CameraIssue.Unavailable
             }
-            cameraState.type == CameraState.Type.OPEN && state.issue == CameraIssue.Unavailable -> {
+            cameraState.type == CameraState.Type.OPEN &&
+                (state.issue == CameraIssue.Unavailable || state.issue == CameraIssue.NoCamera) -> {
                 state.issue = if (analysis == null) CameraIssue.ScanningUnavailable else null
             }
         }
@@ -235,7 +272,7 @@ internal class QrCameraSession(
         if (released) return
         released = true
         scope.cancel()
-        hostLifecycle.removeObserver(pauseObserver)
+        hostLifecycle.removeObserver(hostObserver)
         analysis?.clearAnalyzer()
         camera?.let { cam ->
             if (state.torchOn) cam.cameraControl.enableTorch(false)

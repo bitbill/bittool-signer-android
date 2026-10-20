@@ -2,11 +2,9 @@ package com.bittool.signer.core.scanner
 
 import android.os.Build
 import android.os.SystemClock
-import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.core.view.ViewCompat
@@ -24,12 +21,12 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.scanning.QrScanFrameGate
 import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.scanner.camera.CameraIssue
 import com.bittool.signer.core.scanner.camera.QrCameraPreview
 import com.bittool.signer.core.scanner.camera.QrCameraState
-import com.bittool.signer.core.scanner.internal.ScannerPalette
 import com.bittool.signer.core.scanner.internal.hostWindow
 import com.bittool.signer.core.scanner.scan.QrScannerContent
 import com.bittool.signer.core.scanner.scan.ScannerChrome
@@ -43,8 +40,9 @@ import com.bittool.signer.core.l10n.R as L10n
  *   shown and light system-bar icons; everything is restored when it leaves.
  * - Asks for the camera on appearance when needed; "Camera Access Needed" with "Open Settings" when denied; a grant
  *   made in Settings starts the camera on return ([rememberCameraPermissionState]).
- * - The camera runs only while the screen is resumed and is released on every pause; the torch goes off with it.
- *   The torch button is invisible (keeping its space, so the title stays centred) without a flash unit; tapping the
+ * - The camera runs only while the screen is resumed and is released on every pause; the torch goes off with it. A
+ *   camera that could not start (busy, blocked by policy, CameraX failure) is started again on every resume, as iOS
+ *   builds a new camera with every activation; its message stays until the camera opens. The torch button is invisible (keeping its space, so the title stays centred) without a flash unit; tapping the
  *   preview focuses and meters there.
  * - Every frame's QR values go through [QrScanFrameGate] in frame order on the main thread, with
  *   `SystemClock.elapsedRealtime()`: an accepted text reaches [onScan] **unchanged** (and clears the camera message);
@@ -143,29 +141,26 @@ internal fun QrScannerScreen(
         null -> frames.issue?.let { stringResource(it.messageRes(purpose)) }
         else -> stringResource(issue.messageRes())
     }
-    val animationsEnabled = rememberAnimationsEnabled()
-    MaterialTheme(colorScheme = ScannerPalette.ColorScheme) {
-        QrScannerContent(
-            chrome = ScannerChrome(
-                title = title,
-                hint = hint,
-                progress = progress,
-                status = status,
-                error = error,
-                permission = permission.status,
-                cameraMessage = cameraMessage,
-                torchAvailable = cameraState.torchAvailable,
-                torchOn = cameraState.torchOn,
-                animationsEnabled = animationsEnabled,
-            ),
-            onToggleTorch = cameraState::toggleTorch,
-            onOpenSettings = permission::openSettings,
-            onReset = onReset,
-            onClose = onClose,
-            modifier = modifier,
-            camera = { camera(cameraState, onValues) },
-        )
-    }
+    QrScannerContent(
+        chrome = ScannerChrome(
+            title = title,
+            hint = hint,
+            progress = progress,
+            status = status,
+            error = error,
+            permission = permission.status,
+            cameraMessage = cameraMessage,
+            torchAvailable = cameraState.torchAvailable,
+            torchOn = cameraState.torchOn,
+            animationsEnabled = !SignerTheme.reduceMotion,
+        ),
+        onToggleTorch = cameraState::toggleTorch,
+        onOpenSettings = permission::openSettings,
+        onReset = onReset,
+        onClose = onClose,
+        modifier = modifier,
+        camera = { camera(cameraState, onValues) },
+    )
 }
 
 /**
@@ -265,14 +260,5 @@ private fun ScannerSystemBars() {
             controller.isAppearanceLightStatusBars = lightStatusBars
             controller.isAppearanceLightNavigationBars = lightNavigationBars
         }
-    }
-}
-
-/** False when the user removed animations (developer option / accessibility "Remove animations"). */
-@Composable
-private fun rememberAnimationsEnabled(): Boolean {
-    val context = LocalContext.current
-    return remember(context) {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) != 0f
     }
 }

@@ -26,24 +26,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.FlashlightOff
-import androidx.compose.material.icons.rounded.FlashlightOn
-import androidx.compose.material.icons.rounded.PhotoCamera
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,14 +50,14 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.monospacedDigit
+import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.scanner.CameraPermissionStatus
-import com.bittool.signer.core.scanner.internal.ScannerPalette
 import com.bittool.signer.core.l10n.R as L10n
 
 /** Accessibility identifiers of the scanner (iOS `accessibilityIdentifier`s, scan-sign.md §20, plus Android ones). */
@@ -102,6 +94,10 @@ internal data class ScannerChrome(
  * caller composes it only when authorised), the viewfinder overlay, the top bar and the bottom status panel. The
  * overlay spans the whole window (iOS `ignoresSafeArea`); the chrome sits inside the safe-drawing insets with 20 dp
  * horizontal and 12 dp vertical padding.
+ *
+ * Always dark, in this subtree only (iOS `.environment(\.colorScheme, .dark)`, `QRScannerView.swift:48`): the chrome
+ * and [camera] draw with the dark [SignerTheme] palette (`mint`, `ink`, `warning`, the labels, `scannerScrim`), its
+ * type scale and [SignerIcons], whatever the app's appearance. The system bars are the scanner screen's business.
  */
 @Composable
 internal fun QrScannerContent(
@@ -113,7 +109,23 @@ internal fun QrScannerContent(
     modifier: Modifier = Modifier,
     camera: @Composable () -> Unit = {},
 ) {
+    SignerTheme(darkTheme = true, applySystemBarAppearance = false) {
+        ScannerPage(chrome, onToggleTorch, onOpenSettings, onReset, onClose, modifier, camera)
+    }
+}
+
+@Composable
+private fun ScannerPage(
+    chrome: ScannerChrome,
+    onToggleTorch: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onReset: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier,
+    camera: @Composable () -> Unit,
+) {
     val authorized = chrome.permission == CameraPermissionStatus.Granted
+    // iOS `Color.black.ignoresSafeArea()`: the backdrop behind the camera image, not a surface of the palette.
     Box(modifier.fillMaxSize().background(Color.Black)) {
         if (authorized) camera()
         ViewfinderOverlay(
@@ -159,12 +171,12 @@ private fun ScannerTopBar(
                 .testTag(ScannerTags.CLOSE)
                 .semantics { contentDescription = closeLabel },
         ) {
-            Icon(Icons.Rounded.Close, contentDescription = null, modifier = Modifier.size(22.dp))
+            Icon(SignerIcons.Close, contentDescription = null, modifier = Modifier.size(22.dp))
         }
         Text(
             text = title,
-            style = ScannerText.Headline,
-            color = Color.White,
+            style = SignerTheme.typography.headline,
+            color = SignerTheme.colors.label,
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
@@ -189,7 +201,7 @@ private fun ScannerTopBar(
                 ),
         ) {
             Icon(
-                imageVector = if (torchOn) Icons.Rounded.FlashlightOn else Icons.Rounded.FlashlightOff,
+                imageVector = if (torchOn) SignerIcons.FlashlightOn else SignerIcons.FlashlightOff,
                 contentDescription = null,
                 modifier = Modifier.size(22.dp),
             )
@@ -205,15 +217,16 @@ private fun GlassCircleButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    val label = SignerTheme.colors.label
     FilledIconButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.size(48.dp),
         colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = ScannerPalette.Glass,
-            contentColor = Color.White,
-            disabledContainerColor = ScannerPalette.Glass,
-            disabledContentColor = Color.White,
+            containerColor = GlassMaterial,
+            contentColor = label,
+            disabledContainerColor = GlassMaterial,
+            disabledContentColor = label,
         ),
         content = content,
     )
@@ -242,7 +255,7 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
         Modifier
             .widthIn(max = 420.dp)
             .fillMaxWidth()
-            .background(ScannerPalette.Panel, PanelShape)
+            .background(PanelMaterial, PanelShape)
             .animateContentSize(spring(dampingRatio = 1f, stiffness = 987f))
             .clip(PanelShape)
             .verticalScroll(rememberScrollState()),
@@ -273,23 +286,25 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
 
 @Composable
 private fun CameraDeniedPanel(onOpenSettings: () -> Unit) {
+    val colors = SignerTheme.colors
+    val typography = SignerTheme.typography
     Icon(
-        Icons.Rounded.PhotoCamera,
+        SignerIcons.Camera,
         contentDescription = null,
-        tint = ScannerPalette.Secondary,
+        tint = colors.secondaryLabel,
         modifier = Modifier.size(30.dp),
     )
     Text(
         text = stringResource(L10n.string.camera_access_needed),
-        style = ScannerText.Headline,
-        color = Color.White,
+        style = typography.headline,
+        color = colors.label,
         textAlign = TextAlign.Center,
         modifier = Modifier.semantics { heading() },
     )
     Text(
         text = stringResource(L10n.string.allow_camera_access_in_settings_to_scan_qr_codes_or),
-        style = ScannerText.Subheadline,
-        color = ScannerPalette.Secondary,
+        style = typography.subheadline,
+        color = colors.secondaryLabel,
         textAlign = TextAlign.Center,
     )
     MintButton(
@@ -301,6 +316,7 @@ private fun CameraDeniedPanel(onOpenSettings: () -> Unit) {
 
 @Composable
 private fun SessionErrorPanel(error: String, onReset: () -> Unit) {
+    val colors = SignerTheme.colors
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.Top,
@@ -309,17 +325,17 @@ private fun SessionErrorPanel(error: String, onReset: () -> Unit) {
             .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
     ) {
         Icon(
-            Icons.Rounded.Warning,
+            SignerIcons.WarningFilled,
             contentDescription = null,
-            tint = ScannerPalette.Orange,
+            tint = colors.warning,
             modifier = Modifier
                 .padding(top = 1.dp)
                 .size(18.dp),
         )
         Text(
             text = error,
-            style = ScannerText.Subheadline,
-            color = ScannerPalette.Orange,
+            style = SignerTheme.typography.subheadline,
+            color = colors.warning,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f, fill = false),
         )
@@ -333,6 +349,8 @@ private fun SessionErrorPanel(error: String, onReset: () -> Unit) {
 
 @Composable
 private fun ReadingPanel(chrome: ScannerChrome) {
+    val colors = SignerTheme.colors
+    val typography = SignerTheme.typography
     val progress = chrome.progress ?: 0f
     if (progress > 0f && progress < 1f) {
         val bar = remember { Animatable(progress) }
@@ -346,22 +364,22 @@ private fun ReadingPanel(chrome: ScannerChrome) {
                 .fillMaxWidth()
                 .height(4.dp)
                 .clearAndSetSemantics { },
-            color = ScannerPalette.Mint,
-            trackColor = Color.White.copy(alpha = 0.18f),
+            color = colors.mint,
+            trackColor = colors.fill,
             gapSize = 0.dp,
             drawStopIndicator = {},
         )
         Text(
             text = stringResource(L10n.string.x_2, (progress * 100).toInt()),
-            style = ScannerText.Caption,
-            color = ScannerPalette.Secondary,
+            style = typography.caption.monospacedDigit(),
+            color = colors.secondaryLabel,
             modifier = Modifier.testTag(ScannerTags.PROGRESS),
         )
     }
     Text(
         text = chrome.status ?: chrome.hint,
-        style = ScannerText.Subheadline,
-        color = Color.White,
+        style = typography.subheadline,
+        color = colors.label,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .testTag(ScannerTags.STATUS)
@@ -370,8 +388,8 @@ private fun ReadingPanel(chrome: ScannerChrome) {
     chrome.cameraMessage?.let { message ->
         Text(
             text = message,
-            style = ScannerText.Footnote,
-            color = ScannerPalette.Orange,
+            style = typography.footnote,
+            color = colors.warning,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .testTag(ScannerTags.CAMERA_ERROR)
@@ -383,28 +401,22 @@ private fun ReadingPanel(chrome: ScannerChrome) {
 /** iOS `.borderedProminent` tinted `Brand.mint` with `Brand.ink` text. */
 @Composable
 private fun MintButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = SignerTheme.colors
     Button(
         onClick = onClick,
         modifier = modifier,
-        colors = ButtonDefaults.buttonColors(containerColor = ScannerPalette.Mint, contentColor = ScannerPalette.Ink),
+        colors = ButtonDefaults.buttonColors(containerColor = colors.mint, contentColor = colors.ink),
     ) {
-        Text(text, style = ScannerText.Subheadline.copy(fontWeight = FontWeight.SemiBold))
+        Text(text, style = SignerTheme.typography.subheadline.semibold())
     }
 }
 
 /**
- * iOS text styles at the default size (scan-sign.md §19), on the app's body font, scaled with the user's font size.
+ * Android renditions of iOS `.ultraThinMaterial` over the dimmed camera: the status panel and the glass circles of the
+ * top bar. A material is a translucent blur rather than a palette colour (design-system.md §2.3), so the design system
+ * has no token for it; these two exist only on the scanner's always-dark page.
  */
-private object ScannerText {
-    private val headline = TextStyle(fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
-    private val subheadline = TextStyle(fontSize = 15.sp, lineHeight = 20.sp, letterSpacing = 0.sp)
-    private val footnote = TextStyle(fontSize = 13.sp, lineHeight = 18.sp, letterSpacing = 0.sp)
-    private val caption = TextStyle(fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.sp, fontFeatureSettings = "tnum")
-
-    val Headline: TextStyle @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.merge(headline)
-    val Subheadline: TextStyle @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.merge(subheadline)
-    val Footnote: TextStyle @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.merge(footnote)
-    val Caption: TextStyle @Composable @ReadOnlyComposable get() = MaterialTheme.typography.bodyLarge.merge(caption)
-}
+private val PanelMaterial = Color.Black.copy(alpha = 0.62f)
+private val GlassMaterial = Color.White.copy(alpha = 0.16f)
 
 private val PanelShape = RoundedCornerShape(22.dp)
