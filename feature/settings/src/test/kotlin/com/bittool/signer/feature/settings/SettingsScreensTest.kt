@@ -18,6 +18,19 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performTouchInput
+import com.bittool.signer.core.model.NetworkBrand
+import com.bittool.signer.core.model.registry.ReferenceData
+import com.bittool.signer.feature.settings.about.Measured
+import com.bittool.signer.feature.settings.about.OpenSourceContent
+import com.bittool.signer.feature.settings.about.OpenSourceTags
+import com.bittool.signer.feature.settings.about.OpenSourceUiState
+import com.bittool.signer.feature.settings.reference.NetworkRowModel
+import com.bittool.signer.feature.settings.reference.NetworksContent
+import com.bittool.signer.feature.settings.reference.NetworksTags
+import com.bittool.signer.feature.settings.reference.NetworksUiState
+import com.bittool.signer.feature.settings.reference.ReferenceTags
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.Appearance
 import com.bittool.signer.core.model.CompatibleWallets
@@ -210,6 +223,99 @@ class SettingsScreensTest {
         compose.onNodeWithText("Check the spelling or try a new search.").assertIsDisplayed()
         compose.onNodeWithText("3 Tokens").assertExists()
         compose.onNodeWithText("2 Contracts").assertExists()
+    }
+
+    @Test
+    fun networkRowsOpenTheirPageByGroupingKey() {
+        val opened = mutableListOf<String>()
+        show {
+            NetworksContent(
+                state = NetworksUiState(
+                    loading = false,
+                    registryVersion = "2026-09-22.1",
+                    networks = listOf(NetworkRowModel("ethereum", "evm:1", "Ethereum", "ETH", NetworkBrand.Ethereum, 1008, 329)),
+                    everyChainContracts = 27,
+                    contractCount = 1720,
+                    contractsUpdated = "2026-10-09",
+                ),
+                onBack = {},
+                onOpenNetwork = { opened += it },
+            )
+        }
+        // iOS `summary(for:)`: "ETH · 1008 tokens · 329 contracts" (ungrouped counts).
+        compose.onNodeWithText("ETH · 1008 tokens · 329 contracts", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("BTC · Single-sig and multisig", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(NetworksTags.network("ethereum")).performClick()
+        compose.onNodeWithTag(NetworksTags.LIST).performScrollToNode(hasTestTag(NetworksTags.EVERY_CHAIN))
+        compose.onNodeWithText("27 contracts at the same address on every network", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(NetworksTags.EVERY_CHAIN).performClick()
+        assertEquals(listOf("evm:1", ReferenceData.EVERY_EVM_CHAIN), opened)
+        // The version is isolated (FSI … PDI) so it keeps its order inside a right-to-left sentence.
+        compose.onNodeWithText("Registry \u20682026-09-22.1\u2069.", substring = true).assertExists()
+    }
+
+    @Test
+    fun aTokenOffersItsContractAddressOnLongPress() {
+        val clipboard = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+            .getSystemService(android.content.ClipboardManager::class.java)
+        show {
+            NetworkReferenceContent(
+                state = NetworkReferenceUiState(
+                    loading = false,
+                    title = ReferenceTitle.Network("Ethereum"),
+                    tokenCount = 1,
+                    contractCount = 0,
+                    tokens = listOf(SettingsTestData.usdt),
+                ),
+                onBack = {},
+                onQueryChange = {},
+                onSegmentSelected = {},
+            )
+        }
+        compose.onNodeWithText("6 dp", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(ReferenceTags.TOKEN_ROW).performTouchInput { longClick() }
+        compose.onNodeWithText("Copy Contract Address").performClick()
+        assertEquals(SettingsTestData.usdt.assetAddress, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
+        // No segmented control on a page with a single list.
+        compose.onNodeWithTag(ReferenceTags.PICKER).assertDoesNotExist()
+    }
+
+    @Test
+    fun openSourceShowsBothRepositoriesAndThisBuild() {
+        show {
+            OpenSourceContent(
+                state = OpenSourceUiState(
+                    version = "1.0.0 (1)",
+                    repository = SettingsTestData.buildInfo.repositoryUrl,
+                    distribution = com.bittool.signer.core.common.Distribution.GooglePlay,
+                    signingCertificate = null,
+                    engineDigest = Measured.Value("6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077"),
+                    engineBytes = Measured.Value(1_181_026),
+                    registryVersion = Measured.Unavailable,
+                ),
+                onBack = {},
+                onOpenNotices = {},
+            )
+        }
+        compose.onNodeWithTag(OpenSourceTags.REPOSITORY).assert(hasText("https://github.com/bitbill/bittool-signer-android"))
+        compose.onNodeWithTag(OpenSourceTags.DIGEST).assert(hasText("6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077"))
+        compose.onNodeWithText("1,181,026 bytes", useUnmergedTree = true).assertExists()
+        val list = compose.onNodeWithTag(OpenSourceTags.LIST)
+        list.performScrollToNode(hasText("Google Play"))
+        list.performScrollToNode(hasTestTag(OpenSourceTags.ENGINE_REPOSITORY))
+        compose.onNodeWithTag(OpenSourceTags.ENGINE_REPOSITORY).assert(hasText("https://github.com/bitbill/bittool-signer-ios"))
+        list.performScrollToNode(hasText("Clone the repository and check out the tag for version", substring = true))
+        list.performScrollToNode(hasTestTag(OpenSourceTags.NOTICES))
+        assertNoLinks(compose)
+    }
+
+    @Test
+    fun contactAndSubmitAreTextToCopy() {
+        show { com.bittool.signer.feature.settings.about.ContactScreen(onBack = {}) }
+        compose.onNodeWithTag(com.bittool.signer.feature.settings.about.ContactTags.PUBLISHER).assert(hasText("BITTOOL PTE. LTD."))
+        compose.onNodeWithText("support@bittool.com").assertExists()
+        compose.onNodeWithText("The app never opens a mail app. Copy the address and write to us from another device.").assertExists()
+        assertNoLinks(compose)
     }
 
     /** No text on screen carries a link (LinkAnnotation / URL annotation): the app opens no browser. */
