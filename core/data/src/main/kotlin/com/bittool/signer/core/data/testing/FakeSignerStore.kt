@@ -1,5 +1,6 @@
 package com.bittool.signer.core.data.testing
 
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.PreparedConnect
 import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
@@ -74,6 +75,8 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
         data class RenameWallet(val walletId: WalletId, val name: String) : Call
         data class ChangePassword(val walletId: WalletId, val current: String, val new: String) : Call
         data class DeleteWallet(val walletId: WalletId, val password: String) : Call
+        data class IsDeviceKeyLost(val walletId: WalletId) : Call
+        data class RemoveWalletWithLostDeviceKey(val walletId: WalletId) : Call
         data class Reveal(val walletId: WalletId, val password: String) : Call
         data class Addresses(val walletId: WalletId, val chain: Chain, val profile: String, val start: Long, val count: Int) : Call
         data class Pairing(val walletId: WalletId, val chain: Chain, val profile: String, val outputMode: String, val index: Long) : Call
@@ -116,17 +119,15 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
         setState { s -> s.copy(wallets = s.wallets.map { if (it.id == id) it.copy(name = trimmed) else it }) }
     }
     var onChangePassword: suspend (walletId: WalletId, current: SecretText, new: SecretText) -> Unit = { _, _, _ -> }
-    var onDeleteWallet: suspend (walletId: WalletId, password: SecretText) -> Unit = { id, _ ->
-        suspendSession()
-        clearRequest()
-        setState { s ->
-            s.copy(
-                wallets = s.wallets.filterNot { it.id == id },
-                publicWallets = s.publicWallets - id,
-                metadataStatuses = s.metadataStatuses - id,
-                navigationResetEpoch = s.navigationResetEpoch + 1,
-            )
-        }
+    var onDeleteWallet: suspend (walletId: WalletId, password: SecretText) -> Unit = { id, _ -> removeFromState(id) }
+
+    /** Wallets whose device key is provably gone: the default [onIsDeviceKeyLost] / [onRemoveWalletWithLostDeviceKey]. */
+    var lostDeviceKeys: Set<WalletId> = emptySet()
+    var onIsDeviceKeyLost: suspend (walletId: WalletId) -> Boolean = { it in lostDeviceKeys }
+    var onRemoveWalletWithLostDeviceKey: suspend (walletId: WalletId) -> Unit = { id ->
+        if (id !in lostDeviceKeys) throw VaultError.DeviceKeyLossUnconfirmed()
+        lostDeviceKeys = lostDeviceKeys - id
+        removeFromState(id)
     }
     var onReveal: suspend (walletId: WalletId, password: SecretText) -> VaultSecret = { _, _ ->
         VaultSecret(SecretText.of(PUBLIC_FIXTURE_12), SecretText.empty())
@@ -228,6 +229,16 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
         onDeleteWallet(walletId, password)
     }
 
+    override suspend fun isDeviceKeyLost(walletId: WalletId): Boolean {
+        recorded += Call.IsDeviceKeyLost(walletId)
+        return onIsDeviceKeyLost(walletId)
+    }
+
+    override suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) {
+        recorded += Call.RemoveWalletWithLostDeviceKey(walletId)
+        onRemoveWalletWithLostDeviceKey(walletId)
+    }
+
     override suspend fun reveal(walletId: WalletId, password: SecretText): VaultSecret {
         recorded += Call.Reveal(walletId, password.text())
         return onReveal(walletId, password)
@@ -315,6 +326,20 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
     }
 
     private fun SecretText.text(): String = String(chars())
+
+    /** What a deletion commits (AppStore.swift:526-530): suspend, clear the request, drop the wallet, reset navigation. */
+    private fun removeFromState(id: WalletId) {
+        suspendSession()
+        clearRequest()
+        setState { s ->
+            s.copy(
+                wallets = s.wallets.filterNot { it.id == id },
+                publicWallets = s.publicWallets - id,
+                metadataStatuses = s.metadataStatuses - id,
+                navigationResetEpoch = s.navigationResetEpoch + 1,
+            )
+        }
+    }
 
     companion object {
         /** The published BIP39 test phrase (never fund it). */

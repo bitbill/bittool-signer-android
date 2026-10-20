@@ -192,6 +192,40 @@ class WalletsUiTest {
     }
 
     @Test
+    fun aWalletWithALostDeviceKeyIsRemovedThroughItsOwnConfirmations() {
+        // QA backlog B9: the page explains the lost key, keeps the switch, and ends in "Remove This Wallet?".
+        var state by mutableStateOf(DeleteWalletUiState(identity = identities.first(), deviceKeyLost = true))
+        var removals = 0
+        content {
+            DeleteWalletContent(
+                uiState = state,
+                toast = rememberStatusToastState(),
+                actions = DeleteWalletActions(
+                    onConfirmedChange = { state = state.copy(confirmed = it) },
+                    onDelete = { state = state.copy(askingRemoval = true) },
+                    onRemove = { removals++ },
+                    onCancelRemoval = { state = state.copy(askingRemoval = false) },
+                ),
+            )
+        }
+        compose.onNodeWithTag("delete.deviceKeyLost").assertExists()
+        compose.onNodeWithText("This Wallet Can’t Be Unlocked").assertExists()
+        compose.onNodeWithText("Deleting asks for this wallet’s password.").assertDoesNotExist()
+        compose.onNodeWithText("Remove This Wallet").assertExists()
+        compose.onNodeWithTag("vaultManagement.submit").assertIsNotEnabled()
+        compose.onNodeWithTag("delete.backupConfirmed").performClick()
+        compose.onNodeWithTag("vaultManagement.submit").assertIsEnabled().performClick()
+        compose.onNodeWithText("Remove This Wallet?").assertExists()
+        compose.onNodeWithTag("delete.password").assertDoesNotExist()
+        compose.onNodeWithTag("delete.cancel").performClick()
+        compose.onNodeWithText("Remove This Wallet?").assertDoesNotExist()
+        assertEquals(0, removals)
+        compose.onNodeWithTag("vaultManagement.submit").performClick()
+        compose.onNodeWithTag("delete.removeConfirm").performClick()
+        assertEquals(1, removals)
+    }
+
+    @Test
     fun theDeletePasswordFieldIsAddressedAsDeletePassword() {
         var entered: String? = null
         content { DeletePasswordDialog(onDelete = { secret: SecretText -> entered = String(secret.chars()); secret.wipe() }, onCancel = {}, onBlocked = {}) }

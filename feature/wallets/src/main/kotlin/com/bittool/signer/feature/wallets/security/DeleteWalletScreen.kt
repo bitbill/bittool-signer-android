@@ -42,12 +42,20 @@ internal data class DeleteWalletActions(
     val onSubmitPassword: (SecretText) -> Unit = {},
     val onCancelPassword: () -> Unit = {},
     val onCancel: () -> Unit = {},
+    /** "Remove" in the "Remove This Wallet?" dialog (device key provably lost). */
+    val onRemove: () -> Unit = {},
+    /** "Cancel" / Back of that dialog. */
+    val onCancelRemoval: () -> Unit = {},
 )
 
 /**
  * Delete Wallet (inventory rows 33–35, iOS `DeleteWalletSheet`, wallets-pairing.md §8.4): the warning, the explicit
  * confirmation, then — biometrics first when App Lock is on — the "Wallet Password" dialog; the vault verifies the
  * password before anything is removed. Decisive controls refuse touches through other apps' overlays.
+ *
+ * Android-only (QA backlog B9): when the wallet's device key is provably gone ([DeleteWalletUiState.deviceKeyLost]) no
+ * password can unlock it, so the page says so and becomes "Remove This Wallet": the same switch (confirming that only
+ * the recovery phrase restores it), the biometric check when App Lock is on, then the "Remove This Wallet?" dialog.
  */
 @Composable
 fun DeleteWalletScreen(
@@ -74,6 +82,8 @@ fun DeleteWalletScreen(
                 viewModel.cancel()
                 onCancel()
             },
+            onRemove = viewModel::remove,
+            onCancelRemoval = viewModel::cancelRemoval,
         ),
     )
 }
@@ -81,6 +91,7 @@ fun DeleteWalletScreen(
 @Composable
 internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToastState, actions: DeleteWalletActions) {
     val blocked = rememberOverlayBlockedNotice(toast)
+    val lost = uiState.deviceKeyLost
     SecurityPage(
         title = stringResource(R.string.delete_wallet),
         busy = uiState.busy || uiState.confirming,
@@ -88,19 +99,33 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         toast = toast,
     ) {
         WalletIdentityCard(uiState.identity)
-        Callout(
-            text = stringResource(R.string.this_removes_the_encrypted_wallet_and_its_public_data),
-            title = stringResource(R.string.delete_this_wallet),
-            tone = Tone.Danger,
-        )
+        if (lost) {
+            Callout(
+                text = stringResource(R.string.wallets_lost_key_message),
+                title = stringResource(R.string.wallets_lost_key_title),
+                tone = Tone.Danger,
+                modifier = Modifier.testTag("delete.deviceKeyLost"),
+            )
+        } else {
+            Callout(
+                text = stringResource(R.string.this_removes_the_encrypted_wallet_and_its_public_data),
+                title = stringResource(R.string.delete_this_wallet),
+                tone = Tone.Danger,
+            )
+        }
         GroupedSection(
             footer = stringResource(
-                if (uiState.asksForBiometrics) R.string.security_delete_footer_biometric else R.string.deleting_asks_for_this_wallets_password,
+                when {
+                    lost && uiState.asksForBiometrics -> R.string.wallets_lost_key_footer_biometric
+                    lost -> R.string.wallets_lost_key_footer
+                    uiState.asksForBiometrics -> R.string.security_delete_footer_biometric
+                    else -> R.string.deleting_asks_for_this_wallets_password
+                },
             ),
         ) {
             item {
                 SwitchRow(
-                    title = stringResource(R.string.i_confirm_i_want_to_delete_this_wallet),
+                    title = stringResource(if (lost) R.string.wallets_lost_key_confirm else R.string.i_confirm_i_want_to_delete_this_wallet),
                     icon = null,
                     checked = uiState.confirmed,
                     onCheckedChange = actions.onConfirmedChange,
@@ -111,7 +136,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         }
         SecurityError(uiState.error)
         DestructiveButton(
-            text = stringResource(R.string.delete_wallet),
+            text = stringResource(if (lost) R.string.wallets_lost_key_remove else R.string.delete_wallet),
             icon = SignerIcons.Delete,
             onClick = actions.onDelete,
             busy = uiState.busy || uiState.confirming,
@@ -122,6 +147,31 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
     if (uiState.askingPassword) {
         DeletePasswordDialog(onDelete = actions.onSubmitPassword, onCancel = actions.onCancelPassword, onBlocked = blocked)
     }
+    if (uiState.askingRemoval) {
+        RemoveLostWalletDialog(onRemove = actions.onRemove, onCancel = actions.onCancelRemoval, onBlocked = blocked)
+    }
+}
+
+/**
+ * "Remove This Wallet?" (QA backlog B9, Android-only): the last, explicit confirmation before a wallet whose device key
+ * is provably gone is removed without its password. The destructive "Remove" (`delete.removeConfirm`) refuses touches
+ * through other apps' overlays; "Cancel" (`delete.cancel`) and Back keep the wallet.
+ */
+@Composable
+internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
+    SignerAlertDialog(
+        title = stringResource(R.string.wallets_lost_key_dialog_title),
+        text = stringResource(R.string.wallets_lost_key_dialog_message),
+        confirm = DialogAction(
+            text = stringResource(R.string.wallets_lost_key_dialog_confirm),
+            destructive = true,
+            testTag = "delete.removeConfirm",
+            onObscuredTouch = onBlocked,
+            onClick = onRemove,
+        ),
+        dismiss = DialogAction(text = stringResource(R.string.cancel), testTag = "delete.cancel", onClick = onCancel),
+        onDismissRequest = onCancel,
+    )
 }
 
 /**

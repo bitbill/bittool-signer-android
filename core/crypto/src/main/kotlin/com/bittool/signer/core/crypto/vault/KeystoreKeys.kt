@@ -81,6 +81,20 @@ internal object Keystore {
         return generate(KeyProperties.KEY_ALGORITHM_AES, aesSpec(alias, policy, strongBox = false))
     }
 
+    /**
+     * A throw-away AES key under [alias] that protects nothing: generated only to see Keystore answer (the lost-key proof
+     * of `AndroidKeystoreDeviceKeyStore.isKeyLost`) and deleted right after. TEE, no `setUnlockedDeviceRequired`, so it
+     * can be generated whatever the lock-screen state.
+     */
+    fun generateProbe(alias: String): SecretKey = generate(
+        KeyProperties.KEY_ALGORITHM_AES,
+        KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_ENCRYPT)
+            .setKeySize(128)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .build(),
+    )
+
     /** A new 256-bit HMAC-SHA256 key in the TEE (it MACs every public file on every reload: StrongBox is too slow). */
     fun generateHmac(alias: String, policy: KeystoreKeyPolicy): SecretKey {
         val builder = KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY)

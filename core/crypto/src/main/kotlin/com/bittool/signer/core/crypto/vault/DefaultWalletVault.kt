@@ -193,6 +193,39 @@ class DefaultWalletVault @Inject constructor(
         }
     }
 
+    override suspend fun isDeviceKeyLost(id: WalletId): Boolean = mutex.withLock {
+        withContext(io) {
+            load(id)
+            deviceKeys.isDeviceSecure() && deviceKeys.isKeyLost(id)
+        }
+    }
+
+    override suspend fun removeWithLostDeviceKey(id: WalletId) {
+        mutex.withLock {
+            withContext(io) {
+                load(id)
+                if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
+                // Proven here under the mutex, never taken from the caller's earlier check: without the password this is
+                // the only thing that authorises removing the wallet, and nothing could ever decrypt it again.
+                if (!deviceKeys.isKeyLost(id)) throw VaultError.DeviceKeyLossUnconfirmed()
+            }
+            commit {
+                try {
+                    Files.delete(vaultFile(id).toPath())
+                } catch (e: IOException) {
+                    throw VaultError.StorageFailure(e)
+                }
+                attempts.remove(id)
+                // An invalidated entry would only be garbage (a re-import gets a new id and key); unlike delete, a
+                // refusal here must not report the removed wallet as failed.
+                try {
+                    deviceKeys.delete(id)
+                } catch (_: VaultError) {
+                }
+            }
+        }
+    }
+
     override suspend fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = mutex.withLock {
         withContext(io) {
             if (createIfMissing) {

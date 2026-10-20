@@ -181,6 +181,79 @@ class SignerStoreRealCryptoTest {
         assertFalse(DeviceCrypto.hasKeystoreKey(wallet.id), "A missing key is never silently recreated.")
     }
 
+    /**
+     * QA backlog B9 on the production stack: a wallet whose Keystore key is gone is a dead end (no deletion with the
+     * password, no reset from the phrase, no re-import: its sidecar keeps the walletKeyId) until
+     * `removeWalletWithLostDeviceKey` removes it without a password — its vault file, attempts file and sidecar go, the
+     * other wallet is untouched, and the same phrase imports again under a new id and a new Keystore key.
+     */
+    @Test
+    fun aWalletWhoseKeystoreKeyIsGoneIsRemovedWithoutItsPasswordAndImportsAgain() =
+        DeviceStore.run(deviceKeys = DeviceCrypto.keystoreDeviceKeys()) {
+            store.reload()
+            val kept = createWallet("Kept", passphrase = PublicFixtures.ALTERNATE_PASSPHRASE)
+            val lost = createWallet("Lost")
+            assertFalse(store.isDeviceKeyLost(lost.id))
+            assertFailsWith<VaultError.DeviceKeyLossUnconfirmed> { store.removeWalletWithLostDeviceKey(lost.id) }
+            assertEquals(listOf(kept.id, lost.id), state.wallets.map { it.id })
+
+            DeviceCrypto.deleteKeystoreKeys(listOf(lost.id))
+            assertFailsWith<VaultError.DeviceKeyUnavailable> { PASSWORD.asSecret { store.deleteWallet(lost.id, it) } }
+            assertFailsWith<VaultError.DeviceKeyUnavailable> {
+                PublicFixtures.PHRASE.asSecret { words ->
+                    "".asSecret { pass -> "Replacement-Password2".asSecret { pw -> store.resetPassword(lost.id, words, pass, pw) } }
+                }
+            }
+            val duplicate = assertFailsWith<AppIssue> { createWallet("Again") }
+            assertEquals(UiText.Ios("This recovery phrase and passphrase already belong to an existing wallet."), duplicate.text)
+
+            assertTrue(store.isDeviceKeyLost(lost.id))
+            store.removeWalletWithLostDeviceKey(lost.id)
+            assertEquals(listOf(kept.id), state.wallets.map { it.id })
+            assertFalse(fixture.vaultFile(lost.id).exists())
+            assertFalse(fixture.attemptsFile(lost.id).exists())
+            assertFalse(sidecar(lost.id).exists())
+            assertEquals(1, state.navigationResetEpoch)
+            assertTrue(DeviceCrypto.hasKeystoreKey(kept.id), "the other wallet keeps its key")
+            PASSWORD.asSecret { store.reveal(kept.id, it) }.close()
+
+            val restored = createWallet("Restored")
+            assertEquals(listOf(kept.id, restored.id), state.wallets.map { it.id })
+            assertTrue(DeviceCrypto.hasKeystoreKey(restored.id))
+            assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(restored.id))
+        }
+
+    /**
+     * QA backlog B9 when Keystore lost every key at once — the wallet's and the public-data key, as removing the screen
+     * lock does to keys that need an unlocked device: the public file fails its MAC, so the wallet needs Repair, which
+     * needs the lost key. It is removed without its password, and the same phrase imports again **in the same
+     * process**, although this process had used the public-data key before: Keystore provably lacks it, so it is
+     * created again for the new wallet's public file.
+     */
+    @Test
+    fun aKeystoreThatLostEveryKeyLetsTheWalletBeRemovedAndImportedAgainWithoutARelaunch() =
+        DeviceStore.run(deviceKeys = DeviceCrypto.keystoreDeviceKeys()) {
+            store.reload()
+            val lost = createWallet("Lost")
+            assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(lost.id))
+
+            DeviceCrypto.deleteKeystoreKeys(listOf(lost.id))
+            DeviceCrypto.deletePublicDataKey()
+            store.reload()
+            assertEquals(PublicMetadataStatus.Invalid, state.metadataStatus(lost.id))
+            assertFailsWith<VaultError.DeviceKeyUnavailable> { PASSWORD.asSecret { store.completeSetup(lost.id, it) } }
+
+            assertTrue(store.isDeviceKeyLost(lost.id))
+            store.removeWalletWithLostDeviceKey(lost.id)
+            assertTrue(state.wallets.isEmpty())
+            assertFalse(sidecar(lost.id).exists())
+
+            val restored = createWallet("Restored")
+            assertEquals(listOf(restored.id), state.wallets.map { it.id })
+            assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(restored.id))
+            PASSWORD.asSecret { store.reveal(restored.id, it) }.close()
+        }
+
     private class LanguageVector(val language: Bip39Language, val mnemonic: String, val passphrase: String, val seed: String)
 
     private companion object {

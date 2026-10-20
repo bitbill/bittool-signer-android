@@ -12,9 +12,10 @@ android {
         noCompress += "pack"
     }
     sourceSets {
-        // Shared test code: the engine decorator (ControlledSigningEngine, EngineGate), the public fixtures and vectors,
-        // and the crypto/encoder doubles of the JVM tests (StoreFixture). The instrumented tests run on the production
-        // crypto instead (androidTest RealStoreFixture) and use only the engine decorator and fixtures from here.
+        // Shared test code of the JVM and instrumented tests: the engine decorator (ControlledSigningEngine, EngineGate),
+        // the public fixtures and vectors, `asSecret`. The crypto/encoder doubles and StoreFixture are JVM-only
+        // (src/test): the instrumented tests run on the production crypto (androidTest RealStoreFixture), so the
+        // doubles stay out of the instrumented-test APK.
         getByName("test") {
             kotlin.directories += "src/testShared/kotlin"
             resources.directories += "src/testShared/resources"

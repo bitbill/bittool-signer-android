@@ -1,11 +1,13 @@
 package com.bittool.signer.feature.wallets.security
 
 import app.cash.turbine.test
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.AppIssue
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.security.AppAccessController
 import com.bittool.signer.core.security.AppAccessState
 import com.bittool.signer.core.security.BiometricException
 import com.bittool.signer.core.security.testing.FakeAppAccessController
@@ -222,5 +224,185 @@ class DeleteWalletViewModelTest {
         assertFalse(state.value.busy)
         assertFalse(state.value.confirmed)
         assertNull(state.value.error)
+    }
+
+    // ---- A provably lost device key (QA backlog B9, Android-only) ------------------------------------------------
+
+    private fun lostKeyStore() = WalletFixtures.store().apply { lostDeviceKeys = setOf(WalletFixtures.readyId) }
+
+    @Test
+    fun aWalletWithItsDeviceKeyKeepsThePasswordPath() = runTest(main.dispatcher) {
+        val store = WalletFixtures.store()
+        val vm = viewModel(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        assertEquals(listOf(Call.IsDeviceKeyLost(WalletFixtures.readyId)), store.calls<Call.IsDeviceKeyLost>())
+        assertFalse(state.value.deviceKeyLost)
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.askingPassword)
+        assertFalse(state.value.askingRemoval)
+        vm.remove()
+        advanceUntilIdle()
+        assertTrue(store.calls<Call.RemoveWalletWithLostDeviceKey>().isEmpty(), "no removal without the password")
+    }
+
+    @Test
+    fun aWalletWhoseDeviceKeyIsGoneIsRemovedWithoutAPasswordAfterTheConfirmations() = runTest(main.dispatcher) {
+        val store = lostKeyStore()
+        val vm = viewModel(store)
+        val state = observe(vm.uiState)
+        vm.pageEvents.test {
+            advanceUntilIdle()
+            assertTrue(state.value.deviceKeyLost, "the page explains the lost key and offers the removal")
+            vm.confirm()
+            advanceUntilIdle()
+            assertFalse(state.value.askingRemoval, "the confirmation switch comes first")
+            vm.setConfirmed(true)
+            vm.confirm()
+            advanceUntilIdle()
+            assertTrue(state.value.askingRemoval)
+            assertFalse(state.value.askingPassword, "no password can unlock this wallet")
+            assertTrue(store.calls<Call.RemoveWalletWithLostDeviceKey>().isEmpty(), "the dialog is the last confirmation")
+            vm.remove()
+            advanceUntilIdle()
+            assertEquals(SecurityPageEvent.Done, awaitItem())
+        }
+        assertEquals(listOf(Call.RemoveWalletWithLostDeviceKey(WalletFixtures.readyId)), store.calls<Call.RemoveWalletWithLostDeviceKey>())
+        assertTrue(store.calls<Call.DeleteWallet>().isEmpty())
+        assertTrue(state.value.gone)
+    }
+
+    @Test
+    fun withAppLockOnBiometricsComeFirstForARemovalToo() = runTest(main.dispatcher) {
+        val access = FakeAppAccessController(appLockOn)
+        val store = lostKeyStore()
+        val vm = viewModel(store, access)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertEquals(listOf<UiText>(UiText.Ios("Confirm before deleting this wallet.")), access.sensitiveActionReasons)
+        assertTrue(state.value.askingRemoval)
+
+        access.sensitiveActionFailure = CancellationException("dismissed")
+        vm.cancelRemoval()
+        vm.confirm()
+        advanceUntilIdle()
+        assertFalse(state.value.askingRemoval, "dismissing the prompt stops the removal")
+        assertTrue(store.calls<Call.RemoveWalletWithLostDeviceKey>().isEmpty())
+    }
+
+    @Test
+    fun aRemovalTheVaultRefusesShowsWhyAndFallsBackToThePassword() = runTest(main.dispatcher) {
+        val store = lostKeyStore().apply {
+            onRemoveWalletWithLostDeviceKey = {
+                lostDeviceKeys = emptySet()
+                throw VaultError.DeviceKeyLossUnconfirmed()
+            }
+        }
+        val vm = viewModel(store)
+        val state = observe(vm.uiState)
+        vm.pageEvents.test {
+            advanceUntilIdle()
+            vm.setConfirmed(true)
+            vm.confirm()
+            advanceUntilIdle()
+            vm.remove()
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+        assertEquals(VaultError.DeviceKeyLossUnconfirmed().text, state.value.error)
+        assertFalse(state.value.deviceKeyLost, "the key may still exist: the password path is back")
+        assertFalse(state.value.confirmed, "the password path's own statement is confirmed separately")
+        assertFalse(state.value.busy)
+        assertTrue(store.state.value.wallets.any { it.id == WalletFixtures.readyId })
+    }
+
+    @Test
+    fun aDeletionThatFindsTheDeviceKeyGoneOffersTheRemoval() = runTest(main.dispatcher) {
+        val store = WalletFixtures.store().apply {
+            onDeleteWallet = { id, _ ->
+                lostDeviceKeys = setOf(id)
+                throw VaultError.DeviceKeyUnavailable()
+            }
+        }
+        val vm = viewModel(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        assertFalse(state.value.deviceKeyLost)
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        vm.submit(SecretText.of("Public-Test-Password1!"))
+        advanceUntilIdle()
+        assertEquals(UiText.Ios("This wallet’s device key is unavailable. Restore your recovery phrase on this device."), state.value.error)
+        assertTrue(state.value.deviceKeyLost)
+        assertFalse(state.value.confirmed, "the switch now states something else: it must be turned on again")
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.askingRemoval)
+    }
+
+    @Test
+    fun aSuspensionClosesTheRemovalDialogAndLooksAtTheKeyAgain() = runTest(main.dispatcher) {
+        val store = lostKeyStore()
+        val vm = viewModel(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.askingRemoval)
+        store.suspendSession()
+        advanceUntilIdle()
+        assertFalse(state.value.askingRemoval, "background drops the open removal dialog")
+        assertEquals(2, store.calls<Call.IsDeviceKeyLost>().size)
+        vm.remove()
+        advanceUntilIdle()
+        assertTrue(store.calls<Call.RemoveWalletWithLostDeviceKey>().isEmpty(), "a closed dialog confirms nothing")
+        vm.confirm()
+        advanceUntilIdle()
+        vm.remove()
+        advanceUntilIdle()
+        assertEquals(1, store.calls<Call.RemoveWalletWithLostDeviceKey>().size, "the page itself stays usable")
+    }
+
+    @Test
+    fun aKeyCheckThatChangesThePageDuringTheBiometricPromptOpensNoDialog() = runTest(main.dispatcher) {
+        // The check started when the page opened answers only while the prompt is up: the switch was turned on for
+        // "I confirm I want to delete this wallet", the page now asks to remove a wallet that can't be unlocked.
+        val prompt = CompletableDeferred<Unit>()
+        val fake = FakeAppAccessController(appLockOn)
+        val access = object : AppAccessController by fake {
+            override suspend fun confirmSensitiveAction(reason: UiText) = prompt.await()
+        }
+        val answer = CompletableDeferred<Boolean>()
+        val store = WalletFixtures.store().apply { onIsDeviceKeyLost = { answer.await() } }
+        val vm = DeleteWalletViewModel(store, access, WalletFixtures.args())
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.confirming)
+
+        answer.complete(true)
+        advanceUntilIdle()
+        assertTrue(state.value.deviceKeyLost)
+        assertFalse(state.value.confirmed, "the switch confirmed the other statement")
+        prompt.complete(Unit)
+        advanceUntilIdle()
+        assertFalse(state.value.confirming)
+        assertFalse(state.value.askingRemoval, "no dialog for a statement nobody confirmed")
+        assertFalse(state.value.askingPassword)
+
+        vm.setConfirmed(true)
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(state.value.askingRemoval)
     }
 }

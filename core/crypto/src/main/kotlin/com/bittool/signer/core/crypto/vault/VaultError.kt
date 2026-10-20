@@ -38,6 +38,13 @@ sealed class VaultError(text: UiText, cause: Throwable? = null) : SignerExceptio
     /** No secure lock screen (`KeyguardManager.isDeviceSecure() == false`): Android wording of the iOS passcode error. */
     class DevicePasscodeRequired : VaultError(UiText.Resource(R.string.crypto_device_lock_required))
 
+    /**
+     * Android-only: [WalletVault.removeWithLostDeviceKey] refused because the wallet's device key is not *provably* gone
+     * (it is present, or Keystore did not answer well enough to prove its absence), so only the password can authorise
+     * removing the wallet ([WalletVault.delete]). Nothing was changed.
+     */
+    class DeviceKeyLossUnconfirmed : VaultError(UiText.Resource(R.string.crypto_device_key_loss_unconfirmed))
+
     /** "The encrypted wallet could not be read or saved." (I/O, staging, rename). */
     class StorageFailure(cause: Throwable? = null) : VaultError(UiText.Ios("The encrypted wallet could not be read or saved."), cause)
 

@@ -138,12 +138,15 @@ class KeystoreDeviceKeyStoreTest {
         assertArrayEquals(tag, store.publicDataKey(createIfMissing = true)!!.mac(message))
         assertArrayEquals(tag, AndroidKeystoreDeviceKeyStore({ true }, testPolicy).publicDataKey(false)!!.mac(message))
 
-        // A key this process already used that now reads as missing (flaky Keystore) is never regenerated.
+        // A key this process already used that Keystore provably lacks (it answers, and has no entry) is gone for good:
+        // it is created anew, so a wallet re-imported after the lost-key removal can save its public file (QA backlog
+        // B9; iOS: a lost key makes every wallet need Repair). The old tags no longer verify. A used key that merely
+        // reads as missing (API 26–30 binder flakiness) is never replaced: the JVM KeystoreLossProofTest shows that.
         keystore().deleteEntry(AndroidKeystoreDeviceKeyStore.ALIAS_PREFIX + AndroidKeystoreDeviceKeyStore.PUBLIC_DATA_KEY_ID)
         assertNull(store.publicDataKey(createIfMissing = false))
-        assertThrows(VaultError.DeviceKeyUnavailable::class.java) { store.publicDataKey(createIfMissing = true) }
-        // A new process may create it (iOS: a lost key makes every wallet need Repair).
-        assertNotNull(AndroidKeystoreDeviceKeyStore({ true }, testPolicy).publicDataKey(createIfMissing = true))
+        val again = requireNotNull(store.publicDataKey(createIfMissing = true))
+        assertFalse(again.verify(message, tag))
+        assertArrayEquals(again.mac(message), AndroidKeystoreDeviceKeyStore({ true }, testPolicy).publicDataKey(false)!!.mac(message))
     }
 
     @Test

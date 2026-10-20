@@ -1,5 +1,6 @@
 package com.bittool.signer.core.data
 
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.PublicAccount
 import com.bittool.signer.core.model.SecretText
@@ -28,7 +29,8 @@ import kotlinx.serialization.json.JsonObject
  * - Commits are success boundaries and the **store** enforces them, not the caller: everything after the persistent
  *   write runs in `withContext(NonCancellable)` and without epoch checks — [createWallet] after `vault.create` (reload,
  *   return), [resetPassword] after `vault.resetPassword` (suspend, reload), [deleteWallet] after `vault.delete` (suspend,
- *   sidecar removal, clear request, navigation reset, reload), [completeSetup] after the sidecar save (reload), and
+ *   sidecar removal, clear request, navigation reset, reload) and [removeWalletWithLostDeviceKey] after
+ *   `vault.removeWithLostDeviceKey` (the same steps), [completeSetup] after the sidecar save (reload), and
  *   [sign] once the result is published (receipt append). A caller whose coroutine is cancelled meanwhile still gets a
  *   consistent state (iOS: "A background transition during the commit must not invite a second import").
  *
@@ -155,6 +157,33 @@ interface SignerStore {
      * clears the request, renews `navigationResetEpoch` and reloads. Activity records are kept.
      */
     suspend fun deleteWallet(walletId: WalletId, password: SecretText)
+
+    /**
+     * Whether [walletId]'s device key is provably gone (`WalletVault.isDeviceKeyLost`: no Keystore entry while Keystore
+     * demonstrably answers, or a permanently invalidated one), so the wallet can never be unlocked again and
+     * [removeWalletWithLostDeviceKey] may remove it without its password (QA backlog B9). False when the wallet is not
+     * listed, without a secure lock screen, and whenever the loss is not proven; never throws except
+     * `CancellationException`. No password, no counted attempt, no state change.
+     *
+     * Android-only (iOS has no way out of this dead end). The default is false.
+     */
+    suspend fun isDeviceKeyLost(walletId: WalletId): Boolean = false
+
+    /**
+     * The way out of the lost-device-key dead end (QA backlog B9): such a wallet can be neither unlocked, reset, deleted
+     * with its password nor re-imported (its sidecar keeps the `walletKeyId`). Removes it **without its password**: the
+     * vault re-proves the loss under its lock (`VaultError.DeviceKeyLossUnconfirmed` when it cannot, and nothing changes)
+     * and deletes the vault file, the attempts file and any key remnant; then, exactly as after [deleteWallet]: suspends,
+     * removes the sidecar (failure → `error` "The encrypted wallet was deleted, but its public cache could not be
+     * removed."), clears the request, renews `navigationResetEpoch` and reloads — so the recovery phrase can be imported
+     * again. Committed like [deleteWallet] (a failure reloads and is rethrown). The caller asks for a strong confirmation
+     * first; every wallet whose key is not provably gone keeps [deleteWallet]'s password.
+     *
+     * The default refuses with `VaultError.DeviceKeyLossUnconfirmed`.
+     */
+    suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) {
+        throw VaultError.DeviceKeyLossUnconfirmed()
+    }
 
     /** Decrypts the wallet's secret for the Recovery Phrase page (guarded by both epochs). The caller closes it. */
     suspend fun reveal(walletId: WalletId, password: SecretText): VaultSecret

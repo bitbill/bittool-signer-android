@@ -6,6 +6,7 @@ import com.bittool.signer.core.crypto.Pbkdf2Bip39Seed
 import com.bittool.signer.core.crypto.bip39.Bip39
 import com.bittool.signer.core.crypto.bip39.Bip39WordlistSource
 import com.bittool.signer.core.crypto.bip39.DefaultBip39
+import com.bittool.signer.core.crypto.testing.TestKeystore
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.DeviceKeyStore
 import com.bittool.signer.core.crypto.vault.JournalCipher
@@ -14,7 +15,6 @@ import com.bittool.signer.core.crypto.vault.SignerFiles
 import com.bittool.signer.core.model.QrCodeEncoder
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.scanner.ZxingQrCodeEncoder
-import java.lang.reflect.Proxy
 import java.security.KeyStore
 
 /**
@@ -28,11 +28,11 @@ import java.security.KeyStore
  * marks every key `setUnlockedDeviceRequired(true)`, which API 31 Keystore refuses to generate while no secure lock
  * screen exists, and `AndroidKeystoreDeviceKeyStore` refuses to create keys without one (vault-crypto.md §17.3). The
  * shared test emulator has no lock screen and the tests must not change the device's security settings, so on such a
- * device [journalCipher] and [keystoreDeviceKeys] construct the same classes with the policy `:core:crypto`'s own
- * Keystore tests use (`KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = false)`, a lock-screen gate that
- * answers "secure"). Those constructors are `internal` to `:core:crypto`, so they are reached reflectively; every
- * cryptographic operation is still the production code under real non-exportable Keystore keys. On a device with a
- * lock screen the production `@Inject` constructors are used unchanged.
+ * device [journalCipher] and [keystoreDeviceKeys] come from `:core:crypto`'s public test factory [TestKeystore]: the
+ * same classes with the policy `:core:crypto`'s own Keystore tests use (`KeystoreKeyPolicy(strongBox = false,
+ * unlockedDeviceRequired = false)`) and a lock-screen gate that answers "secure". Every cryptographic operation is still
+ * the production code under real non-exportable Keystore keys. On a device with a lock screen the production `@Inject`
+ * constructors are used unchanged.
  */
 object DeviceCrypto {
     /** The asset wordlists are read once per test process (as the `@Singleton` binding does). */
@@ -47,21 +47,11 @@ object DeviceCrypto {
         get() = DeviceEngine.context.getSystemService(KeyguardManager::class.java)?.isDeviceSecure == true
 
     /** A new `KeystoreJournalCipher` (one per simulated process): the alias `com.bittool.signer.activity.v1` persists. */
-    fun journalCipher(): JournalCipher =
-        if (isDeviceSecure) {
-            KeystoreJournalCipher()
-        } else {
-            KeystoreJournalCipher::class.java.getDeclaredConstructor(policyClass).newInstance(testPolicy())
-        }
+    fun journalCipher(): JournalCipher = if (isDeviceSecure) KeystoreJournalCipher() else TestKeystore.journalCipher()
 
     /** A new `AndroidKeystoreDeviceKeyStore`: per-wallet AES keys and the HMAC public-data key in the Android Keystore. */
     fun keystoreDeviceKeys(): DeviceKeyStore =
-        if (isDeviceSecure) {
-            AndroidKeystoreDeviceKeyStore(DeviceEngine.context)
-        } else {
-            AndroidKeystoreDeviceKeyStore::class.java.getDeclaredConstructor(lockScreenClass, policyClass)
-                .newInstance(secureLockScreen(), testPolicy())
-        }
+        if (isDeviceSecure) AndroidKeystoreDeviceKeyStore(DeviceEngine.context) else TestKeystore.deviceKeyStore()
 
     /** Whether the Keystore holds a device key for [id] (the vault creates it with the wallet and deletes it with it). */
     fun hasKeystoreKey(id: WalletId): Boolean = keystore().containsAlias(AndroidKeystoreDeviceKeyStore.ALIAS_PREFIX + id)
@@ -76,6 +66,16 @@ object DeviceCrypto {
     }
 
     /**
+     * Deletes the public-data HMAC key, as if Keystore had lost it (with every other key that needs an unlocked device,
+     * when the screen lock is removed): every public file then fails its MAC.
+     */
+    fun deletePublicDataKey() {
+        val keystore = keystore()
+        val alias = AndroidKeystoreDeviceKeyStore.ALIAS_PREFIX + AndroidKeystoreDeviceKeyStore.PUBLIC_DATA_KEY_ID
+        if (keystore.containsAlias(alias)) keystore.deleteEntry(alias)
+    }
+
+    /**
      * Deletes the Activity journal key `com.bittool.signer.activity.v1`, as if Keystore had lost it. A cipher that already
      * used it then refuses to seal; a new process (a new `KeystoreJournalCipher`) creates a new key on its first seal.
      */
@@ -85,23 +85,4 @@ object DeviceCrypto {
     }
 
     private fun keystore(): KeyStore = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-
-    private val policyClass: Class<*> by lazy { Class.forName("com.bittool.signer.core.crypto.vault.KeystoreKeyPolicy") }
-
-    private val lockScreenClass: Class<*> by lazy { Class.forName("com.bittool.signer.core.crypto.vault.DeviceLockScreen") }
-
-    /** `KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = false)`. */
-    private fun testPolicy(): Any =
-        policyClass.getDeclaredConstructor(Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType).newInstance(false, false)
-
-    /** A `DeviceLockScreen` that reports a secure lock screen. */
-    private fun secureLockScreen(): Any = Proxy.newProxyInstance(lockScreenClass.classLoader, arrayOf(lockScreenClass)) { proxy, method, args ->
-        when (method.name) {
-            "isSecure" -> true
-            "toString" -> "DeviceLockScreen(test: secure)"
-            "hashCode" -> System.identityHashCode(proxy)
-            "equals" -> proxy === args?.firstOrNull()
-            else -> throw UnsupportedOperationException(method.name)
-        }
-    }
 }

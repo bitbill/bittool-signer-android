@@ -1,5 +1,6 @@
 package com.bittool.signer.core.data.testing
 
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.PreferenceValues
 import com.bittool.signer.core.model.Appearance
 import com.bittool.signer.core.model.LegalBlock
@@ -38,6 +39,25 @@ class FakesTest {
         assertEquals(24, store.generateMnemonic(24).use { String(it.chars()).split(' ').size })
         assertFailsWith<FakeSignerStore.NotScripted> { store.walletPairing(WalletId.random()) }
         assertEquals(2, store.calls<FakeSignerStore.Call.GenerateMnemonic>().size)
+    }
+
+    @Test
+    fun theFakeStoreRemovesOnlyWalletsWithAProvablyLostKey() = runTest {
+        val store = FakeSignerStore()
+        val created = SecretText.of("p").use { p -> SecretText.of("").use { e -> SecretText.of("Secret-1").use { pw -> store.createWallet("Main", p, e, pw) } } }
+        assertFalse(store.isDeviceKeyLost(created.id))
+        assertFailsWith<VaultError.DeviceKeyLossUnconfirmed> { store.removeWalletWithLostDeviceKey(created.id) }
+        assertEquals(listOf(created), store.state.value.wallets)
+        store.lostDeviceKeys = setOf(created.id)
+        assertTrue(store.isDeviceKeyLost(created.id))
+        store.removeWalletWithLostDeviceKey(created.id)
+        assertTrue(store.state.value.wallets.isEmpty())
+        assertEquals(1, store.state.value.navigationResetEpoch)
+        assertEquals(1, store.state.value.securityEpoch)
+        assertEquals(
+            listOf(FakeSignerStore.Call.RemoveWalletWithLostDeviceKey(created.id), FakeSignerStore.Call.RemoveWalletWithLostDeviceKey(created.id)),
+            store.calls<FakeSignerStore.Call.RemoveWalletWithLostDeviceKey>(),
+        )
     }
 
     @Test

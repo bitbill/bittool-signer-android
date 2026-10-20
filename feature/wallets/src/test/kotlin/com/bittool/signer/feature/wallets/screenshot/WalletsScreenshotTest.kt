@@ -132,6 +132,17 @@ enum class Screen(val heightDp: Int, val content: @Composable () -> Unit) {
             actions = DeleteWalletActions(),
         )
     }),
+    RemoveLostKeyWallet(900, {
+        DeleteWalletContent(
+            uiState = DeleteWalletUiState(
+                identity = WalletIdentity.of(WalletFixtures.state(), WalletFixtures.readyId),
+                confirmed = true,
+                deviceKeyLost = true,
+            ),
+            toast = rememberStatusToastState(),
+            actions = DeleteWalletActions(),
+        )
+    }),
     RepairWallet(700, {
         val state = WalletFixtures.state(repair = true)
         RepairWalletContent(
