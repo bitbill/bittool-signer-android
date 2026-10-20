@@ -107,7 +107,20 @@ fun MainScaffold(
     val showBar = destination?.isModal() != true && !WindowInsets.isImeVisible
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val transitions = remember(rtl) { NavTransitions(rtl) }
-    val onTab: (Tab) -> Unit = router::onTabClicked
+    val navigator = remember(navController) { ShellNavigator(navController) }
+    // A tap is judged against the tab that is actually shown: the shown tab is a reselection (pop to its root), any
+    // other is shown at once (the router follows; its collector then finds nothing left to do).
+    val onTab: (Tab) -> Unit = remember(navigator, router) {
+        { tab ->
+            if (navigator.shownTab == tab) {
+                router.onTabShown(tab)
+                router.onTabClicked(tab)
+            } else {
+                router.selectTab(tab)
+                navigator.showTab(tab)
+            }
+        }
+    }
 
     BoxWithConstraints(modifier.fillMaxSize().testTag(MainTags.ROOT)) {
         val rail = maxWidth >= RailMinWidth
@@ -153,7 +166,7 @@ fun MainScaffold(
                 }
             }
         }
-        RouterGlue(navController, router)
+        RouterGlue(navigator, router)
     }
 }
 

@@ -60,44 +60,65 @@ fun NavDestination.tab(): Tab? = hierarchy.firstNotNullOfOrNull { node -> Tab.en
 fun NavDestination.isModal(): Boolean = ModalRouteClasses.any { hasRoute(it) }
 
 /**
- * Shows [tab] (ARCHITECTURE §2.2): its graph with its own back stack restored, the other tabs' stacks saved. Nothing
- * when it is already showing.
+ * Tab and Wallets-stack navigation over the one NavHost (ARCHITECTURE §2.2, §2.4): each tab keeps its own stack (saved
+ * when another tab is shown, restored when it comes back); the router's Wallets requests are applied here. Main
+ * thread, like the NavController.
  */
-fun NavHostController.navigateToTab(tab: Tab) {
-    if (currentBackStackEntry?.destination?.tab() == tab) return
-    navigate(tab.graph) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
-    }
-}
+class ShellNavigator(val navController: NavHostController) {
+    /**
+     * A `Reset` that arrived while another tab was shown: Wallets' saved stack is popped to its root the next time it is
+     * shown. (Dropping the saved stack with `clearBackStack` instead leaves navigation unable to restore Wallets, the
+     * start graph, ever again: the restoring navigation silently does nothing.)
+     */
+    private var walletsResetPending = false
 
-/** Reselecting the shown tab: back to its root (the root screen also scrolls to the top on `AppRouter.reselections`). */
-fun NavHostController.popToTabRoot(tab: Tab) {
-    if (currentBackStackEntry?.destination?.tab() != tab) return
-    popBackStack(tab.root, inclusive = false)
-}
+    /** The tab whose page is on screen, or null on a root-level page. */
+    val shownTab: Tab? get() = navController.currentBackStackEntry?.destination?.tab()
 
-/**
- * One Wallets-stack change (iOS `walletPath` assignments, ARCHITECTURE §2.4):
- * - `Replace(route)`: the Wallets tab, then [route] as the only page above `WalletsRoute`;
- * - `Reset`: back to `WalletsRoute` when Wallets is showing, otherwise its saved stack is dropped, so the tab opens
- *   on its root next time. Other tabs' stacks are untouched.
- */
-fun NavHostController.execute(request: WalletStackRequest) {
-    when (request) {
-        is WalletStackRequest.Replace -> {
-            navigateToTab(Tab.Wallets)
-            navigate(request.route) {
-                popUpTo<WalletsRoute>()
+    /** Shows [tab] with its own stack; nothing when it already shows. */
+    fun showTab(tab: Tab) {
+        if (shownTab != tab) {
+            navController.navigate(tab.graph) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
+                restoreState = true
             }
         }
-        WalletStackRequest.Reset -> {
-            if (currentBackStackEntry?.destination?.tab() == Tab.Wallets) {
-                popBackStack(WalletsRoute, inclusive = false)
-            } else {
-                clearBackStack<WalletsGraph>()
+        if (tab == Tab.Wallets && walletsResetPending && shownTab == Tab.Wallets) {
+            walletsResetPending = false
+            navController.popBackStack(WalletsRoute, inclusive = false)
+        }
+    }
+
+    /** Reselecting the shown tab: back to its root (the root screen also scrolls to the top on `AppRouter.reselections`). */
+    fun popToRoot(tab: Tab) {
+        if (shownTab != tab) return
+        navController.popBackStack(tab.root, inclusive = false)
+    }
+
+    /**
+     * One Wallets-stack change (iOS `walletPath` assignments):
+     * - `Replace(route)`: the Wallets tab, then [route] as the only page above `WalletsRoute`;
+     * - `Reset`: back to `WalletsRoute` when Wallets is showing, otherwise when it is shown next. Other tabs' stacks are
+     *   untouched.
+     */
+    fun execute(request: WalletStackRequest) {
+        when (request) {
+            is WalletStackRequest.Replace -> {
+                showTab(Tab.Wallets)
+                walletsResetPending = false
+                navController.navigate(request.route) {
+                    popUpTo<WalletsRoute>()
+                    launchSingleTop = true
+                }
+            }
+            WalletStackRequest.Reset -> {
+                if (shownTab == Tab.Wallets) {
+                    walletsResetPending = false
+                    navController.popBackStack(WalletsRoute, inclusive = false)
+                } else {
+                    walletsResetPending = true
+                }
             }
         }
     }
@@ -105,23 +126,25 @@ fun NavHostController.execute(request: WalletStackRequest) {
 
 /**
  * The `AppRouter` ↔ NavHost glue (ARCHITECTURE §2.2–§2.4): the selected tab is shown, a reselection pops to the root,
- * Wallets-stack requests run in order, and the shown destination's tab is reported back (system Back to Wallets, a
- * restored stack). Compose this after the NavHost (its graph must exist).
+ * Wallets-stack requests run in order, and the shown page's tab is reported back (system Back to Wallets, a restored
+ * stack). Compose this after the NavHost (its graph must exist).
  */
 @Composable
-fun RouterGlue(navController: NavHostController, router: AppRouter) {
-    LaunchedEffect(navController, router) {
-        router.tab.collect { navController.navigateToTab(it) }
+fun RouterGlue(navigator: ShellNavigator, router: AppRouter) {
+    val navController = navigator.navController
+    LaunchedEffect(navigator, router) {
+        router.tab.collect(navigator::showTab)
     }
-    LaunchedEffect(navController, router) {
-        router.reselections.collect { navController.popToTabRoot(it) }
+    LaunchedEffect(navigator, router) {
+        router.reselections.collect(navigator::popToRoot)
     }
-    LaunchedEffect(navController, router) {
-        router.walletStackRequests.collect { navController.execute(it) }
+    LaunchedEffect(navigator, router) {
+        router.walletStackRequests.collect(navigator::execute)
     }
     DisposableEffect(navController, router) {
-        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
-            destination.tab()?.let(router::onTabShown)
+        // The controller's current page, not the dispatched one: a restore replays entries through the listener.
+        val listener = NavController.OnDestinationChangedListener { controller, _, _ ->
+            controller.currentDestination?.tab()?.let(router::onTabShown)
         }
         navController.addOnDestinationChangedListener(listener)
         onDispose { navController.removeOnDestinationChangedListener(listener) }

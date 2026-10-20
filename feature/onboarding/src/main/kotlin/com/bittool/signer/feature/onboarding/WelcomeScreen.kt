@@ -140,8 +140,9 @@ fun WelcomeContent(
                     onClick = { onStart(SetupIntent.Restore) },
                     modifier = Modifier.testTag(WelcomeTags.IMPORT),
                 )
-                // On top of the bar's own row spacing: the legal links are a separate thought from the two actions.
-                LegalLinks(onShowLegal, Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp))
+                // iOS adds 12 pt above the links (a separate thought from the two actions); their 48 dp touch targets
+                // already put that space between the text and the button, so no extra padding (and none below: bottom 0).
+                LegalLinks(onShowLegal, Modifier.align(Alignment.CenterHorizontally))
             }
         }
     }

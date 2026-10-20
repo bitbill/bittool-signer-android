@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -234,8 +235,11 @@ private fun PageIndicator(pagerState: PagerState, modifier: Modifier = Modifier)
     Canvas(
         modifier
             .size(width, DotSize)
-            .clearAndSetSemantics { contentDescription = description }
-            .testTag(OnboardingTags.INDICATOR),
+            // One node: the description and the tag (a tag outside the clearing modifier would be cleared with the rest).
+            .clearAndSetSemantics {
+                contentDescription = description
+                testTag = OnboardingTags.INDICATOR
+            },
     ) {
         val position = pagerState.currentPage + pagerState.currentPageOffsetFraction
         val height = size.height

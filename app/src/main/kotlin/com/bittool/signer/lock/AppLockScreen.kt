@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -95,11 +96,16 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val password = remember { TextFieldState() }
     val focus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(viewModel) {
         viewModel.fieldEvents.collect { event ->
             when (event) {
                 AppLockEvent.ClearPassword -> password.clearText()
-                AppLockEvent.FocusPassword -> runCatching { focus.requestFocus() }
+                // iOS `passwordFocused = true`: the field takes the focus with the keyboard (the lock window hides it by default).
+                AppLockEvent.FocusPassword -> runCatching {
+                    focus.requestFocus()
+                    keyboard?.show()
+                }
             }
         }
     }
