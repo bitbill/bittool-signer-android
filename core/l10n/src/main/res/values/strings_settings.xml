@@ -5,7 +5,11 @@
     wording otherwise. Protocol tokens, brand and entity names are translatable="false".
 -->
 <resources>
-    <!-- LegalDocumentParser.MISSING (LegalDocumentView.swift:67): a bundled legal text could not be read. -->
+    <!--
+        LegalDocumentParser.MISSING (LegalDocumentView.swift:67): a bundled legal text could not be read. Shown by the
+        Settings legal pages and by Welcome's Terms / Privacy sheet (:feature:onboarding), which reference this one
+        resource; translated with the other strings of this file.
+    -->
     <string name="settings_document_missing">This document is missing from the app bundle.</string>
     <!-- iOS system ContentUnavailableView.search title (not in the app catalogue). -->
     <string name="settings_no_results">No Results for “%1$s”</string>

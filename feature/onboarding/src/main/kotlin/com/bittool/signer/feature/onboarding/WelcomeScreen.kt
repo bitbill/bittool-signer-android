@@ -276,40 +276,50 @@ private fun LegalLink(text: String, tag: String, onClick: () -> Unit) {
  * document's title and "Done" (`legal.done`), the text selectable and without links. English text by decision; the
  * title follows the app language like the button that opened it.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun LegalDocumentSheet(sheet: LegalSheet, onDismiss: () -> Unit) {
-    val colors = SignerTheme.colors
-    val exposeTags = rememberExposesTestTags()
     SignerBottomSheet(onDismissRequest = onDismiss) {
         val sheetScope = this
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                // A sheet is its own window: the root's resource-id flag does not reach it (UI tests find `legal.done`).
-                .semantics { testTagsAsResourceId = exposeTags },
-        ) {
-            Box(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 8.dp)) {
-                Text(
-                    text = stringResource(if (sheet.document == LegalDocument.Terms) R.string.terms_of_use else R.string.privacy_policy),
-                    style = SignerTheme.typography.headline,
-                    color = colors.label,
-                    modifier = Modifier.align(Alignment.Center).padding(horizontal = 72.dp).semantics { heading() },
-                )
-                TextAction(
-                    text = stringResource(R.string.done),
-                    onClick = { sheetScope.dismiss() },
-                    emphasized = true,
-                    modifier = Modifier.align(Alignment.CenterEnd).testTag(WelcomeTags.LEGAL_DONE),
-                )
-            }
-            LegalDocumentView(
-                blocks = sheet.blocks.orEmpty(),
-                modifier = Modifier.weight(1f).fillMaxWidth().testTag(sheet.document.testTag),
-                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+        LegalSheetContent(sheet = sheet, onDone = { sheetScope.dismiss() }, modifier = Modifier.fillMaxHeight())
+    }
+}
+
+/**
+ * The inside of [LegalDocumentSheet]: title, "Done" and the blocks. A document that could not be read is the one
+ * translated paragraph, "This document is missing from the app bundle." (`settings_document_missing`, shared with the
+ * Settings legal pages), in the app language instead of the parser's English `LegalDocumentParser.MISSING`.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+internal fun LegalSheetContent(sheet: LegalSheet, onDone: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = SignerTheme.colors
+    val exposeTags = rememberExposesTestTags()
+    Column(
+        modifier
+            .fillMaxWidth()
+            // A sheet is its own window: the root's resource-id flag does not reach it (UI tests find `legal.done`).
+            .semantics { testTagsAsResourceId = exposeTags },
+    ) {
+        Box(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 8.dp)) {
+            Text(
+                text = stringResource(if (sheet.document == LegalDocument.Terms) R.string.terms_of_use else R.string.privacy_policy),
+                style = SignerTheme.typography.headline,
+                color = colors.label,
+                modifier = Modifier.align(Alignment.Center).padding(horizontal = 72.dp).semantics { heading() },
+            )
+            TextAction(
+                text = stringResource(R.string.done),
+                onClick = onDone,
+                emphasized = true,
+                modifier = Modifier.align(Alignment.CenterEnd).testTag(WelcomeTags.LEGAL_DONE),
             )
         }
+        LegalDocumentView(
+            blocks = sheet.blocks.orEmpty(),
+            modifier = Modifier.weight(1f).fillMaxWidth().testTag(sheet.document.testTag),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+            missingText = stringResource(R.string.settings_document_missing),
+        )
     }
 }
 
