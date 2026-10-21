@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,8 @@ import com.bittool.signer.core.designsystem.component.EmptyState
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.ui.text.asString
@@ -91,15 +94,29 @@ fun LoadFailureScreen(retrying: Boolean, onRetry: () -> Unit, modifier: Modifier
 /**
  * The app-wide failure alert (iOS RootView.swift:66-68): title "Unable to Continue", the message verbatim (already the
  * localised `UiText`), one "OK" that clears it. A `SignerAlertDialog`, so while App Lock is up it waits for the gate.
+ *
+ * The message keeps its own direction (iOS `Text(store.error)`, natural direction; backlog B25): store and engine text
+ * may be English, or carry an address, in an Arabic interface, and a right-to-left paragraph would move its punctuation
+ * and numbers. Compose lays a plain `String` out by its first strong character today, but annotated or selectable text
+ * takes the layout direction (QA round 1 sign-02), so the direction is explicit: drawn like the dialog's own message,
+ * with `contentDirection()` as `Callout(verbatim)` does.
  */
 @Composable
 fun UnableToContinueDialog(error: UiText, onDismiss: () -> Unit) {
+    val message = error.asString()
     SignerAlertDialog(
         title = stringResource(R.string.unable_to_continue),
-        text = error.asString(),
+        text = null,
         confirm = DialogAction(text = stringResource(R.string.ok), testTag = RootTags.ERROR_OK, onClick = onDismiss),
         onDismissRequest = onDismiss,
-    )
+    ) {
+        Text(
+            message,
+            style = SignerTheme.typography.body.contentDirection(),
+            color = SignerTheme.colors.secondaryLabel,
+            modifier = Modifier.testTag(RootTags.ERROR_MESSAGE),
+        )
+    }
 }
 
 /** Test tags of the root layers (Android-only; the iOS suite finds these by their text). */
@@ -109,5 +126,6 @@ object RootTags {
     const val LOAD_FAILURE = "root.loadFailure"
     const val RETRY = "root.retry"
     const val ERROR_OK = "root.error.ok"
+    const val ERROR_MESSAGE = "root.error.message"
     const val SETUP = "setup.overlay"
 }
