@@ -1,0 +1,401 @@
+{
+ "language": "id",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Dompet yang dihapus"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Tinggi"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "Peringatan ditampilkan"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Tanda tangan sebagian dibuat"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "Aktivitas tidak tersedia"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Berkas tidak bisa disimpan."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Tetapkan kunci layar (PIN, pola, atau kata sandi) untuk membuat atau memakai dompet. Kunci perangkat memerlukan perlindungan kunci layar."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer tidak bisa memastikan bahwa kunci perangkat dompet ini sudah hilang. Coba lagi, atau hapus dompet dengan kata sandinya."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Mesin penandatanganan bawaan tidak tersedia. Instal ulang BitTool Signer."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Mesin penandatanganan bawaan tidak bisa dimuat."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Mesin penandatanganan luring tidak bisa dijalankan."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Sumber entropi aman milik mesin tidak bisa dipasang."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Mesin luring tidak bisa memproses permintaan ini."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Operasi penandatanganan ini tidak didukung."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Permintaan ini melebihi batas penandatanganan luring 1 MB."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Sesi pemindaian berakhir. Pindai lagi."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Permintaan ini tidak bisa ditandatangani."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Catatan aktivitas lokal tidak bisa dibaca."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Catatan aktivitas lokal tidak bisa disimpan. Tanda tangan yang sudah selesai tetap tersedia."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Dompet terenkripsi sudah dihapus, tetapi cache publiknya tidak bisa dibersihkan."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Untuk isolasi paling ketat, gunakan ponsel khusus dan biarkan semua koneksinya mati."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer tidak memiliki izin internet, jadi Android memblokir setiap koneksi"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "Kode QR ditemukan, tetapi tidak memuat teks yang bisa dibaca. Ekspor permintaan sebagai berkas saja."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Kode QR ini kosong. Pindai permintaan penandatanganan dari dompet Anda yang lain."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Kode QR ini terlalu besar. Gunakan kode QR beranimasi atau ekspor berkas permintaan."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "Kode QR ini tidak memuat kata yang bisa dibaca. Compact SeedQR tidak didukung; gunakan kode QR yang memuat kata-katanya atau SeedQR standar, atau ketik kata-katanya."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Kode QR ini kosong. Pindai kode QR yang memuat frasa pemulihan Anda."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Kode QR ini terlalu besar untuk sebuah frasa pemulihan."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "Kunci aplikasi"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Wajibkan buka kunci biometrik untuk membuka BitTool Signer saat diluncurkan dan setelah 2 menit di latar belakang. Setiap tanda tangan tetap memerlukan kata sandi dompet."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "Atur buka kunci dengan sidik jari atau wajah di Pengaturan Android untuk mengunci BitTool Signer. Setiap tanda tangan tetap selalu memerlukan kata sandi dompet."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Buka kunci dengan biometrik"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Gunakan biometrik saja"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "Buka kunci BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "Kunci BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Menandatangani tetap memerlukan kata sandi dompet."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Autentikasi biometrik tidak tersedia. Periksa buka kunci dengan sidik jari atau wajah di Pengaturan Android, atau gunakan kata sandi dompet."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Biometrik terkunci setelah terlalu banyak percobaan. Gunakan kata sandi dompet, atau buka dulu kunci ponsel Anda dengan kunci layarnya."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Menghapus akan meminta konfirmasi biometrik, lalu kata sandi dompet ini."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "Aplikasi lain sedang tampil di atas BitTool Signer. Tutup aplikasi itu, lalu coba lagi."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Kunci aplikasi tidak bisa diubah. Coba lagi."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Dokumen ini tidak ada dalam paket aplikasi."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Tidak ada hasil untuk “%1$s”"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Periksa ejaan atau coba pencarian baru."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "Hapus pencarian"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Distribusi"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Unduhan langsung (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Sertifikat penandatanganan"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer sepenuhnya sumber terbuka. Aplikasi Android, mesin penandatanganan luring, dan data token diterbitkan, sehingga siapa pun bisa membaca apa yang dilakukan signer terhadap frasa pemulihan — lalu membangunnya ulang dan membandingkan hasilnya dengan salinan yang terpasang di sini."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Kode sumber mesin penandatanganan"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: satu xpub akun untuk setiap jenis alamat Bitcoin, untuk EVM dan untuk TRON, serta ketiga alamat Solana, dalam satu QR beranimasi"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "Tangkapan layar terdeteksi"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "Kode QR ini tidak memuat frasa pemulihan."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Pada frasa %1$d kata, setiap kartu menampilkan %2$d dari %3$d kata, dan %4$d kata lainnya bisa ditebak dengan daya komputasi yang cukup. Jaga setiap kartu seketat frasa lengkapnya, atau gunakan frasa 24 kata untuk cadangan terbagi."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Kosong"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Kosong, diisi berikutnya"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Frasa sudah disembunyikan lagi, tetapi tangkapan layarnya mungkin sudah memuatnya. Hapus dari galeri Anda dan dari semua salinan tersinkronisasi, lalu simpan cadangan tertulis secara luring."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Tangkapan layar mungkin memuat frasa pemulihan Anda atau sebagian kata-katanya. Hapus dari galeri Anda dan dari semua salinan tersinkronisasi, lalu simpan cadangan tertulis secara luring."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Kunci layar diperlukan"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Frasa pemulihan ini milik dompet di perangkat ini yang kunci perangkatnya sudah hilang, jadi kata sandinya tidak bisa disetel ulang. Buka dompet itu, pilih “Hapus dompet”, lalu “Keluarkan dompet ini”, dan impor lagi frasanya."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Buka dompet"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "Ada permintaan penandatanganan yang menunggu"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Pencocokan terputus. Coba lagi."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Tidak ada dompet yang cocok"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Tidak ada informasi penanda tangan"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Cocok dengan lebih dari satu dompet"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Dompet perlu disiapkan"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Protokol penandatanganan tidak didukung"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Membaca permintaan…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Jaga kode beranimasi tetap terlihat · %1$d bagian"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 adalah PSBT persis yang dibawa kode QR ini; decoded dibaca darinya sebagai referensi."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Berkas tidak bisa dibaca."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Berkas tidak bisa disimpan."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Perlu disiapkan"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Data (heksadesimal)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Data (teks)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s byte"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Teks biasa"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "Kontrak NFT (belum diverifikasi)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "+%1$d lainnya (lihat Detail)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Tinjau permintaan"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Alamat"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Sidik jari disimpan sebagai angka 32-bit: %1$s adalah sidik jari %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Kurangi"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Tambah"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Kecerahan layar"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Normal"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Terang"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Dompet ini tidak bisa dibuka kuncinya"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Kunci perangkat dompet ini sudah tidak ada di perangkat ini, jadi dompet tidak bisa dibuka kuncinya, bahkan dengan kata sandi yang benar. Keluarkan dompet di sini, lalu impor lagi frasa pemulihan dan frasa sandi BIP39 (jika ada) untuk memulihkannya. Dana tidak terpengaruh."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Saya memahami bahwa hanya frasa pemulihan yang bisa memulihkan dompet ini"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Mengeluarkan dompet ini tidak meminta kata sandinya: kunci perangkat yang diperlukan kata sandi itu sudah hilang."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Mengeluarkan dompet ini meminta konfirmasi biometrik, bukan kata sandinya: kunci perangkat yang diperlukan kata sandi itu sudah hilang."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Keluarkan dompet ini"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Keluarkan dompet ini?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Berkas terenkripsinya dihapus dari perangkat ini tanpa kata sandi. Hanya frasa pemulihan dan frasa sandi BIP39 (jika ada) yang bisa memulihkannya."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Keluarkan"
+  }
+ }
+}

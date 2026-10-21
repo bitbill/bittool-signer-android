@@ -1,0 +1,401 @@
+{
+ "language": "ko",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "삭제된 지갑"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "높음"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "경고 표시됨"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "일부 서명을 만들었습니다"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "활동 기록을 사용할 수 없습니다"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "파일을 저장하지 못했습니다."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "지갑을 만들거나 사용하려면 화면 잠금(PIN, 패턴 또는 비밀번호)을 설정하세요. 기기 키는 화면 잠금 보호가 필요합니다."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer가 이 지갑의 기기 키가 사라졌는지 확인하지 못했습니다. 다시 시도하거나, 지갑 암호를 입력해 지갑을 삭제하세요."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "내장된 서명 엔진을 사용할 수 없습니다. BitTool Signer를 다시 설치하세요."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "내장된 서명 엔진을 불러오지 못했습니다."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "오프라인 서명 엔진을 시작하지 못했습니다."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "엔진에 안전한 난수 소스를 설치하지 못했습니다."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "오프라인 엔진이 이 요청을 처리하지 못했습니다."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "이 서명 작업은 지원하지 않습니다."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "이 요청은 오프라인 서명 한도인 1MB를 넘습니다."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "스캔 세션이 끝났습니다. 다시 스캔하세요."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "이 요청에 서명하지 못했습니다."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "로컬 활동 기록을 읽지 못했습니다."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "로컬 활동 기록을 저장하지 못했습니다. 완료된 서명은 계속 사용할 수 있습니다."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "암호화된 지갑은 삭제했지만, 공개 캐시를 지우지 못했습니다."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "가장 확실하게 분리하려면 전용 휴대전화를 쓰고 통신을 모두 꺼 두세요."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer에는 인터넷 권한이 없어 Android가 모든 연결을 차단합니다"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "QR 코드를 찾았지만 읽을 수 있는 텍스트가 없습니다. 대신 요청을 파일로 내보내세요."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "이 QR 코드는 비어 있습니다. 다른 지갑의 서명 요청을 스캔하세요."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "이 QR 코드는 너무 큽니다. 애니메이션 QR 코드를 사용하거나 요청 파일을 내보내세요."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "이 QR 코드에는 읽을 수 있는 단어가 없습니다. Compact SeedQR은 지원하지 않습니다. 단어가 담긴 QR 코드나 표준 SeedQR을 사용하거나, 단어를 직접 입력하세요."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "이 QR 코드는 비어 있습니다. 복구 구문이 담긴 QR 코드를 스캔하세요."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "이 QR 코드는 복구 구문이라고 하기에는 너무 큽니다."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "앱 잠금"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "앱을 실행할 때와 백그라운드에서 2분이 지난 뒤 BitTool Signer를 열려면 생체 인증이 필요합니다. 서명에는 여전히 지갑 암호가 필요합니다."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "BitTool Signer를 잠그려면 Android 설정에서 지문 또는 얼굴 인식을 설정하세요. 서명에는 항상 지갑 암호가 필요합니다."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "생체 인증으로 잠금 해제"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "대신 생체 인증 사용"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "BitTool Signer 잠금 해제"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "BitTool Signer 잠금"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "서명에는 여전히 지갑 암호가 필요합니다."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "생체 인증을 사용할 수 없습니다. Android 설정에서 지문 또는 얼굴 인식을 확인하거나 지갑 암호를 사용하세요."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "시도 횟수가 많아 생체 인증이 잠겼습니다. 지갑 암호를 사용하거나, 먼저 화면 잠금으로 휴대전화 잠금을 해제하세요."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "삭제하려면 생체 인증으로 확인한 뒤 이 지갑의 암호가 필요합니다."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "다른 앱이 BitTool Signer 위에 표시되고 있습니다. 그 앱을 닫은 뒤 다시 시도하세요."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "앱 잠금을 변경하지 못했습니다. 다시 시도하세요."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "앱에 이 문서가 포함되어 있지 않습니다."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "‘%1$s’에 대한 결과 없음"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "철자를 확인하거나 다른 검색어로 검색해 보세요."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "검색어 지우기"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "배포 경로"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "직접 다운로드(APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "서명 인증서"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer는 전부 오픈소스입니다. Android 앱, 오프라인 서명 엔진, 토큰 데이터가 공개되어 있어, 서명기가 복구 구문을 어떻게 다루는지 누구나 읽어볼 수 있습니다. 직접 다시 빌드해 이 기기에 설치된 것과 비교할 수도 있습니다."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "서명 엔진 소스 코드"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: 비트코인 주소 유형별 계정 xpub, EVM·TRON의 계정 xpub, Solana 주소 세 개를 모두 하나의 애니메이션 QR 코드에 담음"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "스크린샷이 감지되었습니다"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "이 QR 코드에는 복구 구문이 없습니다."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "%1$d단어 구문에서는 카드마다 %3$d단어 중 %2$d단어가 보이고, 나머지 %4$d단어는 충분한 연산 능력이 있으면 알아낼 수 있습니다. 모든 카드를 전체 구문만큼 철저히 보관하거나, 분할 백업에는 24단어 구문을 사용하세요."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "빈칸"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "빈칸, 다음에 채울 칸"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "복구 구문을 다시 가렸지만, 스크린샷에는 이미 담겼을 수 있습니다. 갤러리와 동기화된 사본에서도 삭제하고, 손으로 적은 백업을 오프라인으로 보관하세요."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "스크린샷에 복구 구문이나 일부 단어가 담겼을 수 있습니다. 갤러리와 동기화된 사본에서도 삭제하고, 손으로 적은 백업을 오프라인으로 보관하세요."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "화면 잠금이 필요합니다"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "이 복구 구문은 이 기기에 있는 지갑의 것이지만, 그 지갑의 기기 키가 사라져 비밀번호를 재설정할 수 없습니다. 그 지갑을 열어 ‘지갑 삭제’를 선택한 다음 ‘이 지갑 제거’를 선택하고, 복구 구문을 다시 가져오세요."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "지갑 열기"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "서명 요청이 대기 중입니다"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "대조가 중단되었습니다. 다시 시도하세요."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "일치하는 지갑 없음"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "서명자 정보 없음"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "여러 지갑이 일치함"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "지갑 설정 필요"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "지원하지 않는 서명 프로토콜"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "요청을 읽는 중…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "애니메이션 QR 코드를 화면 안에 유지하세요 · 프레임 %1$d개"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64는 이 QR 코드에 담긴 PSBT 그대로이며, decoded는 참고용으로 여기서 읽어낸 내용입니다."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "파일을 읽지 못했습니다."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "파일을 저장하지 못했습니다."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "설정 필요"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "페이로드(16진)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "페이로드(텍스트)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s바이트"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "일반 텍스트"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "NFT 컨트랙트(미검증)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "외 %1$d개(‘세부 정보’ 참고)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "요청 검토"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "주소"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "지문은 32비트 숫자로 저장됩니다. %1$s은(는) 지문 %2$s입니다."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "감소"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "증가"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "화면 밝기"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "보통"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "밝게"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "이 지갑은 잠금 해제할 수 없습니다"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "기기 키가 더 이상 이 기기에 없어, 올바른 암호로도 이 지갑의 잠금을 해제할 수 없습니다. 여기서 제거한 뒤, 복구 구문과 (설정했다면) BIP39 패스프레이즈를 다시 가져와 되살리세요. 자산에는 영향이 없습니다."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "이 지갑은 복구 구문으로만 되살릴 수 있음을 이해했습니다"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "이 지갑을 제거할 때는 암호를 묻지 않습니다. 암호에 필요한 기기 키가 사라졌기 때문입니다."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "이 지갑을 제거할 때는 암호 대신 생체 인증으로 확인합니다. 암호에 필요한 기기 키가 사라졌기 때문입니다."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "이 지갑 제거"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "이 지갑을 제거할까요?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "암호화된 파일이 암호 입력 없이 이 기기에서 삭제됩니다. 복구 구문과 (설정했다면) BIP39 패스프레이즈로만 되살릴 수 있습니다."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "제거"
+  }
+ }
+}

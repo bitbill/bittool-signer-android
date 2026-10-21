@@ -1,0 +1,401 @@
+{
+ "language": "vi",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Ví đã xóa"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Cao"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "Đã hiện cảnh báo"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Đã tạo chữ ký một phần"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "Hoạt động không khả dụng"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Không lưu được tệp."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Hãy đặt khóa màn hình (mã PIN, hình mở khóa hoặc mật khẩu) để tạo hoặc dùng ví. Khóa thiết bị cần được bảo vệ bằng khóa màn hình."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer không xác nhận được rằng khóa thiết bị của ví này đã mất. Hãy thử lại, hoặc xóa ví bằng mật khẩu của ví."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Bộ máy ký đi kèm ứng dụng không khả dụng. Hãy cài lại BitTool Signer."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Không tải được bộ máy ký đi kèm ứng dụng."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Không khởi động được bộ máy ký ngoại tuyến."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Không cài đặt được nguồn entropy an toàn của bộ máy."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Bộ máy ngoại tuyến không xử lý được yêu cầu này."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Không hỗ trợ thao tác ký này."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Yêu cầu này vượt quá giới hạn 1 MB của việc ký ngoại tuyến."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Phiên quét đã kết thúc. Hãy quét lại."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Không ký được yêu cầu này."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Không đọc được bản ghi hoạt động cục bộ."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Không lưu được bản ghi hoạt động cục bộ. Mọi chữ ký đã hoàn tất vẫn dùng được."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Ví đã mã hóa đã được xóa, nhưng không gỡ được bộ nhớ đệm công khai của ví."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Để cách ly triệt để nhất, hãy dùng một chiếc điện thoại riêng và luôn tắt các kết nối của máy."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer không có quyền truy cập Internet, nên Android chặn mọi kết nối"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "Đã tìm thấy mã QR, nhưng mã không chứa văn bản đọc được. Hãy xuất yêu cầu dưới dạng tệp."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Mã QR này trống. Hãy quét yêu cầu ký từ ví còn lại của bạn."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Mã QR này quá lớn. Hãy dùng mã QR động hoặc xuất một tệp yêu cầu."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "Mã QR này không chứa từ nào đọc được. Không hỗ trợ Compact SeedQR; hãy dùng mã QR chứa các từ hoặc một SeedQR tiêu chuẩn, hoặc gõ các từ vào."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Mã QR này trống. Hãy quét mã QR chứa cụm từ khôi phục của bạn."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Mã QR này quá lớn, không thể là một cụm từ khôi phục."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "Khóa ứng dụng"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Yêu cầu mở khóa bằng sinh trắc học để mở BitTool Signer khi khởi động và sau 2 phút ở chế độ nền. Mỗi chữ ký vẫn cần mật khẩu của ví."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "Thiết lập mở khóa bằng vân tay hoặc khuôn mặt trong Cài đặt Android để khóa BitTool Signer. Mỗi chữ ký vẫn luôn cần mật khẩu của ví."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Mở khóa bằng sinh trắc học"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Dùng sinh trắc học thay thế"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "Mở khóa BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "Khóa BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Việc ký vẫn cần mật khẩu của ví."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Không thể xác thực sinh trắc học. Hãy kiểm tra mở khóa bằng vân tay hoặc khuôn mặt trong Cài đặt Android, hoặc dùng mật khẩu ví."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Sinh trắc học đã bị khóa sau quá nhiều lần thử. Hãy dùng mật khẩu ví, hoặc mở khóa điện thoại bằng khóa màn hình của máy trước."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Khi xóa, ứng dụng sẽ hỏi xác nhận bằng sinh trắc học, rồi hỏi mật khẩu của ví này."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "Một ứng dụng khác đang hiển thị đè lên BitTool Signer. Hãy đóng ứng dụng đó rồi thử lại."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Không thay đổi được khóa ứng dụng. Hãy thử lại."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Tài liệu này không có trong gói ứng dụng."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Không có kết quả cho “%1$s”"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Hãy kiểm tra chính tả hoặc thử tìm kiếm khác."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "Xóa tìm kiếm"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Kênh phân phối"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Tải trực tiếp (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Chứng chỉ ký"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer là mã nguồn mở hoàn toàn. Ứng dụng Android, bộ máy ký ngoại tuyến và dữ liệu token đều được công bố, nên ai cũng có thể đọc xem trình ký làm gì với cụm từ khôi phục — rồi dựng lại và so sánh kết quả với bản đang cài ở đây."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Mã nguồn bộ máy ký"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: một xpub cấp tài khoản cho từng loại địa chỉ Bitcoin, cho EVM và cho TRON, cùng cả ba địa chỉ Solana, trong một mã QR động"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "Phát hiện ảnh chụp màn hình"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "Mã QR này không chứa cụm từ khôi phục."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Với cụm từ %1$d từ, mỗi thẻ hiển thị %2$d trong số %3$d từ, và %4$d từ còn lại có thể bị đoán ra nếu đủ sức tính toán. Hãy bảo vệ từng thẻ cẩn thận như bảo vệ toàn bộ cụm từ, hoặc dùng cụm từ 24 từ để sao lưu chia thẻ."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Trống"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Trống, ô cần điền tiếp theo"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Cụm từ đã được ẩn lại, nhưng ảnh chụp màn hình có thể đã chứa nó. Hãy xóa ảnh khỏi thư viện ảnh và khỏi mọi bản sao đã đồng bộ, rồi giữ một bản ghi tay ở chế độ ngoại tuyến."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Ảnh chụp màn hình có thể chứa cụm từ khôi phục của bạn hoặc một số từ trong đó. Hãy xóa ảnh khỏi thư viện ảnh và khỏi mọi bản sao đã đồng bộ, rồi giữ một bản ghi tay ở chế độ ngoại tuyến."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Cần đặt khóa màn hình"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Cụm từ khôi phục này thuộc về một ví trên thiết bị này mà khóa thiết bị của ví đã mất, nên không thể đặt lại mật khẩu của ví. Hãy mở ví đó, chọn “Xóa ví”, rồi “Gỡ ví này”, sau đó nhập lại cụm từ."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Mở ví"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "Có một yêu cầu ký đang chờ"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Quá trình khớp bị gián đoạn. Hãy thử lại."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Không có ví nào khớp"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Thiếu thông tin người ký"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Khớp với nhiều ví"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Cần thiết lập ví trước"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Giao thức ký không được hỗ trợ"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Đang đọc yêu cầu…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Giữ mã động trong khung hình · %1$d phần"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 chính là PSBT mà mã QR này mang theo; decoded được đọc ra từ đó để tham khảo."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Không đọc được tệp."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Không lưu được tệp."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Cần thiết lập"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Dữ liệu (hex)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Dữ liệu (văn bản)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s byte"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Văn bản thuần"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "Hợp đồng NFT (chưa kiểm chứng)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "+%1$d mục khác (xem Chi tiết)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Xem xét yêu cầu"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Địa chỉ"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Dấu vân tay được lưu dưới dạng số 32 bit: %1$s là dấu vân tay %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Giảm"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Tăng"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Độ sáng màn hình"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Bình thường"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Sáng"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Không thể mở khóa ví này"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Khóa thiết bị của ví này không còn trên thiết bị này, nên không thể mở khóa ví, kể cả với mật khẩu đúng. Hãy gỡ ví ở đây, rồi nhập lại cụm từ khôi phục và mật khẩu bổ sung BIP39 (nếu có) để khôi phục ví. Tiền không bị ảnh hưởng."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Tôi hiểu rằng chỉ cụm từ khôi phục mới khôi phục được ví này"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Khi gỡ ví này, ứng dụng không hỏi mật khẩu của ví: khóa thiết bị mà mật khẩu cần đã mất."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Khi gỡ ví này, ứng dụng sẽ hỏi xác nhận bằng sinh trắc học, không hỏi mật khẩu của ví: khóa thiết bị mà mật khẩu cần đã mất."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Gỡ ví này"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Gỡ ví này?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Tệp đã mã hóa của ví sẽ bị xóa khỏi thiết bị này mà không cần mật khẩu. Chỉ cụm từ khôi phục và mật khẩu bổ sung BIP39 (nếu có) mới khôi phục được ví."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Gỡ"
+  }
+ }
+}

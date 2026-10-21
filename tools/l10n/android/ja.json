@@ -1,0 +1,401 @@
+{
+ "language": "ja",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "削除済みのウォレット"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "高"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "警告を表示済み"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "一部の署名を作成しました"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "履歴を利用できません"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "ファイルを保存できませんでした。"
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "ウォレットを作成または使用するには、画面ロック（PIN、パターン、パスワード）を設定してください。デバイス鍵には画面ロックによる保護が必要です。"
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer は、このウォレットのデバイス鍵が失われたことを確認できませんでした。もう一度試すか、パスワードを入力してウォレットを削除してください。"
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "内蔵の署名エンジンを利用できません。BitTool Signer を再インストールしてください。"
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "内蔵の署名エンジンを読み込めませんでした。"
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "オフライン署名エンジンを起動できませんでした。"
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "エンジンに安全な乱数源を組み込めませんでした。"
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "オフラインエンジンでこのリクエストを処理できませんでした。"
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "この署名操作には対応していません。"
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "このリクエストはオフライン署名の上限 1 MB を超えています。"
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "読み取りセッションが終了しました。もう一度読み取ってください。"
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "このリクエストに署名できませんでした。"
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "ローカルの履歴を読み込めませんでした。"
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "ローカルの履歴を保存できませんでした。作成済みの署名は引き続き利用できます。"
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "暗号化されたウォレットは削除しましたが、公開キャッシュを削除できませんでした。"
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "最も確実に隔離するには、専用のスマートフォンを用意し、通信をすべてオフのままにしてください。"
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer にはインターネット権限がないため、Android がすべての通信をブロックします"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "QR コードは見つかりましたが、読み取れるテキストが含まれていません。リクエストをファイルとして書き出してください。"
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "この QR コードは空です。もう一方のウォレットの署名リクエストを読み取ってください。"
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "この QR コードは大きすぎます。アニメーション QR コードを使うか、リクエストファイルを書き出してください。"
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "この QR コードには読み取れる単語が含まれていません。Compact SeedQR には対応していません。単語を含む QR コードか標準 SeedQR を使うか、単語を入力してください。"
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "この QR コードは空です。リカバリーフレーズを含む QR コードを読み取ってください。"
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "この QR コードはリカバリーフレーズにしては大きすぎます。"
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "App ロック"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "起動時と、バックグラウンドで 2 分経過した後に、BitTool Signer を開くには生体認証が必要になります。署名にはこれまでどおりウォレットのパスワードが必要です。"
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "BitTool Signer をロックするには、Android の「設定」で指紋認証または顔認証を設定してください。署名には常にウォレットのパスワードが必要です。"
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "生体認証でロック解除"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "代わりに生体認証を使う"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "BitTool Signer のロックを解除"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "BitTool Signer をロック"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "署名にはこれまでどおりウォレットのパスワードが必要です。"
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "生体認証を利用できません。Android の「設定」で指紋認証または顔認証を確認するか、ウォレットのパスワードを使ってください。"
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "試行回数が多すぎたため生体認証がロックされました。ウォレットのパスワードを使うか、先に画面ロックでスマートフォンのロックを解除してください。"
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "削除には生体認証による確認の後、このウォレットのパスワードが必要です。"
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "別のアプリが BitTool Signer の上に表示されています。そのアプリを閉じてから、もう一度お試しください。"
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "App ロックを変更できませんでした。もう一度お試しください。"
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "このドキュメントがアプリに含まれていません。"
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "「%1$s」の結果はありません"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "スペルを確認するか、別の語句で検索してください。"
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "検索語を消去"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "配布方法"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "直接ダウンロード（APK）"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "署名証明書"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer はすべてオープンソースです。Android アプリ、オフライン署名エンジン、トークンデータは公開されており、署名器がリカバリーフレーズをどう扱うかを誰でも読めます。自分でビルドし直し、この端末に入っているものと比べることもできます。"
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "署名エンジンのソースコード"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s：ビットコインの各アドレス形式、EVM、TRON のアカウント xpub と、3 つの Solana アドレスすべてを 1 つのアニメーション QR コードに収録"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "スクリーンショットを検出しました"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "この QR コードにはリカバリーフレーズが含まれていません。"
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "%1$d 単語のフレーズでは、各カードに %3$d 単語のうち %2$d 単語が載り、残りの %4$d 単語は十分な計算能力があれば割り出せます。どのカードもフレーズ全体と同じように厳重に保管するか、分割バックアップには 24 単語のフレーズを使ってください。"
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "空欄"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "空欄、次に入力"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "フレーズは再び隠しましたが、スクリーンショットにはすでに写っている可能性があります。ギャラリーや同期されたコピーからも削除し、手書きのバックアップをオフラインで保管してください。"
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "スクリーンショットにリカバリーフレーズ、またはその一部の単語が写っている可能性があります。ギャラリーや同期されたコピーからも削除し、手書きのバックアップをオフラインで保管してください。"
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "画面ロックが必要です"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "このリカバリーフレーズは、この端末にあるウォレットのものですが、そのウォレットのデバイス鍵が失われているため、パスワードを再設定できません。そのウォレットを開いて「ウォレットを削除」、続いて「このウォレットを削除」を選んでから、フレーズをもう一度インポートしてください。"
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "ウォレットを開く"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "署名リクエストが待機中です"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "照合が中断されました。もう一度お試しください。"
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "一致するウォレットがありません"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "署名者の情報がありません"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "一致するウォレットが複数あります"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "ウォレットの設定が必要です"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "署名プロトコルに対応していません"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "リクエストを読み取り中…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "アニメーション QR コードをカメラに映したままにしてください · %1$d フレーム"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 はこの QR コードに含まれる PSBT そのものです。decoded はそこから読み取った参考情報です。"
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "ファイルを読み込めませんでした。"
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "ファイルを保存できませんでした。"
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "設定が必要"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "ペイロード（16 進）"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "ペイロード（テキスト）"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s バイト"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "プレーンテキスト"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "NFT コントラクト（未検証）"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "他 %1$d 件（「詳細」を参照）"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "リクエストを確認"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "アドレス"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "フィンガープリントは 32 ビットの数値として保存されます。%1$s はフィンガープリント %2$s です。"
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "減らす"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "増やす"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "画面の明るさ"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "標準"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "最大"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "このウォレットはロック解除できません"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "デバイス鍵がこの端末にもう存在しないため、正しいパスワードでもこのウォレットのロックを解除できません。ここで削除してから、リカバリーフレーズと（設定していれば）BIP39 パスフレーズをもう一度インポートして復元してください。資産には影響しません。"
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "このウォレットを復元できるのはリカバリーフレーズだけであることを理解しました"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "このウォレットの削除にパスワードは不要です。パスワードに必要なデバイス鍵が失われているためです。"
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "このウォレットの削除には、パスワードではなく生体認証による確認が必要です。パスワードに必要なデバイス鍵が失われているためです。"
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "このウォレットを削除"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "このウォレットを削除しますか？"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "暗号化されたファイルは、パスワードなしでこの端末から削除されます。復元できるのは、リカバリーフレーズと（設定していれば）BIP39 パスフレーズだけです。"
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "削除"
+  }
+ }
+}

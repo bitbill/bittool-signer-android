@@ -1,0 +1,401 @@
+{
+ "language": "uk",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Видалений гаманець"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Високий"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "Показано попередження"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Частковий підпис створено"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "Активність недоступна"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Не вдалося зберегти файл."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Налаштуйте блокування екрана (PIN-код, графічний ключ або пароль), щоб створити гаманець чи користуватися ним. Ключ пристрою потребує захисту блокуванням екрана."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer не вдалося підтвердити, що ключа пристрою для цього гаманця більше немає. Спробуйте ще раз або видаліть гаманець, ввівши його пароль."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Вбудований рушій підпису недоступний. Перевстановіть BitTool Signer."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Не вдалося завантажити вбудований рушій підпису."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Не вдалося запустити офлайн-рушій підпису."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Не вдалося підключити безпечне джерело ентропії рушія."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Офлайн-рушію не вдалося обробити цей запит."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Ця операція підпису не підтримується."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Цей запит перевищує ліміт офлайн-підпису в 1 МБ."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Сеанс сканування завершено. Відскануйте ще раз."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Не вдалося підписати цей запит."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Не вдалося прочитати локальний запис активності."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Не вдалося зберегти локальний запис активності. Уже створені підписи залишаються доступними."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Зашифрований гаманець видалено, але не вдалося видалити його відкритий кеш."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Для найсуворішої ізоляції використовуйте окремий телефон і тримайте його з’єднання вимкненими."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer не має дозволу на доступ до інтернету, тож Android блокує будь-яке з’єднання"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "Знайдено QR-код, але він не містить читабельного тексту. Натомість експортуйте запит у файл."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Цей QR-код порожній. Відскануйте запит на підпис із вашого іншого гаманця."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Цей QR-код завеликий. Використайте анімований QR-код або експортуйте файл запиту."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "Цей QR-код не містить читабельних слів. Compact SeedQR не підтримується: використайте QR-код зі словами або стандартний SeedQR чи введіть слова вручну."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Цей QR-код порожній. Відскануйте QR-код, що містить вашу фразу відновлення."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Цей QR-код завеликий для фрази відновлення."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "Блокування застосунку"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Вимагати біометричне розблокування для відкриття BitTool Signer під час запуску та після 2 хвилин у фоні. Кожен підпис і далі потребує пароля гаманця."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "Налаштуйте розблокування відбитком пальця або обличчям у «Налаштуваннях» Android, щоб блокувати BitTool Signer. Кожен підпис завжди потребує пароля гаманця."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Розблокувати біометрією"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Скористатися біометрією натомість"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "Розблокування BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "Блокування BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Для підпису все одно потрібен пароль гаманця."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Біометрична автентифікація недоступна. Перевірте розблокування відбитком пальця чи обличчям у «Налаштуваннях» Android або скористайтеся паролем гаманця."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Біометрію заблоковано після надто багатьох спроб. Скористайтеся паролем гаманця або спершу розблокуйте телефон за допомогою блокування екрана."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Для видалення буде запитано біометричне підтвердження, а потім пароль цього гаманця."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "Інший застосунок відображається поверх BitTool Signer. Закрийте його й спробуйте ще раз."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Не вдалося змінити блокування застосунку. Спробуйте ще раз."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Цей документ відсутній у пакеті застосунку."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Немає результатів для «%1$s»"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Перевірте написання або спробуйте інший запит."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "Очистити пошук"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Розповсюдження"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Пряме завантаження (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Сертифікат підпису"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer має повністю відкритий код. Застосунок для Android, офлайн-рушій підпису та дані про токени опубліковано, тож будь-хто може прочитати, що підписувач робить із фразою відновлення, зібрати його заново й порівняти результат із копією, встановленою тут."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Початковий код рушія підпису"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: xpub рахунку для кожного типу біткоїн-адрес, для EVM і TRON, а також усі три адреси Solana в одному анімованому QR-коді"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "Виявлено знімок екрана"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "Цей QR-код не містить фрази відновлення."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Для фрази з %1$d слів кожна картка показує %2$d з %3$d слів, а решту %4$d можна вгадати за достатньої обчислювальної потужності. Бережіть кожну картку так само ретельно, як повну фразу, або використовуйте для розділених копій фразу з 24 слів."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Порожньо"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Порожньо, заповнюється наступним"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Фразу знову приховано, але знімок екрана вже може її містити. Видаліть його з галереї та з усіх синхронізованих копій, а письмову копію тримайте офлайн."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Знімок екрана може містити вашу фразу відновлення або деякі її слова. Видаліть його з галереї та з усіх синхронізованих копій, а письмову копію тримайте офлайн."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Потрібне блокування екрана"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Ця фраза відновлення належить гаманцю на цьому пристрої, ключа пристрою якого більше немає, тож його пароль не можна скинути. Відкрийте той гаманець, виберіть «Видалити гаманець», потім «Прибрати цей гаманець» та імпортуйте фразу знову."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Відкрити гаманець"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "Очікує запит на підпис"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Зіставлення перервано. Спробуйте ще раз."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Немає відповідного гаманця"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Бракує даних про підписувача"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Неоднозначне зіставлення гаманця"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Потрібно налаштувати гаманець"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Непідтримуваний протокол підпису"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Читання запиту…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Тримайте анімований код у кадрі · частин: %1$d"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 — це точний PSBT, який передає цей QR-код; decoded прочитано з нього для довідки."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Не вдалося прочитати файл."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Не вдалося зберегти файл."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Потрібне налаштування"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Дані (hex)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Дані (текст)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s Б"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Звичайний текст"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "Контракт NFT (не перевірено)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "Ще %1$d (див. «Подробиці»)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Переглянути запит"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Адреса"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Відбитки зберігаються як 32-бітні числа: %1$s — це відбиток %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Зменшити"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Збільшити"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Яскравість екрана"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Звичайна"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Максимальна"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Цей гаманець не можна розблокувати"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Ключа пристрою для цього гаманця більше немає на цьому пристрої, тож гаманець не можна розблокувати навіть правильним паролем. Щоб відновити його, приберіть гаманець тут, а потім знову імпортуйте фразу відновлення та парольну фразу BIP39, якщо вона є. Коштів це не стосується."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Я розумію, що відновити цей гаманець можна лише за фразою відновлення"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Щоб прибрати цей гаманець, пароль не потрібен: ключа пристрою, без якого пароль не працює, більше немає."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Щоб прибрати цей гаманець, буде запитано біометричне підтвердження, а не пароль: ключа пристрою, без якого пароль не працює, більше немає."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Прибрати цей гаманець"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Прибрати цей гаманець?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Його зашифрований файл буде видалено з цього пристрою без пароля. Відновити гаманець можна буде лише за фразою відновлення та парольною фразою BIP39, якщо вона є."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Прибрати"
+  }
+ }
+}

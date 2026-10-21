@@ -1,0 +1,401 @@
+{
+ "language": "ru",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Удалённый кошелёк"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Высокий"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "Показаны предупреждения"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Частичная подпись создана"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "История недоступна"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Не удалось сохранить файл."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Настройте блокировку экрана (PIN-код, графический ключ или пароль), чтобы создать кошелёк или пользоваться им. Ключу устройства нужна защита блокировкой экрана."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer не удалось подтвердить, что ключ устройства для этого кошелька утрачен. Попробуйте снова или удалите кошелёк, введя его пароль."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Встроенный движок подписи недоступен. Переустановите BitTool Signer."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Не удалось загрузить встроенный движок подписи."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Не удалось запустить офлайн-движок подписи."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Не удалось подключить надёжный источник энтропии движка."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Офлайн-движку не удалось обработать этот запрос."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Эта операция подписи не поддерживается."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Этот запрос превышает лимит офлайн-подписи в 1 МБ."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Сеанс сканирования завершён. Отсканируйте снова."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Не удалось подписать этот запрос."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Не удалось прочитать локальную запись истории."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Не удалось сохранить локальную запись истории. Уже созданные подписи остаются доступными."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Зашифрованный кошелёк удалён, но его публичный кэш удалить не удалось."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Для максимальной изоляции используйте отдельный телефон и держите всю связь выключенной."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "У BitTool Signer нет разрешения на доступ в интернет, поэтому Android блокирует любые подключения"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "QR-код найден, но в нём нет читаемого текста. Выгрузите запрос файлом."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Этот QR-код пуст. Отсканируйте запрос подписи из другого кошелька."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Этот QR-код слишком большой. Используйте анимированный QR-код или выгрузите файл запроса."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "В этом QR-коде нет читаемых слов. Compact SeedQR не поддерживается: используйте QR-код со словами или стандартный SeedQR либо введите слова вручную."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Этот QR-код пуст. Отсканируйте QR-код с вашей фразой восстановления."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Этот QR-код слишком большой для фразы восстановления."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "Блокировка приложения"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Требовать биометрическую разблокировку для открытия BitTool Signer при запуске и после 2 минут в фоне. Для каждой подписи по-прежнему нужен пароль кошелька."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "Настройте разблокировку по отпечатку пальца или по лицу в Настройках Android, чтобы блокировать BitTool Signer. Для каждой подписи всегда нужен пароль кошелька."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Разблокировать биометрией"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Использовать биометрию"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "Разблокировка BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "Блокировка BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Для подписи по-прежнему нужен пароль кошелька."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Биометрия недоступна. Проверьте разблокировку по отпечатку пальца или по лицу в Настройках Android либо введите пароль кошелька."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Биометрия заблокирована из-за слишком многих попыток. Введите пароль кошелька или сначала разблокируйте телефон, используя блокировку экрана."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Для удаления потребуется биометрическое подтверждение, а затем пароль этого кошелька."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "Другое приложение отображается поверх BitTool Signer. Закройте его и попробуйте снова."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Не удалось изменить блокировку приложения. Попробуйте снова."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Этот документ отсутствует в пакете приложения."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Нет результатов для «%1$s»"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Проверьте написание или попробуйте другой запрос."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "Очистить поиск"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Распространение"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Прямая загрузка (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Сертификат подписи"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer полностью открыт. Приложение для Android, офлайн-движок подписи и данные о токенах опубликованы, так что любой может прочитать, что подписывающее приложение делает с фразой восстановления, — собрать его заново и сравнить с установленной здесь копией."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Исходный код движка подписи"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: xpub счёта для каждого типа биткойн-адресов, для EVM и TRON, а также все три адреса Solana в одном анимированном QR-коде"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "Обнаружен скриншот"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "В этом QR-коде нет фразы восстановления."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Для фразы из %1$d слов каждая карточка показывает %2$d из %3$d слов, а остальные %4$d можно подобрать при достаточных вычислительных мощностях. Берегите каждую карточку так же тщательно, как полную фразу, или используйте для разделённых копий фразу из 24 слов."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Пусто"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Пусто, заполняется следующим"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Фраза снова скрыта, но она могла попасть на скриншот. Удалите его из галереи и всех синхронизированных копий, а бумажную копию держите офлайн."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "На скриншоте могла оказаться фраза восстановления или часть её слов. Удалите его из галереи и всех синхронизированных копий, а бумажную копию держите офлайн."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Нужна блокировка экрана"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Эта фраза восстановления принадлежит кошельку на этом устройстве, ключ устройства которого утрачен, поэтому сбросить его пароль нельзя. Откройте этот кошелёк, выберите «Удалить кошелёк», затем «Убрать этот кошелёк» и импортируйте фразу снова."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Открыть кошелёк"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "Ожидает запрос подписи"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Сопоставление прервано. Попробуйте снова."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Нет подходящего кошелька"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Нет сведений о подписанте"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Неоднозначное сопоставление кошелька"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Кошелёк нужно донастроить"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Неподдерживаемый протокол подписи"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Чтение запроса…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Держите анимированный код в кадре · частей: %1$d"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 — это тот самый PSBT, который передаёт этот QR-код; decoded получен из него для справки."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Не удалось прочитать файл."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Не удалось сохранить файл."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Нужна настройка"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Данные (hex)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Данные (текст)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s Б"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Обычный текст"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "Контракт NFT (не проверен)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "Ещё %1$d (см. «Подробности»)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Проверка запроса"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Адрес"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Отпечатки хранятся как 32-битные числа: %1$s — это отпечаток %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Уменьшить"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Увеличить"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Яркость экрана"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Обычная"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Максимальная"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Этот кошелёк нельзя разблокировать"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Ключа устройства для этого кошелька больше нет на этом устройстве, поэтому кошелёк нельзя разблокировать даже правильным паролем. Чтобы восстановить его, уберите кошелёк здесь, а затем снова импортируйте фразу восстановления и парольную фразу BIP39, если она была. На средства это не влияет."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Я понимаю, что восстановить этот кошелёк можно только по фразе восстановления"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Чтобы убрать этот кошелёк, пароль не нужен: ключа устройства, без которого пароль не работает, больше нет."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Чтобы убрать этот кошелёк, потребуется биометрическое подтверждение, а не пароль: ключа устройства, без которого пароль не работает, больше нет."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Убрать этот кошелёк"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Убрать этот кошелёк?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Его зашифрованный файл будет удалён с этого устройства без пароля. Восстановить кошелёк можно будет только по фразе восстановления и парольной фразе BIP39, если она была."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Убрать"
+  }
+ }
+}

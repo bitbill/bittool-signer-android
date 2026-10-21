@@ -1,0 +1,401 @@
+{
+ "language": "th",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "กระเป๋าที่ถูกลบ"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "สูง"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "แสดงคำเตือนแล้ว"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "สร้างลายเซ็นบางส่วนแล้ว"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "กิจกรรมใช้งานไม่ได้"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "ไม่สามารถบันทึกไฟล์ได้"
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "ตั้งค่าการล็อกหน้าจอ (PIN รูปแบบ หรือรหัสผ่าน) เพื่อสร้างหรือใช้กระเป๋า คีย์ของอุปกรณ์ต้องมีการป้องกันด้วยการล็อกหน้าจอ"
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer ยืนยันไม่ได้ว่าคีย์ของอุปกรณ์สำหรับกระเป๋านี้หายไปแล้ว ลองใหม่อีกครั้ง หรือลบกระเป๋าโดยใช้รหัสผ่านของกระเป๋า"
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "เอนจินการเซ็นที่รวมมากับแอปใช้งานไม่ได้ ติดตั้ง BitTool Signer ใหม่"
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "ไม่สามารถโหลดเอนจินการเซ็นที่รวมมากับแอปได้"
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "ไม่สามารถเริ่มเอนจินเซ็นแบบออฟไลน์ได้"
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "ไม่สามารถติดตั้งแหล่งเอนโทรปีที่ปลอดภัยของเอนจินได้"
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "เอนจินออฟไลน์ไม่สามารถดำเนินการกับคำขอนี้ได้"
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "ไม่รองรับการดำเนินการเซ็นนี้"
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "คำขอนี้เกินขีดจำกัด 1 MB ของการเซ็นแบบออฟไลน์"
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "เซสชันการสแกนสิ้นสุดแล้ว สแกนอีกครั้ง"
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "ไม่สามารถเซ็นคำขอนี้ได้"
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "ไม่สามารถอ่านระเบียนกิจกรรมในเครื่องได้"
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "ไม่สามารถบันทึกระเบียนกิจกรรมในเครื่องได้ ลายเซ็นที่สร้างเสร็จแล้วยังคงใช้งานได้"
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "กระเป๋าที่เข้ารหัสถูกลบแล้ว แต่ไม่สามารถนำแคชสาธารณะของกระเป๋าออกได้"
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "เพื่อการแยกขาดที่สุด ให้ใช้โทรศัพท์เฉพาะเครื่องหนึ่งและปิดการเชื่อมต่อทั้งหมดไว้"
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer ไม่มีสิทธิ์เข้าถึงอินเทอร์เน็ต Android จึงบล็อกการเชื่อมต่อทั้งหมด"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "พบคิวอาร์โค้ด แต่ไม่มีข้อความที่อ่านได้ ให้ส่งออกคำขอเป็นไฟล์แทน"
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "คิวอาร์โค้ดนี้ว่างเปล่า สแกนคำขอเซ็นจากกระเป๋าอีกใบของคุณ"
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "คิวอาร์โค้ดนี้ใหญ่เกินไป ใช้คิวอาร์โค้ดเคลื่อนไหวหรือส่งออกไฟล์คำขอ"
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "คิวอาร์โค้ดนี้ไม่มีคำที่อ่านได้ ไม่รองรับ Compact SeedQR ให้ใช้คิวอาร์โค้ดที่มีคำเหล่านั้นหรือ SeedQR มาตรฐาน หรือพิมพ์คำเอง"
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "คิวอาร์โค้ดนี้ว่างเปล่า สแกนคิวอาร์โค้ดที่มีวลีกู้คืนของคุณ"
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "คิวอาร์โค้ดนี้ใหญ่เกินกว่าจะเป็นวลีกู้คืน"
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "ล็อกแอป"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "กำหนดให้ปลดล็อกด้วยชีวมิติเพื่อเปิด BitTool Signer เมื่อเริ่มแอปและหลังอยู่เบื้องหลัง 2 นาที ทุกลายเซ็นยังคงต้องใช้รหัสผ่านกระเป๋า"
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "ตั้งค่าการปลดล็อกด้วยลายนิ้วมือหรือใบหน้าในการตั้งค่า Android เพื่อล็อก BitTool Signer ทุกลายเซ็นยังคงต้องใช้รหัสผ่านกระเป๋าเสมอ"
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "ปลดล็อกด้วยชีวมิติ"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "ใช้ชีวมิติแทน"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "ปลดล็อก BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "ล็อก BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "การเซ็นยังคงต้องใช้รหัสผ่านกระเป๋า"
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "การยืนยันตัวตนด้วยชีวมิติใช้งานไม่ได้ ตรวจสอบการปลดล็อกด้วยลายนิ้วมือหรือใบหน้าในการตั้งค่า Android หรือใช้รหัสผ่านกระเป๋า"
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "ชีวมิติถูกล็อกหลังพยายามหลายครั้งเกินไป ใช้รหัสผ่านกระเป๋า หรือปลดล็อกโทรศัพท์ด้วยการล็อกหน้าจอก่อน"
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "การลบจะขอการยืนยันด้วยชีวมิติ แล้วตามด้วยรหัสผ่านของกระเป๋านี้"
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "มีแอปอื่นแสดงทับ BitTool Signer อยู่ ปิดแอปนั้นแล้วลองใหม่"
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "ไม่สามารถเปลี่ยนการล็อกแอปได้ ลองอีกครั้ง"
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "เอกสารนี้ไม่มีอยู่ในแพ็กเกจของแอป"
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "ไม่พบผลลัพธ์สำหรับ “%1$s”"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "ตรวจสอบการสะกดหรือลองค้นหาใหม่"
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "ล้างการค้นหา"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "ช่องทางเผยแพร่"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "ดาวน์โหลดโดยตรง (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "ใบรับรองการเซ็น"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer เป็นโอเพนซอร์สทั้งหมด ทั้งแอป Android เอนจินเซ็นแบบออฟไลน์ และข้อมูลโทเคน ล้วนเผยแพร่ไว้ ใครก็อ่านได้ว่าตัวเซ็นทำอะไรกับวลีกู้คืน แล้วสร้างใหม่เองและเทียบผลลัพธ์กับสำเนาที่ติดตั้งอยู่ตรงนี้"
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "ซอร์สโค้ดเอนจินการเซ็น"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: xpub ระดับบัญชีของที่อยู่ Bitcoin ทุกประเภท รวมถึงของ EVM และ TRON พร้อมที่อยู่ Solana ทั้งสามแบบ ในคิวอาร์เคลื่อนไหวอันเดียว"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "ตรวจพบภาพหน้าจอ"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "คิวอาร์โค้ดนี้ไม่มีวลีกู้คืน"
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "หากเป็นวลี %1$d คำ การ์ดแต่ละใบจะแสดง %2$d จาก %3$d คำ และอีก %4$d คำที่เหลืออาจถูกคำนวณหาได้หากมีกำลังประมวลผลมากพอ เก็บรักษาการ์ดทุกใบอย่างระมัดระวังเท่ากับวลีทั้งชุด หรือใช้วลี 24 คำสำหรับการสำรองแบบแบ่งการ์ด"
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "ว่าง"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "ว่าง, เติมช่องนี้ถัดไป"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "วลีถูกซ่อนอีกครั้งแล้ว แต่ภาพหน้าจออาจมีวลีอยู่แล้ว ให้ลบออกจากแกลเลอรีและจากสำเนาที่ซิงก์ไว้ทุกชุด แล้วเก็บสำเนาที่เขียนไว้แบบออฟไลน์"
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "ภาพหน้าจออาจมีวลีกู้คืนของคุณหรือบางคำในวลีนั้น ให้ลบออกจากแกลเลอรีและจากสำเนาที่ซิงก์ไว้ทุกชุด แล้วเก็บสำเนาที่เขียนไว้แบบออฟไลน์"
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "ต้องตั้งค่าการล็อกหน้าจอ"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "วลีกู้คืนนี้เป็นของกระเป๋าบนอุปกรณ์นี้ที่คีย์ของอุปกรณ์หายไปแล้ว จึงตั้งรหัสผ่านใหม่ไม่ได้ เปิดกระเป๋านั้น เลือก “ลบกระเป๋า” แล้วเลือก “นำกระเป๋านี้ออก” จากนั้นนำเข้าวลีอีกครั้ง"
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "เปิดกระเป๋า"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "มีคำขอเซ็นรออยู่"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "การจับคู่ถูกขัดจังหวะ ลองอีกครั้ง"
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "ไม่มีกระเป๋าที่ตรงกัน"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "ไม่มีข้อมูลผู้เซ็น"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "ตรงกับกระเป๋ามากกว่าหนึ่งใบ"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "ต้องตั้งค่ากระเป๋าก่อน"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "โปรโตคอลการเซ็นที่ไม่รองรับ"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "กำลังอ่านคำขอ…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "ให้โค้ดเคลื่อนไหวอยู่ในกรอบกล้อง · %1$d ส่วน"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 คือ PSBT ฉบับตรงตัวที่คิวอาร์โค้ดนี้บรรจุอยู่ ส่วน decoded อ่านมาจาก PSBT นั้นเพื่อใช้อ้างอิง"
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "ไม่สามารถอ่านไฟล์ได้"
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "ไม่สามารถบันทึกไฟล์ได้"
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "ต้องตั้งค่า"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "ข้อมูล (ฐานสิบหก)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "ข้อมูล (ข้อความ)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s ไบต์"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "ข้อความธรรมดา"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "สัญญา NFT (ยังไม่ได้ตรวจสอบ)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "+%1$d รายการ (ดูในรายละเอียด)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "ตรวจสอบคำขอ"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "ที่อยู่"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "ลายนิ้วมือถูกจัดเก็บเป็นตัวเลข 32 บิต: %1$s คือลายนิ้วมือ %2$s"
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "ลด"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "เพิ่ม"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "ความสว่างหน้าจอ"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "ปกติ"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "สว่าง"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "ปลดล็อกกระเป๋านี้ไม่ได้"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "คีย์ของอุปกรณ์สำหรับกระเป๋านี้ไม่อยู่บนอุปกรณ์นี้แล้ว จึงปลดล็อกกระเป๋าไม่ได้แม้จะใช้รหัสผ่านที่ถูกต้อง ให้นำกระเป๋าออกที่นี่ แล้วนำเข้าวลีกู้คืนและรหัสผ่านวลี BIP39 (ถ้ามี) อีกครั้งเพื่อกู้คืน เงินของคุณไม่ได้รับผลกระทบ"
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "ฉันเข้าใจว่ามีเพียงวลีกู้คืนเท่านั้นที่กู้กระเป๋านี้ได้"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "การนำกระเป๋านี้ออกจะไม่ขอรหัสผ่าน เพราะคีย์ของอุปกรณ์ที่รหัสผ่านต้องใช้หายไปแล้ว"
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "การนำกระเป๋านี้ออกจะขอการยืนยันด้วยชีวมิติ ไม่ใช่รหัสผ่าน เพราะคีย์ของอุปกรณ์ที่รหัสผ่านต้องใช้หายไปแล้ว"
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "นำกระเป๋านี้ออก"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "นำกระเป๋านี้ออกไหม"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "ไฟล์ที่เข้ารหัสของกระเป๋าจะถูกลบออกจากอุปกรณ์นี้โดยไม่ต้องใช้รหัสผ่าน มีเพียงวลีกู้คืนและรหัสผ่านวลี BIP39 (ถ้ามี) เท่านั้นที่กู้คืนกระเป๋าได้"
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "นำออก"
+  }
+ }
+}

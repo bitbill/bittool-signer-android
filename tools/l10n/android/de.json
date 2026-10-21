@@ -1,0 +1,401 @@
+{
+ "language": "de",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Gelöschte Wallet"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Hoch"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "Warnungen angezeigt"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Teilsignatur erstellt"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "Verlauf nicht verfügbar"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Die Datei konnte nicht gespeichert werden."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Richten Sie eine Displaysperre (PIN, Muster oder Passwort) ein, um eine Wallet zu erstellen oder zu nutzen. Der Geräteschlüssel braucht den Schutz durch die Displaysperre."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer konnte nicht bestätigen, dass der Geräteschlüssel dieser Wallet nicht mehr vorhanden ist. Versuchen Sie es erneut oder löschen Sie die Wallet mit ihrem Passwort."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Die integrierte Signier-Engine ist nicht verfügbar. Installieren Sie BitTool Signer neu."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Die integrierte Signier-Engine konnte nicht geladen werden."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Die Offline-Signier-Engine konnte nicht gestartet werden."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Die sichere Entropiequelle der Engine konnte nicht installiert werden."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Die Offline-Engine konnte diese Anfrage nicht verarbeiten."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Dieser Signiervorgang wird nicht unterstützt."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Diese Anfrage überschreitet das Offline-Signierlimit von 1 MB."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Die Scan-Sitzung ist beendet. Scannen Sie erneut."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Diese Anfrage konnte nicht signiert werden."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Der lokale Verlauf konnte nicht gelesen werden."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Der lokale Verlauf konnte nicht gespeichert werden. Bereits erstellte Signaturen bleiben verfügbar."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Die verschlüsselte Wallet wurde gelöscht, ihr öffentlicher Cache konnte aber nicht entfernt werden."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Für die stärkste Trennung nutzen Sie ein eigenes Smartphone und lassen alle Verbindungen aus."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer hat keine Internetberechtigung, daher blockiert Android jede Verbindung"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "Ein QR-Code wurde gefunden, enthält aber keinen lesbaren Text. Exportieren Sie die Anfrage stattdessen als Datei."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Dieser QR-Code ist leer. Scannen Sie die Signieranfrage aus Ihrer anderen Wallet."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Dieser QR-Code ist zu groß. Nutzen Sie einen animierten QR-Code oder exportieren Sie eine Anfragedatei."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "Dieser QR-Code enthält keine lesbaren Wörter. Compact-SeedQR wird nicht unterstützt; nutzen Sie einen QR-Code mit den Wörtern oder einen Standard-SeedQR, oder geben Sie die Wörter ein."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Dieser QR-Code ist leer. Scannen Sie einen QR-Code, der Ihre Wiederherstellungsphrase enthält."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Dieser QR-Code ist zu groß für eine Wiederherstellungsphrase."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "App-Sperre"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Biometrische Entsperrung verlangen, um BitTool Signer beim Start und nach 2 Minuten im Hintergrund zu öffnen. Jede Signatur braucht weiterhin das Wallet-Passwort."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "Richten Sie die Entsperrung per Fingerabdruck oder Gesichtserkennung in den Android-Einstellungen ein, um BitTool Signer zu sperren. Jede Signatur braucht immer das Wallet-Passwort."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Mit Biometrie entsperren"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Stattdessen Biometrie nutzen"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "BitTool Signer entsperren"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "BitTool Signer sperren"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Zum Signieren wird weiterhin das Wallet-Passwort benötigt."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Biometrie ist nicht verfügbar. Prüfen Sie die Entsperrung per Fingerabdruck oder Gesichtserkennung in den Android-Einstellungen oder nutzen Sie ein Wallet-Passwort."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Die Biometrie ist nach zu vielen Versuchen gesperrt. Nutzen Sie ein Wallet-Passwort oder entsperren Sie das Smartphone zuerst mit der Displaysperre."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Zum Löschen werden eine biometrische Bestätigung und danach das Passwort dieser Wallet verlangt."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "Eine andere App wird über BitTool Signer angezeigt. Schließen Sie sie und versuchen Sie es erneut."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Die App-Sperre konnte nicht geändert werden. Versuchen Sie es erneut."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Dieses Dokument fehlt im App-Bundle."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Keine Ergebnisse für „%1$s“"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Prüfen Sie die Schreibweise oder starten Sie eine neue Suche."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "Suche löschen"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Bezugsquelle"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Direkter Download (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Signaturzertifikat"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer ist vollständig quelloffen. Android-App, Offline-Signier-Engine und Token-Daten sind veröffentlicht, sodass jeder nachlesen kann, was der Signierer mit einer Wiederherstellungsphrase tut — und ihn neu bauen und mit der hier installierten Fassung vergleichen kann."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Quellcode der Signier-Engine"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: je einen Konto-xpub für jeden Bitcoin-Adresstyp, für EVM und für TRON sowie alle drei Solana-Adressen in einem animierten QR-Code"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "Screenshot erkannt"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "Dieser QR-Code enthält keine Wiederherstellungsphrase."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Bei einer Phrase mit %1$d Wörtern zeigt jede Karte %2$d der %3$d Wörter, und die übrigen %4$d ließen sich mit genug Rechenleistung ermitteln. Schützen Sie jede Karte so sorgfältig wie die ganze Phrase oder nutzen Sie für geteilte Sicherungen eine Phrase mit 24 Wörtern."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Leer"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Leer, als Nächstes auszufüllen"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Die Phrase ist wieder verborgen, der Screenshot kann sie aber schon enthalten. Löschen Sie ihn aus Ihrer Galerie und allen synchronisierten Kopien und bewahren Sie eine schriftliche Sicherung offline auf."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Der Screenshot kann Ihre Wiederherstellungsphrase oder Teile davon enthalten. Löschen Sie ihn aus Ihrer Galerie und allen synchronisierten Kopien und bewahren Sie eine schriftliche Sicherung offline auf."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Displaysperre erforderlich"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Diese Wiederherstellungsphrase gehört zu einer Wallet auf diesem Gerät, deren Geräteschlüssel nicht mehr vorhanden ist, daher lässt sich ihr Passwort nicht zurücksetzen. Öffnen Sie diese Wallet, wählen Sie „Wallet löschen“ und dann „Diese Wallet entfernen“ und importieren Sie die Phrase erneut."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Wallet öffnen"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "Eine Signieranfrage wartet"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Zuordnung unterbrochen. Versuchen Sie es erneut."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Keine passende Wallet"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Unterzeichnerangaben fehlen"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Wallet-Zuordnung nicht eindeutig"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Wallet-Einrichtung erforderlich"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Nicht unterstütztes Signierprotokoll"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Anfrage wird gelesen…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Halten Sie den animierten Code im Bild · %1$d Teile"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 ist genau das PSBT, das dieser QR-Code enthält; decoded wird zur Orientierung daraus gelesen."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Die Datei konnte nicht gelesen werden."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Die Datei konnte nicht gespeichert werden."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Einrichtung erforderlich"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Nutzdaten (Hex)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Nutzdaten (Text)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s Bytes"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Klartext"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "NFT-Vertrag (nicht verifiziert)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "+%1$d weitere (siehe Details)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Anfrage prüfen"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Adresse"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Fingerprints werden als 32-Bit-Zahlen gespeichert: %1$s ist der Fingerprint %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Verringern"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Erhöhen"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Bildschirmhelligkeit"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Normal"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Hell"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Diese Wallet lässt sich nicht entsperren"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Der Geräteschlüssel dieser Wallet ist nicht mehr auf diesem Gerät, daher lässt sie sich nicht entsperren, auch nicht mit dem richtigen Passwort. Entfernen Sie sie hier und importieren Sie dann ihre Wiederherstellungsphrase und eine etwaige BIP39-Passphrase erneut, um sie wiederherzustellen. Das Guthaben bleibt unberührt."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Ich verstehe, dass nur die Wiederherstellungsphrase diese Wallet wiederherstellen kann"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Zum Entfernen dieser Wallet wird ihr Passwort nicht verlangt: Der Geräteschlüssel, den das Passwort braucht, ist nicht mehr vorhanden."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Zum Entfernen dieser Wallet wird eine biometrische Bestätigung verlangt, nicht ihr Passwort: Der Geräteschlüssel, den das Passwort braucht, ist nicht mehr vorhanden."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Diese Wallet entfernen"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Diese Wallet entfernen?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Die verschlüsselte Datei der Wallet wird ohne Passwort von diesem Gerät gelöscht. Nur ihre Wiederherstellungsphrase und eine etwaige BIP39-Passphrase können sie wiederherstellen."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Entfernen"
+  }
+ }
+}

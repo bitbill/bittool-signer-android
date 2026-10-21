@@ -1,0 +1,401 @@
+{
+ "language": "fil",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "Binurang wallet"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "Mataas"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "May ipinakitang babala"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "Nagawa ang bahagyang lagda"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "Hindi available ang aktibidad"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "Hindi na-save ang file."
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "Magtakda ng screen lock (PIN, pattern o password) para gumawa o gumamit ng wallet. Kailangan ng proteksyong screen lock ang device key."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "Hindi makumpirma ng BitTool Signer na wala na ang device key ng wallet na ito. Subukan muli, o burahin ang wallet gamit ang password nito."
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "Hindi magamit ang kasamang signing engine. I-install muli ang BitTool Signer."
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "Hindi ma-load ang kasamang signing engine."
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "Hindi masimulan ang offline signing engine."
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "Hindi mai-install ang ligtas na entropy source ng engine."
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "Hindi maproseso ng offline engine ang kahilingang ito."
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "Hindi suportado ang signing operation na ito."
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "Lumalampas ang kahilingang ito sa 1 MB na limitasyon ng offline na paglagda."
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "Natapos na ang scan session. Mag-scan muli."
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "Hindi malagdaan ang kahilingang ito."
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "Hindi nabasa ang lokal na talaan ng aktibidad."
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "Hindi na-save ang lokal na talaan ng aktibidad. Available pa rin ang anumang natapos na lagda."
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "Nabura ang naka-encrypt na wallet, pero hindi naalis ang public cache nito."
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "Para sa pinakamahigpit na paghihiwalay, gumamit ng nakalaang telepono at panatilihing naka-off ang mga koneksyon nito."
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "Walang internet permission ang BitTool Signer, kaya bina-block ng Android ang bawat koneksyon"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "May nakitang QR code, pero wala itong nababasang teksto. I-export na lang ang kahilingan bilang file."
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "Walang laman ang QR code na ito. I-scan ang signing request mula sa kabila mong wallet."
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "Masyadong malaki ang QR code na ito. Gumamit ng animated na QR code o mag-export ng request file."
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "Walang nababasang salita ang QR code na ito. Hindi suportado ang Compact SeedQR; gumamit ng QR code na may mga salita o ng Standard SeedQR, o i-type ang mga salita."
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "Walang laman ang QR code na ito. Mag-scan ng QR code na naglalaman ng recovery phrase mo."
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "Masyadong malaki ang QR code na ito para maging recovery phrase."
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "App Lock"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "Humingi ng biometric unlock para buksan ang BitTool Signer kapag binuksan ito at pagkatapos ng 2 minuto sa background. Kailangan pa rin ng password ng wallet sa bawat lagda."
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "I-set up ang fingerprint o face unlock sa Mga setting ng Android para ma-lock ang BitTool Signer. Laging kailangan pa rin ng password ng wallet sa bawat lagda."
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "I-unlock gamit ang biometrics"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "Gamitin na lang ang biometrics"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "I-unlock ang BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "I-lock ang BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "Kailangan pa rin ng password ng wallet para makalagda."
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "Hindi magamit ang biometric authentication. Suriin ang fingerprint o face unlock sa Mga setting ng Android, o gumamit ng wallet password."
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "Na-lock ang biometrics dahil sa sobrang dami ng pagsubok. Gumamit ng wallet password, o i-unlock muna ang telepono mo gamit ang screen lock nito."
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "Sa pagbura, hihingin ang biometric na kumpirmasyon, tapos ang password ng wallet na ito."
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "May ibang app na nakapatong sa BitTool Signer. Isara ito, tapos subukan muli."
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "Hindi mabago ang App Lock. Subukan muli."
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "Wala ang dokumentong ito sa app bundle."
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "Walang resulta para sa “%1$s”"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "Suriin ang spelling o sumubok ng bagong paghahanap."
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "I-clear ang paghahanap"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "Distribusyon"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "Direktang download (APK)"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "Signing certificate"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "Buong-buong open source ang BitTool Signer. Ang Android app, ang offline signing engine at ang token data ay inilathala, kaya kahit sino ay makakabasa kung ano ang ginagawa ng signer sa isang recovery phrase — at mabubuo itong muli at maihahambing ang resulta sa kopyang naka-install dito."
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "Source code ng signing engine"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s: isang account xpub para sa bawat uri ng Bitcoin address, para sa EVM at para sa TRON, at lahat ng tatlong Solana address, sa iisang animated na QR"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "May na-detect na screenshot"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "Walang recovery phrase sa QR code na ito."
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "Sa phrase na %1$d salita, ipinapakita ng bawat card ang %2$d sa %3$d salita, at maaaring makalkula ang natitirang %4$d kung sapat ang lakas ng pagkukuwenta. Bantayan ang bawat card nang kasingingat ng buong phrase, o gumamit ng phrase na 24 salita para sa hinating backup."
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "Walang laman"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "Walang laman, susunod na pupunan"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Nakatago na muli ang phrase, pero posibleng nasa screenshot na ito. Burahin ito sa gallery mo at sa lahat ng naka-sync na kopya, at magtago ng nakasulat na backup nang offline."
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "Posibleng nasa screenshot ang recovery phrase mo o ilan sa mga salita nito. Burahin ito sa gallery mo at sa lahat ng naka-sync na kopya, at magtago ng nakasulat na backup nang offline."
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "Kailangan ng screen lock"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero wala na ang device key ng wallet na iyon, kaya hindi ma-reset ang password nito. Buksan ang wallet na iyon, piliin ang “Burahin ang wallet”, tapos ang “Alisin ang wallet na ito”, at i-import muli ang phrase."
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "Buksan ang wallet"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "May naghihintay na signing request"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "Naputol ang pagtutugma. Subukan muli."
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "Walang tugmang wallet"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "Walang impormasyon ng lumagda"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "Tumutugma sa higit sa isang wallet"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "Kailangang i-set up ang wallet"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "Hindi suportadong signing protocol"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "Binabasa ang kahilingan…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "Panatilihing nakikita ang animated na code · %1$d bahagi"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "Ang psbt_base64 ay ang eksaktong PSBT na dala ng QR code na ito; ang decoded ay binasa mula rito para sa sanggunian."
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "Hindi nabasa ang file."
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "Hindi na-save ang file."
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "Kailangang i-set up"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "Data (hex)"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "Data (teksto)"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s byte"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "Plain text"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "Kontrata ng NFT (hindi nasuri)"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "+%1$d pa (tingnan ang Mga detalye)"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "Suriin ang kahilingan"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "Address"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "Iniimbak ang mga fingerprint bilang 32-bit na numero: ang %1$s ay ang fingerprint na %2$s."
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "Bawasan"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "Dagdagan"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "Liwanag ng screen"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "Normal"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "Maliwanag"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "Hindi ma-unlock ang wallet na ito"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "Wala na sa device na ito ang device key nito, kaya hindi ma-unlock ang wallet, kahit tama ang password. Alisin ito rito, tapos i-import muli ang recovery phrase nito at ang anumang BIP39 passphrase para maibalik ito. Hindi apektado ang pondo."
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "Nauunawaan kong ang recovery phrase lang ang makapagbabalik ng wallet na ito"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "Hindi hihingin ang password sa pag-alis ng wallet na ito: wala na ang device key na kailangan ng password."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "Sa pag-alis ng wallet na ito, biometric na kumpirmasyon ang hihingin, hindi ang password nito: wala na ang device key na kailangan ng password."
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "Alisin ang wallet na ito"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "Alisin ang wallet na ito?"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "Buburahin sa device na ito ang naka-encrypt na file nito nang walang password. Ang recovery phrase nito at ang anumang BIP39 passphrase lang ang makapagbabalik nito."
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "Alisin"
+  }
+ }
+}

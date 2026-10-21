@@ -1,0 +1,401 @@
+{
+ "language": "zh-Hans",
+ "strings": {
+  "activity_deleted_wallet": {
+   "source": "Deleted wallet",
+   "value": "已删除的钱包"
+  },
+  "activity_risk_high": {
+   "source": "High",
+   "value": "高"
+  },
+  "activity_risk_warnings_shown": {
+   "source": "Warnings shown",
+   "value": "已显示警告"
+  },
+  "activity_partial_signature_created": {
+   "source": "Partial signature created",
+   "value": "已生成部分签名"
+  },
+  "activity_unreadable_title": {
+   "source": "Activity Unavailable",
+   "value": "活动记录不可用"
+  },
+  "activity_export_failed": {
+   "source": "The file could not be saved.",
+   "value": "无法保存文件。"
+  },
+  "crypto_device_lock_required": {
+   "source": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "value": "创建或使用钱包前，请先设置屏幕锁定（PIN 码、图案或密码）。设备密钥需要屏幕锁定保护。"
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "source": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "value": "BitTool Signer 无法确认这个钱包的设备密钥已不存在。请重试，或用钱包密码删除钱包。"
+  },
+  "data_engine_missing": {
+   "source": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "value": "内置签名引擎不可用。请重新安装 BitTool Signer。"
+  },
+  "data_engine_invalid": {
+   "source": "The bundled signing engine could not be loaded.",
+   "value": "无法加载内置签名引擎。"
+  },
+  "data_engine_unavailable": {
+   "source": "The offline signing engine could not be started.",
+   "value": "无法启动离线签名引擎。"
+  },
+  "data_engine_entropy_unavailable": {
+   "source": "The engine’s secure entropy source could not be installed.",
+   "value": "无法为引擎安装安全随机数源。"
+  },
+  "data_engine_failure": {
+   "source": "The offline engine could not process this request.",
+   "value": "离线引擎无法处理这个请求。"
+  },
+  "data_engine_unsupported_operation": {
+   "source": "This signing operation is not supported.",
+   "value": "不支持这种签名操作。"
+  },
+  "data_engine_request_too_large": {
+   "source": "This request exceeds the 1 MB offline signing limit.",
+   "value": "这个请求超出了 1 MB 的离线签名上限。"
+  },
+  "data_engine_scan_ended": {
+   "source": "The scan session ended. Scan again.",
+   "value": "扫描会话已结束。请重新扫描。"
+  },
+  "data_engine_signing_failed": {
+   "source": "This request could not be signed.",
+   "value": "这个请求无法签名。"
+  },
+  "data_activity_unreadable": {
+   "source": "The local activity record could not be read.",
+   "value": "无法读取本机活动记录。"
+  },
+  "data_activity_not_saved": {
+   "source": "The local activity record could not be saved. Any completed signature remains available.",
+   "value": "无法保存本机活动记录。已完成的签名仍然可用。"
+  },
+  "data_public_cache_not_removed": {
+   "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "value": "加密钱包已删除，但无法移除其公开缓存。"
+  },
+  "onboarding_prepare_body": {
+   "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "value": "要做到最彻底的隔离，请使用一台专用手机，并保持其所有连接关闭。"
+  },
+  "onboarding_no_internet_permission": {
+   "source": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "value": "BitTool Signer 没有联网权限，因此 Android 会阻止所有连接"
+  },
+  "scanner_gate_non_text_signing": {
+   "source": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "value": "检测到二维码，但其中没有可读的文本。请改为以文件形式导出请求。"
+  },
+  "scanner_gate_empty_signing": {
+   "source": "This QR code is empty. Scan the signing request from your other wallet.",
+   "value": "这个二维码是空的。请扫描你另一个钱包里的签名请求。"
+  },
+  "scanner_gate_too_large_signing": {
+   "source": "This QR code is too large. Use an animated QR code or export a request file.",
+   "value": "这个二维码太大。请使用动态二维码，或导出请求文件。"
+  },
+  "scanner_gate_non_text_recovery": {
+   "source": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "value": "这个二维码里没有可读的单词。不支持 Compact SeedQR；请使用包含单词的二维码或标准 SeedQR，或手动输入单词。"
+  },
+  "scanner_gate_empty_recovery": {
+   "source": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "value": "这个二维码是空的。请扫描包含你助记词的二维码。"
+  },
+  "scanner_gate_too_large_recovery": {
+   "source": "This QR code is too large to be a recovery phrase.",
+   "value": "这个二维码太大，不可能是助记词。"
+  },
+  "security_app_lock": {
+   "source": "App Lock",
+   "value": "App 锁"
+  },
+  "security_app_lock_footer_available": {
+   "source": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "value": "启动时以及退到后台 2 分钟后，打开 BitTool Signer 需要生物识别解锁。每次签名仍然需要钱包密码。"
+  },
+  "security_app_lock_footer_unavailable": {
+   "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "value": "在系统设置中启用指纹或人脸解锁，即可锁定 BitTool Signer。每次签名始终需要钱包密码。"
+  },
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "用生物识别解锁"
+  },
+  "security_use_biometrics_instead": {
+   "source": "Use Biometrics Instead",
+   "value": "改用生物识别"
+  },
+  "security_prompt_unlock_title": {
+   "source": "Unlock BitTool Signer",
+   "value": "解锁 BitTool Signer"
+  },
+  "security_prompt_lock_title": {
+   "source": "Lock BitTool Signer",
+   "value": "锁定 BitTool Signer"
+  },
+  "security_prompt_description": {
+   "source": "Signing still requires the wallet password.",
+   "value": "签名仍然需要钱包密码。"
+  },
+  "security_biometric_unavailable": {
+   "source": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "value": "生物识别不可用。请在 Android 设置里检查指纹或人脸解锁，或改用钱包密码。"
+  },
+  "security_biometric_lockout": {
+   "source": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "value": "尝试次数过多，生物识别已被锁定。请使用钱包密码，或先用屏幕锁定解锁手机。"
+  },
+  "security_delete_footer_biometric": {
+   "source": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "value": "删除会先要求生物识别确认，再要求该钱包的密码。"
+  },
+  "security_overlay_blocked": {
+   "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "value": "其他 App 正覆盖在 BitTool Signer 上方。请关闭该 App 后重试。"
+  },
+  "security_app_lock_save_failed": {
+   "source": "App Lock could not be changed. Try again.",
+   "value": "无法更改 App 锁。请重试。"
+  },
+  "settings_document_missing": {
+   "source": "This document is missing from the app bundle.",
+   "value": "App 内缺少这份文档。"
+  },
+  "settings_no_results": {
+   "source": "No Results for “%1$s”",
+   "value": "没有“%1$s”的结果"
+  },
+  "settings_no_results_hint": {
+   "source": "Check the spelling or try a new search.",
+   "value": "请检查拼写或尝试新的搜索。"
+  },
+  "settings_clear_search": {
+   "source": "Clear search",
+   "value": "清除搜索"
+  },
+  "settings_distribution": {
+   "source": "Distribution",
+   "value": "分发渠道"
+  },
+  "settings_distribution_apk": {
+   "source": "Direct download (APK)",
+   "value": "直接下载（APK）"
+  },
+  "settings_signing_certificate": {
+   "source": "Signing certificate",
+   "value": "签名证书"
+  },
+  "settings_open_source_intro": {
+   "source": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "value": "BitTool Signer 完全开源。Android App、离线签名引擎和代币数据均已公开，任何人都能看清签名器如何处理助记词，也能自行重新构建并与这台设备上安装的版本比对。"
+  },
+  "settings_engine_source": {
+   "source": "Signing engine source",
+   "value": "签名引擎源代码"
+  },
+  "settings_wallet_level_format": {
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "value": "%1$s：比特币各地址类型及 EVM、TRON 的账户 xpub，外加全部三个 Solana 地址，集中在一个动态二维码中"
+  },
+  "setup_screenshot_detected": {
+   "source": "Screenshot Detected",
+   "value": "检测到截图"
+  },
+  "setup_qr_not_recovery_phrase": {
+   "source": "This QR code does not contain a recovery phrase.",
+   "value": "这个二维码不包含助记词。"
+  },
+  "setup_weak_cards_warning": {
+   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "value": "使用 %1$d 词助记词时，每张卡片会露出 %3$d 个词中的 %2$d 个，其余 %4$d 个在足够算力下可以被推算出来。请像保管完整助记词一样保管每一张卡片，或改用 24 词助记词进行拆分备份。"
+  },
+  "setup_slot_empty": {
+   "source": "Empty",
+   "value": "空白"
+  },
+  "setup_slot_empty_next": {
+   "source": "Empty, next to fill",
+   "value": "空白，下一个待填"
+  },
+  "setup_screenshot_phrase_hidden": {
+   "source": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "助记词已重新隐藏，但截图里可能已经包含它。请从相册以及任何同步副本中删除，并保留离线手抄备份。"
+  },
+  "setup_screenshot_may_contain": {
+   "source": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "value": "该截图可能包含你的助记词或其中部分单词。请从相册以及任何同步副本中删除，并保留离线手抄备份。"
+  },
+  "setup_screen_lock_required": {
+   "source": "Screen Lock Required",
+   "value": "需要屏幕锁定"
+  },
+  "setup_lost_key_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "value": "这组助记词属于本机上的一个钱包，但该钱包的设备密钥已不存在，因此无法重置其密码。请打开该钱包，选择「删除钱包」，再选择「移除这个钱包」，然后重新导入这组助记词。"
+  },
+  "setup_lost_key_open_wallet": {
+   "source": "Open Wallet",
+   "value": "打开钱包"
+  },
+  "shell_scan_badge_description": {
+   "source": "A signing request is waiting",
+   "value": "有一个签名请求待处理"
+  },
+  "sign_matching_interrupted": {
+   "source": "Matching interrupted. Try again.",
+   "value": "匹配已中断。请重试。"
+  },
+  "sign_no_matching_wallet": {
+   "source": "No matching wallet",
+   "value": "没有匹配的钱包"
+  },
+  "sign_missing_signer_information": {
+   "source": "Missing signer information",
+   "value": "缺少签名者信息"
+  },
+  "sign_ambiguous_wallet_match": {
+   "source": "Ambiguous wallet match",
+   "value": "匹配到多个钱包"
+  },
+  "sign_wallet_setup_required": {
+   "source": "Wallet setup required",
+   "value": "钱包需要先完成设置"
+  },
+  "sign_unsupported_signing_protocol": {
+   "source": "Unsupported signing protocol",
+   "value": "不支持的签名协议"
+  },
+  "sign_reading_request": {
+   "source": "Reading request…",
+   "value": "正在读取请求…"
+  },
+  "sign_keep_animated_code_in_view": {
+   "source": "Keep the animated code in view · %1$d parts",
+   "value": "请让动态二维码保持在画面内 · %1$d 帧"
+  },
+  "sign_psbt_payload_note": {
+   "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "value": "psbt_base64 是这个二维码承载的原始 PSBT；decoded 是从中解析出的内容，仅供参考。"
+  },
+  "sign_file_unreadable": {
+   "source": "The file could not be read.",
+   "value": "无法读取文件。"
+  },
+  "sign_file_not_saved": {
+   "source": "The file could not be saved.",
+   "value": "无法保存文件。"
+  },
+  "ui_setup_required": {
+   "source": "Setup required",
+   "value": "需要设置"
+  },
+  "ui_payload_hex": {
+   "source": "Payload (Hex)",
+   "value": "载荷（十六进制）"
+  },
+  "ui_payload_text": {
+   "source": "Payload (Text)",
+   "value": "载荷（文本）"
+  },
+  "ui_payload_bytes": {
+   "source": "%1$s bytes",
+   "value": "%1$s 字节"
+  },
+  "ui_payload_plain_text": {
+   "source": "Plain text",
+   "value": "纯文本"
+  },
+  "ui_nft_contract_not_verified": {
+   "source": "NFT contract (not verified)",
+   "value": "NFT 合约（未验证）"
+  },
+  "ui_more_see_details": {
+   "source": "+%1$d more (see Details)",
+   "value": "还有 %1$d 项（见「详情」）"
+  },
+  "ui_review_request": {
+   "source": "Review request",
+   "value": "审核请求"
+  },
+  "ui_profile_legacy": {
+   "source": "Legacy",
+   "value": "Legacy"
+  },
+  "ui_profile_standard": {
+   "source": "Standard",
+   "value": "Standard"
+  },
+  "ui_export_address": {
+   "source": "Address",
+   "value": "地址"
+  },
+  "ui_fingerprint_note": {
+   "source": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "value": "指纹以 32 位整数存储：%1$s 即指纹 %2$s。"
+  },
+  "ui_decrease": {
+   "source": "Decrease",
+   "value": "减少"
+  },
+  "ui_increase": {
+   "source": "Increase",
+   "value": "增加"
+  },
+  "wallets_qr_brightness": {
+   "source": "Screen brightness",
+   "value": "屏幕亮度"
+  },
+  "wallets_qr_brightness_normal": {
+   "source": "Normal",
+   "value": "正常"
+  },
+  "wallets_qr_brightness_bright": {
+   "source": "Bright",
+   "value": "调亮"
+  },
+  "wallets_lost_key_title": {
+   "source": "This Wallet Can’t Be Unlocked",
+   "value": "这个钱包无法解锁"
+  },
+  "wallets_lost_key_message": {
+   "source": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "value": "它的设备密钥已不在这台设备上，因此即使密码正确也无法解锁这个钱包。请在这里移除它，然后重新导入它的助记词和相应的 BIP39 passphrase 来恢复。资产不受影响。"
+  },
+  "wallets_lost_key_confirm": {
+   "source": "I understand that only the recovery phrase can restore this wallet",
+   "value": "我明白只有助记词能恢复这个钱包"
+  },
+  "wallets_lost_key_footer": {
+   "source": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "value": "移除这个钱包不需要输入密码：密码所依赖的设备密钥已不存在。"
+  },
+  "wallets_lost_key_footer_biometric": {
+   "source": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "value": "移除这个钱包需要生物识别确认，而不是密码：密码所依赖的设备密钥已不存在。"
+  },
+  "wallets_lost_key_remove": {
+   "source": "Remove This Wallet",
+   "value": "移除这个钱包"
+  },
+  "wallets_lost_key_dialog_title": {
+   "source": "Remove This Wallet?",
+   "value": "移除这个钱包？"
+  },
+  "wallets_lost_key_dialog_message": {
+   "source": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "value": "它的加密文件将在不验证密码的情况下从本机删除。之后只有它的助记词和相应的 BIP39 passphrase 能恢复它。"
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "source": "Remove",
+   "value": "移除"
+  }
+ }
+}
