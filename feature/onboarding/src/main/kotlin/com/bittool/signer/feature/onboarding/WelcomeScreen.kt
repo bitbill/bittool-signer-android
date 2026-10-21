@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +56,7 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -347,13 +349,24 @@ private fun Features(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * One promise: the symbol in a 34 dp column, then the title and the detail. The symbol follows the text size like the
+ * iOS `.font(.title2)` symbol (QA regression-07): 26 dp at the default size, larger with large text, the column
+ * widening with it.
+ */
 @Composable
 private fun Feature(icon: ImageVector, title: Int, detail: Int) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
+    val iconSize = with(LocalDensity.current) { (typography.title2.fontSize * FEATURE_ICON_RATIO).toDp() }
     Row(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.Top) {
-        Box(Modifier.width(34.dp), contentAlignment = Alignment.TopCenter) {
-            Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.padding(top = 1.dp).size(26.dp))
+        Box(Modifier.widthIn(min = 34.dp), contentAlignment = Alignment.TopCenter) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = colors.accent,
+                modifier = Modifier.padding(top = 1.dp).size(iconSize).testTag(WelcomeTags.FEATURE_ICON),
+            )
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -362,6 +375,9 @@ private fun Feature(icon: ImageVector, title: Int, detail: Int) {
         }
     }
 }
+
+/** A feature symbol's size as a share of the title2 font size: 26 dp beside 22 sp text. */
+private const val FEATURE_ICON_RATIO = 26f / 22f
 
 /** The bundled networks (the logo stack reads as one element with the short names) and their names in a line. */
 @Composable
@@ -462,6 +478,9 @@ object WelcomeTags {
 
     /** The scrolling page above the bar. */
     const val CONTENT = "welcome.content"
+
+    /** The symbol of each of the three promises (decorative; layout tests). */
+    const val FEATURE_ICON = "welcome.feature.icon"
 
     /** "Screen Lock Required" (Android only): "Open Settings" and "Cancel". */
     const val LOCK_OPEN_SETTINGS = "welcome.lock.openSettings"

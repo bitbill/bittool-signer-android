@@ -3,16 +3,20 @@ package com.bittool.signer.feature.setup.phrase
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -218,6 +222,10 @@ class PhraseKeyboardTest {
             val info = EditorInfo()
             view.onCreateInputConnection(info)
             assertTrue(info.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0, "incognito")
+            // QA regression-01: no suggestion strip either, on the plain text class (CJK input methods keep working).
+            assertTrue(info.inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0, "no suggestions")
+            assertEquals(InputType.TYPE_CLASS_TEXT, info.inputType and InputType.TYPE_MASK_CLASS)
+            assertEquals(InputType.TYPE_TEXT_VARIATION_NORMAL, info.inputType and InputType.TYPE_MASK_VARIATION)
             assertTrue(shadowOf(imm()).isSoftInputVisible, "the system keyboard was asked for")
         }
 
@@ -359,5 +367,32 @@ class PhraseKeyboardTest {
         compose.onNodeWithTag(Bip39KeyboardTags.DONE).performClick()
         compose.waitForIdle()
         compose.onNodeWithTag("setup.import").assertExists()
+    }
+
+    /**
+     * Only "Continue" steps aside on a short window: an error (which typing does not clear, iOS) stays above the
+     * keyboard while the person fixes the phrase it is about, and Continue comes back under it with Done.
+     */
+    @Test
+    @Config(qualifiers = "w852dp-h393dp-xhdpi")
+    fun onAShortWindowAnErrorStaysAboveTheKeyboardWhileContinueStepsAside() {
+        flow()
+        compose.runOnIdle { model.fields.phrase.setTextAndPlaceCursorAtEnd("abandon abandon abandon") }
+        compose.onNodeWithTag("setup.import").performClick()
+        compose.waitForIdle()
+        val error = compose.onNodeWithTag("setup.error")
+        error.assert(hasText("Invalid recovery phrase", substring = true)).assertIsDisplayed()
+        editor.performScrollTo()
+        tapEditor()
+        keyboard.assertIsDisplayed()
+        compose.onNodeWithTag("setup.import").assertDoesNotExist()
+        error.assertIsDisplayed()
+        val errorBottom = error.fetchSemanticsNode().boundsInRoot.bottom
+        val keyboardTop = keyboard.fetchSemanticsNode().boundsInRoot.top
+        assertTrue(errorBottom <= keyboardTop + 1f, "the error ends at $errorBottom, under the keyboard at $keyboardTop")
+        compose.onNodeWithTag(Bip39KeyboardTags.DONE).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag("setup.import").assertIsDisplayed()
+        error.assertIsDisplayed()
     }
 }
