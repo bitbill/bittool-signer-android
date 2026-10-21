@@ -1,5 +1,7 @@
 package com.bittool.signer.feature.activity
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.performTouchInput
@@ -110,6 +112,20 @@ class ActivityScreensTest {
             .performScrollToNode(hasText("The request and signature are kept for the 25 most recent signatures. This one is older, so only its summary remains."))
         compose.onNodeWithTag(ActivityDetailTags.SHOW_QR).assertDoesNotExist()
         compose.onNodeWithText("Input", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** "Signed Request" for a record that kept no request says why there is nothing to show; it never spins forever. */
+    @Test
+    fun aSignedRequestWithoutAStoredRequestExplainsInsteadOfWaiting() {
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                SignedRequestContent(decode = DecodeState.NotStored, onBack = {})
+            }
+        }
+        compose.onNodeWithText(
+            "The request and signature are kept for the 25 most recent signatures. This one is older, so only its summary remains.",
+        ).assertIsDisplayed()
+        compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo), useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test

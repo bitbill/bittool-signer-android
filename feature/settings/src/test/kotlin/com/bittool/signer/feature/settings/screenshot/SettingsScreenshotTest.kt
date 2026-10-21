@@ -244,11 +244,33 @@ class SettingsScreenshotTest(private val look: Look) {
         ThirdPartyNoticesContent(
             NoticesUiState(
                 listOf(
+                    // As the bundled files are written (QA sign-16): separators, headlines, 78-column licence text.
                     NoticeSection(
                         "BitTool Signer JavaScript engine — third-party notices",
-                        listOf("@noble/curves 1.9.7\nMIT License\nCopyright (c) 2022 Paul Miller (https://paulmillr.com)", "=".repeat(60)),
+                        listOf(
+                            "=".repeat(72) + "\n@noble/curves 1.9.7 — MIT\nhttps://github.com/paulmillr/noble-curves",
+                            "MIT License",
+                            "Copyright (c) 2022 Paul Miller (https://paulmillr.com)",
+                            "Permission is hereby granted, free of charge, to any person obtaining a copy\n" +
+                                "of this software and associated documentation files (the \"Software\"), to deal\n" +
+                                "in the Software without restriction, including without limitation the rights\n" +
+                                "to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n" +
+                                "copies of the Software, and to permit persons to whom the Software is\n" +
+                                "furnished to do so, subject to the following conditions:",
+                        ),
                     ),
-                    NoticeSection("BitTool Signer for Android — third-party notices", listOf("AndroidX\nApache License 2.0")),
+                    NoticeSection(
+                        "BitTool Signer for Android — third-party notices",
+                        listOf(
+                            "                                 Apache License\n" +
+                                "                           Version 2.0, January 2004\n" +
+                                "                        https://www.apache.org/licenses/",
+                            "   2. Grant of Copyright License. Subject to the terms and conditions of\n" +
+                                "      this License, each Contributor hereby grants to You a perpetual,\n" +
+                                "      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n" +
+                                "      copyright license to reproduce, prepare Derivative Works of,",
+                        ),
+                    ),
                 ),
             ),
             onBack = {},

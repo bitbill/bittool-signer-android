@@ -146,12 +146,22 @@ class ActivityDetailViewModel @Inject constructor(
     /**
      * The file picker returned [uri] (null: cancelled, nothing happens). Writes the stored response text; a failure is
      * shown under the buttons, with the provider's own reason when it gives one (iOS `error.localizedDescription`).
+     *
+     * The picker is another app: while it is open Android may end this process, and the answer then reaches a new
+     * ViewModel before the store has read the journal again. The text is taken once the store has loaded, so the
+     * document the person just created is written rather than left empty; a record that is gone by then (or kept no
+     * signature) is reported as not saved.
      */
     fun onExport(uri: Uri?) {
         uri ?: return
-        val text = currentReceipt()?.responseText?.takeIf { it.isNotEmpty() } ?: return
         local.update { it.copy(exportError = null) }
         viewModelScope.launch {
+            val text = store.state.first { !it.isLoading }.receipts.firstOrNull { it.id == receiptId }
+                ?.responseText?.takeIf { it.isNotEmpty() }
+            if (text == null) {
+                local.update { it.copy(exportError = UiText.Resource(R.string.activity_export_failed)) }
+                return@launch
+            }
             try {
                 writer.write(uri, text)
             } catch (e: CancellationException) {
@@ -194,7 +204,15 @@ class ActivityDetailViewModel @Inject constructor(
                 RiskLevel.High.wire -> RiskRow.High
                 else -> RiskRow.WarningsShown
             },
-            decode = if (receipt.requestJson == null) DecodeState.NotStored else decoded,
+            // A review decoded on this visit stays: a newer signature can push the record past the 25 most recent while
+            // "Signed Request" shows it, and the record then loses its request (activity-settings.md §2.1). iOS pages
+            // keep the values they were opened with; here the page would otherwise wait for a decode that never comes.
+            // (The Signature page hides Input once the record has no request.)
+            decode = when {
+                decoded is DecodeState.Decoded -> decoded
+                receipt.requestJson == null -> DecodeState.NotStored
+                else -> decoded
+            },
             showsQr = local.showsQr && receipt.responseFrames?.isNotEmpty() == true,
             exportError = local.exportError,
         )

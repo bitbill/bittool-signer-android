@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -34,6 +35,7 @@ import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -43,11 +45,22 @@ import com.bittool.signer.core.model.review.DecodeStatus
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.symbolSize
 
+/** Whether the review has a pinned bar: a task to sign, or "Cannot Sign"; nothing while the wallet is being matched. */
+internal val RequestReviewUiState.hasSignBar: Boolean
+    get() = matchingIssue != null || pending != null
+
+/** Whether the risk acknowledgement is asked for: a task to sign whose request is not fully decoded or is high risk. */
+internal val RequestReviewUiState.showsAcknowledgement: Boolean
+    get() = pending != null && matchingIssue == null && requiresAcknowledgement
+
 /**
  * The pinned bar of the review (iOS `signBar`, `Features/Sign/RequestReviewView.swift:186-206`): with a task to sign,
- * the risk acknowledgement when the request needs it, "Signature n of m" for several wallets and "Sign with …"
- * (disabled until acknowledged and while signing); "Cannot Sign" when the request cannot be matched; nothing while
- * matching. Both decisive controls refuse touches through another app's overlay ([onObscuredTouch]).
+ * the risk acknowledgement when the request needs it and [acknowledgementInBar] (otherwise the page scrolls it as the
+ * last item above the bar), "Signature n of m" for several wallets and "Sign with …" (disabled until acknowledged and
+ * while signing); "Cannot Sign" when the request cannot be matched. The page composes no bar at all while matching
+ * ([hasSignBar]). Both decisive controls refuse touches through another app's overlay ([onObscuredTouch]).
+ * [onAcknowledgementHeight] and [onActionsHeight] report the measured heights of the acknowledgement and of the part
+ * under it (the page decides where the acknowledgement goes from them).
  */
 @Composable
 internal fun ColumnScope.SignBar(
@@ -55,36 +68,45 @@ internal fun ColumnScope.SignBar(
     onToggleRisk: () -> Unit,
     onAuthorize: () -> Unit,
     onObscuredTouch: () -> Unit,
+    acknowledgementInBar: Boolean = true,
+    onAcknowledgementHeight: (Int) -> Unit = {},
+    onActionsHeight: (Int) -> Unit = {},
 ) {
     val pending = state.pending
     when {
         pending != null && state.matchingIssue == null -> {
-            if (state.requiresAcknowledgement) {
+            if (state.showsAcknowledgement && acknowledgementInBar) {
                 RiskAcknowledgement(
                     checked = state.riskAccepted,
                     fullyDecoded = state.review?.decodeStatus == DecodeStatus.FullyDecoded,
                     onToggle = onToggleRisk,
                     onObscuredTouch = onObscuredTouch,
+                    modifier = Modifier.onSizeChanged { onAcknowledgementHeight(it.height) },
                 )
             }
-            if (state.taskCount > 1) {
-                Text(
-                    text = stringResource(R.string.signature_x_of_x, state.completedCount + 1, state.taskCount),
-                    style = SignerTheme.typography.footnote.semibold(),
-                    color = SignerTheme.colors.secondaryLabel,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
+            Column(
+                modifier = Modifier.fillMaxWidth().onSizeChanged { onActionsHeight(it.height) },
+                verticalArrangement = Arrangement.spacedBy(SignerMetrics.barGap),
+            ) {
+                if (state.taskCount > 1) {
+                    Text(
+                        text = stringResource(R.string.signature_x_of_x, state.completedCount + 1, state.taskCount),
+                        style = SignerTheme.typography.footnote.semibold(),
+                        color = SignerTheme.colors.secondaryLabel,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    )
+                }
+                val name = pending.wallet.name ?: stringResource(R.string.wallet)
+                PrimaryButton(
+                    text = stringResource(R.string.sign_with_x, name),
+                    onClick = onAuthorize,
+                    icon = SignerIcons.Signature,
+                    busy = state.busy,
+                    enabled = !state.blocked && !state.busy,
+                    modifier = Modifier.obscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE),
                 )
             }
-            val name = pending.wallet.name ?: stringResource(R.string.wallet)
-            PrimaryButton(
-                text = stringResource(R.string.sign_with_x, name),
-                onClick = onAuthorize,
-                icon = SignerIcons.Signature,
-                busy = state.busy,
-                enabled = !state.blocked && !state.busy,
-                modifier = Modifier.obscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE),
-            )
         }
         state.matchingIssue != null -> SecondaryButton(
             text = stringResource(R.string.cannot_sign),

@@ -1,24 +1,33 @@
 package com.bittool.signer.feature.settings.about
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.data.LegalDocumentRepository
@@ -78,9 +87,10 @@ fun ThirdPartyNoticesScreen(onBack: () -> Unit, modifier: Modifier = Modifier, v
 }
 
 /**
- * Each notices file under its own heading (the engine's, then the Android app's), every paragraph verbatim in 11 sp
- * monospace, selectable, lazily (iOS `LicensesView`: `LazyVStack`, spacing 10, padding 20). The notices are English
- * and laid out left to right in every language.
+ * Each notices file under its own heading (the engine's, then the Android app's), every paragraph's words verbatim in
+ * 11 sp monospace, selectable, lazily (iOS `LicensesView`: `LazyVStack`, spacing 10, padding 20). Unlike iOS, which draws
+ * the hard-wrapped text as it is, the paragraphs are reflowed to the screen ([NoticeParagraph]). The notices are
+ * English and laid out left to right in every language.
  */
 @Composable
 internal fun ThirdPartyNoticesContent(state: NoticesUiState, onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -114,11 +124,54 @@ internal fun ThirdPartyNoticesContent(state: NoticesUiState, onBack: () -> Unit,
                 }
                 items(section.paragraphs.size, key = { "p-$sectionIndex-$it" }, contentType = { "paragraph" }) { index ->
                     val paragraph = section.paragraphs[index]
-                    SelectionContainer(SectionFrame) {
+                    if (paragraph == LegalDocumentRepository.NOTICES_MISSING) {
+                        Text(missing, style = noticeStyle, color = SignerTheme.colors.label, modifier = SectionFrame.fillMaxWidth())
+                    } else {
+                        NoticeParagraph(paragraph)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The notices' 11 sp monospace, left to right in every language (the files are English). */
+private val noticeStyle: TextStyle
+    @Composable get() = SignerTheme.typography.caption2.monospaced().ltr()
+
+/**
+ * One notices paragraph, its words verbatim and selectable, reflowed to the screen ([NoticeReflow]): every line of the
+ * file wraps as a paragraph of its own with the file's indentation as an indent (hanging where the file hangs it,
+ * capped at [MAX_INDENT] characters so a phone keeps a usable width), lines the file centres centred, and `=====`
+ * separators drawn as hairlines.
+ */
+@Composable
+private fun NoticeParagraph(paragraph: String) {
+    val blocks = remember(paragraph) { NoticeReflow.blocks(paragraph) }
+    val style = noticeStyle
+    val colors = SignerTheme.colors
+    SelectionContainer(SectionFrame) {
+        Column(Modifier.fillMaxWidth()) {
+            blocks.forEach { block ->
+                when (block) {
+                    NoticeBlock.Rule -> Box(
+                        Modifier
+                            .padding(vertical = 8.dp)
+                            .fillMaxWidth()
+                            .height(0.5.dp)
+                            .background(colors.separator),
+                    )
+                    is NoticeBlock.Text -> block.lines.forEach { line ->
                         Text(
-                            text = if (paragraph == LegalDocumentRepository.NOTICES_MISSING) missing else paragraph,
-                            style = SignerTheme.typography.caption2.monospaced().ltr(),
-                            color = SignerTheme.colors.label,
+                            text = line.text,
+                            style = style.copy(
+                                textAlign = if (line.centered) TextAlign.Center else TextAlign.Start,
+                                textIndent = TextIndent(
+                                    firstLine = (line.indent.coerceAtMost(MAX_INDENT) * MONOSPACE_ADVANCE).em,
+                                    restLine = (line.hangingIndent.coerceAtMost(MAX_INDENT) * MONOSPACE_ADVANCE).em,
+                                ),
+                            ),
+                            color = colors.label,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
@@ -127,6 +180,12 @@ internal fun ThirdPartyNoticesContent(state: NoticesUiState, onBack: () -> Unit,
         }
     }
 }
+
+/** The deepest indent drawn, in characters. */
+private const val MAX_INDENT = 12
+
+/** The advance of one character of the monospace face, in em. */
+private const val MONOSPACE_ADVANCE = 0.6f
 
 /** Side and bottom insets plus the iOS 20 pt page padding above and below the text. */
 @Composable

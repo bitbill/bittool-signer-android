@@ -1,5 +1,8 @@
 package com.bittool.signer.feature.settings.language
 
+import android.icu.text.DisplayContext
+import android.icu.text.LocaleDisplayNames
+import android.icu.util.ULocale
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +48,7 @@ import com.bittool.signer.feature.settings.SettingsPage
 import com.bittool.signer.feature.settings.listContentPadding
 import com.bittool.signer.feature.settings.rememberResumed
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.text.Normalizer
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,18 +109,11 @@ internal fun LanguageContent(state: LanguageUiState, onSelect: (AppLanguage) -> 
         ) {
             item(key = "languages") {
                 val systemName = stringResource(R.string.system)
-                // Each language's name in the interface language ("German"), and the device language "System" follows.
-                // Locale extensions are not part of the name: Arabic is applied as ar-u-nu-latn, and Android 14 puts the
-                // regional preferences (units, first day of the week) on the device locale as -u- keywords, which some
-                // runtimes spell out ("Arabic (Latin Digits)").
+                // Each language's name in the interface language ("Simplified Chinese"), and the device language "System"
+                // follows; none where it would only repeat the row's own name (LanguageNames).
                 val details = remember(state.options, state.systemLocale, appLocale) {
-                    state.options.associateWith { option ->
-                        if (option == AppLanguage.System) {
-                            state.systemLocale.stripExtensions().getDisplayName(appLocale)
-                        } else {
-                            Locale.forLanguageTag(option.languageTag).stripExtensions().getDisplayName(appLocale).takeIf { it != option.endonym }
-                        }
-                    }
+                    val names = LanguageNames(appLocale)
+                    state.options.associateWith { option -> names.detail(option, state.systemLocale) }
                 }
                 val rows = state.options.map { option ->
                     val title = if (option == AppLanguage.System) AnnotatedString(systemName) else endonym(option)
@@ -164,5 +161,47 @@ private fun LanguageRow(title: AnnotatedString, detail: String?, selected: Boole
             if (detail != null) Text(detail, style = typography.footnote, color = colors.secondaryLabel)
         }
         if (selected) Icon(SignerIcons.Check, contentDescription = null, tint = colors.accent, modifier = Modifier.size(22.dp))
+    }
+}
+
+/**
+ * The secondary line of a language row: the language's name in the interface language, from ICU's dialect names
+ * ("Simplified Chinese", "Brazilian Portuguese", ja "簡体中国語") capitalised as CLDR does for list items, instead of
+ * `Locale.getDisplayName`'s "language (script)" form ("Chinese (Simplified Han)", ja "中国語 (漢字(簡体字))"; QA sign-12).
+ * Locale extensions never reach a name: Arabic is applied as ar-u-nu-latn, and Android 14 puts the regional preferences
+ * (units, first day of the week) on the device locale as -u- keywords, which some runtimes spell out ("Arabic (Latin
+ * Digits)").
+ */
+internal class LanguageNames(appLocale: Locale) {
+    private val interfaceLocale = appLocale.stripExtensions()
+    private val names = LocaleDisplayNames.getInstance(
+        ULocale.forLocale(interfaceLocale),
+        DisplayContext.DIALECT_NAMES,
+        DisplayContext.CAPITALIZATION_FOR_UI_LIST_OR_MENU,
+    )
+
+    /** The name of [locale] in the interface language. */
+    fun name(locale: Locale): String = names.localeDisplayName(locale.stripExtensions())
+
+    /**
+     * The detail of [option]: for "System" the name of the device language [systemLocale]; for a language its name,
+     * unless that only repeats the endonym above it (zh "简体中文" / "简体中文") or names the interface language itself
+     * (es "Español (España)" / "Español de España"), which the reader of that row already reads.
+     */
+    fun detail(option: AppLanguage, systemLocale: Locale): String? {
+        if (option == AppLanguage.System) return name(systemLocale)
+        val locale = Locale.forLanguageTag(option.languageTag).stripExtensions()
+        val name = name(locale)
+        return name.takeUnless { comparable(it) == comparable(option.endonym) || sameLanguage(locale, interfaceLocale) }
+    }
+
+    /** Case, compatibility forms, spaces and punctuation aside ("简体中文" and "简体 中文", "Español" and "español"). */
+    private fun comparable(text: String): String =
+        Normalizer.normalize(text, Normalizer.Form.NFKC).lowercase(interfaceLocale).filter(Char::isLetterOrDigit)
+
+    private fun sameLanguage(a: Locale, b: Locale): Boolean {
+        val x = ULocale.addLikelySubtags(ULocale.forLocale(a))
+        val y = ULocale.addLikelySubtags(ULocale.forLocale(b))
+        return x.language == y.language && x.script == y.script && x.country == y.country
     }
 }

@@ -1,18 +1,24 @@
 package com.bittool.signer.feature.settings.reference
 
 import android.os.Build
+import android.view.ViewConfiguration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.PressGestureScope
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,14 +32,18 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +58,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.EmptyState
@@ -73,6 +84,9 @@ import com.bittool.signer.core.ui.review.ContractCategoryGlyph
 import com.bittool.signer.core.ui.wallet.isolate
 import com.bittool.signer.feature.settings.SettingsPage
 import com.bittool.signer.feature.settings.rememberResumed
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Test tags of a network page (iOS `reference.picker` plus Android-only ids for the e2e suite). */
 object ReferenceTags {
@@ -275,9 +289,13 @@ private fun ContractRow(contract: KnownContractEntry, toast: StatusToastState) {
 }
 
 /**
- * A plain-list row with the iOS context menu "Copy Contract Address": long press (with the long-press haptic) opens a
- * menu anchored to the row; TalkBack gets the same as a long-click and a custom action. The copy goes through
- * [SignerClipboard] (expires after 120 s); Android 13+ confirms it itself, older versions get the "Copied" toast.
+ * A plain-list row with the iOS context menu "Copy Contract Address". Holding the row shows the pressed ripple (the
+ * Android counterpart of the iOS lift; not for a quick tap, which does nothing here, nor for a touch that turns into a
+ * scroll), and the long press (with its haptic) opens the menu at the finger, as iOS shows it at the row (QA sign-15):
+ * below and after the finger, or above / before it where the window has no room (near the keyboard, the bottom edge, the
+ * far side). TalkBack gets the same as a long-click, the menu then under the row's start, and as a custom action. The
+ * copy goes through [SignerClipboard] (expires after 120 s); Android 13+ confirms it itself, older versions get the
+ * "Copied" toast.
  */
 @Composable
 private fun CopyMenuRow(
@@ -291,6 +309,10 @@ private fun CopyMenuRow(
     val copyLabel = stringResource(R.string.copy_contract_address)
     val copied = stringResource(R.string.copied)
     var menu by remember { mutableStateOf(false) }
+    // Where the long press happened, from the row's top left (null: TalkBack's long-click, which has no position).
+    var pressedAt by remember { mutableStateOf<Offset?>(null) }
+    val interaction = remember { MutableInteractionSource() }
+    val scope = rememberCoroutineScope()
     val copy = {
         if (SignerClipboard.copy(context, address) && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) toast.show(copied)
     }
@@ -299,14 +321,20 @@ private fun CopyMenuRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 64.dp)
+                .indication(interaction, ripple())
                 .pointerInput(address) {
-                    detectTapGestures(onLongPress = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        menu = true
-                    })
+                    detectTapGestures(
+                        onPress = { offset -> showPress(offset, interaction, scope) },
+                        onLongPress = { offset ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            pressedAt = offset
+                            menu = true
+                        },
+                    )
                 }
                 .semantics(mergeDescendants = true) {
                     onLongClick(label = copyLabel) {
+                        pressedAt = null
                         menu = true
                         true
                     }
@@ -329,18 +357,55 @@ private fun CopyMenuRow(
         )
         // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
         if (menu && rememberWindowGateReleased()) {
-            DropdownMenu(expanded = true, onDismissRequest = { menu = false }, containerColor = SignerTheme.colors.elevatedCard) {
-                DropdownMenuItem(
-                    text = { Text(copyLabel) },
-                    leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
-                    onClick = {
-                        menu = false
-                        copy()
-                    },
-                )
+            val menuContent: @Composable () -> Unit = {
+                DropdownMenu(
+                    expanded = true,
+                    onDismissRequest = { menu = false },
+                    containerColor = SignerTheme.colors.elevatedCard,
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(copyLabel) },
+                        leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
+                        onClick = {
+                            menu = false
+                            copy()
+                        },
+                    )
+                }
+            }
+            val at = pressedAt
+            if (at == null) {
+                menuContent()
+            } else {
+                // The menu's anchor is a point under the finger, so DropdownMenu opens it with a corner at the finger
+                // and flips it around that point near the window's edges. (An offset from the row would put a flipped
+                // menu a row's height above the finger.) The press is measured from the left in either direction.
+                Box(Modifier.align(AbsoluteAlignment.TopLeft).absoluteOffset { at.round() }) { menuContent() }
             }
         }
     }
 }
+
+/**
+ * The pressed state of a row that answers only a long press (`clickable` does the same for its rows): drawn once the
+ * finger has stayed [TAP_INDICATION_DELAY_MILLIS], so a quick tap or the start of a scroll draws nothing, and kept until
+ * the finger lifts (released) or the gesture turns into a scroll (cancelled).
+ */
+private suspend fun PressGestureScope.showPress(offset: Offset, interaction: MutableInteractionSource, scope: CoroutineScope) {
+    val press = PressInteraction.Press(offset)
+    val shown = scope.launch {
+        delay(TAP_INDICATION_DELAY_MILLIS)
+        interaction.emit(press)
+    }
+    val released = tryAwaitRelease()
+    if (shown.isActive) {
+        shown.cancel()
+    } else {
+        interaction.emit(if (released) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+    }
+}
+
+/** Compose `clickable`'s delay before a press inside a scrolling list is drawn (the system tap timeout). */
+private val TAP_INDICATION_DELAY_MILLIS: Long = ViewConfiguration.getTapTimeout().toLong()
 
 private const val SEGMENT_FADE_MILLIS = 200

@@ -20,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -127,6 +128,28 @@ class ActivityDetailViewModelTest {
         assertTrue(store.calls<FakeSignerStore.Call.ReviewStoredRequest>().isEmpty())
     }
 
+    /**
+     * "Signed Request" is open on the Activity tab while a new signature is made on the Scan tab; the record is now past
+     * the 25 most recent and loses its request. The decoded review stays (iOS keeps the value the page was opened with)
+     * instead of the page turning into a spinner that never ends.
+     */
+    @Test
+    fun aDecodedRequestStaysWhenTheRecordLaterLosesItsPayloads() = runTest {
+        val store = store(receipt(id))
+        store.onReviewStoredRequest = { _, _ -> ActivityTestData.approvalReview }
+        val viewModel = viewModel(store)
+        viewModel.uiState.first { it.decode is DecodeState.Decoded }
+        viewModel.uiState.test {
+            assertIs<DecodeState.Decoded>(awaitItem().decode)
+            store.setState { it.copy(receipts = listOf(receipt(id).withoutPayloads())) }
+            val shed = awaitItem()
+            assertTrue(shed.receipt?.hasPayloads == false)
+            assertEquals(DecodeState.Decoded(ActivityTestData.approvalReview), shed.decode)
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(1, store.calls<FakeSignerStore.Call.ReviewStoredRequest>().size)
+    }
+
     @Test
     fun decodingWaitsForTheStoreToLoad() = runTest {
         val store = store(loading = true)
@@ -200,6 +223,36 @@ class ActivityDetailViewModelTest {
         viewModel.onExport(uri)
         assertEquals(uri to receipt(id).responseText, written.await())
         assertNull(viewModel.uiState.first().exportError)
+    }
+
+    /**
+     * Android may end the process while the system file picker is open; its answer then reaches a new ViewModel while
+     * the store is still reading the journal. The stored signature is written once the record is loaded, instead of
+     * being dropped and the document the person just created left empty.
+     */
+    @Test
+    fun anExportAnsweredAfterTheProcessWasRestartedWaitsForTheRecord() = runTest {
+        val written = CompletableDeferred<Pair<Uri, String>>()
+        val store = store(loading = true)
+        store.onReviewStoredRequest = { _, _ -> ActivityTestData.plainReview }
+        val viewModel = viewModel(store) { uri, text -> written.complete(uri to text) }
+        val uri = Uri.parse("content://com.example.documents/document/1")
+        viewModel.onExport(uri)
+        assertTrue(!written.isCompleted)
+        store.setState { it.copy(isLoading = false, walletLoadSucceeded = true, receipts = listOf(receipt(id))) }
+        assertEquals(uri to receipt(id).responseText, withTimeout(5_000) { written.await() })
+        assertNull(viewModel.uiState.value.exportError)
+    }
+
+    @Test
+    fun anExportWhoseSignatureAgedOutMeanwhileSaysTheFileWasNotSaved() = runTest {
+        // Past the 25 most recent records only the summary remains (activity-settings.md §2.1).
+        var writes = 0
+        val store = store(receipt(id).withoutPayloads())
+        val viewModel = viewModel(store) { _, _ -> writes++ }
+        viewModel.onExport(Uri.parse("content://x/1"))
+        assertEquals(0, writes)
+        assertEquals(UiText.Resource(R.string.activity_export_failed), withTimeout(5_000) { viewModel.uiState.first { it.exportError != null } }.exportError)
     }
 
     @Test

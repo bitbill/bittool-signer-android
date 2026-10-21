@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bittool.signer.core.data.SignerStore
+import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
@@ -144,6 +145,15 @@ class ScanHomeViewModel @Inject constructor(
                 if (operation == pasteOperation) _uiState.update { it.copy(paste = it.paste?.copy(busy = false)) }
             }
         }
+    }
+
+    /**
+     * "Import File" found no document picker to open (no app handles `OPEN_DOCUMENT`): the import error says the file
+     * could not be read, in place, instead of the app stopping.
+     */
+    fun onPickerUnavailable() {
+        if (_uiState.value.busy) return
+        _uiState.update { it.copy(error = UiText.Resource(R.string.sign_file_unreadable)) }
     }
 
     /**

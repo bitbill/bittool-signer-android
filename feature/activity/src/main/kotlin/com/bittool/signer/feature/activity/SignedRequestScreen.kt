@@ -31,6 +31,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.review.ReviewPresentation
 import com.bittool.signer.core.model.review.TransactionReview
+import com.bittool.signer.core.model.signing.SigningReceipt
 import com.bittool.signer.core.ui.review.ContractNotice
 import com.bittool.signer.core.ui.review.ReviewDetailsCard
 import com.bittool.signer.core.ui.review.ReviewSummaryCard
@@ -65,7 +66,10 @@ fun SignedRequestScreen(
     SignedRequestContent(decode = state.decode, onBack = { back(Unit) }, modifier = modifier)
 }
 
-/** Stateless Signed Request page. */
+/**
+ * Stateless Signed Request page. A record that kept no request (reached only through a restored back stack that lost
+ * the Signature page, so nothing was decoded on this visit) says why there is nothing to show instead of waiting.
+ */
 @Composable
 internal fun SignedRequestContent(decode: DecodeState, onBack: () -> Unit, modifier: Modifier = Modifier) {
     ActivityPage(title = stringResource(R.string.signed_request), onBack = onBack, modifier = modifier) { insets ->
@@ -74,7 +78,10 @@ internal fun SignedRequestContent(decode: DecodeState, onBack: () -> Unit, modif
             is DecodeState.Failed -> Box(Modifier.fillMaxSize().padding(insets).padding(SignerMetrics.pagePadding)) {
                 Callout(text = decode.message, tone = Tone.Warning)
             }
-            DecodeState.Decoding, DecodeState.NotStored -> Box(Modifier.fillMaxSize().padding(insets), contentAlignment = Alignment.Center) {
+            DecodeState.NotStored -> Box(Modifier.fillMaxSize().padding(insets).padding(top = 8.dp)) {
+                ListFootnote(stringResource(R.string.the_request_and_signature_are_kept_for_the_x_most, SigningReceipt.PAYLOAD_RETENTION))
+            }
+            DecodeState.Decoding -> Box(Modifier.fillMaxSize().padding(insets), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(Modifier.size(28.dp), color = SignerTheme.colors.secondaryLabel, strokeWidth = 2.5.dp)
             }
         }

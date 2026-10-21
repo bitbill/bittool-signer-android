@@ -1,5 +1,14 @@
 package com.bittool.signer.feature.sign.review
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +26,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,9 +51,11 @@ import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
+import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
+import com.bittool.signer.core.model.review.DecodeStatus
 import com.bittool.signer.core.model.review.ReviewPresentation
 import com.bittool.signer.core.model.review.ReviewText
 import com.bittool.signer.core.model.review.TransactionReview
@@ -98,6 +116,11 @@ fun RequestReviewScreen(
  * warnings (verbatim), the signing wallets, every decoded field and the request fingerprint; the acknowledgement and
  * Sign pinned at the bottom. While the page leaves (Reject, the last signature) it keeps showing the last request
  * instead of going blank.
+ *
+ * The bar exists only when it has something to show (nothing while the wallet is being matched), and it slides in
+ * when matching ends. At large text sizes the acknowledgement would take most of a phone's height above Sign
+ * ([AcknowledgementPlacement]): it then scrolls as the last item of the page, directly above the bar, so the request
+ * itself stays readable; Sign stays pinned and disabled until it is ticked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,8 +140,11 @@ fun RequestReviewContent(
     val toast = rememberStatusToastState()
     val blocked = rememberOverlayBlocked(toast)
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val placement = remember { AcknowledgementPlacement() }
+    val pinned = placement.pinned
+    val reduceMotion = SignerTheme.reduceMotion
     LaunchedEffect(scrollToTop, listState) { scrollToTop.collect { listState.animateScrollToItem(0) } }
-    Box(modifier.testTag(SignTags.REVIEW)) {
+    Box(modifier.testTag(SignTags.REVIEW).onSizeChanged { placement.pageHeight = it.height }) {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = SignerTheme.colors.page,
@@ -138,23 +164,82 @@ fun RequestReviewContent(
                 )
             },
             bottomBar = {
-                BottomActionBar(canScrollUnder = listState.canScrollForward) {
-                    SignBar(shown, onToggleRisk = onToggleRisk, onAuthorize = onAuthorize, onObscuredTouch = blocked)
+                // iOS draws an empty bar while matching; here no strip and hairline wait above the tab bar.
+                AnimatedVisibility(
+                    visible = shown.hasSignBar,
+                    enter = if (reduceMotion) EnterTransition.None else barEnter,
+                    exit = if (reduceMotion) ExitTransition.None else barExit,
+                ) {
+                    BottomActionBar(canScrollUnder = listState.canScrollForward, modifier = Modifier.testTag(SignTags.SIGN_BAR)) {
+                        SignBar(
+                            shown,
+                            onToggleRisk = onToggleRisk,
+                            onAuthorize = onAuthorize,
+                            onObscuredTouch = blocked,
+                            acknowledgementInBar = pinned,
+                            onAcknowledgementHeight = { placement.acknowledgementHeight = it },
+                            onActionsHeight = { placement.actionsHeight = it },
+                        )
+                    }
                 }
             },
         ) { padding ->
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().testTag(SignTags.REVIEW_LIST),
                 state = listState,
                 contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 20.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 reviewSections(shown, review, reviewText, onRetry)
+                if (!pinned && shown.showsAcknowledgement) {
+                    item(key = "acknowledgement", contentType = "acknowledgement") {
+                        RiskAcknowledgement(
+                            checked = shown.riskAccepted,
+                            fullyDecoded = review.decodeStatus == DecodeStatus.FullyDecoded,
+                            onToggle = onToggleRisk,
+                            onObscuredTouch = blocked,
+                            modifier = Modifier
+                                .readableWidth()
+                                .padding(horizontal = SignerMetrics.pagePadding)
+                                .onSizeChanged { placement.acknowledgementHeight = it.height },
+                        )
+                    }
+                }
             }
         }
         StatusToastHost(toast)
     }
 }
+
+/**
+ * Where the risk acknowledgement goes (QA sign-04; design-system "use stacking at large font scales rather than
+ * truncating"): pinned above Sign while the bar it makes stays within [MAX_PINNED_BAR_FRACTION] of the page, else in the
+ * scrolling content. Decided from measured heights that do not depend on the decision (the acknowledgement keeps its
+ * width in either place, and the actions under it are measured on their own), so it never flips back and forth.
+ * Before the first measurement it is pinned.
+ */
+@Stable
+private class AcknowledgementPlacement {
+    var pageHeight by mutableIntStateOf(0)
+    var acknowledgementHeight by mutableIntStateOf(0)
+    var actionsHeight by mutableIntStateOf(0)
+
+    val pinned: Boolean by derivedStateOf {
+        if (pageHeight == 0 || acknowledgementHeight == 0) return@derivedStateOf true
+        // The bar's own chrome (8 dp above and below) and the gap between the acknowledgement and the actions are
+        // left out: they are the same in both placements and small next to the threshold.
+        acknowledgementHeight + actionsHeight <= MAX_PINNED_BAR_FRACTION * pageHeight
+    }
+}
+
+/** The largest share of the review page the pinned acknowledgement and Sign may take together. */
+private const val MAX_PINNED_BAR_FRACTION = 0.35f
+
+/** The bar rises from the bottom edge while the list makes room for it (as the tab bar does). */
+private val barEnter = slideInVertically(SignerMotion.reveal()) { it } +
+    expandVertically(SignerMotion.reveal(), expandFrom = Alignment.Top) + fadeIn(SignerMotion.reveal())
+private val barExit = slideOutVertically(SignerMotion.reveal()) { it } +
+    shrinkVertically(SignerMotion.reveal(), shrinkTowards = Alignment.Top) + fadeOut(SignerMotion.reveal())
 
 private fun LazyListScope.reviewSections(
     state: RequestReviewUiState,

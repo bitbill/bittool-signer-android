@@ -59,7 +59,8 @@ private const val FOCUS_DELAY_MILLIS = 350L
 /**
  * "Authorize Signature" (inventory row 53; iOS `AuthorizeSheet`, `Features/Sign/RequestReviewView.swift:821-907`): the
  * wallet that signs, its password ("Wallet password", focused 350 ms after the sheet appears), the failure or the
- * reassurance line, and "Sign" (`authorize.sign`) pinned above the keyboard.
+ * reassurance line, and "Sign" (`authorize.sign`) pinned above the keyboard. The sheet is as tall as its content
+ * (iOS medium detent) with Sign at its bottom; long content scrolls between the header and Sign.
  *
  * - The typed password lives only in this composition (`remember`, never saved): it is moved into a [SecretText] and
  *   cleared from the field the moment Sign is pressed, and cleared when the app stops and when the sheet leaves.
@@ -119,7 +120,9 @@ internal fun AuthorizeSheet(
                     )
                 }
             }
-            StatusToastHost(toast)
+            // Over the content without measuring it: the host fills its constraints, and as the Box's own child it
+            // would stretch the sheet to the full window height, leaving Sign high above a blank surface (QA sign-11).
+            StatusToastHost(toast, Modifier.matchParentSize())
         }
     }
 }
