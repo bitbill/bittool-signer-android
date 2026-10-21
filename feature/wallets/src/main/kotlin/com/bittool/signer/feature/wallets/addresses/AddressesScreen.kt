@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
@@ -47,6 +49,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -126,6 +131,7 @@ fun AddressesContent(uiState: AddressesUiState, actions: AddressesActions, modif
     ) { padding ->
         val direction = LocalLayoutDirection.current
         val chain = uiState.chain
+        val labelWidth = if (chain == Chain.Solana) rememberPresetLabelWidth() else null
         LazyColumn(
             modifier = Modifier.fillMaxSize().testTag("addresses.list"),
             contentPadding = PaddingValues(
@@ -162,6 +168,7 @@ fun AddressesContent(uiState: AddressesUiState, actions: AddressesActions, modif
                             AddressRow(
                                 account = account,
                                 chain = chain,
+                                labelWidth = labelWidth,
                                 onOpen = { actions.onShowAddress(account) },
                             )
                         }
@@ -227,11 +234,12 @@ internal fun addressTitle(account: PublicAccount, chain: Chain): String =
 /**
  * One address (iOS `AddressRow`, `AddressesView.swift:143-168`): `#index` (Solana: the preset name), the grouped address
  * and a QR glyph; the whole row opens the sheet. A long press offers "Copy Address" (no toast, as iOS) and "Show QR
- * Code", also offered to TalkBack as custom actions. Tag `address.row.<index>`.
+ * Code", also offered to TalkBack as custom actions. Tag `address.row.<index>`. [labelWidth] fixes the label column
+ * (Solana's preset names); null keeps iOS `minWidth: 34`.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun AddressRow(account: PublicAccount, chain: Chain, onOpen: () -> Unit) {
+private fun AddressRow(account: PublicAccount, chain: Chain, labelWidth: Dp?, onOpen: () -> Unit) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val context = LocalContext.current
@@ -276,9 +284,9 @@ private fun AddressRow(account: PublicAccount, chain: Chain, onOpen: () -> Unit)
         ) {
             Text(
                 text = label,
-                style = typography.caption.semibold().monospacedDigit(),
+                style = typography.caption.addressLabel(),
                 color = colors.secondaryLabel,
-                modifier = Modifier.widthIn(min = 34.dp),
+                modifier = if (labelWidth != null) Modifier.width(labelWidth) else Modifier.widthIn(min = LABEL_MIN_WIDTH),
                 maxLines = 1,
             )
             AddressText(account.address, Modifier.weight(1f), style = typography.footnote)
@@ -306,6 +314,30 @@ private fun AddressRow(account: PublicAccount, chain: Chain, onOpen: () -> Unit)
             }
         }
     }
+}
+
+/** The row label's style (iOS `.caption.weight(.semibold).monospacedDigit()`). */
+private fun TextStyle.addressLabel(): TextStyle = semibold().monospacedDigit()
+
+/** iOS `frame(minWidth: 34, alignment: .leading)` of the row label. */
+private val LABEL_MIN_WIDTH: Dp = 34.dp
+
+/**
+ * The label column of the Solana rows (QA wallets-13): the widest preset name (Standard, Trust, Legacy in the app
+ * language and text size), so every address starts at the same x. With iOS `minWidth: 34` alone each address moved
+ * with the width of its name (iOS has the same misalignment; the index labels of the other chains stay as iOS draws
+ * them).
+ */
+@Composable
+private fun rememberPresetLabelWidth(): Dp {
+    val style = SignerTheme.typography.caption.addressLabel()
+    val labels = AccountProfiles.solana.map { it.localizedTitle() }
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val widest = remember(labels, style, density, measurer) {
+        labels.maxOfOrNull { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width } ?: 0
+    }
+    return maxOf(with(density) { widest.toDp() }, LABEL_MIN_WIDTH)
 }
 
 @Composable

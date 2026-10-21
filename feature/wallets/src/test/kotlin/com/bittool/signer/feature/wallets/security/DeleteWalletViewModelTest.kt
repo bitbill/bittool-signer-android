@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.wallets.security
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.testing.FakeSignerStore
@@ -372,19 +373,57 @@ class DeleteWalletViewModelTest {
     }
 
     @Test
+    fun theFirstKeyCheckShowsANeutralStateAndConfirmsNothing() = runTest(main.dispatcher) {
+        // QA backlog B22: the page used to show "I confirm I want to delete this wallet" and switch to "This Wallet
+        // Can’t Be Unlocked" a second later. Until the first look answers it states neither, and nothing proceeds.
+        val access = FakeAppAccessController(appLockOn)
+        val answer = CompletableDeferred<Boolean>()
+        val store = lostKeyStore().apply { onIsDeviceKeyLost = { answer.await() } }
+        val vm = viewModel(store, access)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        assertTrue(state.value.checkingDeviceKey)
+        assertFalse(state.value.deviceKeyLost)
+        vm.setConfirmed(true)
+        assertFalse(state.value.canDelete, "nothing is confirmed before the page knows what it deletes")
+        vm.confirm()
+        advanceUntilIdle()
+        assertTrue(access.sensitiveActionReasons.isEmpty())
+        assertFalse(state.value.confirming)
+
+        answer.complete(true)
+        advanceUntilIdle()
+        assertFalse(state.value.checkingDeviceKey)
+        assertTrue(state.value.deviceKeyLost, "the first answer is the first statement shown")
+        store.suspendSession()
+        advanceUntilIdle()
+        assertFalse(state.value.checkingDeviceKey, "a later look keeps the page as it is meanwhile")
+    }
+
+    @Test
+    fun aWalletThatIsNoLongerListedShowsNoLoadingState() = runTest(main.dispatcher) {
+        val vm = DeleteWalletViewModel(WalletFixtures.store(), FakeAppAccessController(), SavedStateHandle())
+        assertFalse(observe(vm.uiState).value.checkingDeviceKey, "no wallet id, nothing to look at")
+    }
+
+    @Test
     fun aKeyCheckThatChangesThePageDuringTheBiometricPromptOpensNoDialog() = runTest(main.dispatcher) {
-        // The check started when the page opened answers only while the prompt is up: the switch was turned on for
-        // "I confirm I want to delete this wallet", the page now asks to remove a wallet that can't be unlocked.
+        // A later look (after a suspension) answers only while the prompt is up: the switch was turned on for "I
+        // confirm I want to delete this wallet", the page now asks to remove a wallet that can't be unlocked.
         val prompt = CompletableDeferred<Unit>()
         val fake = FakeAppAccessController(appLockOn)
         val access = object : AppAccessController by fake {
             override suspend fun confirmSensitiveAction(reason: UiText) = prompt.await()
         }
         val answer = CompletableDeferred<Boolean>()
-        val store = WalletFixtures.store().apply { onIsDeviceKeyLost = { answer.await() } }
+        var looks = 0
+        val store = WalletFixtures.store().apply { onIsDeviceKeyLost = { if (++looks == 1) false else answer.await() } }
         val vm = DeleteWalletViewModel(store, access, WalletFixtures.args())
         val state = observe(vm.uiState)
         advanceUntilIdle()
+        store.suspendSession()
+        advanceUntilIdle()
+        assertEquals(2, looks, "the second look is pending")
         vm.setConfirmed(true)
         vm.confirm()
         advanceUntilIdle()
