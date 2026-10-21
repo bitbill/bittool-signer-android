@@ -1,0 +1,598 @@
+{
+ "strings": {
+  "activity_deleted_wallet": {
+   "area": "activity",
+   "english": "Deleted wallet",
+   "formatted": true,
+   "context": "Activity detail \"Wallet\" value, and the row subtitle, when the signing wallet no longer exists (ActivityTab.swift:139)."
+  },
+  "activity_risk_high": {
+   "area": "activity",
+   "english": "High",
+   "formatted": true,
+   "context": "Activity detail \"Risk\" value for a high-risk request (ActivityTab.swift:145)."
+  },
+  "activity_risk_warnings_shown": {
+   "area": "activity",
+   "english": "Warnings shown",
+   "formatted": true,
+   "context": "Activity detail \"Risk\" value for a request that showed warnings (ActivityTab.swift:145)."
+  },
+  "activity_partial_signature_created": {
+   "area": "activity",
+   "english": "Partial signature created",
+   "formatted": true,
+   "context": "The stored result of a task that was not the plan's last one (AppStore.swift:452), shown in the status pill."
+  },
+  "activity_unreadable_title": {
+   "area": "activity",
+   "english": "Activity Unavailable",
+   "formatted": true,
+   "context": "Android-only: title of the Activity tab while the encrypted record cannot be read (SignerState.activityUnreadable)."
+  },
+  "activity_export_failed": {
+   "area": "activity",
+   "english": "The file could not be saved.",
+   "formatted": true,
+   "context": "Android-only: export failure when the chosen document provider gives no reason of its own."
+  },
+  "crypto_device_lock_required": {
+   "area": "crypto",
+   "english": "Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.",
+   "formatted": true,
+   "context": "VaultError.DevicePasscodeRequired: Android wording of the iOS \"Set an iPhone passcode…\" (vault-crypto.md §17.12). Unlike iOS (creation only) Android refuses every create *and* secret operation without a screen lock: shown for create, unlock, sign, reveal, change/reset password and delete, so it names no single operation."
+  },
+  "crypto_device_key_loss_unconfirmed": {
+   "area": "crypto",
+   "english": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
+   "formatted": true,
+   "context": "VaultError.DeviceKeyLossUnconfirmed: removing a wallet without its password was refused because Keystore did not prove that the wallet's device key is gone (it may still be there). Nothing was removed."
+  },
+  "data_engine_missing": {
+   "area": "data",
+   "english": "The bundled signing engine is unavailable. Reinstall BitTool Signer.",
+   "formatted": true,
+   "context": "ENGINE_MISSING, SigningEngine.swift:210"
+  },
+  "data_engine_invalid": {
+   "area": "data",
+   "english": "The bundled signing engine could not be loaded.",
+   "formatted": true,
+   "context": "ENGINE_INVALID, SigningEngine.swift:67"
+  },
+  "data_engine_unavailable": {
+   "area": "data",
+   "english": "The offline signing engine could not be started.",
+   "formatted": true,
+   "context": "ENGINE_UNAVAILABLE, SigningEngine.swift:20"
+  },
+  "data_engine_entropy_unavailable": {
+   "area": "data",
+   "english": "The engine’s secure entropy source could not be installed.",
+   "formatted": true,
+   "context": "ENTROPY_UNAVAILABLE, SigningEngine.swift:62"
+  },
+  "data_engine_failure": {
+   "area": "data",
+   "english": "The offline engine could not process this request.",
+   "formatted": true,
+   "context": "ENGINE_FAILURE, SigningEngine.swift:82"
+  },
+  "data_engine_unsupported_operation": {
+   "area": "data",
+   "english": "This signing operation is not supported.",
+   "formatted": true,
+   "context": "UNSUPPORTED_OPERATION, SigningEngine.swift:152"
+  },
+  "data_engine_request_too_large": {
+   "area": "data",
+   "english": "This request exceeds the 1 MB offline signing limit.",
+   "formatted": true,
+   "context": "REQUEST_TOO_LARGE, SigningEngine.swift:192"
+  },
+  "data_engine_scan_ended": {
+   "area": "data",
+   "english": "The scan session ended. Scan again.",
+   "formatted": true,
+   "context": "SCAN, SigningEngine.swift:173"
+  },
+  "data_engine_signing_failed": {
+   "area": "data",
+   "english": "This request could not be signed.",
+   "formatted": true,
+   "context": "Default message of an engine error without one (SIGNING_FAILED), SigningEngine.swift:84-89"
+  },
+  "data_activity_unreadable": {
+   "area": "data",
+   "english": "The local activity record could not be read.",
+   "formatted": true,
+   "context": "Store messages shown in the \"Unable to Continue\" alert (iOS Models/AppStore.swift:528, 539, 601)."
+  },
+  "data_activity_not_saved": {
+   "area": "data",
+   "english": "The local activity record could not be saved. Any completed signature remains available.",
+   "formatted": true,
+   "context": ""
+  },
+  "data_public_cache_not_removed": {
+   "area": "data",
+   "english": "The encrypted wallet was deleted, but its public cache could not be removed.",
+   "formatted": true,
+   "context": ""
+  },
+  "onboarding_prepare_body": {
+   "area": "onboarding",
+   "english": "For the strongest isolation, use a dedicated phone and keep its connections off.",
+   "formatted": true,
+   "context": "Introduction page 3 body. Replaces the iOS \"For the strongest isolation, use a dedicated iPhone and keep its connections off.\""
+  },
+  "onboarding_no_internet_permission": {
+   "area": "onboarding",
+   "english": "BitTool Signer has no internet permission, so Android blocks every connection",
+   "formatted": true,
+   "context": "Introduction page 3 point. Replaces the iOS \"If iOS asks to allow wireless data, choose Don’t Allow: the app never connects\" (a mainland-China iOS prompt Android does not have). Like every point it has no final full stop."
+  },
+  "scanner_gate_non_text_signing": {
+   "area": "scanner",
+   "english": "A QR code was found, but it doesn’t contain readable text. Export the request as a file instead.",
+   "formatted": true,
+   "context": "QrScanFrameGate rejections shown under the scanner hint. Exact iOS English of QRScanFrameGate.Issue.message(for:) (Features/Sign/QRScannerView.swift:214-219), which has no key in the iOS catalogue (gaps.md G6). They must stay equal to QrScanFrameGate.Issue.english(purpose) in :core:model (QrScannerScreenTest.gateMessagesUseTheExactIosEnglishForEachPurpose)."
+  },
+  "scanner_gate_empty_signing": {
+   "area": "scanner",
+   "english": "This QR code is empty. Scan the signing request from your other wallet.",
+   "formatted": true,
+   "context": ""
+  },
+  "scanner_gate_too_large_signing": {
+   "area": "scanner",
+   "english": "This QR code is too large. Use an animated QR code or export a request file.",
+   "formatted": true,
+   "context": ""
+  },
+  "scanner_gate_non_text_recovery": {
+   "area": "scanner",
+   "english": "This QR code doesn’t contain readable words. Compact SeedQR isn’t supported; use a QR code with the words or a Standard SeedQR, or type the words.",
+   "formatted": true,
+   "context": ""
+  },
+  "scanner_gate_empty_recovery": {
+   "area": "scanner",
+   "english": "This QR code is empty. Scan a QR code that contains your recovery phrase.",
+   "formatted": true,
+   "context": ""
+  },
+  "scanner_gate_too_large_recovery": {
+   "area": "scanner",
+   "english": "This QR code is too large to be a recovery phrase.",
+   "formatted": true,
+   "context": ""
+  },
+  "security_app_lock": {
+   "area": "security",
+   "english": "App Lock",
+   "formatted": true,
+   "context": "Settings › Security toggle title (replaces the iOS \"%@ Lock\", G7.4)."
+  },
+  "security_app_lock_footer_available": {
+   "area": "security",
+   "english": "Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.",
+   "formatted": true,
+   "context": "Settings › Security footer while biometrics are available (replaces the iOS \"Require %@ to open…\")."
+  },
+  "security_app_lock_footer_unavailable": {
+   "area": "security",
+   "english": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
+   "formatted": true,
+   "context": "Settings › Security footer while no strong biometric is enrolled (replaces the iOS \"Set up Face ID or Touch ID in iOS Settings…\")."
+  },
+  "security_unlock_with_biometrics": {
+   "area": "security",
+   "english": "Unlock with Biometrics",
+   "formatted": true,
+   "context": "Lock screen primary button (replaces the iOS \"Unlock with %@\")."
+  },
+  "security_use_biometrics_instead": {
+   "area": "security",
+   "english": "Use Biometrics Instead",
+   "formatted": true,
+   "context": "Lock screen password form: back to the biometric button (replaces the iOS \"Use %@ Instead\")."
+  },
+  "security_prompt_unlock_title": {
+   "area": "security",
+   "english": "Unlock BitTool Signer",
+   "formatted": true,
+   "context": "BiometricPrompt title when unlocking the app."
+  },
+  "security_prompt_lock_title": {
+   "area": "security",
+   "english": "Lock BitTool Signer",
+   "formatted": true,
+   "context": "BiometricPrompt title when turning App Lock on."
+  },
+  "security_prompt_description": {
+   "area": "security",
+   "english": "Signing still requires the wallet password.",
+   "formatted": true,
+   "context": "BiometricPrompt description of both App Lock prompts."
+  },
+  "security_biometric_unavailable": {
+   "area": "security",
+   "english": "Biometric authentication is unavailable. Check fingerprint or face unlock in Android Settings, or use a wallet password.",
+   "formatted": true,
+   "context": "No strong biometric can run (replaces the iOS Face ID / Touch ID wording)."
+  },
+  "security_biometric_lockout": {
+   "area": "security",
+   "english": "Biometrics are locked after too many attempts. Use a wallet password, or unlock your phone with its screen lock first.",
+   "formatted": true,
+   "context": "ERROR_LOCKOUT / ERROR_LOCKOUT_PERMANENT (replaces the iOS \"unlock your iPhone with its passcode\")."
+  },
+  "security_delete_footer_biometric": {
+   "area": "security",
+   "english": "Deleting asks for biometric confirmation, then for this wallet’s password.",
+   "formatted": true,
+   "context": "Delete Wallet footer while App Lock is on and biometrics are available (replaces the iOS \"Deleting asks for %@, then…\")."
+  },
+  "security_overlay_blocked": {
+   "area": "security",
+   "english": "Another app is drawing over BitTool Signer. Close it, then try again.",
+   "formatted": true,
+   "context": "A decisive control refused a touch because another app's window covers it (gaps.md G4.3)."
+  },
+  "security_app_lock_save_failed": {
+   "area": "security",
+   "english": "App Lock could not be changed. Try again.",
+   "formatted": true,
+   "context": "The App Lock preference could not be written (DataStore I/O failure); App Lock is left unchanged."
+  },
+  "settings_document_missing": {
+   "area": "settings",
+   "english": "This document is missing from the app bundle.",
+   "formatted": true,
+   "context": "LegalDocumentParser.MISSING (LegalDocumentView.swift:67): a bundled legal text could not be read. Shown by the Settings legal pages and by Welcome's Terms / Privacy sheet (:feature:onboarding), which reference this one resource; translated with the other strings of this file."
+  },
+  "settings_no_results": {
+   "area": "settings",
+   "english": "No Results for “%1$s”",
+   "formatted": true,
+   "context": "iOS system ContentUnavailableView.search title (not in the app catalogue)."
+  },
+  "settings_no_results_hint": {
+   "area": "settings",
+   "english": "Check the spelling or try a new search.",
+   "formatted": true,
+   "context": "iOS system ContentUnavailableView.search description."
+  },
+  "settings_clear_search": {
+   "area": "settings",
+   "english": "Clear search",
+   "formatted": true,
+   "context": "Android-only: label of the clear button in the network search field."
+  },
+  "settings_distribution": {
+   "area": "settings",
+   "english": "Distribution",
+   "formatted": true,
+   "context": "Open Source › This build (activity-settings.md §14.8)."
+  },
+  "settings_distribution_apk": {
+   "area": "settings",
+   "english": "Direct download (APK)",
+   "formatted": true,
+   "context": ""
+  },
+  "settings_signing_certificate": {
+   "area": "settings",
+   "english": "Signing certificate",
+   "formatted": true,
+   "context": ""
+  },
+  "settings_open_source_intro": {
+   "area": "settings",
+   "english": "BitTool Signer is open source, all of it. The Android app, the offline signing engine and the token data are published, so anyone can read what the signer does with a recovery phrase — and rebuild it and compare the result with the copy installed here.",
+   "formatted": true,
+   "context": "Android-only replacement of the iOS Open Source callout, whose \"published under one repository\" is not true on Android: the app and the signing engine are two repositories (DECISIONS.md §9.1)."
+  },
+  "settings_engine_source": {
+   "area": "settings",
+   "english": "Signing engine source",
+   "formatted": true,
+   "context": "Android-only: label of the engine repository in \"Rebuild it yourself\" (DECISIONS.md §9.1)."
+  },
+  "settings_wallet_level_format": {
+   "area": "settings",
+   "english": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "formatted": true,
+   "context": "Compatibility › Wallet Level \"QR format\": the protocol token stays, the English tail is translated (gaps.md G6)."
+  },
+  "setup_screenshot_detected": {
+   "area": "setup",
+   "english": "Screenshot Detected",
+   "formatted": true,
+   "context": "RecoveryCopy.screenshotTitle (Features/Setup/RecoveryPhraseViews.swift:348), title of both screenshot alerts."
+  },
+  "setup_qr_not_recovery_phrase": {
+   "area": "setup",
+   "english": "This QR code does not contain a recovery phrase.",
+   "formatted": true,
+   "context": "Recovery QR scanner error (Features/Setup/WalletSetupFlow.swift:226)."
+  },
+  "setup_weak_cards_warning": {
+   "area": "setup",
+   "english": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
+   "formatted": true,
+   "context": "Recovery cards warning for 12/15-word phrases (Features/Backup/RecoveryBackupViews.swift:212-215). Arguments: 1 word count, 2 words shown on each card (count minus a third), 3 word count again, 4 words left out."
+  },
+  "setup_slot_empty": {
+   "area": "setup",
+   "english": "Empty",
+   "formatted": true,
+   "context": "Accessibility values of an empty blank of the backup check (Features/Backup/RecoveryBackupViews.swift:483)."
+  },
+  "setup_slot_empty_next": {
+   "area": "setup",
+   "english": "Empty, next to fill",
+   "formatted": true,
+   "context": ""
+  },
+  "setup_screenshot_phrase_hidden": {
+   "area": "setup",
+   "english": "The phrase is hidden again, but the screenshot may already contain it. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "formatted": true,
+   "context": "Android wording of the two iOS screenshot messages (\"Photos, Recently Deleted\" are iOS app names)."
+  },
+  "setup_screenshot_may_contain": {
+   "area": "setup",
+   "english": "The screenshot may contain your recovery phrase or some of its words. Delete it from your gallery and any synced copies, and keep a written backup offline.",
+   "formatted": true,
+   "context": ""
+  },
+  "setup_screen_lock_required": {
+   "area": "setup",
+   "english": "Screen Lock Required",
+   "formatted": true,
+   "context": "Android only (QA wallets-04): title of the screen-lock requirement, shown with crypto_device_lock_required on the first setup step and in Welcome's dialog (strings_onboarding has no copy of it) before anything is typed."
+  },
+  "setup_lost_key_message": {
+   "area": "setup",
+   "english": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "formatted": true,
+   "context": "Android only (QA backlog B21): the password step when the phrase belongs to a wallet here whose device key is provably gone (title: wallets_lost_key_title). \"Delete Wallet\" and \"Remove This Wallet\" name the controls of the wallet page (delete_wallet, wallets_lost_key_remove)."
+  },
+  "setup_lost_key_open_wallet": {
+   "area": "setup",
+   "english": "Open Wallet",
+   "formatted": true,
+   "context": ""
+  },
+  "shell_scan_badge_description": {
+   "area": "shell",
+   "english": "A signing request is waiting",
+   "formatted": true,
+   "context": "TalkBack state of the Scan tab while its badge \"1\" is shown (a reviewed request waits and is not signed yet). iOS VoiceOver reads the badge count itself; Android says what it means."
+  },
+  "sign_matching_interrupted": {
+   "area": "sign",
+   "english": "Matching interrupted. Try again.",
+   "formatted": true,
+   "context": "MatchingIssue.Interrupted (AppStore.swift:92): the session was suspended while the request was being matched."
+  },
+  "sign_no_matching_wallet": {
+   "area": "sign",
+   "english": "No matching wallet",
+   "formatted": true,
+   "context": "resolveSigningPlan status messages (engine/src/resolver.js; RequestReviewView.swift:140-148). No period on purpose."
+  },
+  "sign_missing_signer_information": {
+   "area": "sign",
+   "english": "Missing signer information",
+   "formatted": true,
+   "context": ""
+  },
+  "sign_ambiguous_wallet_match": {
+   "area": "sign",
+   "english": "Ambiguous wallet match",
+   "formatted": true,
+   "context": ""
+  },
+  "sign_wallet_setup_required": {
+   "area": "sign",
+   "english": "Wallet setup required",
+   "formatted": true,
+   "context": ""
+  },
+  "sign_unsupported_signing_protocol": {
+   "area": "sign",
+   "english": "Unsupported signing protocol",
+   "formatted": true,
+   "context": "MatchingIssue.Unsupported (AppStore.swift:373): the engine review did not set canSign."
+  },
+  "sign_reading_request": {
+   "area": "sign",
+   "english": "Reading request…",
+   "formatted": true,
+   "context": "ScanSession.status (ScanTab.swift:20-24): the first frame is being read; an animated code with %1$d parts so far."
+  },
+  "sign_keep_animated_code_in_view": {
+   "area": "sign",
+   "english": "Keep the animated code in view · %1$d parts",
+   "formatted": true,
+   "context": ""
+  },
+  "sign_psbt_payload_note": {
+   "area": "sign",
+   "english": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
+   "formatted": true,
+   "context": "Signature result payload note for a PSBT response (SignatureResultView.swift:81). psbt_base64 and decoded are JSON keys."
+  },
+  "sign_file_unreadable": {
+   "area": "sign",
+   "english": "The file could not be read.",
+   "formatted": true,
+   "context": "Android-only. Import File: the system could not open or read the chosen document (iOS shows the OS error text; ARCHITECTURE §4.2 keeps platform exception messages out of the UI)."
+  },
+  "sign_file_not_saved": {
+   "area": "sign",
+   "english": "The file could not be saved.",
+   "formatted": true,
+   "context": "Android-only. Export as File: shown when the system reports no message of its own for a failed save."
+  },
+  "ui_setup_required": {
+   "area": "ui",
+   "english": "Setup required",
+   "formatted": true,
+   "context": "WalletIdentityHeader: \"Fingerprint %@\" value when a wallet has no public index (setup-backup.md §9.3)."
+  },
+  "ui_payload_hex": {
+   "area": "ui",
+   "english": "Payload (Hex)",
+   "formatted": true,
+   "context": "QrPayloadView.titleEnglish for hex / text payloads (PayloadDisclosure title; \"Payload (JSON)\" is a catalogue key)."
+  },
+  "ui_payload_text": {
+   "area": "ui",
+   "english": "Payload (Text)",
+   "formatted": true,
+   "context": ""
+  },
+  "ui_payload_bytes": {
+   "area": "ui",
+   "english": "%1$s bytes",
+   "formatted": true,
+   "context": "QrPayloadView.summary parts: \"Plain text · 170 bytes\", \"ur:crypto-account · CBOR · 170 bytes\". %1$s is the grouped number."
+  },
+  "ui_payload_plain_text": {
+   "area": "ui",
+   "english": "Plain text",
+   "formatted": true,
+   "context": ""
+  },
+  "ui_nft_contract_not_verified": {
+   "area": "ui",
+   "english": "NFT contract (not verified)",
+   "formatted": true,
+   "context": "ReviewDisplay.assetContractCaption default (scan-sign.md §11.3)."
+  },
+  "ui_more_see_details": {
+   "area": "ui",
+   "english": "+%1$d more (see Details)",
+   "formatted": true,
+   "context": "ReviewDisplay.boundedLines overflow line of a marketplace-order list."
+  },
+  "ui_review_request": {
+   "area": "ui",
+   "english": "Review request",
+   "formatted": true,
+   "context": "TransactionReview.DEFAULT_TITLE, shown as the summary action line when the engine gives no title."
+  },
+  "ui_profile_legacy": {
+   "area": "ui",
+   "english": "Legacy",
+   "formatted": true,
+   "context": "Connect / Addresses account presets (iOS AccountProfile titles, ConnectView.swift:3-22)."
+  },
+  "ui_profile_standard": {
+   "area": "ui",
+   "english": "Standard",
+   "formatted": true,
+   "context": ""
+  },
+  "ui_export_address": {
+   "area": "ui",
+   "english": "Address",
+   "formatted": true,
+   "context": "\"Export as\" choices (ConnectOptions.exportModes; \"Wallet\" is the catalogue key)."
+  },
+  "ui_fingerprint_note": {
+   "area": "ui",
+   "english": "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s.",
+   "formatted": true,
+   "context": "Connect payload note (QrPayloadView.fingerprintNotes): %1$s decimal value, %2$s hex fingerprint."
+  },
+  "ui_decrease": {
+   "area": "ui",
+   "english": "Decrease",
+   "formatted": true,
+   "context": "Android-only. AddressIndexControl's two stepper buttons (iOS Stepper reads its own increment / decrement)."
+  },
+  "ui_increase": {
+   "area": "ui",
+   "english": "Increase",
+   "formatted": true,
+   "context": ""
+  },
+  "wallets_qr_brightness": {
+   "area": "wallets",
+   "english": "Screen brightness",
+   "formatted": true,
+   "context": "The QR brightness switch on the Pair and address QR codes (wallets-pairing.md §13.5; iOS never changes the brightness, so it has no text for it). Read by TalkBack as \"<name>, <state>\"."
+  },
+  "wallets_qr_brightness_normal": {
+   "area": "wallets",
+   "english": "Normal",
+   "formatted": true,
+   "context": "Switch state: the system brightness is left alone."
+  },
+  "wallets_qr_brightness_bright": {
+   "area": "wallets",
+   "english": "Bright",
+   "formatted": true,
+   "context": "Switch state: full brightness while the code is shown, for cameras that struggle with a dim screen."
+  },
+  "wallets_lost_key_title": {
+   "area": "wallets",
+   "english": "This Wallet Can’t Be Unlocked",
+   "formatted": true,
+   "context": "Callout title on the Delete Wallet page."
+  },
+  "wallets_lost_key_message": {
+   "area": "wallets",
+   "english": "Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.",
+   "formatted": true,
+   "context": "Callout text: why the password cannot help and how the wallet is restored."
+  },
+  "wallets_lost_key_confirm": {
+   "area": "wallets",
+   "english": "I understand that only the recovery phrase can restore this wallet",
+   "formatted": true,
+   "context": "The confirmation switch the person must turn on first."
+  },
+  "wallets_lost_key_footer": {
+   "area": "wallets",
+   "english": "Removing this wallet does not ask for its password: the device key the password needs is gone.",
+   "formatted": true,
+   "context": "Footer under the switch (App Lock off)."
+  },
+  "wallets_lost_key_footer_biometric": {
+   "area": "wallets",
+   "english": "Removing this wallet asks for biometric confirmation, not for its password: the device key the password needs is gone.",
+   "formatted": true,
+   "context": "Footer under the switch (App Lock on with biometrics)."
+  },
+  "wallets_lost_key_remove": {
+   "area": "wallets",
+   "english": "Remove This Wallet",
+   "formatted": true,
+   "context": "The page's destructive button."
+  },
+  "wallets_lost_key_dialog_title": {
+   "area": "wallets",
+   "english": "Remove This Wallet?",
+   "formatted": true,
+   "context": "The final confirmation dialog."
+  },
+  "wallets_lost_key_dialog_message": {
+   "area": "wallets",
+   "english": "Its encrypted file is deleted from this device without the password. Only its recovery phrase and any BIP39 passphrase can restore it.",
+   "formatted": true,
+   "context": ""
+  },
+  "wallets_lost_key_dialog_confirm": {
+   "area": "wallets",
+   "english": "Remove",
+   "formatted": true,
+   "context": ""
+  }
+ }
+}
