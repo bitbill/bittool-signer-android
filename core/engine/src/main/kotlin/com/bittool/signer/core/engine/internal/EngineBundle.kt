@@ -70,6 +70,16 @@ internal class EngineBundle private constructor(
             if (digest != EXPECTED_SHA256 || source.size != EXPECTED_BYTES) {
                 throw EngineException(EngineException.ENGINE_INVALID, "The bundled signing engine could not be loaded.")
             }
+            val (bootstrap, engine) = compile("bittool-bootstrap.js" to BOOTSTRAP.toByteArray(Charsets.UTF_8), "signer.js" to source)
+            return EngineBundle(digest, source.size, bootstrap, engine)
+        }
+
+        /**
+         * Compiles UTF-8 JavaScript [sources] (file name to bytes) to bytecode in one throwaway compiler runtime, the
+         * only kind of runtime with a parser. Must run on the engine thread. The isolation tests compile their probes
+         * with it.
+         */
+        fun compile(vararg sources: Pair<String, ByteArray>): List<ByteArray> {
             val compiler = try {
                 NativeQuickJs.newRuntime(QuickJsContextHost.MEMORY_LIMIT_BYTES, QuickJsContextHost.MAX_STACK_BYTES, compiler = true)
             } catch (t: Throwable) {
@@ -79,9 +89,7 @@ internal class EngineBundle private constructor(
                 throw EngineException(EngineException.ENGINE_UNAVAILABLE, "The offline signing engine could not be started.")
             }
             try {
-                val bootstrap = NativeQuickJs.compile(compiler, BOOTSTRAP.toByteArray(Charsets.UTF_8), "bittool-bootstrap.js")
-                val engine = NativeQuickJs.compile(compiler, source, "signer.js")
-                return EngineBundle(digest, source.size, bootstrap, engine)
+                return sources.map { (name, bytes) -> NativeQuickJs.compile(compiler, bytes, name) }
             } catch (t: Throwable) {
                 throw EngineException(EngineException.ENGINE_INVALID, "The bundled signing engine could not be loaded.")
             } finally {
