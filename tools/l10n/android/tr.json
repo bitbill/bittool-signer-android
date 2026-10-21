@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "Yine de geç"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "Panoda yapıştırılacak metin yok."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "En güçlü yalıtım için ayrı bir telefon kullanın ve bağlantılarını kapalı tutun."

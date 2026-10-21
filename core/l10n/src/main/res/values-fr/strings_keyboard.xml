@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">Le clavier intégré de BitTool garde votre phrase de récupération dans cette app. Le clavier système, ou tout clavier tiers que vous avez installé, peut voir les mots que vous tapez, et les apprendre ou les enregistrer. Ne changez que si vous devez saisir une phrase de récupération en chinois, en japonais ou en coréen.</string>
     <string name="keyboard_switch_keep">Garder le clavier BitTool</string>
     <string name="keyboard_switch_confirm">Changer quand même</string>
+    <string name="keyboard_paste_empty">Le presse-papiers ne contient aucun texte à coller.</string>
 </resources>

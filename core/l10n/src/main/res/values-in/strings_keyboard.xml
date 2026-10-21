@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">Keyboard bawaan BitTool menjaga frasa pemulihan Anda tetap di dalam aplikasi ini. Keyboard sistem, atau keyboard pihak ketiga yang Anda pasang, dapat melihat kata yang Anda ketik dan dapat mempelajari atau merekamnya. Beralihlah hanya jika Anda perlu mengetik frasa pemulihan dalam bahasa Tionghoa, Jepang, atau Korea.</string>
     <string name="keyboard_switch_keep">Tetap gunakan keyboard BitTool</string>
     <string name="keyboard_switch_confirm">Tetap beralih</string>
+    <string name="keyboard_paste_empty">Tidak ada teks di papan klip untuk ditempel.</string>
 </resources>

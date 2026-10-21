@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "仍要切换"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "剪贴板中没有可粘贴的文本。"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "要做到最彻底的隔离，请使用一台专用手机，并保持其所有连接关闭。"

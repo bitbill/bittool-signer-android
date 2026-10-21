@@ -227,6 +227,12 @@ internal fun RecoveryPhraseEditor(
  * keep their conversion candidates, which composing needs, and Korean composes syllables as before, unlike the
  * visible-password variation, which makes Gboard switch to a Latin-only layout. Wraps the platform input request
  * like `NoPersonalizedLearning`, which stays in place around it.
+ *
+ * Input methods that honour the flag (AOSP LatinIME and its derivatives) show no candidates. Gboard does not (QA
+ * activity-keyboard-02: 10.8.03 kept its candidate strip and composing underline with `inputType=0xa0001`), and no
+ * variation or flag removes Gboard's candidates without also removing the CJK layouts: accepted and documented in
+ * setup-backup §15.8, where the alternatives that were weighed are listed. The in-app keyboard, the default, never
+ * reaches an input method at all.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

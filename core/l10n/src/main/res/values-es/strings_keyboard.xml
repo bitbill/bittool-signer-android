@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">El teclado propio de BitTool mantiene tu frase de recuperación dentro de esta app. El teclado del sistema, o cualquier teclado de terceros que hayas instalado, puede ver las palabras que escribes y aprenderlas o registrarlas. Cambia solo si necesitas escribir una frase de recuperación en chino, japonés o coreano.</string>
     <string name="keyboard_switch_keep">Seguir con el teclado de BitTool</string>
     <string name="keyboard_switch_confirm">Cambiar de todos modos</string>
+    <string name="keyboard_paste_empty">No hay texto en el portapapeles para pegar.</string>
 </resources>

@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">使用 BitTool 自带键盘，助记词不会离开本 App。系统键盘或你安装的第三方输入法能看到你输入的单词，并可能学习或记录。仅在需要输入中文、日文或韩文助记词时才切换。</string>
     <string name="keyboard_switch_keep">继续用 BitTool 键盘</string>
     <string name="keyboard_switch_confirm">仍要切换</string>
+    <string name="keyboard_paste_empty">剪贴板中没有可粘贴的文本。</string>
 </resources>

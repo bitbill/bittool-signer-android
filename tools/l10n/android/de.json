@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "Trotzdem wechseln"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "In der Zwischenablage ist kein Text zum Einfügen."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Für die stärkste Trennung nutzen Sie ein eigenes Smartphone und lassen alle Verbindungen aus."

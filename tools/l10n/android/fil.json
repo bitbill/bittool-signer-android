@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "Lumipat pa rin"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "Walang text sa clipboard na maidikit."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Para sa pinakamahigpit na paghihiwalay, gumamit ng nakalaang telepono at panatilihing naka-off ang mga koneksyon nito."

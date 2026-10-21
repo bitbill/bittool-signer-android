@@ -1,8 +1,10 @@
 package com.bittool.signer.core.ui.keyboard
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
@@ -22,21 +24,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.AndroidClipboard
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -50,6 +60,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.ui.WindowSignals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -60,6 +71,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowClipboardManager
 
 /**
  * The in-app keyboard over a real Compose text field (Robolectric, the real input stack): it types at the caret, deletes
@@ -82,6 +94,9 @@ class Bip39KeyboardTest {
     private var switches = 0
     private lateinit var view: View
 
+    /** The clipboard the keyboard is given (the platform's, through [ReadCountingClipboard] when a test wraps it). */
+    private var clipboardFor: (Clipboard) -> Clipboard = { it }
+
     private fun show(rtl: Boolean = false) {
         compose.setContent {
             view = LocalView.current
@@ -90,10 +105,27 @@ class Bip39KeyboardTest {
                 CompositionLocalProvider(
                     LocalDensity provides Density(density.density, fontScale),
                     LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
+                    LocalClipboard provides clipboardFor(LocalClipboard.current),
                 ) { Host() }
             }
         }
         compose.waitForIdle()
+    }
+
+    private fun platformClipboard() = compose.activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+    /** Reads through the platform clipboard and counts them: only Paste may read the clip (no clipboard notice). */
+    private class ReadCountingClipboard(private val clipboard: AndroidClipboard) : AndroidClipboard {
+        var reads = 0
+
+        override suspend fun getClipEntry(): ClipEntry? {
+            reads++
+            return clipboard.getClipEntry()
+        }
+
+        override suspend fun setClipEntry(clipEntry: ClipEntry?) = clipboard.setClipEntry(clipEntry)
+
+        override val clipboardManager: ClipboardManager get() = clipboard.clipboardManager
     }
 
     @Composable
@@ -208,6 +240,135 @@ class Bip39KeyboardTest {
         assertEquals("zoo legal winner\nthank", composeText())
         // The keyboard only reads the clipboard.
         assertEquals("legal winner\nthank", clipboard.primaryClip?.getItemAt(0)?.text?.toString())
+    }
+
+    /**
+     * QA activity-keyboard-05: the Paste key shows whether there is text to paste, as the editor's Paste menu item
+     * decides it (a clip with a text type), and follows the clipboard while the keyboard is up. TalkBack reads it as
+     * unavailable then.
+     */
+    @Test
+    fun thePasteKeyIsUnavailableWithoutTextOnTheClipboardAndFollowsIt() {
+        val clipboard = platformClipboard()
+        clipboard.clearPrimaryClip()
+        show()
+        val unavailable = SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled)
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+        compose.runOnUiThread { clipboard.setPrimaryClip(ClipData.newPlainText("phrase", "legal winner")) }
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+        // Something that is not text (an image), then nothing at all.
+        compose.runOnUiThread {
+            clipboard.setPrimaryClip(ClipData(ClipDescription("photo", arrayOf("image/png")), ClipData.Item(Uri.parse("content://media/1"))))
+        }
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+        compose.runOnUiThread { clipboard.setPrimaryClip(ClipData.newHtmlText("rich", "legal winner", "<b>legal</b> winner")) }
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+        compose.runOnUiThread { clipboard.clearPrimaryClip() }
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+    }
+
+    /**
+     * The platform tells only the app with the focus that the clipboard changed: text copied in another app while this
+     * window had no focus is found when the window gets the focus back, and so is a clipboard emptied meanwhile.
+     */
+    @Test
+    fun thePasteKeyCatchesUpWithTheClipboardWhenTheWindowGetsTheFocusBack() {
+        val clipboard = platformClipboard()
+        clipboard.clearPrimaryClip()
+        show()
+        val unavailable = SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled)
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+
+        WindowSignals.windowFocus(view, hasFocus = false)
+        unheard { clipboard.setPrimaryClip(ClipData.newPlainText("phrase", "legal winner")) }
+        key(Bip39KeyboardTags.PASTE).assert(unavailable) // nothing told the keyboard
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+
+        WindowSignals.windowFocus(view, hasFocus = false)
+        unheard { clipboard.clearPrimaryClip() }
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+    }
+
+    /** Changes the clipboard without telling its listeners, as the platform does while another app has the focus. */
+    private fun unheard(change: () -> Unit) {
+        val field = ShadowClipboardManager::class.java.getDeclaredField("listeners").apply { isAccessible = true }
+        @Suppress("UNCHECKED_CAST")
+        val listeners = field.get(null) as MutableCollection<ClipboardManager.OnPrimaryClipChangedListener>
+        val heard = listeners.toList()
+        listeners.clear()
+        try {
+            compose.runOnUiThread(change)
+        } finally {
+            listeners.addAll(heard)
+        }
+        compose.waitForIdle()
+    }
+
+    /**
+     * A tap on Paste with nothing to paste says so: "The clipboard has no text to paste." in the top row (read out by
+     * TalkBack) and the reject haptic instead of the key tap; the phrase stays as it was. The next key, or a moment,
+     * brings the suggestions back.
+     */
+    @Test
+    fun pasteWithNothingToPasteSaysSoAndChangesNothing() {
+        platformClipboard().clearPrimaryClip()
+        show()
+        suggestions = KeyboardSuggestions.Hint("Type a word to see suggestions")
+        type(letter('a'), letter('b'))
+        type(Bip39KeyboardTags.PASTE)
+        assertEquals("ab", composeText())
+        compose.onNodeWithText(NOTHING_TO_PASTE).assertExists()
+        compose.onAllNodesWithText("Type a word to see suggestions").assertCountEquals(0)
+        compose.onNode(hasText(NOTHING_TO_PASTE) and SemanticsMatcher.expectValue(SemanticsProperties.LiveRegion, LiveRegionMode.Polite))
+            .assertExists()
+        compose.runOnIdle { assertEquals(HapticFeedbackConstants.REJECT, shadowOf(view).lastHapticFeedbackPerformed()) }
+        // The next key ends it.
+        type(letter('c'))
+        compose.onAllNodesWithText(NOTHING_TO_PASTE).assertCountEquals(0)
+        compose.onNodeWithText("Type a word to see suggestions").assertExists()
+        // Or, without a key, a moment.
+        type(Bip39KeyboardTags.PASTE)
+        compose.onNodeWithText(NOTHING_TO_PASTE).assertExists()
+        compose.mainClock.advanceTimeBy(3_000)
+        compose.onAllNodesWithText(NOTHING_TO_PASTE).assertCountEquals(0)
+        assertEquals("abc", composeText())
+    }
+
+    /**
+     * Whether there is text to paste comes from the clip's description only: the clip itself is read once, by Paste,
+     * never while the keyboard follows the clipboard (on Android 12+ every read shows the "pasted from your clipboard"
+     * notice).
+     */
+    @Test
+    fun onlyPasteReadsTheClip() {
+        val counting = mutableListOf<ReadCountingClipboard>()
+        clipboardFor = { platform -> ReadCountingClipboard(platform as AndroidClipboard).also { counting += it } }
+        val clipboard = platformClipboard()
+        clipboard.setPrimaryClip(ClipData.newPlainText("phrase", "zoo"))
+        show()
+        compose.runOnUiThread {
+            clipboard.clearPrimaryClip()
+            clipboard.setPrimaryClip(ClipData.newPlainText("phrase", "legal"))
+        }
+        compose.waitForIdle()
+        WindowSignals.windowFocus(view, hasFocus = false)
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(!SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled))
+        assertEquals(0, counting.sumOf { it.reads }, "nothing read before Paste")
+        type(Bip39KeyboardTags.PASTE)
+        compose.waitUntil(5_000) { state.text.isNotEmpty() }
+        assertEquals("legal", composeText())
+        assertEquals(1, counting.sumOf { it.reads }, "Paste read the clip once")
     }
 
     @Test
@@ -356,5 +517,6 @@ class Bip39KeyboardTest {
 
     private companion object {
         const val FIELD = "field"
+        const val NOTHING_TO_PASTE = "The clipboard has no text to paste."
     }
 }

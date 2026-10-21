@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">تُبقي لوحة مفاتيح BitTool المدمجة عبارتك الاحتياطية داخل هذا التطبيق. يمكن للوحة مفاتيح النظام، أو لأي لوحة مفاتيح تابعة لجهة خارجية قمت بتثبيتها، أن ترى الكلمات التي تكتبها وقد تتعلّمها أو تسجّلها. لا تقم بالتبديل إلا إذا كنت بحاجة إلى كتابة عبارة احتياطية باللغة الصينية أو اليابانية أو الكورية.</string>
     <string name="keyboard_switch_keep">متابعة باستخدام لوحة مفاتيح BitTool</string>
     <string name="keyboard_switch_confirm">التبديل على أي حال</string>
+    <string name="keyboard_paste_empty">لا يوجد في الحافظة نص للصقه.</string>
 </resources>

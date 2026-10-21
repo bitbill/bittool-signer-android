@@ -99,12 +99,14 @@ import com.bittool.signer.core.ui.keyboard.hideSystemKeyboard
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.ui.window.windowHeight
 import com.bittool.signer.feature.setup.phrase.RecoveryPhraseEditor
 import com.bittool.signer.feature.setup.phrase.RecoveryPhraseStatus
 import com.bittool.signer.feature.setup.phrase.RecoverySuggestionBar
 import com.bittool.signer.feature.setup.phrase.toKeyboardSuggestions
 import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.ErrorCallout
+import com.bittool.signer.feature.setup.ui.SHORTENED_ERROR_LINES
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
@@ -188,7 +190,11 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
  * predictive back gesture, first put the in-app keyboard away (it follows the gesture down a little). On a window too
  * short for "Continue", the keyboard and the editor together (landscape phones), "Continue" steps aside while the
  * keyboard is up; Done brings it back. An error stays above the keyboard meanwhile: it is what the person is fixing
- * ("“xyzzy” is not in the BIP39 word list"), and typing does not clear it (iOS).
+ * ("“xyzzy” is not in the BIP39 word list"), and typing does not clear it (iOS). On such a window, and at
+ * accessibility text sizes, it is shortened to two lines while a keyboard is up (the in-app one, or the system one
+ * under its suggestion bar), so the status line and the editor keep their room (QA activity-keyboard-03); TalkBack
+ * reads it whole, Done shows it whole. The window height follows rotations, which this activity handles itself
+ * (`windowHeight`, QA activity-keyboard-01).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -209,8 +215,14 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     val phraseFocus = remember { FocusRequester() }
     val inAppKeyboardShown = inAppKeyboard && phraseFocused
     val suggestions = !inAppKeyboard && phraseFocused && WindowInsets.isImeVisible
-    val shortWindow = windowInfo.containerDpSize.height < SHORT_WINDOW_HEIGHT
+    // Follows a rotation, which this activity handles itself (not LocalWindowInfo: QA activity-keyboard-01).
+    val shortWindow = windowHeight() < SHORT_WINDOW_HEIGHT
     val continueAside = inAppKeyboardShown && shortWindow
+    // Read unconditionally: a composable read inside `&&` / `||` would only run sometimes, and that broke this
+    // composition (the editor lost the focus it was given).
+    val accessibilityText = SignerTheme.isAccessibilityTextSize
+    // Either keyboard: above the system one the bar also holds the suggestion row, so the error needs it even more.
+    val shortenError = (inAppKeyboardShown || suggestions) && (shortWindow || accessibilityText)
     val canContinue by remember { derivedStateOf { !fields.phraseIsBlank() } }
 
     LaunchedEffect(keyboard) {
@@ -282,7 +294,9 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
             )
         },
         footer = {
-            ErrorCallout(state.error)
+            // Shortened while the keyboard is up where the page would otherwise lose the status line and the editor
+            // (QA activity-keyboard-03); whole again with Done, and always whole for TalkBack.
+            ErrorCallout(state.error, maxLines = if (shortenError) SHORTENED_ERROR_LINES else Int.MAX_VALUE)
             if (!continueAside) {
                 PrimaryButton(
                     text = stringResource(L10n.string.continue_text),

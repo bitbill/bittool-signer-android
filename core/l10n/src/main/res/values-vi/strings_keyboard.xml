@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">Bàn phím riêng của BitTool giữ cụm từ khôi phục của bạn bên trong ứng dụng này. Bàn phím hệ thống, hoặc bất kỳ bàn phím bên thứ ba nào bạn đã cài đặt, có thể thấy các từ bạn nhập và có thể học hoặc ghi lại chúng. Chỉ chuyển nếu bạn cần nhập cụm từ khôi phục bằng tiếng Trung, tiếng Nhật hoặc tiếng Hàn.</string>
     <string name="keyboard_switch_keep">Tiếp tục dùng bàn phím BitTool</string>
     <string name="keyboard_switch_confirm">Vẫn chuyển</string>
+    <string name="keyboard_paste_empty">Không có văn bản nào trong bộ nhớ tạm để dán.</string>
 </resources>

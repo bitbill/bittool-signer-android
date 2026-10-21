@@ -1170,7 +1170,7 @@ method. There is no iOS counterpart; iOS behaviour elsewhere is unchanged.
 
 **Where.** `ImportWalletStep` (`:feature:setup` `flow/FormSteps.kt`) is the only place a phrase is typed: import,
 resetting a forgotten password, a phrase that is already here, and re-importing after a lost device key. The components
-live in `:core:ui` `keyboard/`; the strings in `strings_keyboard.xml` (7 Android-only strings, translated into the 20
+live in `:core:ui` `keyboard/`; the strings in `strings_keyboard.xml` (8 Android-only strings, translated into the 20
 other languages; the keys otherwise reuse the iOS keys "Done", "Delete", "Paste from Clipboard", "Insert %@").
 
 **No input-method connection.** `RecoveryPhraseEditor` is hosted by `InAppKeyboardInput(inAppKeyboard = true)`, which
@@ -1196,19 +1196,45 @@ above it:
   activation that changes nothing ends the repeat and its haptic (`Key(onRepeat)` reports whether the edit applied;
   the touch-down press keeps its one haptic, like every key). Done hides the keyboard (clears the focus, leaving
   nothing focused also with a hardware keyboard: `rememberClearFocus`).
+- Paste shows whether there is text to paste, decided like the editor's Paste menu item (Compose
+  `ClipboardPasteState`: `hasPrimaryClip()` and a `text/*` `primaryClipDescription`, `rememberClipboardHasText`). Only
+  the description is asked for, never the clip, so nothing is read before Paste and Android 12+ shows no "pasted from
+  your clipboard" notice; the clip is read once, by the key itself (QA activity-keyboard-05). It follows the clipboard
+  while the keyboard is up: a clip-changed listener (the platform tells only the app with the focus) and a new check
+  whenever the window gains the focus (back from another app or a dialog). Without text the key's glyph is dimmed
+  (38 %) and TalkBack reads it as unavailable; a tap plays the reject haptic instead of the key tap and shows "The
+  clipboard has no text to paste." (`keyboard_paste_empty`, a polite live region) in the top row until the next key or
+  2.5 s. A clip that turns out to hold no text when Paste reads it gets the same answer.
 - Edits go straight into the editor's `TextFieldState` (`KeyboardEdit`, redacted `toString`), nowhere else.
 - Keys never take the focus; the whole cell is the touch target; pressed colour and a letter preview drawn in this
   window (no popup, so it stays under `FLAG_SECURE`); keyboard-tap haptic through the view (the system setting
   decides; no sounds); TalkBack names every key; the window is accessibility-sensitive while shown (API 34+). Labels
   grow with the font size up to 1.3×; keys at most 720 dp wide; shorter rows on short windows; light and dark from the
   design-system palette.
+- The window height behind the row heights, "Continue" stepping aside and the backup step's Security Tips placement is
+  `windowHeight()` (`:core:ui` `window/`): `LocalConfiguration.screenHeightDp`, never `LocalWindowInfo.containerDpSize`
+  (QA activity-keyboard-01). Compose 1.12 refreshes `containerDpSize` only from the `ComponentCallbacks` it registers on
+  the view's context, and below API 33 an activity forwards those to the Application, which hears of a rotation first,
+  while the activity's resources and window bounds are still the old ones; the activity's own configuration change
+  then brings Compose nothing new. `MainActivity` handles rotation itself (`configChanges`), so the size stayed one
+  orientation behind (portrait rows and a pinned "Continue" in landscape, the editor off screen; the landscape layout
+  again after turning back). Measured on the API 31 emulator: after turning to landscape `containerDpSize` still read
+  392.7 × 807.3 dp while the configuration read 368 dp high. `screenHeightDp` excludes the system bars below API 35 and
+  includes them from API 35 (target SDK 35+).
 
 **Back.** Back and the predictive back gesture close the keyboard first (it sinks a little with the gesture; a cancelled
 gesture leaves it up); only the next Back asks to discard the draft.
 
 **Short windows.** Below 420 dp of window height (phones in landscape) "Continue" steps aside while the keyboard is up,
-so the editor keeps room; Done brings it back. An error is not hidden with it: it stays above the keyboard while the
-phrase is fixed (typing does not clear it, iOS).
+so the editor keeps room; Done brings it back. Both follow a rotation while the keyboard is up, either way. An error is
+not hidden with it: it stays above the keyboard while the phrase is fixed (typing does not clear it, iOS). On a short
+window or at accessibility text sizes (font scale 1.6 and up) the error is shortened to two lines ending in an
+ellipsis while a keyboard is up (`ErrorCallout(maxLines = SHORTENED_ERROR_LINES)`, the same callout drawn with a
+line limit), so the status line and the editor stay above it: at font scale 2.0 the length error alone took five
+lines, about 180 dp, and pushed the status line under the top bar (QA activity-keyboard-03). This holds for the system
+keyboard too, where the bar also carries "Continue" and the suggestion row: above a 260 dp system keyboard the
+five-line error left 55 dp between the top bar and the bar, with the status line out of view. TalkBack still reads the
+whole message, and Done (the keyboard's or the suggestion row's) shows it whole again.
 
 **System keyboard (Chinese, Japanese, Korean).** The globe key opens `SwitchToSystemKeyboardDialog` ("Switch to the
 system keyboard?", the system or a third-party keyboard can see and learn the words; "Keep BitTool keyboard" is the
@@ -1216,17 +1242,54 @@ default, Back keeps it). "Switch anyway" sets `WalletSetupViewModel.phraseKeyboa
 state, not a secret, for the presentation; in-app again for the next one), recreates the editor and focuses it once
 the window has the focus, raising the system keyboard. The editor then asks the input method for:
 `IME_FLAG_NO_PERSONALIZED_LEARNING` (`NoPersonalizedLearning`, incognito), no autocorrection, no capitalisation, and
-`TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain text class (`NoSuggestions`, QA regression-01: Gboard showed its
-suggestion strip, composing underline and clipboard chip without it; CJK input methods keep their conversion
-candidates, which the flag does not cover; not yet checked on a device). No password or visible-password variation,
-which would give Latin-only layouts. Above the system keyboard the suggestion bar (`RecoverySuggestionBar`) starts
-with a "BitTool keyboard" chip (`keyboard.inApp`) that switches back and puts the system keyboard away.
+`TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain text class (`NoSuggestions`, QA regression-01). No password or
+visible-password variation, which would give Latin-only layouts. Above the system keyboard the suggestion bar
+(`RecoverySuggestionBar`) starts with a "BitTool keyboard" chip (`keyboard.inApp`) that switches back and puts the
+system keyboard away.
 
-**Tests.** `:core:ui` `Bip39KeyboardEditsTest` (Ownbit's edit cases), `Bip39KeyboardTest` and Roborazzi component
-shots; `:feature:setup` `PhraseKeyboardTest` (no input connection, keys, suggestions, hardware keys, Copy / Cut refused,
-Done and Back, predictive back, switching both ways with the warning and the system keyboard's traits, short window
-with and without an error), `PhraseKeyboardInsertTest` (Ownbit's suggestion cases on the Insert semantics),
-`PhraseEditorTest` (input traits), `KeyboardKeepInViewTest`, `PhraseKeyboardScreenshotTest`.
+**Known limit: Gboard ignores `TYPE_TEXT_FLAG_NO_SUGGESTIONS` (QA activity-keyboard-02, accepted).** On the API 31
+emulator, Gboard 10.8.03.382062350 (preload) received `inputType=0xa0001` (text, multi-line, no suggestions) and
+`imeOptions=0x43000000` (no personalised learning, no fullscreen, no Enter action), opened in incognito, and still
+showed its candidate strip ("aboutaban | about an | about a an" for "aban") and underlined the word being composed.
+The flag and incognito mode are hints; nothing an app can set makes Gboard drop dictionary candidates for a text field
+and keep the Chinese, Japanese and Korean layouts and their conversion candidates, which composing needs:
+- `TYPE_TEXT_VARIATION_VISIBLE_PASSWORD` (the usual workaround) and the password variations make Gboard switch to a
+  Latin-only layout, so no CJK phrase can be typed; the password ones also mask the words.
+- Choosing the variation by the detected language would need `InputMethodManager.restartInput` mid-phrase. Detected
+  from the whole text, the Latin letters typed for Pinyin or romaji conversion read as a Latin phrase, so it would
+  flip the editor to the Latin-only layout in the middle of composing; detected from committed words only, the first
+  word is still typed with candidates. Before the first word there is nothing to detect. Choosing it by the input
+  method's current subtype (`InputMethodManager.currentInputMethodSubtype`) fails at the start instead: a keyboard
+  left on English when the person switches would open the Latin-only layout before they reach Pinyin, kana or Hangul.
+- The email, URI and filter variations, which AOSP LatinIME treats as "no suggestions", are layout hints: input methods
+  answer them with URL or email layouts (often ASCII only), and Gboard's candidates there are not specified.
+- `TYPE_TEXT_FLAG_AUTO_COMPLETE` ("the editor shows its own completions") is a hint of the same kind as
+  `NO_SUGGESTIONS`, expects completions through `InputMethodManager.displayCompletions`, which Compose does not
+  support, and could leave a CJK input method with an empty candidate bar.
+- Refusing composing text (committing every composing region at once) would remove the underline but breaks Japanese,
+  Korean and Pinyin composition. Gboard documents no `privateImeOptions` value for this.
+What limits the exposure instead: the in-app keyboard is the default and has no input-method connection at all (no
+keyboard app sees a word); the system keyboard is one presentation's explicit choice after the warning, which names
+the risk (the keyboard can see, learn or record the words; switch only for a Chinese, Japanese or Korean phrase) and
+needs no change; incognito, so Gboard does not learn the words; no autocorrection, so a candidate is only ever taken by
+a tap; a candidate that is not a BIP39 word is marked at once by the status line ("Unknown: …") and refused on
+Continue, as is a wrong checksum; the BIP39 bar with the "BitTool keyboard" chip sits on top of the system keyboard.
+Input methods that honour the flag (AOSP LatinIME and its derivatives) show no candidates.
+
+**Tests.** `:core:ui` `Bip39KeyboardEditsTest` (Ownbit's edit cases), `Bip39KeyboardTest` (also Paste's availability,
+including a clipboard change the app was not told of, found when the window gets the focus back, its "nothing to
+paste" answer, and no read of the clip before Paste), `Bip39KeyboardRotationTest` (rows after a rotation both ways,
+API 31 and 36) and Roborazzi component shots; instrumented `WindowHeightRotationDeviceTest` (a real rotation of an
+activity with `MainActivity`'s `configChanges`, both ways, on emulator-5554); `:feature:setup` `PhraseKeyboardTest`
+(no input connection, keys, suggestions, hardware keys, Copy / Cut refused, Done and Back, predictive back, switching
+both ways with the warning and the system keyboard's traits, short window with and without an error),
+`SetupRotationTest` (the import step with the keyboard up and the backup step through rotations both ways, API 31 and
+36), `ImportErrorKeyboardLayoutTest` (font scale 2.0 with an error above the in-app and the system keyboard, real text
+layout), `PhraseKeyboardInsertTest` (Ownbit's suggestion cases on the Insert semantics), `PhraseEditorTest` (input
+traits), `KeyboardKeepInViewTest`, `PhraseKeyboardScreenshotTest`. The Robolectric rotations (`rotateItself`) are
+delivered in the platform's order for an activity that handles them itself: the Application's callbacks first, while
+the activity's resources are still the old ones, then the resources, the activity and its views, then the window's new
+size.
 
 ### 15.9 Engine and crypto pitfalls
 

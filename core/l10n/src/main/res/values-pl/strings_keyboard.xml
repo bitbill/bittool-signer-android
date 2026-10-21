@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">Dzięki wbudowanej klawiaturze BitTool fraza odzyskiwania pozostaje w tej aplikacji. Klawiatura systemowa lub dowolna zainstalowana klawiatura innej firmy widzi wpisywane słowa i może się ich uczyć lub je rejestrować. Przełącz tylko wtedy, gdy musisz wpisać frazę odzyskiwania po chińsku, japońsku lub koreańsku.</string>
     <string name="keyboard_switch_keep">Pozostań przy klawiaturze BitTool</string>
     <string name="keyboard_switch_confirm">Przełącz mimo to</string>
+    <string name="keyboard_paste_empty">W schowku nie ma tekstu do wklejenia.</string>
 </resources>
