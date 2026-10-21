@@ -30,11 +30,21 @@ QA round 1 adds device findings in `docs/qa/round1-*.md`. ✅ = fixed and review
 
 | # | Owner | Item |
 |---|---|---|
-| B21 | feature:setup | Re-importing the phrase of a wallet whose device key is lost switches setup into Reset Password, which then fails with "device key unavailable…". Detect the lost key and point the user to "Remove This Wallet" (B9) instead. |
-| B22 | feature:wallets | Delete Wallet first renders the normal page, then switches to "This Wallet Can’t Be Unlocked" after the key check (~1 s on a device): show a neutral loading state until the check answers. |
-| B23 | core:crypto | `TestKeystore` is a public production-source object building weaker test-policy keys; guard it (`@VisibleForTesting` + lint, or move it behind a test-only artifact). |
-| B24 | app | `FixtureDeviceKeyStore` keeps `isKeyLost = false`, so e2e can never reach the lost-key removal; add a harness switch. |
-| B25 | app | `UnableToContinueDialog` shows store/engine error text in the interface direction; iOS shows it as given (`contentDirection()`). |
-| B26 | core:designsystem / core:ui | `DropdownMenu` popups (ProfileMenu, App Lock wallet menu…) do not publish test tags as resource ids. |
-| B27 | core:ui | Verify that PasswordField's semantics for autofill (`InputText`, `FillableData`) never carry the plain password (relies on the app-wide autofill exclusion today). |
-| B28 | app | Pre-existing lint error: RestrictedApi in `SignerNavigation.kt:84`. |
+| B21 ✅ | feature:setup | Re-importing the phrase of a wallet whose device key is lost switches setup into Reset Password, which then fails with "device key unavailable…". Detect the lost key and point the user to "Remove This Wallet" (B9) instead. |
+| B22 ✅ | feature:wallets | Delete Wallet first renders the normal page, then switches to "This Wallet Can’t Be Unlocked" after the key check (~1 s on a device): show a neutral loading state until the check answers. |
+| B23 ✅ | core:crypto | `TestKeystore` is a public production-source object building weaker test-policy keys; guard it (`@VisibleForTesting` + lint, or move it behind a test-only artifact). |
+| B24 ✅ | app | `FixtureDeviceKeyStore` keeps `isKeyLost = false`, so e2e can never reach the lost-key removal; add a harness switch. |
+| B25 ✅ | app | `UnableToContinueDialog` shows store/engine error text in the interface direction; iOS shows it as given (`contentDirection()`). |
+| B26 ✅ | core:designsystem / core:ui | `DropdownMenu` popups (ProfileMenu, App Lock wallet menu…) do not publish test tags as resource ids. |
+| B27 ✅ | core:ui | Verify that PasswordField's semantics for autofill (`InputText`, `FillableData`) never carry the plain password (relies on the app-wide autofill exclusion today). |
+| B28 ✅ | app | Pre-existing lint error: RestrictedApi in `SignerNavigation.kt:84`. |
+
+## Left by the QA round 1 fix reviewers (open)
+
+| # | Owner | Item |
+|---|---|---|
+| B29 | app, feature:settings, feature:wallets | Raw `DropdownMenu` calls (AppLockScreen.kt:380, NetworkReferenceScreen.kt:332, AddressesScreen.kt:289, WalletsScreen.kt:218) → `SignerDropdownMenu`, so their tags are resource ids (rest of B26). |
+| B30 | core:designsystem / core:ui | Put `WindowFocusReturnEffect` inside `SignerAlertDialog`, `SignerBottomSheet`, `SignerDropdownMenu` and the core:ui menus, so every dialog, sheet and popup returns or clears focus like the Wallets ones (rest of wallets-12). |
+| B31 | core:designsystem | `SwitchRow` subtitle: `LineBreak.Heading` / phrase breaking on API 33+ (rest of setup-15). |
+| B32 | feature:sign | When the acknowledgement scrolls into the list (font ≥ ~1.6), the disabled Sign gives no hint; and first frame shows the acknowledgement in the bar before it moves. |
+| B33 | app / feature:sign | Whether the tab bar should hide on the review page (iOS parity check of the pushed review). |
