@@ -20,3 +20,5 @@ local.properties
 !debug.keystore
 secrets.properties
 .claude/
+# Release / upload signing keys and anything kept next to them (never committed).
+/keystore/
