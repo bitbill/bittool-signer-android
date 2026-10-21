@@ -11,7 +11,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.compose.composable
@@ -29,12 +31,14 @@ import com.bittool.signer.core.navigation.SettingsRoute
 import com.bittool.signer.core.navigation.WalletsGraph
 import com.bittool.signer.core.navigation.WalletsRoute
 import com.bittool.signer.lock.AppLockContent
+import com.bittool.signer.lock.AppLockTags
 import com.bittool.signer.lock.AppLockUiState
 import com.bittool.signer.lock.LockWallet
 import com.bittool.signer.main.MainScaffold
 import com.bittool.signer.root.LoadFailureScreen
 import com.bittool.signer.root.PrivacyCover
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,6 +97,20 @@ class ShellScreenshotTest(private val look: Look) {
             )
         }
         capture("app-lock-password")
+    }
+
+    /** The wallet menu open (a popup window of its own, so every window is captured): "Choose a wallet", then the names. */
+    @Test
+    fun appLockWalletMenu() {
+        render {
+            Lock(AppLockUiState(usePassword = true, wallets = wallets, selectedWallet = wallets.last().id))
+        }
+        compose.onNodeWithTag(AppLockTags.WALLET).performClick()
+        // The popup window is drawn only once its own frames have run (a paused clock leaves it blank).
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        compose.onNodeWithTag(AppLockTags.NO_WALLET).assertExists()
+        captureScreenRoboImage("build/outputs/roborazzi/shell/app-lock-wallet-menu-${look.name.lowercase()}.png")
     }
 
     @Test

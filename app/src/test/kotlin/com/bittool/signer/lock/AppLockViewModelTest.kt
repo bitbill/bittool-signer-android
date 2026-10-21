@@ -148,6 +148,38 @@ class AppLockViewModelTest {
         assertEquals("Public fixture 2", viewModel.uiState.value.selectedName)
     }
 
+    /**
+     * iOS `Picker` item `Text("Choose a wallet").tag(nil as UUID?)` (AppLockView.swift:70-76): choosing it leaves no
+     * wallet, also when the only one had been chosen for the person, so "Unlock" waits; "Use a Wallet Password" after
+     * the biometric actions chooses the only wallet again (iOS `if walletID == nil, store.wallets.count == 1`).
+     */
+    @Test
+    fun chooseAWalletLeavesNoWalletUntilTheFormIsOpenedAgain() = runTest(dispatcher) {
+        val viewModel = AppLockViewModel(access, store)
+        access.lock()
+        viewModel.usePassword()
+        assertEquals(first.id, viewModel.uiState.value.selectedWallet)
+
+        viewModel.clearWallet()
+        assertNull(viewModel.uiState.value.selectedWallet, "the only wallet is not chosen for the person again")
+        assertNull(viewModel.uiState.value.selectedName)
+        val password = SecretText.of("Public-Test-Password1!")
+        viewModel.unlock(password)
+        assertTrue(password.isEmpty(), "an ignored password is wiped too")
+        assertEquals(emptyList(), access.passwordUnlocks)
+
+        viewModel.useBiometrics()
+        viewModel.usePassword()
+        assertEquals(first.id, viewModel.uiState.value.selectedWallet)
+
+        store.setState { it.copy(wallets = listOf(first, second)) }
+        viewModel.selectWallet(second.id)
+        viewModel.clearWallet()
+        assertNull(viewModel.uiState.value.selectedWallet)
+        viewModel.selectWallet(first.id)
+        assertEquals("Public fixture 1", viewModel.uiState.value.selectedName)
+    }
+
     @Test
     fun aWrongPasswordShowsTheVaultErrorAndRefocusesTheField() = runTest(dispatcher) {
         val viewModel = AppLockViewModel(access, store)

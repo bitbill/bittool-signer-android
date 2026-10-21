@@ -86,6 +86,11 @@ class AppLockViewModel @Inject constructor(
     private data class Local(
         val usePassword: Boolean = false,
         val selectedWallet: WalletId? = null,
+        /**
+         * The person chose "Choose a wallet" (iOS `tag(nil as UUID?)`): no wallet, and the only one is not chosen for
+         * them again until they come back to the form from the biometric actions.
+         */
+        val noWallet: Boolean = false,
         val busy: Boolean = false,
         val error: UiText? = null,
     )
@@ -152,10 +157,13 @@ class AppLockViewModel @Inject constructor(
 
     /**
      * The wallet the password is for: the person's choice while that wallet exists, otherwise on the password form the
-     * only wallet — also when the list arrives after the form (a cold launch shows the lock while the wallets load).
+     * only wallet — also when the list arrives after the form (a cold launch shows the lock while the wallets load) —
+     * unless the person chose "Choose a wallet".
      */
-    private fun selection(local: Local, wallets: List<WalletId>): WalletId? =
-        local.selectedWallet?.takeIf { it in wallets } ?: wallets.singleOrNull()?.takeIf { local.usePassword }
+    private fun selection(local: Local, wallets: List<WalletId>): WalletId? {
+        if (local.noWallet) return null
+        return local.selectedWallet?.takeIf { it in wallets } ?: wallets.singleOrNull()?.takeIf { local.usePassword }
+    }
 
     /** The lock screen's `LifecycleResumeEffect`: prompts are shown only while the activity is resumed. */
     fun onResumedChanged(resumed: Boolean) {
@@ -199,14 +207,26 @@ class AppLockViewModel @Inject constructor(
         local.update { it.copy(usePassword = true, error = null) }
     }
 
-    /** "Use Biometrics Instead": back to the biometric actions, the typed password cleared. */
+    /**
+     * "Use Biometrics Instead": back to the biometric actions, the typed password cleared. A later "Use a Wallet
+     * Password" chooses the only wallet again when none is chosen (iOS `if walletID == nil, store.wallets.count == 1`).
+     */
     fun useBiometrics() {
         events.trySend(AppLockEvent.ClearPassword)
-        local.update { it.copy(usePassword = false, error = null) }
+        local.update { it.copy(usePassword = false, noWallet = false, error = null) }
     }
 
+    /** A wallet from the menu. */
     fun selectWallet(id: WalletId) {
-        local.update { it.copy(selectedWallet = id) }
+        local.update { it.copy(selectedWallet = id, noWallet = false) }
+    }
+
+    /**
+     * "Choose a wallet", the menu's first item (iOS `Text("Choose a wallet").tag(nil as UUID?)`): no wallet, so
+     * "Unlock" waits for one.
+     */
+    fun clearWallet() {
+        local.update { it.copy(selectedWallet = null, noWallet = true) }
     }
 
     /**
