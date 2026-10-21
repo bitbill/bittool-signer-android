@@ -119,6 +119,12 @@ fun SecondaryButton(
  */
 internal const val BUTTON_GLYPH_RATIO = 20f / 17f
 
+/** [TonalPillButton]'s glyph: 18 dp beside its 15 sp subheadline label (iOS symbol at `.subheadline`), scaled from there. */
+internal const val PILL_GLYPH_RATIO = 18f / 15f
+
+/** [TextAction]'s optional glyph: 18 dp beside its 17 sp body label, scaled from there. */
+internal const val TEXT_ACTION_GLYPH_RATIO = 18f / 17f
+
 /** Accent at 14 % on the surface: the tonal fill of secondary and pill buttons. */
 internal fun tonalFill(colors: SignerColors): Color = colors.accent.copy(alpha = 0.14f)
 
@@ -239,13 +245,16 @@ private class LineExtent {
  * A small tonal pill (iOS wallet-card actions "Pair" / "Addresses", `.bordered` `.regular` capsule with
  * `CompactActionLabelStyle`, `Features/Wallets/WalletsTab.swift:108-127,142-153`): icon + `subheadline` semibold
  * label, 6 dp apart, shrinking to 85 %. At accessibility text sizes only the icon is shown; [text] stays the
- * accessibility label. 48 dp touch target.
+ * accessibility label. 48 dp touch target. The icon is 18 dp at the default text size and scales with the label's font
+ * like the iOS symbol (QA setup-12), also when it is shown alone.
  */
 @Composable
 fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = SignerTheme.colors
     val iconOnly = SignerTheme.isAccessibilityTextSize
     val interaction = remember { MutableInteractionSource() }
+    val labelStyle = SignerTheme.typography.subheadline.semibold()
+    val glyph = labelStyle.glyphSize(PILL_GLYPH_RATIO)
     Surface(
         onClick = onClick,
         modifier = modifier
@@ -262,9 +271,9 @@ fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifi
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.accentOnTint)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(glyph), tint = colors.accentOnTint)
             if (!iconOnly) {
-                ShrinkingLabel(text, SignerTheme.typography.subheadline.semibold().copy(color = colors.accentOnTint), minScale = 0.85f)
+                ShrinkingLabel(text, labelStyle.copy(color = colors.accentOnTint), minScale = 0.85f)
             }
         }
     }
@@ -273,7 +282,7 @@ fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifi
 /**
  * A text action for top bars and inline links (iOS toolbar `Button("Cancel" / "Done" / "Reject")`, plain tinted
  * buttons such as "Export as File"): accent, or danger when [destructive] (Reject, Clear). [emphasized] uses semibold
- * for the confirming action of a bar ("Done").
+ * for the confirming action of a bar ("Done"). An [icon] is 18 dp at the default text size and scales with the label.
  */
 @Composable
 fun TextAction(
@@ -294,11 +303,11 @@ fun TextAction(
         colors = ButtonDefaults.textButtonColors(contentColor = color, disabledContentColor = colors.tertiaryLabel),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     ) {
+        val style = SignerTheme.typography.body.let { if (emphasized) it.semibold() else it }
         if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(style.glyphSize(TEXT_ACTION_GLYPH_RATIO)))
             Box(Modifier.size(6.dp))
         }
-        val style = SignerTheme.typography.body.let { if (emphasized) it.semibold() else it }
         Text(text, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

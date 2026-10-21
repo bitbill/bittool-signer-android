@@ -309,6 +309,33 @@ class ComponentsTest {
     }
 
     /**
+     * QA setup-12, the other buttons with a glyph beside text: the tonal pill's symbol follows its subheadline label
+     * (iOS `CompactActionLabelStyle` sets the symbol's font), 18 dp at the default size and larger with the font, also at
+     * accessibility sizes, where the pill shows the symbol alone. Measured as the pill's width: 12 dp padding each side.
+     */
+    @Test
+    fun aPillIconScalesWithTheFont() {
+        var fontScale by mutableStateOf(1f)
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    Box { TonalPillButton("Pair", SignerIcons.QrCode, onClick = {}, modifier = Modifier.testTag("pill")) }
+                }
+            }
+        }
+        for (scale in listOf(1.6f, 2f)) {
+            fontScale = scale
+            compose.waitForIdle()
+            val labelDp = Density(compose.density.density, scale).run { 15.sp.toDp().value }
+            val expected = labelDp * 18f / 15f
+            val pill = compose.onNodeWithTag("pill").fetchSemanticsNode().boundsInRoot
+            val icon = pill.width / compose.density.density - 2 * 12f
+            assertEquals(expected, icon, 1f, "icon size at font scale $scale")
+        }
+    }
+
+    /**
      * QA setup-11: iOS draws `checkmark.seal.fill` at the font size `size × 0.62`, which covers 0.406 of the disc's
      * diameter on the Done step's screenshot, against 0.331 for the Material glyph in a box of that size. Counted here
      * on fully inked rows only (no anti-aliased edge), the old glyph covers 0.31 and the iOS-sized one 0.38.

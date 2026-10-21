@@ -146,16 +146,18 @@ fun TextStyle.ltr(): TextStyle = copy(textDirection = TextDirection.Ltr, lineBre
 fun TextStyle.contentDirection(): TextStyle = copy(textDirection = TextDirection.Content)
 
 /**
- * The size of a glyph drawn beside text in this style, [ratio] × its font size (an SF Symbol follows Dynamic Type the
- * same way): a fixed `dp` icon would stay small next to text at large font scales. Never below the size it has at the
- * default font scale.
+ * The size of a glyph drawn beside text in this style, [ratio] × its font size as drawn (an SF Symbol follows Dynamic
+ * Type the same way): a fixed `dp` icon would stay small next to text at large font scales. The ratio applies to the
+ * drawn text size, after the font scale: Android 14+ scales large sizes less than small ones (non-linear font scaling),
+ * so converting `ratio × fontSize` instead would draw the glyph smaller than its text. Never below the size it has at
+ * the default font scale.
  */
 @Composable
 @ReadOnlyComposable
 fun TextStyle.glyphSize(ratio: Float): Dp {
     if (!fontSize.isSp) return DEFAULT_GLYPH
     val density = LocalDensity.current
-    val scaled = with(density) { (fontSize * ratio).toDp() }
+    val scaled = with(density) { fontSize.toDp() } * ratio
     val unscaled = (fontSize.value * ratio).dp
     return maxOf(scaled, unscaled)
 }
