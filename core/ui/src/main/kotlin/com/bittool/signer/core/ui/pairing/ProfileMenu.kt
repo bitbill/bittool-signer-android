@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,11 +31,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.contentDirection
-import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 
 /**
  * A menu picker presented as a full-width row (iOS `ProfileMenu`, `Features/Wallets/ConnectView.swift:547-597`;
@@ -108,30 +107,29 @@ fun <T> ProfileMenu(
                 valueBlock()
             }
         }
-        if (expanded && rememberWindowGateReleased()) {
-            // design-system §9.2: menus on the (elevated) card colour, not Material's surfaceContainer (= the page).
-            DropdownMenu(expanded = true, onDismissRequest = { expanded = false }, containerColor = colors.elevatedCard) {
-                options.forEach { option ->
-                    val isSelected = option == selection
-                    DropdownMenuItem(
-                        text = {
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(label(option), style = typography.body, color = colors.label)
-                                Text(detail(option), style = typography.footnote.contentDirection(), color = colors.secondaryLabel)
-                            }
-                        },
-                        trailingIcon = if (isSelected) {
-                            { Icon(SignerIcons.Check, contentDescription = null, tint = colors.accent) }
-                        } else {
-                            null
-                        },
-                        onClick = {
-                            expanded = false
-                            if (!isSelected) onSelect(option)
-                        },
-                        modifier = Modifier.semantics { selected = isSelected },
-                    )
-                }
+        // A popup window: the design system's menu waits for the window gate, uses the elevated card colour and
+        // publishes test tags as resource ids in debuggable builds (backlog B26).
+        SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                val isSelected = option == selection
+                DropdownMenuItem(
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(label(option), style = typography.body, color = colors.label)
+                            Text(detail(option), style = typography.footnote.contentDirection(), color = colors.secondaryLabel)
+                        }
+                    },
+                    trailingIcon = if (isSelected) {
+                        { Icon(SignerIcons.Check, contentDescription = null, tint = colors.accent) }
+                    } else {
+                        null
+                    },
+                    onClick = {
+                        expanded = false
+                        if (!isSelected) onSelect(option)
+                    },
+                    modifier = Modifier.semantics { selected = isSelected },
+                )
             }
         }
     }
