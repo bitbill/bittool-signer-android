@@ -26,13 +26,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.window.SecureFlagPolicy
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.ElevatedSurfaceLevel
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
 import com.bittool.signer.core.designsystem.window.appExposesTestTags
+import com.bittool.signer.core.designsystem.window.rememberSecureFlagPolicy
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.designsystem.window.windowTestTags
 import kotlinx.coroutines.launch
@@ -62,8 +62,9 @@ data class DialogAction(
  * Window rules: not shown until `LocalWindowGateOpen` releases it (a dialog requested while App Lock is up appears after
  * unlock; one already shown stays), its window hides foreign overlays (API 31+), and with [secure] the window is
  * `FLAG_SECURE` even where the activity is not (dialogs are separate windows: any dialog that can show a secret passes
- * `secure = true`). Modal: a tap outside does nothing; Back and the system dismiss call [onDismissRequest] (the cancel
- * action) unless [dismissOnBack] is false (busy). In debuggable builds the window publishes its test tags as resource
+ * `secure = true`), except in the debug screenshot tour ([rememberSecureFlagPolicy]). Modal: a tap outside does
+ * nothing; Back and the system dismiss call [onDismissRequest] (the cancel action) unless [dismissOnBack] is false
+ * (busy). In debuggable builds the window publishes its test tags as resource
  * ids itself (`windowTestTags`): the root's flag does not reach a separate window.
  */
 @Composable
@@ -80,6 +81,7 @@ fun SignerAlertDialog(
 ) {
     if (!rememberWindowGateReleased()) return
     val exposeTestTags = appExposesTestTags()
+    val securePolicy = rememberSecureFlagPolicy(secure)
     ElevatedSurfaceLevel {
         val colors = SignerTheme.colors
         val typography = SignerTheme.typography
@@ -113,7 +115,7 @@ fun SignerAlertDialog(
             properties = DialogProperties(
                 dismissOnBackPress = dismissOnBack,
                 dismissOnClickOutside = false,
-                securePolicy = if (secure) SecureFlagPolicy.SecureOn else SecureFlagPolicy.Inherit,
+                securePolicy = securePolicy,
             ),
         )
     }
@@ -151,8 +153,9 @@ interface SignerSheetScope : ColumnScope {
  * scrim nor Back closes it (iOS `interactiveDismissDisabled`).
  *
  * Same window rules as [SignerAlertDialog]: waits for `LocalWindowGateOpen`, hides foreign overlays on API 31+, and with
- * [secure] the sheet window is `FLAG_SECURE` (paste, authorize, recovery cards), and in debuggable builds the content
- * publishes its test tags as resource ids. [testTag] tags the sheet content.
+ * [secure] the sheet window is `FLAG_SECURE` (paste, authorize, recovery cards; not in the debug screenshot tour,
+ * [rememberSecureFlagPolicy]), and in debuggable builds the content publishes its test tags as resource ids.
+ * [testTag] tags the sheet content.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -174,6 +177,7 @@ fun SignerBottomSheet(
     )
     val scope = rememberCoroutineScope()
     val exposeTestTags = appExposesTestTags()
+    val securePolicy = rememberSecureFlagPolicy(secure)
     ElevatedSurfaceLevel {
         val colors = SignerTheme.colors
         ModalBottomSheet(
@@ -185,7 +189,7 @@ fun SignerBottomSheet(
             tonalElevation = 0.dp,
             dragHandle = { BottomSheetDefaults.DragHandle(color = colors.tertiaryLabel) },
             properties = ModalBottomSheetProperties(
-                securePolicy = if (secure) SecureFlagPolicy.SecureOn else SecureFlagPolicy.Inherit,
+                securePolicy = securePolicy,
                 shouldDismissOnBackPress = dismissible,
                 shouldDismissOnClickOutside = dismissible,
             ),

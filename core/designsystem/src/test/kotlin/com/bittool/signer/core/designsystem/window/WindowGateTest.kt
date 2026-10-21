@@ -2,6 +2,7 @@ package com.bittool.signer.core.designsystem.window
 
 import android.Manifest
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.view.View
 import android.view.WindowManager
 import androidx.compose.material3.Text
@@ -102,12 +103,24 @@ class WindowGateTest {
 
     /**
      * gaps G4.1 and ARCHITECTURE §4.4: dialogs and sheets are windows of their own, so each one hides other apps'
-     * overlays (API 31+) and, when it can show a secret, is `FLAG_SECURE` itself.
+     * overlays (API 31+) and, when it can show a secret, is `FLAG_SECURE` itself — in a release build even where the
+     * activity window is not (`SecureWindowFlagsTest` covers the debug screenshot tour).
      */
     @Test
     fun dialogAndSheetWindowsHideOverlaysAndCanBeSecure() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         shadowOf(app).grantPermissions(Manifest.permission.HIDE_OVERLAY_WINDOWS) // normal protection: granted at install
+        val info = app.applicationInfo
+        val flags = info.flags
+        info.flags = flags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
+        try {
+            assertSecureWindows()
+        } finally {
+            info.flags = flags
+        }
+    }
+
+    private fun assertSecureWindows() {
         open = true
         var dialogView: View? = null
         var sheetView: View? = null
