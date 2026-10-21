@@ -1,7 +1,11 @@
 package com.bittool.signer.harness
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.LocaleList
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.test.core.app.ApplicationProvider
 import com.bittool.signer.core.crypto.SystemSecureRandomSource
 import com.bittool.signer.core.crypto.vault.DefaultWalletVault
@@ -31,6 +35,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 /**
  * The debug UI-test harness (gaps.md G3; iOS `SimulatorUITestContext`): opt-in by launch extras on an emulator only,
@@ -322,6 +327,61 @@ class DebugUiTestHarnessTest {
         assertEquals(1, FixtureDeviceKeyStore.loseWalletKeys(directory))
         assertEquals(0, FixtureDeviceKeyStore.loseWalletKeys(File(directory, "missing")))
     }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.BAKLAVA])
+    fun theRunLanguageReachesAndroidsOwnListOnApi33() {
+        // Before super.onCreate no AppCompat delegate exists, so AppCompat's API 33+ path would set nothing (audit A11).
+        DebugUiTestHarness.configure(context, intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_LOCALE to "de-DE"))
+        assertEquals("de-DE", frameworkLocales())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun arabicWithLatinDigitsAlreadyIsTheRunsArabic() {
+        // MainActivity turned the last run's `ar` into `ar-u-nu-latn`: asking for `ar` again would relaunch it again.
+        setFrameworkLocales("ar-u-nu-latn")
+        DebugUiTestHarness.configure(context, intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_LOCALE to "ar"))
+        assertEquals("ar-u-nu-latn", frameworkLocales())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.TIRAMISU])
+    fun theDefaultRunLanguageReplacesAnotherOne() {
+        setFrameworkLocales("ar-u-nu-latn")
+        DebugUiTestHarness.configure(context, intent(DebugUiTestHarness.EXTRA_RUN to runId))
+        assertEquals("en-US", frameworkLocales())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2])
+    fun belowApi33AppCompatKeepsTheRunLanguage() {
+        try {
+            DebugUiTestHarness.configure(context, intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_LOCALE to "de-DE"))
+            assertEquals("de-DE", AppCompatDelegate.getApplicationLocales().toLanguageTags())
+        } finally {
+            // AppCompat keeps this list process-wide below API 33: do not hand it to the next test of the sandbox.
+            AppCompatDelegate::class.java.getDeclaredMethod("resetStaticRequestedAndStoredLocales")
+                .apply { isAccessible = true }
+                .invoke(null)
+        }
+    }
+
+    /** Android's own per-app list (API 33+). */
+    private fun setFrameworkLocales(tags: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.getSystemService(LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(tags)
+        } else {
+            error("Android keeps per-app languages itself from API 33")
+        }
+    }
+
+    private fun frameworkLocales(): String =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.getSystemService(LocaleManager::class.java).applicationLocales.toLanguageTags()
+        } else {
+            error("Android keeps per-app languages itself from API 33")
+        }
 
     @Test
     fun theFixtureBiometricAlwaysFailsWithItsMessage() = runTest {
