@@ -204,7 +204,15 @@ class ActivityDetailViewModel @Inject constructor(
                 RiskLevel.High.wire -> RiskRow.High
                 else -> RiskRow.WarningsShown
             },
-            decode = if (receipt.requestJson == null) DecodeState.NotStored else decoded,
+            // A review decoded on this visit stays: a newer signature can push the record past the 25 most recent while
+            // "Signed Request" shows it, and the record then loses its request (activity-settings.md §2.1). iOS pages
+            // keep the values they were opened with; here the page would otherwise wait for a decode that never comes.
+            // (The Signature page hides Input once the record has no request.)
+            decode = when {
+                decoded is DecodeState.Decoded -> decoded
+                receipt.requestJson == null -> DecodeState.NotStored
+                else -> decoded
+            },
             showsQr = local.showsQr && receipt.responseFrames?.isNotEmpty() == true,
             exportError = local.exportError,
         )

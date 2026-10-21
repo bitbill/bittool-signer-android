@@ -128,6 +128,28 @@ class ActivityDetailViewModelTest {
         assertTrue(store.calls<FakeSignerStore.Call.ReviewStoredRequest>().isEmpty())
     }
 
+    /**
+     * "Signed Request" is open on the Activity tab while a new signature is made on the Scan tab; the record is now past
+     * the 25 most recent and loses its request. The decoded review stays (iOS keeps the value the page was opened with)
+     * instead of the page turning into a spinner that never ends.
+     */
+    @Test
+    fun aDecodedRequestStaysWhenTheRecordLaterLosesItsPayloads() = runTest {
+        val store = store(receipt(id))
+        store.onReviewStoredRequest = { _, _ -> ActivityTestData.approvalReview }
+        val viewModel = viewModel(store)
+        viewModel.uiState.first { it.decode is DecodeState.Decoded }
+        viewModel.uiState.test {
+            assertIs<DecodeState.Decoded>(awaitItem().decode)
+            store.setState { it.copy(receipts = listOf(receipt(id).withoutPayloads())) }
+            val shed = awaitItem()
+            assertTrue(shed.receipt?.hasPayloads == false)
+            assertEquals(DecodeState.Decoded(ActivityTestData.approvalReview), shed.decode)
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals(1, store.calls<FakeSignerStore.Call.ReviewStoredRequest>().size)
+    }
+
     @Test
     fun decodingWaitsForTheStoreToLoad() = runTest {
         val store = store(loading = true)
