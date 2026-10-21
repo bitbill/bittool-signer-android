@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Freigabe / NFT-Token-ID</string>
     <string name="also_paid_out">Außerdem ausgezahlt</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Vergleichen Sie vor dem Empfang immer die ersten Adressen in beiden Apps.</string>
+    <string name="ambiguous_wallet_match">Mehrere Wallets passen</string>
     <string name="amount">Betrag</string>
     <string name="amount_sol">Betrag (SOL)</string>
     <string name="amount_trx">Betrag (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Ungültige Wiederherstellungsphrase: Sie hat 1 Wort. Wiederherstellungsphrasen haben 12, 15, 18, 21 oder 24 Wörter.</string>
     <string name="invalid_request_format">Ungültiges Anfrageformat.</string>
     <string name="invalid_signing_plan">Ungültiger Signierplan.</string>
+    <string name="invalid_signing_request">Ungültige Signaturanfrage</string>
     <string name="invalid_signing_wallet_identity">Ungültige Identität der signierenden Wallet.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Sie enthält nur die %d Wörter. Ihre BIP39-Passphrase ist nicht dabei; zur Wiederherstellung dieser Wallet wird sie ebenfalls gebraucht.</string>
     <string name="items">Positionen</string>
     <string name="ive_written_them_down_in_order">Ich habe sie der Reihe nach notiert</string>
     <string name="keep_editing">Weiter bearbeiten</string>
     <string name="keep_it_offline">Offline aufbewahren</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Halten Sie den animierten Code im Bild · %d Teile</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Bewahren Sie die drei Karten an drei verschiedenen Orten auf. Eine Karte allein enthält nicht die ganze Phrase, zeigt aber zwei Drittel der Wörter; bei 12 oder 15 Wörtern lässt sich der Rest mit genug Rechenleistung erraten, verstecken Sie daher jede Karte.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Bewahren Sie diese drei Karten an drei verschiedenen Orten auf. Je zwei stellen die vollständige Wiederherstellungsphrase her; geht eine verloren oder wird gestohlen, bleibt Ihre Wallet mit den anderen beiden sicher wiederherstellbar.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Bewahren Sie diese drei Karten an drei verschiedenen Orten auf. Je zwei stellen die vollständige Wiederherstellungsphrase her; geht eine verloren, stellen die anderen beiden Ihre Wallet weiterhin her.</string>
@@ -354,6 +357,7 @@
     <string name="method">Methode</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Transaktions-Commitment fehlt oder ist ungültig.</string>
+    <string name="missing_signer_information">Angaben zum Unterzeichner fehlen</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Mehrere gespeicherte Wallets passen. Löschen Sie die doppelte Wallet und scannen Sie erneut.</string>
     <string name="multisig">Multisig</string>
     <string name="multisig_account">Multisig-Konto</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Es ist keine Kamera verfügbar. Laden Sie die Anfrage stattdessen als Datei.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Keine unterbrochene oder nicht zugeordnete Anfrage zum Wiederholen.</string>
     <string name="no_matching_signing_task_review_the_request_again">Keine passende Signieraufgabe. Prüfen Sie die Anfrage erneut.</string>
+    <string name="no_matching_wallet">Keine passende Wallet</string>
     <string name="no_matching_word">Kein passendes Wort</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Nonce-Konto</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Menge</string>
     <string name="raw_amount">Rohbetrag</string>
     <string name="read_every_warning_above_before_signing">Lesen Sie vor dem Signieren jede Warnung oben.</string>
+    <string name="reading_request">Anfrage wird gelesen…</string>
     <string name="reading">Wird gelesen…</string>
     <string name="rebuild_it_yourself">Selbst neu bauen</string>
     <string name="receive_addresses">Empfangsadressen</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Unbegrenztes Permit</string>
     <string name="unlock">Entsperren</string>
     <string name="unlock_to_view_your_wallets_and_activity">Entsperren Sie, um Ihre Wallets und den Verlauf zu sehen.</string>
+    <string name="unlock_with_x">Mit %s entsperren</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Das Entsperren der App gibt nie eine Signatur frei.</string>
     <string name="update_account_permissions">Kontoberechtigungen ändern</string>
     <string name="use_x_instead">Stattdessen %s nutzen</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Die Wallet-Daten haben sich geändert. Ordnen Sie diese Anfrage erneut zu.</string>
     <string name="wallet_name">Wallet-Name</string>
     <string name="wallet_password_2">Wallet-Passwort</string>
+    <string name="wallet_setup_required_2">Wallet-Einrichtung erforderlich</string>
     <string name="wallet_setup_required">Diese Wallet muss noch eingerichtet werden.</string>
     <string name="wallets">Wallets</string>
     <string name="wallets_unavailable">Wallets nicht verfügbar</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Nur beobachten</string>
     <string name="which_language_is_your_backup_in">In welcher Sprache ist Ihre Sicherung geschrieben?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Welche davon die Wallet liest: Wallet-Ebene sowie Coin-Ebene für Bitcoin, EVM, TRON oder Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Bei einer Phrase aus %1$d Wörtern zeigt jede Karte %2$d der %3$d Wörter, und die übrigen %4$d lassen sich mit genügend Rechenleistung ermitteln. Bewahren Sie jede Karte so sorgfältig auf wie die vollständige Phrase, oder nutzen Sie für geteilte Backups eine Phrase aus 24 Wörtern.</string>
     <string name="word_x">Wort %d</string>
     <string name="word_x_x">Wort %1$d, %2$s</string>
     <string name="word_x_hidden">Wort %d, verborgen</string>

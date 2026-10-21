@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">Screenshot rilevato</string>
     <string name="setup_qr_not_recovery_phrase">Questo codice QR non contiene una frase di recupero.</string>
-    <string name="setup_weak_cards_warning">Con una frase da %1$d parole ogni scheda mostra %2$d delle %3$d parole, e le altre %4$d si potrebbero ricavare con sufficiente potenza di calcolo. Custodisci ogni scheda con la stessa cura dell’intera frase, oppure usa una frase da 24 parole per le copie suddivise.</string>
     <string name="setup_slot_empty">Vuota</string>
     <string name="setup_slot_empty_next">Vuota, la prossima da compilare</string>
     <string name="setup_screenshot_phrase_hidden">La frase è di nuovo nascosta, ma lo screenshot potrebbe già contenerla. Eliminalo dalla galleria e da ogni copia sincronizzata, e conserva una copia scritta offline.</string>

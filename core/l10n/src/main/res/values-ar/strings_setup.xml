@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">اكتُشفت لقطة شاشة</string>
     <string name="setup_qr_not_recovery_phrase">رمز QR هذا لا يحتوي على عبارة احتياطية.</string>
-    <string name="setup_weak_cards_warning">مع عبارة من %1$d كلمة، تعرض كل بطاقة %2$d من أصل %3$d كلمة، ويمكن استنتاج الكلمات الـ %4$d الباقية بقدرة حوسبة كافية. احرس كل بطاقة بالعناية نفسها التي تحرس بها العبارة كاملة، أو استخدم عبارة من 24 كلمة للنسخ المقسّمة.</string>
     <string name="setup_slot_empty">فارغ</string>
     <string name="setup_slot_empty_next">فارغ، يُملأ تاليًا</string>
     <string name="setup_screenshot_phrase_hidden">أُخفيت العبارة من جديد، لكن لقطة الشاشة قد تحتوي عليها. احذفها من معرض الصور ومن أي نسخ مزامنة، واحتفظ بنسخة مكتوبة دون اتصال.</string>

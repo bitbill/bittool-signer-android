@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">授權額度／NFT Token ID</string>
     <string name="also_paid_out">其他人收到</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">收款前，請務必在兩個 App 中核對第一個地址。</string>
+    <string name="ambiguous_wallet_match">比對到多個錢包</string>
     <string name="amount">金額</string>
     <string name="amount_sol">金額（SOL）</string>
     <string name="amount_trx">金額（TRX）</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">助記詞無效：只有 1 個字。助記詞應為 12、15、18、21 或 24 個字。</string>
     <string name="invalid_request_format">請求格式無效。</string>
     <string name="invalid_signing_plan">簽名計畫無效。</string>
+    <string name="invalid_signing_request">簽名請求無效</string>
     <string name="invalid_signing_wallet_identity">簽名錢包的身分無效。</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">其中只包含這 %d 個單詞，不含 BIP39 passphrase；恢復這個錢包還需要該 passphrase。</string>
     <string name="items">項目</string>
     <string name="ive_written_them_down_in_order">我已按順序抄寫完畢</string>
     <string name="keep_editing">繼續編輯</string>
     <string name="keep_it_offline">不要讓它連網</string>
+    <string name="keep_the_animated_code_in_view_x_parts">保持動態二維碼在取景框內 · 已讀取 %d 段</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">把三張卡片分別放在三個不同的地方。單張卡片不含完整助記詞，但會露出三分之二的字；對 12 或 15 字的助記詞來說，剩下的部分在足夠算力下可以被猜出來，所以每一張都要藏好。</string>
     <string name="keep_these_three_cards_in_three_different_places_any">把這三張卡片分別放在三個不同的地方。任兩張即可還原完整助記詞，因此即使遺失或被竊一張，另外兩張仍能讓錢包安全且可恢復。</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">把這三張卡片分別放在三個不同的地方。任兩張即可還原完整助記詞，因此即使遺失一張，另外兩張仍能恢復你的錢包。</string>
@@ -354,6 +357,7 @@
     <string name="method">方法</string>
     <string name="mint">代幣鑄造地址</string>
     <string name="missing_or_invalid_transaction_commitment">缺少交易承諾，或承諾無效。</string>
+    <string name="missing_signer_information">缺少簽名方資訊</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">有多個已儲存的錢包都能比對到。請刪除重複的錢包後重新掃描。</string>
     <string name="multisig">多簽</string>
     <string name="multisig_account">多重簽名帳戶</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">沒有可用的相機。請改用檔案匯入請求。</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">沒有可重試的中斷或未比對請求。</string>
     <string name="no_matching_signing_task_review_the_request_again">沒有相符的簽名任務。請重新審核該請求。</string>
+    <string name="no_matching_wallet">沒有相符的錢包</string>
     <string name="no_matching_word">沒有符合的單詞</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Nonce 帳戶</string>
@@ -464,6 +469,7 @@
     <string name="quantity">數量</string>
     <string name="raw_amount">原始金額</string>
     <string name="read_every_warning_above_before_signing">簽名前請先讀完上面每一條警告。</string>
+    <string name="reading_request">正在讀取請求…</string>
     <string name="reading">讀取中…</string>
     <string name="rebuild_it_yourself">自行重新建置</string>
     <string name="receive_addresses">收款地址</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">無上限 Permit</string>
     <string name="unlock">解鎖</string>
     <string name="unlock_to_view_your_wallets_and_activity">解鎖後檢視錢包與活動記錄。</string>
+    <string name="unlock_with_x">用 %s 解鎖</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">解鎖 App 本身從不授權任何簽名。</string>
     <string name="update_account_permissions">更新帳戶權限</string>
     <string name="use_x_instead">改用 %s</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">錢包資訊已變化。請重新比對這個請求。</string>
     <string name="wallet_name">錢包名稱</string>
     <string name="wallet_password_2">錢包密碼</string>
+    <string name="wallet_setup_required_2">錢包需要先完成設定</string>
     <string name="wallet_setup_required">該錢包需要先完成設定。</string>
     <string name="wallets">錢包</string>
     <string name="wallets_unavailable">錢包無法使用</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">僅觀察</string>
     <string name="which_language_is_your_backup_in">你的備份使用哪種語言？</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">該錢包能讀取其中哪些：錢包級，以及 Bitcoin、EVM、TRON 或 Solana 的幣種級。</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">%1$d 詞的助記詞，每張卡片會顯示 %3$d 個詞中的 %2$d 個，剩下的 %4$d 個有足夠算力就能推算出來。請像保管完整助記詞一樣保管每一張卡片，或改用 24 詞助記詞來做分卡備份。</string>
     <string name="word_x">第 %d 個單詞</string>
     <string name="word_x_x">第 %1$d 個單詞，%2$s</string>
     <string name="word_x_hidden">第 %d 個單詞，已隱藏</string>

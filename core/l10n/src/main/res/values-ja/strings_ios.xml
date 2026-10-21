@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">許可額／NFT トークン ID</string>
     <string name="also_paid_out">他の受取先</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">入金の前に、両方のアプリで最初のアドレスを必ず見比べてください。</string>
+    <string name="ambiguous_wallet_match">複数のウォレットが一致しました</string>
     <string name="amount">金額</string>
     <string name="amount_sol">数量（SOL）</string>
     <string name="amount_trx">数量（TRX）</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">リカバリーフレーズが不正です：1 単語しかありません。リカバリーフレーズは 12、15、18、21、24 単語のいずれかです。</string>
     <string name="invalid_request_format">リクエストの形式が不正です。</string>
     <string name="invalid_signing_plan">署名プランが不正です。</string>
+    <string name="invalid_signing_request">署名リクエストが無効です</string>
     <string name="invalid_signing_wallet_identity">署名ウォレットの ID が不正です。</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">含まれるのは %d 単語だけです。BIP39 パスフレーズは含まれません。このウォレットの復元にはパスフレーズも必要です。</string>
     <string name="items">アイテム</string>
     <string name="ive_written_them_down_in_order">順番どおり書き写しました</string>
     <string name="keep_editing">編集を続ける</string>
     <string name="keep_it_offline">オフラインで保管</string>
+    <string name="keep_the_animated_code_in_view_x_parts">アニメーションQRコードを画面内に保ってください · %d 個読み取り済み</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">3 枚のカードは、それぞれ別の場所に保管してください。1 枚だけではフレーズ全体にはなりませんが、単語の 3 分の 2 が見えてしまいます。12 または 15 単語のフレーズでは、十分な計算能力があれば残りを推測できるため、どのカードも必ず隠してください。</string>
     <string name="keep_these_three_cards_in_three_different_places_any">3 枚のカードは、それぞれ別の場所に保管してください。どの 2 枚からでも完全なリカバリーフレーズを復元できるため、1 枚を紛失したり盗まれたりしても、残りの 2 枚でウォレットを安全に復元できます。</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">3 枚のカードは、それぞれ別の場所に保管してください。どの 2 枚からでも完全なリカバリーフレーズを復元できるため、1 枚を紛失しても残りの 2 枚でウォレットを復元できます。</string>
@@ -354,6 +357,7 @@
     <string name="method">メソッド</string>
     <string name="mint">ミント</string>
     <string name="missing_or_invalid_transaction_commitment">トランザクションのコミットメントが欠けているか、不正です。</string>
+    <string name="missing_signer_information">署名者の情報がありません</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">保存済みのウォレットが複数一致します。重複したウォレットを削除してから、もう一度読み取ってください。</string>
     <string name="multisig">マルチシグ</string>
     <string name="multisig_account">マルチシグアカウント</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">使用できるカメラがありません。リクエストをファイルから読み込んでください。</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">再試行できる中断中または未照合のリクエストはありません。</string>
     <string name="no_matching_signing_task_review_the_request_again">一致する署名タスクがありません。リクエストをもう一度確認してください。</string>
+    <string name="no_matching_wallet">一致するウォレットがありません</string>
     <string name="no_matching_word">一致する単語がありません</string>
     <string name="nonce">ノンス</string>
     <string name="nonce_account">ノンスアカウント</string>
@@ -464,6 +469,7 @@
     <string name="quantity">数量</string>
     <string name="raw_amount">生の数量</string>
     <string name="read_every_warning_above_before_signing">署名の前に、上の警告をすべて読んでください。</string>
+    <string name="reading_request">リクエストを読み取っています…</string>
     <string name="reading">読み込み中…</string>
     <string name="rebuild_it_yourself">自分でビルドし直す</string>
     <string name="receive_addresses">受取アドレス</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">無制限の Permit</string>
     <string name="unlock">ロック解除</string>
     <string name="unlock_to_view_your_wallets_and_activity">ロックを解除すると、ウォレットと履歴を表示できます。</string>
+    <string name="unlock_with_x">%s でロック解除</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">アプリのロック解除が署名を承認することはありません。</string>
     <string name="update_account_permissions">アカウント権限を更新</string>
     <string name="use_x_instead">代わりに %s を使う</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">ウォレットの情報が変わりました。このリクエストをもう一度照合してください。</string>
     <string name="wallet_name">ウォレット名</string>
     <string name="wallet_password_2">ウォレットのパスワード</string>
+    <string name="wallet_setup_required_2">ウォレットのセットアップが必要です</string>
     <string name="wallet_setup_required">このウォレットは設定を完了する必要があります。</string>
     <string name="wallets">ウォレット</string>
     <string name="wallets_unavailable">ウォレットを利用できません</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">残高表示のみ</string>
     <string name="which_language_is_your_backup_in">バックアップは何語で書かれていますか？</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">そのウォレットが読めるもの：ウォレットレベル、および Bitcoin・EVM・TRON・Solana のコインレベル。</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">%1$d 語のリカバリーフレーズでは、各カードに %3$d 語のうち %2$d 語が表示され、残りの %4$d 語は十分な計算力があれば割り出せます。カードはすべて完全なフレーズと同じ厳重さで保管するか、分割バックアップには 24 語のフレーズを使ってください。</string>
     <string name="word_x">%d 番目の単語</string>
     <string name="word_x_x">%1$d 番目の単語、%2$s</string>
     <string name="word_x_hidden">%d 番目の単語、非表示</string>

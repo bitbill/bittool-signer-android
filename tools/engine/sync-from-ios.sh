@@ -6,6 +6,8 @@
 #
 # It refuses to copy unless the iOS file matches the iOS repo's own engine/bundle-manifest.json, then updates
 # EngineBundle.EXPECTED_SHA256 / EXPECTED_BYTES; EngineDigestTest and the runtime check enforce them.
+# Then it syncs the translation catalogue the same way (tools/l10n/sync-from-ios.sh, which can also run on its own):
+# the engine's English field labels and the app's interface strings are one catalogue, owned by the iOS repository.
 set -euo pipefail
 IOS=${1:-$HOME/Documents/bitsigner-ios/BitSigner}
 SRC="$IOS/BitToolSigner/Resources/signer.js"
@@ -26,4 +28,5 @@ grouped=$(python3 -c "import sys; print(f'{int(sys.argv[1]):_}')" "$bytes")
 sed -i '' -E "s/(const val EXPECTED_SHA256 = \")[0-9a-f]{64}(\")/\1$sha\2/; s/(const val EXPECTED_BYTES = )[0-9_]+/\1$grouped/" "$KT"
 cmp "$SRC" "$DST"
 echo "signer.js synced from iOS: $sha ($bytes bytes)"
+"$ROOT/tools/l10n/sync-from-ios.sh" "$IOS"
 echo "Next: tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest"

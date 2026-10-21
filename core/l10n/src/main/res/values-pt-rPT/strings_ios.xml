@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Limite autorizado / ID do token NFT</string>
     <string name="also_paid_out">Também pago</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Compare sempre os primeiros endereços nas duas apps antes de receber fundos.</string>
+    <string name="ambiguous_wallet_match">Várias carteiras correspondem</string>
     <string name="amount">Montante</string>
     <string name="amount_sol">Montante (SOL)</string>
     <string name="amount_trx">Montante (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Frase de recuperação inválida: tem 1 palavra. As frases de recuperação têm 12, 15, 18, 21 ou 24 palavras.</string>
     <string name="invalid_request_format">Formato do pedido inválido.</string>
     <string name="invalid_signing_plan">Plano de assinatura inválido.</string>
+    <string name="invalid_signing_request">Pedido de assinatura inválido</string>
     <string name="invalid_signing_wallet_identity">Identidade da carteira signatária inválida.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Contém apenas as %d palavras. A sua palavra-passe BIP39 não está incluída; restaurar esta carteira exige também a palavra-passe.</string>
     <string name="items">Artigos</string>
     <string name="ive_written_them_down_in_order">Já as escrevi pela ordem</string>
     <string name="keep_editing">Continuar a editar</string>
     <string name="keep_it_offline">Mantenha-a offline</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Mantenha o código animado no enquadramento · %d partes</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Guarde os três cartões em três sítios diferentes. Um cartão sozinho não contém a frase completa, mas mostra dois terços das palavras; com uma frase de 12 ou 15 palavras, o resto pode ser adivinhado com poder de cálculo suficiente, por isso esconda todos os cartões.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Guarde estes três cartões em três sítios diferentes. Dois quaisquer deles restauram a frase de recuperação completa: se um cartão se perder ou for roubado, os outros dois mantêm a sua carteira segura e recuperável.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Guarde estes três cartões em três sítios diferentes. Dois quaisquer deles restauram a frase de recuperação completa: se um cartão se perder, os outros dois continuam a conseguir restaurar a sua carteira.</string>
@@ -354,6 +357,7 @@
     <string name="method">Método</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Compromisso da transação em falta ou inválido.</string>
+    <string name="missing_signer_information">Faltam dados do signatário</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Corresponde mais do que uma carteira guardada. Elimine a carteira duplicada e volte a ler o código.</string>
     <string name="multisig">Multiassinatura</string>
     <string name="multisig_account">Conta de multiassinatura</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Não há câmara disponível. Importe antes o pedido como ficheiro.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Não há nenhum pedido interrompido ou por associar para repetir.</string>
     <string name="no_matching_signing_task_review_the_request_again">Não há nenhuma tarefa de assinatura correspondente. Analise novamente o pedido.</string>
+    <string name="no_matching_wallet">Nenhuma carteira corresponde</string>
     <string name="no_matching_word">Nenhuma palavra corresponde</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Conta de nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Quantidade</string>
     <string name="raw_amount">Montante em bruto</string>
     <string name="read_every_warning_above_before_signing">Leia todos os avisos acima antes de assinar.</string>
+    <string name="reading_request">A ler o pedido…</string>
     <string name="reading">A ler…</string>
     <string name="rebuild_it_yourself">Recompile-o você mesmo</string>
     <string name="receive_addresses">Endereços de receção</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit ilimitado</string>
     <string name="unlock">Desbloquear</string>
     <string name="unlock_to_view_your_wallets_and_activity">Desbloqueie para ver as suas carteiras e a sua atividade.</string>
+    <string name="unlock_with_x">Desbloquear com %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Desbloquear a app nunca autoriza uma assinatura.</string>
     <string name="update_account_permissions">Atualizar as permissões da conta</string>
     <string name="use_x_instead">Utilizar %s em vez disso</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">As informações da carteira mudaram. Associe novamente este pedido.</string>
     <string name="wallet_name">Nome da carteira</string>
     <string name="wallet_password_2">Palavra-passe da carteira</string>
+    <string name="wallet_setup_required_2">É preciso configurar a carteira</string>
     <string name="wallet_setup_required">É necessário configurar a carteira.</string>
     <string name="wallets">Carteiras</string>
     <string name="wallets_unavailable">Carteiras indisponíveis</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Só de leitura</string>
     <string name="which_language_is_your_backup_in">Em que idioma está a sua cópia?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Quais destes a carteira lê: nível de carteira e nível de moeda para Bitcoin, EVM, TRON ou Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Com uma frase de %1$d palavras, cada cartão mostra %2$d das %3$d palavras, e as outras %4$d podem ser deduzidas com poder de computação suficiente. Guarde cada cartão com o mesmo cuidado da frase completa, ou use uma frase de 24 palavras para cópias de segurança divididas.</string>
     <string name="word_x">Palavra %d</string>
     <string name="word_x_x">Palavra %1$d, %2$s</string>
     <string name="word_x_hidden">Palavra %d, oculta</string>

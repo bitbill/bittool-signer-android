@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Дозволена сума / ID токена NFT</string>
     <string name="also_paid_out">Також сплачується</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Завжди звіряйте перші адреси в обох застосунках, перш ніж отримувати кошти.</string>
+    <string name="ambiguous_wallet_match">Збіглося кілька гаманців</string>
     <string name="amount">Сума</string>
     <string name="amount_sol">Сума (SOL)</string>
     <string name="amount_trx">Сума (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Недійсна фраза відновлення: у ній 1 слово. Фрази відновлення мають 12, 15, 18, 21 або 24 слова.</string>
     <string name="invalid_request_format">Недійсний формат запиту.</string>
     <string name="invalid_signing_plan">Недійсний план підпису.</string>
+    <string name="invalid_signing_request">Хибний запит на підпис</string>
     <string name="invalid_signing_wallet_identity">Недійсна ідентичність гаманця-підписувача.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Він містить лише %d слів. Вашої парольної фрази BIP39 там немає; для відновлення цього гаманця потрібна також парольна фраза.</string>
     <string name="items">Позиції</string>
     <string name="ive_written_them_down_in_order">Я записав їх по порядку</string>
     <string name="keep_editing">Продовжити введення</string>
     <string name="keep_it_offline">Тримайте її офлайн</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Тримайте анімований код у кадрі · отримано частин: %d</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Зберігайте три картки в трьох різних місцях. Одна картка не містить усієї фрази, але показує дві третини слів; для фрази з 12 чи 15 слів решту можна вгадати за достатньої обчислювальної потужності, тож ховайте кожну картку.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Зберігайте ці три картки в трьох різних місцях. Будь-які дві з них відновлюють повну фразу відновлення: якщо одну картку загублено або вкрадено, дві інші зберігають ваш гаманець у безпеці й придатним до відновлення.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Зберігайте ці три картки в трьох різних місцях. Будь-які дві з них відновлюють повну фразу відновлення: якщо одну картку загублено, дві інші все одно можуть відновити ваш гаманець.</string>
@@ -354,6 +357,7 @@
     <string name="method">Метод</string>
     <string name="mint">Мінт</string>
     <string name="missing_or_invalid_transaction_commitment">Зобов’язання транзакції відсутнє або недійсне.</string>
+    <string name="missing_signer_information">Бракує відомостей про підписанта</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Збігається більш ніж один збережений гаманець. Видаліть дубльований гаманець і відскануйте ще раз.</string>
     <string name="multisig">Мультипідпис</string>
     <string name="multisig_account">Рахунок мультипідпису</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Камера недоступна. Натомість імпортуйте запит як файл.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Немає перерваного чи незіставленого запиту для повтору.</string>
     <string name="no_matching_signing_task_review_the_request_again">Немає відповідного завдання підпису. Перегляньте запит ще раз.</string>
+    <string name="no_matching_wallet">Немає відповідного гаманця</string>
     <string name="no_matching_word">Немає відповідного слова</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Рахунок nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Кількість</string>
     <string name="raw_amount">Сира сума</string>
     <string name="read_every_warning_above_before_signing">Прочитайте всі попередження вище, перш ніж підписувати.</string>
+    <string name="reading_request">Читання запиту…</string>
     <string name="reading">Читання…</string>
     <string name="rebuild_it_yourself">Зберіть його самі</string>
     <string name="receive_addresses">Адреси отримання</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Необмежений Permit</string>
     <string name="unlock">Розблокувати</string>
     <string name="unlock_to_view_your_wallets_and_activity">Розблокуйте, щоб переглянути свої гаманці та активність.</string>
+    <string name="unlock_with_x">Розблокувати за допомогою %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Розблокування застосунку ніколи не авторизує підпис.</string>
     <string name="update_account_permissions">Оновити дозволи рахунку</string>
     <string name="use_x_instead">Скористатися %s натомість</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Інформація про гаманець змінилася. Зіставте цей запит ще раз.</string>
     <string name="wallet_name">Назва гаманця</string>
     <string name="wallet_password_2">Пароль гаманця</string>
+    <string name="wallet_setup_required_2">Потрібне налаштування гаманця</string>
     <string name="wallet_setup_required">Потрібно налаштувати гаманець.</string>
     <string name="wallets">Гаманці</string>
     <string name="wallets_unavailable">Гаманці недоступні</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Лише для перегляду</string>
     <string name="which_language_is_your_backup_in">Якою мовою ваша копія?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Що з цього читає гаманець: рівень гаманця та рівень монети для Bitcoin, EVM, TRON чи Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">За фрази з %1$d слів кожна картка показує %2$d із %3$d слів, а решту %4$d можна обчислити за достатніх обчислювальних потужностей. Зберігайте кожну картку так само ретельно, як повну фразу, або візьміть фразу з 24 слів для роздільної резервної копії.</string>
     <string name="word_x">Слово %d</string>
     <string name="word_x_x">Слово %1$d, %2$s</string>
     <string name="word_x_hidden">Слово %d, приховано</string>

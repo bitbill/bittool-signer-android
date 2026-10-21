@@ -264,7 +264,7 @@ if [ -n "$IOS" ] && [ -d "$IOS/translations" ]; then
   if [ -z "$stale" ]; then
     record PASS "l10n: catalogue copies = iOS" "$(ls tools/l10n/translations/*.json | wc -l | tr -d ' ') translations + interface-strings.json byte-identical"
   else
-    record FAIL "l10n: catalogue copies = iOS" "differ from $IOS:$stale (copy them, then rerun import_ios_strings.py)"
+    record FAIL "l10n: catalogue copies = iOS" "differ from $IOS:$stale (run tools/l10n/sync-from-ios.sh)"
   fi
 else
   record WARN "l10n: catalogue copies = iOS" "$([ -n "$IOS" ] && echo "no $IOS/translations" || echo "--ios none"): catalogue copies not compared"

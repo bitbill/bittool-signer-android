@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">ตรวจพบภาพหน้าจอ</string>
     <string name="setup_qr_not_recovery_phrase">คิวอาร์โค้ดนี้ไม่มีวลีกู้คืน</string>
-    <string name="setup_weak_cards_warning">หากเป็นวลี %1$d คำ การ์ดแต่ละใบจะแสดง %2$d จาก %3$d คำ และอีก %4$d คำที่เหลืออาจถูกคำนวณหาได้หากมีกำลังประมวลผลมากพอ เก็บรักษาการ์ดทุกใบอย่างระมัดระวังเท่ากับวลีทั้งชุด หรือใช้วลี 24 คำสำหรับการสำรองแบบแบ่งการ์ด</string>
     <string name="setup_slot_empty">ว่าง</string>
     <string name="setup_slot_empty_next">ว่าง, เติมช่องนี้ถัดไป</string>
     <string name="setup_screenshot_phrase_hidden">วลีถูกซ่อนอีกครั้งแล้ว แต่ภาพหน้าจออาจมีวลีอยู่แล้ว ให้ลบออกจากแกลเลอรีและจากสำเนาที่ซิงก์ไว้ทุกชุด แล้วเก็บสำเนาที่เขียนไว้แบบออฟไลน์</string>

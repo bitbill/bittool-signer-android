@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">May na-detect na screenshot</string>
     <string name="setup_qr_not_recovery_phrase">Walang recovery phrase sa QR code na ito.</string>
-    <string name="setup_weak_cards_warning">Sa phrase na %1$d salita, ipinapakita ng bawat card ang %2$d sa %3$d salita, at maaaring makalkula ang natitirang %4$d kung sapat ang lakas ng pagkukuwenta. Bantayan ang bawat card nang kasingingat ng buong phrase, o gumamit ng phrase na 24 salita para sa hinating backup.</string>
     <string name="setup_slot_empty">Walang laman</string>
     <string name="setup_slot_empty_next">Walang laman, susunod na pupunan</string>
     <string name="setup_screenshot_phrase_hidden">Nakatago na muli ang phrase, pero posibleng nasa screenshot na ito. Burahin ito sa gallery mo at sa lahat ng naka-sync na kopya, at magtago ng nakasulat na backup nang offline.</string>

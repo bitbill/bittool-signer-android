@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "Walang recovery phrase sa QR code na ito."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "Sa phrase na %1$d salita, ipinapakita ng bawat card ang %2$d sa %3$d salita, at maaaring makalkula ang natitirang %4$d kung sapat ang lakas ng pagkukuwenta. Bantayan ang bawat card nang kasingingat ng buong phrase, o gumamit ng phrase na 24 salita para sa hinating backup."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Walang laman"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Naputol ang pagtutugma. Subukan muli."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Walang tugmang wallet"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "Walang impormasyon ng lumagda"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Tumutugma sa higit sa isang wallet"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Kailangang i-set up ang wallet"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Hindi suportadong signing protocol"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "Binabasa ang kahilingan…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Panatilihing nakikita ang animated na code · %1$d bahagi"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

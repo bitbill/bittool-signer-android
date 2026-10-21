@@ -775,7 +775,7 @@ third-party wallet round trips of DECISIONS §9.9).
   English (DECISIONS §9.2); brand names and protocol tokens `translatable="false"`.
 - Numbers through `NumberFormat` of the current locale (Arabic uses Latin digits); dates through `DateTimeFormatter`
   with the app locale.
-- `IosStrings.lookup` only knows the 773 catalogue keys. A `UiText.Ios(english)` whose English is **not** in the
+- `IosStrings.lookup` only knows the 782 catalogue keys. A `UiText.Ios(english)` whose English is **not** in the
   catalogue falls back to English, so code in a lower module that needs a translatable non-catalogue text uses
   `UiText.Resource(R.string.<area>_…)` from its own file; a feature that receives model English (e.g.
   `MatchingIssue.english`, `SigningReceipt.resultType`, `QrPayloadView.titleEnglish`) maps the known values to its
@@ -791,12 +791,12 @@ others reference that resource (all `strings_*.xml` compile into the one `com.bi
 | The 6 frame-gate messages (both purposes) | `strings_scanner.xml` (W1-scanner) | |
 | "Setup required" (null fingerprint), "Payload (Hex)", "Payload (Text)", the `QrPayloadView.summary` unit "bytes" sentence parts, "NFT contract (not verified)", "+%d more (see Details)", "Review request", profile titles (Native SegWit, Taproot, Nested SegWit, Legacy, Standard, Trust), "Account XPUB", "Address", "Ethereum & EVM", "Fingerprints are stored as 32-bit numbers: %1$s is fingerprint %2$s." | `strings_ui.xml` (W1-design) | shown by `:core:ui` components (`WalletIdentityHeader`, `PayloadDisclosure` callers, `ReviewSummaryCard`, `ProfileMenu`, `ChainPicker`); brand/protocol tokens inside them stay `translatable="false"`; product names (Taproot, Account XPUB) translatable only if the owner says so. An unknown wallet name uses the catalogue key "Wallet" |
 | "Biometric authentication was cancelled. Use a wallet password to continue." | none (debug harness English, G3) | W2-shell, not a resource |
-| "Matching interrupted. Try again.", "No matching wallet", "Missing signer information", "Ambiguous wallet match", "Wallet setup required" (no period), "Unsupported signing protocol", "Reading request…", "Keep the animated code in view · %1$d parts", "psbt_base64 is the exact PSBT…" | `strings_sign.xml` (W2-sign) | `MatchingIssue` mapping; other engine messages stay verbatim |
-| "This QR code does not contain a recovery phrase.", "Screenshot Detected", the two Android screenshot messages (DECISIONS §9.4), "%1$s: %2$s…", the weak-cards warning (positional, 4 args), "Empty", "Empty, next to fill" (verification-board values) | `strings_setup.xml` (W2-setup) | |
+| "Matching interrupted. Try again.", "Unsupported signing protocol", "psbt_base64 is the exact PSBT…" | `strings_sign.xml` (W2-sign) | `MatchingIssue` mapping. The resolver's messages ("No matching wallet", "Missing signer information", "Ambiguous wallet match", "Wallet setup required", "Invalid signing request"), "Reading request…" and "Keep the animated code in view · %d parts" are iOS catalogue keys since iOS ff2756f: engine messages are drawn through `ReviewText.phrase` (translated when the catalogue has them, else verbatim) |
+| "This QR code does not contain a recovery phrase.", "Screenshot Detected", the two Android screenshot messages (DECISIONS §9.4), "%1$s: %2$s…", "Empty", "Empty, next to fill" (verification-board values) | `strings_setup.xml` (W2-setup) | the weak-cards warning (positional, 4 args) is an iOS catalogue key since iOS ff2756f |
 | "Password changed" (toast announcement) | `strings_wallets.xml` (W2-wallets) | or reuse the key "Password Changed" |
 | "Deleted wallet", "Warnings shown", "High", "Partial signature created", "No Results for “%1$s”", "Check the spelling or try a new search.", the Distribution / Signing certificate rows | `strings_activity.xml` / `strings_settings.xml` (W2-activity-settings) | `resultType` values mapped, anything else verbatim |
 | "This document is missing from the app bundle." (`LegalDocumentParser.MISSING`) | `strings_settings.xml` (W2-activity-settings) | the repository returns the English block; the legal views map it |
-| The G7.4 App Lock set, `security_overlay_blocked` | `strings_security.xml` (W1-security) | lock-screen texts used by `:app` reference them |
+| The G7.4 App Lock set, `security_overlay_blocked` | `strings_security.xml` (W1-security) | lock-screen texts used by `:app` reference them. The catalogue's "Unlock with %s" (iOS f9092a7), "Use %s Instead" and "%s Lock" stay unused: their argument is the system's untranslated Face ID / Touch ID, and their translations are written around such a Latin name (spaces in Chinese, Japanese, Thai; Korean "(으)로"; a detached Arabic "بـ") |
 | Onboarding Android wording (page 3 body, the replaced point) | `strings_onboarding.xml` (W2-shell) | |
 
 ### 4.4 Secrets

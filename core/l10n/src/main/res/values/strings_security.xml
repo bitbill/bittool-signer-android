@@ -2,7 +2,11 @@
 <!--
     Android-only strings of :core:security (owner: W1-security). English only until the translation pass.
     The App Lock set is the single replacement set of gaps.md G7.4 for the iOS "%@"-with-Face-ID keys; lock-screen and
-    Settings texts in :app and :feature:settings reference these resources.
+    Settings texts in :app and :feature:settings reference these resources. The catalogue keys "Unlock with %s"
+    (unlock_with_x, since iOS f9092a7), "Use %s Instead" and "%s Lock" are not used: their argument is the system's
+    untranslated Face ID / Touch ID, and their translations are written around such a Latin name (spaces around it in
+    Chinese, Japanese and Thai, the Korean "(으)로", a detached Arabic "بـ"), so a translated "Biometrics" would read
+    wrong in them. Keep these fixed texts.
 -->
 <resources>
     <!-- Settings › Security toggle title (replaces the iOS "%@ Lock", G7.4). -->

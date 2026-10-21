@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">Capture d’écran détectée</string>
     <string name="setup_qr_not_recovery_phrase">Ce QR code ne contient pas de phrase de récupération.</string>
-    <string name="setup_weak_cards_warning">Avec une phrase de %1$d mots, chaque carte montre %2$d des %3$d mots, et les %4$d autres pourraient être retrouvés avec assez de puissance de calcul. Protégez chaque carte aussi soigneusement que la phrase entière, ou utilisez une phrase de 24 mots pour les sauvegardes réparties.</string>
     <string name="setup_slot_empty">Vide</string>
     <string name="setup_slot_empty_next">Vide, à remplir ensuite</string>
     <string name="setup_screenshot_phrase_hidden">La phrase est de nouveau masquée, mais la capture d’écran la contient peut-être déjà. Supprimez-la de votre galerie et de toute copie synchronisée, et conservez une sauvegarde écrite hors ligne.</string>

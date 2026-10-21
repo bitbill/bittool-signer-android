@@ -60,6 +60,7 @@ allowance_raw_units	Allowance (raw units)
 allowance_nft_token_id	Allowance / NFT token ID
 also_paid_out	Also paid out
 always_compare_the_first_addresses_in_both_apps_before	Always compare the first addresses in both apps before receiving funds.
+ambiguous_wallet_match	Ambiguous wallet match
 amount	Amount
 amount_sol	Amount (SOL)
 amount_trx	Amount (TRX)
@@ -305,12 +306,14 @@ invalid_recovery_phrase_it_has_x_words_recovery_phrases	Invalid recovery phrase:
 invalid_recovery_phrase_it_has_1_word_recovery_phrases	Invalid recovery phrase: it has 1 word. Recovery phrases have 12, 15, 18, 21 or 24 words.
 invalid_request_format	Invalid request format.
 invalid_signing_plan	Invalid signing plan.
+invalid_signing_request	Invalid signing request
 invalid_signing_wallet_identity	Invalid signing wallet identity.
 it_contains_the_x_words_only_your_bip39_passphrase_is	It contains the %lld words only. Your BIP39 passphrase is not included; restoring this wallet also needs the passphrase.
 items	Items
 ive_written_them_down_in_order	I’ve Written Them Down in Order
 keep_editing	Keep Editing
 keep_it_offline	Keep it offline
+keep_the_animated_code_in_view_x_parts	Keep the animated code in view · %lld parts
 keep_the_three_cards_in_three_different_places_one_card	Keep the three cards in three different places. One card alone does not hold the full phrase, but it shows two thirds of the words; with a 12- or 15-word phrase the rest can be guessed with enough computing power, so hide every card.
 keep_these_three_cards_in_three_different_places_any	Keep these three cards in three different places. Any two of them restore the complete recovery phrase, so if one card is lost or stolen, the other two keep your wallet safe and recoverable.
 keep_these_three_cards_in_three_different_places_any_2	Keep these three cards in three different places. Any two of them restore the complete recovery phrase, so if one card is lost, the other two can still restore your wallet.
@@ -352,6 +355,7 @@ met	Met
 method	Method
 mint	Mint
 missing_or_invalid_transaction_commitment	Missing or invalid transaction commitment.
+missing_signer_information	Missing signer information
 more_than_one_saved_wallet_matches_delete_the_duplicate	More than one saved wallet matches. Delete the duplicate wallet, then scan again.
 multisig	Multisig
 multisig_account	Multisig account
@@ -388,6 +392,7 @@ no_accounts_servers_or_cloud_sync	No accounts, servers or cloud sync
 no_camera_is_available_import_the_request_as_a_file	No camera is available. Import the request as a file instead.
 no_interrupted_or_unmatched_request_to_retry	No interrupted or unmatched request to retry.
 no_matching_signing_task_review_the_request_again	No matching signing task. Review the request again.
+no_matching_wallet	No matching wallet
 no_matching_word	No matching word
 nonce	Nonce
 nonce_account	Nonce account
@@ -462,6 +467,7 @@ qr_transfer_is_too_large	QR transfer is too large.
 quantity	Quantity
 raw_amount	Raw amount
 read_every_warning_above_before_signing	Read every warning above before signing.
+reading_request	Reading request…
 reading	Reading…
 rebuild_it_yourself	Rebuild it yourself
 receive_addresses	Receive Addresses
@@ -724,6 +730,7 @@ unknown_x	Unknown: %@
 unlimited_permit	Unlimited permit
 unlock	Unlock
 unlock_to_view_your_wallets_and_activity	Unlock to view your wallets and activity.
+unlock_with_x	Unlock with %@
 unlocking_the_app_never_authorizes_a_signature	Unlocking the app never authorizes a signature.
 update_account_permissions	Update account permissions
 use_x_instead	Use %@ Instead
@@ -747,6 +754,7 @@ wallet_password	Wallet Password
 wallet_information_changed_match_this_request_again	Wallet information changed. Match this request again.
 wallet_name	Wallet name
 wallet_password_2	Wallet password
+wallet_setup_required_2	Wallet setup required
 wallet_setup_required	Wallet setup required.
 wallets	Wallets
 wallets_unavailable	Wallets Unavailable
@@ -754,6 +762,7 @@ watch_and_sign_by_qr	Watch and sign by QR
 watch_only	Watch only
 which_language_is_your_backup_in	Which language is your backup in?
 which_of_these_the_wallet_reads_wallet_level_and_coin	Which of these the wallet reads: Wallet Level, and Coin Level for Bitcoin, EVM, TRON or Solana.
+with_a_x_word_phrase_each_card_shows_x_of_the_x_words	With a %lld-word phrase each card shows %lld of the %lld words, and the other %lld could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.
 word_x	Word %lld
 word_x_x	Word %lld, %@
 word_x_hidden	Word %lld, hidden

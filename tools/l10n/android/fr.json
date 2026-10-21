@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "Ce QR code ne contient pas de phrase de récupération."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "Avec une phrase de %1$d mots, chaque carte montre %2$d des %3$d mots, et les %4$d autres pourraient être retrouvés avec assez de puissance de calcul. Protégez chaque carte aussi soigneusement que la phrase entière, ou utilisez une phrase de 24 mots pour les sauvegardes réparties."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Vide"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Association interrompue. Réessayez."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Aucun portefeuille correspondant"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "Informations du signataire manquantes"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Correspondance de portefeuille ambiguë"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Configuration du portefeuille requise"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Protocole de signature non pris en charge"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "Lecture de la demande…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Gardez le code animé dans le cadre · %1$d parties"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

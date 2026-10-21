@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "這個 QR Code 不包含助記詞。"
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "使用 %1$d 字助記詞時，每張卡片會露出 %3$d 個字中的 %2$d 個，其餘 %4$d 個在足夠算力下可以被推算出來。請像保管完整助記詞一樣保管每一張卡片，或改用 24 字助記詞進行分拆備份。"
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "空白"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "比對已中斷。請重試。"
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "沒有相符的錢包"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "缺少簽名者資訊"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "比對到多個錢包"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "錢包需要先完成設定"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "不支援的簽名協定"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "正在讀取請求…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "請讓動態 QR Code 保持在畫面內 · %1$d 個影格"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

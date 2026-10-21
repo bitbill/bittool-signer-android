@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">İzin verilen tutar / NFT token kimliği</string>
     <string name="also_paid_out">Ayrıca ödenen</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Para almadan önce her iki uygulamadaki ilk adresleri mutlaka karşılaştırın.</string>
+    <string name="ambiguous_wallet_match">Birden fazla cüzdan eşleşti</string>
     <string name="amount">Tutar</string>
     <string name="amount_sol">Tutar (SOL)</string>
     <string name="amount_trx">Tutar (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Geçersiz kurtarma ifadesi: 1 kelime içeriyor. Kurtarma ifadeleri 12, 15, 18, 21 veya 24 kelimeden oluşur.</string>
     <string name="invalid_request_format">Geçersiz istek biçimi.</string>
     <string name="invalid_signing_plan">Geçersiz imzalama planı.</string>
+    <string name="invalid_signing_request">Geçersiz imza isteği</string>
     <string name="invalid_signing_wallet_identity">Geçersiz imzalayan cüzdan kimliği.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Yalnızca %d kelimeyi içerir. BIP39 parolanız dâhil değildir; bu cüzdanı geri getirmek için parola da gerekir.</string>
     <string name="items">Kalemler</string>
     <string name="ive_written_them_down_in_order">Sırayla yazdım</string>
     <string name="keep_editing">Düzenlemeyi sürdür</string>
     <string name="keep_it_offline">Çevrimdışı tutun</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Animasyonlu kodu kadrajda tutun · %d parça</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Üç kartı üç farklı yerde saklayın. Tek bir kart ifadenin tamamını içermez ama kelimelerin üçte ikisini gösterir; 12 veya 15 kelimelik bir ifadede geri kalanı yeterli işlem gücüyle tahmin edilebilir, bu yüzden her kartı saklayın.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Bu üç kartı üç farklı yerde saklayın. Herhangi ikisi tam kurtarma ifadesini geri getirir; bir kart kaybolur veya çalınırsa diğer ikisi cüzdanınızı güvende ve kurtarılabilir tutar.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Bu üç kartı üç farklı yerde saklayın. Herhangi ikisi tam kurtarma ifadesini geri getirir; bir kart kaybolursa diğer ikisi yine de cüzdanınızı geri getirebilir.</string>
@@ -354,6 +357,7 @@
     <string name="method">Yöntem</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">İşlem taahhüdü eksik veya geçersiz.</string>
+    <string name="missing_signer_information">İmzalayan bilgisi eksik</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Birden fazla kayıtlı cüzdan eşleşiyor. Yinelenen cüzdanı silip yeniden tarayın.</string>
     <string name="multisig">Çoklu imza</string>
     <string name="multisig_account">Çoklu imza hesabı</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Kullanılabilir kamera yok. Bunun yerine isteği dosya olarak içe aktarın.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Yeniden denenecek, yarıda kalmış veya eşleşmemiş bir istek yok.</string>
     <string name="no_matching_signing_task_review_the_request_again">Eşleşen bir imzalama görevi yok. İsteği yeniden inceleyin.</string>
+    <string name="no_matching_wallet">Eşleşen cüzdan yok</string>
     <string name="no_matching_word">Eşleşen kelime yok</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Nonce hesabı</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Miktar</string>
     <string name="raw_amount">Ham tutar</string>
     <string name="read_every_warning_above_before_signing">İmzalamadan önce yukarıdaki tüm uyarıları okuyun.</string>
+    <string name="reading_request">İstek okunuyor…</string>
     <string name="reading">Okunuyor…</string>
     <string name="rebuild_it_yourself">Kendiniz yeniden derleyin</string>
     <string name="receive_addresses">Alma adresleri</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Sınırsız Permit</string>
     <string name="unlock">Kilidi aç</string>
     <string name="unlock_to_view_your_wallets_and_activity">Cüzdanlarınızı ve etkinliğinizi görmek için kilidi açın.</string>
+    <string name="unlock_with_x">%s ile kilidi aç</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Uygulamanın kilidini açmak hiçbir zaman bir imzayı yetkilendirmez.</string>
     <string name="update_account_permissions">Hesap izinlerini güncelle</string>
     <string name="use_x_instead">Bunun yerine %s kullan</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Cüzdan bilgisi değişti. Bu isteği yeniden eşleştirin.</string>
     <string name="wallet_name">Cüzdan adı</string>
     <string name="wallet_password_2">Cüzdan parolası</string>
+    <string name="wallet_setup_required_2">Önce cüzdanı kurmanız gerekiyor</string>
     <string name="wallet_setup_required">Cüzdan kurulumu gerekiyor.</string>
     <string name="wallets">Cüzdanlar</string>
     <string name="wallets_unavailable">Cüzdanlar kullanılamıyor</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Yalnızca izleme</string>
     <string name="which_language_is_your_backup_in">Yedeğiniz hangi dilde?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Cüzdanın bunlardan hangilerini okuduğu: cüzdan düzeyi ve Bitcoin, EVM, TRON ya da Solana için coin düzeyi.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">%1$d kelimelik bir ifadede her kart %3$d kelimenin %2$d tanesini gösterir, kalan %4$d kelime ise yeterli işlem gücüyle bulunabilir. Her kartı tam ifade kadar dikkatli saklayın ya da bölünmüş yedekler için 24 kelimelik bir ifade kullanın.</string>
     <string name="word_x">Kelime %d</string>
     <string name="word_x_x">Kelime %1$d, %2$s</string>
     <string name="word_x_hidden">Kelime %d, gizli</string>

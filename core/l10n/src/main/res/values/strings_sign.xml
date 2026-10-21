@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Strings of :feature:sign (owner: W2-sign). English only until the translation pass (DECISIONS §9.2).
-  The first group is iOS English that is not in the 773-key catalogue (gaps.md G6; ARCHITECTURE §4.3 table): iOS draws
-  it untranslated, the Android port translates it. Engine messages other than these stay verbatim.
+  The first group is iOS English that is not in the iOS catalogue (gaps.md G6; ARCHITECTURE §4.3 table): iOS draws it
+  untranslated, the Android port translates it. The resolver's matching messages, "Reading request…" and "Keep the
+  animated code in view · %d parts" joined the iOS catalogue (iOS ff2756f) and are its resources now: never add them
+  here again.
 -->
 <resources>
     <!-- MatchingIssue.Interrupted (AppStore.swift:92): the session was suspended while the request was being matched. -->
     <string name="sign_matching_interrupted">Matching interrupted. Try again.</string>
-    <!-- resolveSigningPlan status messages (engine/src/resolver.js; RequestReviewView.swift:140-148). No period on purpose. -->
-    <string name="sign_no_matching_wallet">No matching wallet</string>
-    <string name="sign_missing_signer_information">Missing signer information</string>
-    <string name="sign_ambiguous_wallet_match">Ambiguous wallet match</string>
-    <string name="sign_wallet_setup_required">Wallet setup required</string>
     <!-- MatchingIssue.Unsupported (AppStore.swift:373): the engine review did not set canSign. -->
     <string name="sign_unsupported_signing_protocol">Unsupported signing protocol</string>
-    <!-- ScanSession.status (ScanTab.swift:20-24): the first frame is being read; an animated code with %1$d parts so far. -->
-    <string name="sign_reading_request">Reading request…</string>
-    <string name="sign_keep_animated_code_in_view">Keep the animated code in view · %1$d parts</string>
     <!-- Signature result payload note for a PSBT response (SignatureResultView.swift:81). psbt_base64 and decoded are JSON keys. -->
     <string name="sign_psbt_payload_note">psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.</string>
 

@@ -308,7 +308,11 @@ private fun NoUnlockPathCard(state: AppLockUiState, onContinue: () -> Unit, onBl
     }
 }
 
-/** "Unlock with Biometrics" and "Use a Wallet Password" (AppLockView.swift:47-64). */
+/**
+ * "Unlock with Biometrics" and "Use a Wallet Password" (AppLockView.swift:47-64). The button is the G7.4 text, not the
+ * catalogue's "Unlock with %@" (iOS f9092a7): that key's argument is the system's untranslated Face ID / Touch ID, and
+ * several of its translations only read right around such a Latin name (strings_security.xml).
+ */
 @Composable
 private fun BiometricActions(state: AppLockUiState, onBiometrics: () -> Unit, onUsePassword: () -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {

@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Batas yang diizinkan / ID token NFT</string>
     <string name="also_paid_out">Juga dibayarkan</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Selalu bandingkan alamat pertama di kedua aplikasi sebelum menerima dana.</string>
+    <string name="ambiguous_wallet_match">Beberapa dompet cocok</string>
     <string name="amount">Jumlah</string>
     <string name="amount_sol">Jumlah (SOL)</string>
     <string name="amount_trx">Jumlah (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Frasa pemulihan tidak valid: berisi 1 kata. Frasa pemulihan terdiri dari 12, 15, 18, 21, atau 24 kata.</string>
     <string name="invalid_request_format">Format permintaan tidak valid.</string>
     <string name="invalid_signing_plan">Rencana penandatanganan tidak valid.</string>
+    <string name="invalid_signing_request">Permintaan tanda tangan tidak valid</string>
     <string name="invalid_signing_wallet_identity">Identitas dompet penanda tangan tidak valid.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Isinya hanya %d kata itu. Frasa sandi BIP39 Anda tidak disertakan; memulihkan dompet ini juga memerlukan frasa sandi tersebut.</string>
     <string name="items">Item</string>
     <string name="ive_written_them_down_in_order">Saya sudah menuliskannya berurutan</string>
     <string name="keep_editing">Lanjut mengetik</string>
     <string name="keep_it_offline">Simpan secara luring</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Jaga kode animasi tetap dalam bingkai · %d bagian</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Simpan ketiga kartu di tiga tempat berbeda. Satu kartu saja tidak memuat seluruh frasa, tetapi menampilkan dua pertiga kata; pada frasa 12 atau 15 kata, sisanya bisa ditebak dengan daya komputasi yang cukup, jadi sembunyikan setiap kartu.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Simpan ketiga kartu ini di tiga tempat berbeda. Dua kartu mana pun memulihkan frasa pemulihan lengkap, jadi jika satu kartu hilang atau dicuri, dua kartu lainnya menjaga dompet Anda tetap aman dan bisa dipulihkan.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Simpan ketiga kartu ini di tiga tempat berbeda. Dua kartu mana pun memulihkan frasa pemulihan lengkap, jadi jika satu kartu hilang, dua kartu lainnya masih bisa memulihkan dompet Anda.</string>
@@ -354,6 +357,7 @@
     <string name="method">Metode</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Komitmen transaksi tidak ada atau tidak valid.</string>
+    <string name="missing_signer_information">Informasi penanda tangan tidak ada</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Lebih dari satu dompet tersimpan yang cocok. Hapus dompet gandanya, lalu pindai lagi.</string>
     <string name="multisig">Multitanda tangan</string>
     <string name="multisig_account">Akun multitanda tangan</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Tidak ada kamera yang tersedia. Impor permintaan sebagai berkas saja.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Tidak ada permintaan yang terputus atau belum cocok untuk dicoba lagi.</string>
     <string name="no_matching_signing_task_review_the_request_again">Tidak ada tugas penandatanganan yang cocok. Tinjau permintaannya lagi.</string>
+    <string name="no_matching_wallet">Tidak ada dompet yang cocok</string>
     <string name="no_matching_word">Tidak ada kata yang cocok</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Akun nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Kuantitas</string>
     <string name="raw_amount">Jumlah mentah</string>
     <string name="read_every_warning_above_before_signing">Baca semua peringatan di atas sebelum menandatangani.</string>
+    <string name="reading_request">Membaca permintaan…</string>
     <string name="reading">Membaca…</string>
     <string name="rebuild_it_yourself">Bangun ulang sendiri</string>
     <string name="receive_addresses">Alamat penerimaan</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit tanpa batas</string>
     <string name="unlock">Buka kunci</string>
     <string name="unlock_to_view_your_wallets_and_activity">Buka kunci untuk melihat dompet dan aktivitas Anda.</string>
+    <string name="unlock_with_x">Buka dengan %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Membuka kunci aplikasi tidak pernah mengizinkan sebuah tanda tangan.</string>
     <string name="update_account_permissions">Perbarui izin akun</string>
     <string name="use_x_instead">Gunakan %s saja</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Informasi dompet berubah. Cocokkan permintaan ini lagi.</string>
     <string name="wallet_name">Nama dompet</string>
     <string name="wallet_password_2">Kata sandi dompet</string>
+    <string name="wallet_setup_required_2">Dompet perlu disiapkan dulu</string>
     <string name="wallet_setup_required">Dompet perlu disiapkan.</string>
     <string name="wallets">Dompet</string>
     <string name="wallets_unavailable">Dompet tidak tersedia</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Pantau saja</string>
     <string name="which_language_is_your_backup_in">Cadangan Anda dalam bahasa apa?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Yang mana yang bisa dibaca dompet: level dompet, dan level koin untuk Bitcoin, EVM, TRON, atau Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Pada frasa %1$d kata, tiap kartu menampilkan %2$d dari %3$d kata, dan %4$d sisanya bisa dihitung dengan daya komputasi yang cukup. Jaga setiap kartu secermat frasa lengkapnya, atau pakai frasa 24 kata untuk cadangan terbagi.</string>
     <string name="word_x">Kata %d</string>
     <string name="word_x_x">Kata %1$d, %2$s</string>
     <string name="word_x_hidden">Kata %d, tersembunyi</string>

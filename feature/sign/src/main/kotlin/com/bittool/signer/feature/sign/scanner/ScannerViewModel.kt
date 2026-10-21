@@ -43,12 +43,13 @@ data class ScannerUiState(
 ) {
     /**
      * iOS `ScanSession.status`: "Reading request…" while the first frame is read, "Keep the animated code in view · n
-     * parts" while an animated code is incomplete, else null (the scanner shows its hint).
+     * parts" while an animated code is incomplete, else null (the scanner shows its hint). Both are iOS catalogue
+     * strings (iOS ff2756f localizes them; they used to be drawn verbatim).
      */
     val status: UiText?
         get() = when {
-            processing && received == 1 -> UiText.Resource(R.string.sign_reading_request)
-            received > 1 && progress < 1.0 -> UiText.Resource(R.string.sign_keep_animated_code_in_view, listOf(received))
+            processing && received == 1 -> UiText.Resource(R.string.reading_request)
+            received > 1 && progress < 1.0 -> UiText.Resource(R.string.keep_the_animated_code_in_view_x_parts, listOf(received))
             else -> null
         }
 }

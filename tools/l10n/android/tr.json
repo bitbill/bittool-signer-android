@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "Bu QR kodu bir kurtarma ifadesi içermiyor."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "%1$d kelimelik bir ifadede her kart %3$d kelimenin %2$d tanesini gösterir; kalan %4$d kelime yeterli işlem gücüyle bulunabilir. Her kartı tam ifade kadar özenle koruyun ya da bölünmüş yedekler için 24 kelimelik bir ifade kullanın."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Boş"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Eşleştirme yarıda kesildi. Tekrar deneyin."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Eşleşen cüzdan yok"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "İmzacı bilgisi eksik"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Belirsiz cüzdan eşleşmesi"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Cüzdan kurulumu gerekiyor"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Desteklenmeyen imzalama protokolü"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "İstek okunuyor…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Hareketli kodu kadrajda tutun · %1$d parça"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

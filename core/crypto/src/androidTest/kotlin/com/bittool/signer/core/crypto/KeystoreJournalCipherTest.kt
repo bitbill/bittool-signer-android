@@ -12,15 +12,18 @@ import javax.crypto.KeyGenerator
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
  * `receipts.bin` sealing (DECISIONS.md §9.3): `"BTSR" ‖ 0x01 ‖ iv ‖ ciphertext ‖ tag` under the Keystore key
- * `com.bittool.signer.activity.v1`, created on the first seal and never replaced. The test policy omits
- * `setUnlockedDeviceRequired` because the shared emulator has no lock screen (see KeystoreDeviceKeyStoreTest).
+ * `com.bittool.signer.activity.v1`, created on the first seal and replaced only when it is provably lost
+ * (ARCHITECTURE §6 item 19, QA L1). The test policy omits `setUnlockedDeviceRequired` because the shared emulator has
+ * no lock screen (see KeystoreDeviceKeyStoreTest).
  */
 @RunWith(AndroidJUnit4::class)
 class KeystoreJournalCipherTest {
@@ -56,17 +59,53 @@ class KeystoreJournalCipherTest {
         assertThrows(VaultError.AuthenticationFailed::class.java) { cipher.open(sealed.copyOf(32)) }
     }
 
+    /**
+     * QA L1 (ARCHITECTURE §6 item 19) on a real Keystore. Removing the screen lock deletes the journal key; here the test
+     * deletes it, so it is absent while Keystore answers, which `KeystoreLossProof` proves. The old ciphertext stays
+     * unreadable for good, and a fresh key is created only on that proof, through `discardLostKey` (the path
+     * `ReceiptRepository.startOverIfKeyLost` takes). A usable key is never "lost".
+     */
     @Test
-    fun aLostKeyReadsAsUnreadableAndIsNotSilentlyReplaced() {
+    fun aLostKeyLeavesItsJournalUnreadableAndIsReplacedOnlyOnTheProof() {
+        val journal = "[]".encodeToByteArray()
         val cipher = KeystoreJournalCipher(policy)
-        val sealed = cipher.seal("[]".encodeToByteArray())
+        val sealed = cipher.seal(journal)
+        assertFalse("a usable key is not lost", cipher.discardLostKey())
+        assertArrayEquals(journal, cipher.open(sealed))
+
         removeKey()
         assertThrows(VaultError.AuthenticationFailed::class.java) { cipher.open(sealed) }
-        // This process used the key: a missing key now means loss (or a flaky Keystore), never "first use".
-        assertThrows(VaultError.DeviceKeyUnavailable::class.java) { cipher.seal("[]".encodeToByteArray()) }
-        // A new process (e.g. after "Clear Activity") starts a new journal key.
+        assertTrue("absent while Keystore answers: proven lost", cipher.discardLostKey())
+        assertFalse("the proof creates nothing under the alias", keystore().containsAlias(SignerFiles.RECEIPTS_KEY_ALIAS))
+        assertThrows(VaultError.AuthenticationFailed::class.java) { cipher.open(sealed) }
+
+        // The next journal is sealed under a new key, readable in this process and the next one.
+        val fresh = cipher.seal(journal)
+        assertTrue(keystore().containsAlias(SignerFiles.RECEIPTS_KEY_ALIAS))
+        assertArrayEquals(journal, cipher.open(fresh))
+        assertArrayEquals(journal, KeystoreJournalCipher(policy).open(fresh))
+        assertThrows(VaultError.AuthenticationFailed::class.java) { cipher.open(sealed) }
+        assertFalse("the new key is usable", cipher.discardLostKey())
+    }
+
+    /**
+     * The seal itself replaces a key this process used only when the same proof shows it gone. A real Keystore cannot be
+     * made to read a working key as missing (the API 26–30 binder flakiness) or to stop answering; JournalKeyLossTest
+     * covers those with the JVM stand-in, where the seal then fails with `DeviceKeyUnavailable`. Here the key is
+     * provably absent, so the seal creates the new key, and what the lost key sealed never opens again.
+     */
+    @Test
+    fun aKeyThisProcessUsedIsCreatedAgainBySealOnlyOnTheProof() {
+        val journal = "[]".encodeToByteArray()
+        val cipher = KeystoreJournalCipher(policy)
+        val sealed = cipher.seal(journal)
+        removeKey()
+        val fresh = cipher.seal(journal)
+        assertArrayEquals(journal, cipher.open(fresh))
+        assertThrows(VaultError.AuthenticationFailed::class.java) { cipher.open(sealed) }
+        // A new process (e.g. after "Clear Activity") reads the new journal and still not the old one.
         val next = KeystoreJournalCipher(policy)
-        assertArrayEquals("[]".encodeToByteArray(), next.open(next.seal("[]".encodeToByteArray())))
+        assertArrayEquals(journal, next.open(fresh))
         assertThrows(VaultError.AuthenticationFailed::class.java) { next.open(sealed) }
     }
 
@@ -77,6 +116,9 @@ class KeystoreJournalCipherTest {
             generateKey()
         }
         val cipher = KeystoreJournalCipher(policy)
+        assertThrows(VaultError.DeviceKeyUnavailable::class.java) { cipher.seal("[]".encodeToByteArray()) }
+        // The cipher has no usable key under the alias, but that is no proven loss: nothing is discarded or replaced.
+        assertFalse(cipher.discardLostKey())
         assertThrows(VaultError.DeviceKeyUnavailable::class.java) { cipher.seal("[]".encodeToByteArray()) }
         assertEquals("HmacSHA256", keystore().getKey(SignerFiles.RECEIPTS_KEY_ALIAS, null).algorithm)
     }

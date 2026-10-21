@@ -37,7 +37,9 @@ import kotlinx.serialization.json.JsonObject
  * Errors (DECISIONS.md §9.2, gaps.md G6):
  * - `SignerException`s (`AppIssue`, `VaultError`, `Bip39Error`) carry their UI text.
  * - `EngineException`s authored by the **engine** (resolver, protocol and parser messages) propagate unchanged and are
- *   shown verbatim (`Throwable.toUiText()` → `UiText.Verbatim`), exactly like iOS.
+ *   shown verbatim (`Throwable.toUiText()` → `UiText.Verbatim`), exactly like iOS. The review's match error
+ *   (`MatchingIssue.Failure`, like `MatchingIssue.Engine`) draws that English through `ReviewText.phrase`, as iOS does
+ *   since ff2756f, so the messages the catalogue has appear translated.
  * - `EngineException`s authored by the **Kotlin host** (`:core:engine` — matched by exact code *and* English message:
  *   ENGINE_MISSING "The bundled signing engine is unavailable. Reinstall BitTool Signer.", ENGINE_INVALID "The bundled
  *   signing engine could not be loaded.", ENGINE_UNAVAILABLE "The offline signing engine could not be started.",

@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">Виявлено знімок екрана</string>
     <string name="setup_qr_not_recovery_phrase">Цей QR-код не містить фрази відновлення.</string>
-    <string name="setup_weak_cards_warning">Для фрази з %1$d слів кожна картка показує %2$d з %3$d слів, а решту %4$d можна вгадати за достатньої обчислювальної потужності. Бережіть кожну картку так само ретельно, як повну фразу, або використовуйте для розділених копій фразу з 24 слів.</string>
     <string name="setup_slot_empty">Порожньо</string>
     <string name="setup_slot_empty_next">Порожньо, заповнюється наступним</string>
     <string name="setup_screenshot_phrase_hidden">Фразу знову приховано, але знімок екрана вже може її містити. Видаліть його з галереї та з усіх синхронізованих копій, а письмову копію тримайте офлайн.</string>

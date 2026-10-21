@@ -109,7 +109,7 @@ private fun MatchingIssueBox(issue: MatchingIssue, state: RequestReviewUiState, 
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             FirstLineIcon(SignerIcons.DangerousFilled, colors.danger, messageStyle)
-            // Engine English stays in its own direction inside a right-to-left interface.
+            // Engine English the catalogue does not translate keeps its own direction in a right-to-left interface.
             Text(issue.message(), style = messageStyle.contentDirection(), color = colors.dangerOnTint)
         }
         Text(stringResource(issue.explanation.res), style = typography.footnote, color = colors.secondaryLabel)
