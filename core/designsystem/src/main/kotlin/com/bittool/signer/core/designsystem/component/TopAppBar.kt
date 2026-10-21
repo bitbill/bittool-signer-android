@@ -5,6 +5,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.headingLineBreaks
+import com.bittool.signer.core.designsystem.theme.phraseBreakable
 import com.bittool.signer.core.l10n.R
 
 /** The leading navigation affordance of [SignerTopAppBar]. */
@@ -60,9 +63,10 @@ object NavIconTags {
  * The page bar (iOS `.navigationTitle` + toolbar): Material 3 `TopAppBar` on the page colour, a large title for tab
  * roots ([large], iOS large titles: `largeTitle` 34 / 41 bold, collapsing into the 17 sp semibold inline title) and an
  * inline `headline` title otherwise. The large bar grows with the font scale so its title is never clipped, and allows
- * a second line at accessibility text sizes. Scrolled content lifts the bar to `surfaceContainerHigh` (light) /
- * `card` (dark) through [scrollBehavior]. [actions] hold `TextAction`s and icon buttons; [navigation] decides the
- * leading icon, [onNavigate] handles it.
+ * a second line at accessibility text sizes, broken like a heading: balanced, and between phrases in Japanese and
+ * Korean, also below API 33 (`headingLineBreaks`, `phraseBreakable`; QA regression-13). Scrolled content lifts the bar
+ * to `surfaceContainerHigh` (light) / `card` (dark) through [scrollBehavior]. [actions] hold `TextAction`s and icon
+ * buttons; [navigation] decides the leading icon, [onNavigate] handles it.
  *
  * The navigation icon carries the test tag [navigationTag] (default [NavIcon.testTag]: `nav.back` / `nav.close`), is
  * read as [navigationLabel] (default "Back" / "Close"; the first setup step's cross says "Cancel") and ignores taps
@@ -118,8 +122,10 @@ fun SignerTopAppBar(
         ) {
             LargeTopAppBar(
                 title = {
+                    // Called for the expanded and the collapsed row, each with its own text style.
                     Text(
-                        text = title,
+                        text = phraseBreakable(title),
+                        style = LocalTextStyle.current.headingLineBreaks(),
                         maxLines = lines,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.semantics { heading() },

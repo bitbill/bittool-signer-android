@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -62,6 +61,7 @@ import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.monospacedDigit
 import com.bittool.signer.core.designsystem.theme.semibold
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AccountProfiles
 import kotlinx.coroutines.coroutineScope
@@ -101,7 +101,8 @@ object AddressIndexInput {
  * `m/44'/195'/0'/0/<index>` (caption, monospaced, secondary; read as "Derivation path …"). Any index 0…2,147,483,647:
  * see [AddressIndexInput]. The field always shows the exported index — the stepper updates it while editing, and losing
  * focus rewrites it (`007` → `7`, empty → the index). The label sits above the controls at accessibility text sizes
- * and whenever it would not fit beside them on one line. The keyboard is a digits-only pad.
+ * and whenever it would not fit beside them on one line. The keyboard is a digits-only pad; its Done key (or Enter on a
+ * hardware keyboard) ends the editing with nothing focused.
  * Tags: `connect.tronIndex.field`, `connect.tronIndex`.
  */
 @Composable
@@ -114,7 +115,9 @@ fun AddressIndexControl(
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val stacked = SignerTheme.isAccessibilityTextSize
-    val focusManager = LocalFocusManager.current
+    // Done / Enter ends the editing with nothing focused (iOS `editing = false`), also with a hardware keyboard,
+    // where a plain clearFocus() hands the focus to the page's first control, the back arrow (QA regression-03).
+    val clearFocus = rememberClearFocus()
     val currentIndex by rememberUpdatedState(index)
     val currentOnChange by rememberUpdatedState(onIndexChange)
     val state = remember { TextFieldState(index.toString()) }
@@ -158,7 +161,7 @@ fun AddressIndexControl(
                 imeAction = ImeAction.Done,
                 autoCorrectEnabled = false,
             ),
-            onKeyboardAction = KeyboardActionHandler { focusManager.clearFocus() },
+            onKeyboardAction = KeyboardActionHandler { clearFocus() },
             lineLimits = TextFieldLineLimits.SingleLine,
             cursorBrush = SolidColor(colors.accent),
             decorator = { inner ->
