@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.modifier.keepInViewAboveBar
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
@@ -34,6 +35,10 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
  * [canScrollUnder] (typically `scrollState.canScrollForward` / `listState.canScrollForward`) draws, only then, a 12 dp
  * fade above the bar and a hairline at its top edge: the Android rendition of the iOS 26 scroll-edge effect, so
  * content visibly continues under the buttons and the bar reads as a surface only when it covers something.
+ *
+ * The bar grows with the keyboard, over content that scrolls beneath it: give that scrolling content
+ * [keepInViewAboveBar] with the scaffold's bottom padding, so a focused field and the line being typed stay visible
+ * above the bar when the keyboard opens (QA setup-02).
  */
 @Composable
 fun BottomActionBar(
