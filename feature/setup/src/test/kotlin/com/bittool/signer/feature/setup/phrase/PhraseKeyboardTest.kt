@@ -6,6 +6,7 @@ import android.content.Context
 import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.BackEventCompat
@@ -334,7 +335,8 @@ class PhraseKeyboardTest {
      * Accessibility services do not use the menu or the keys: they call the editor's own Copy and Cut actions
      * (`ACTION_COPY` / `ACTION_CUT`: TalkBack's actions menu, "copy" in Voice Access, Switch Access). With BitTool's
      * keyboard and with the system keyboard those never put recovery words on the clipboard either (ARCHITECTURE §4.4,
-     * final audit A01), and Cut deletes nothing. The Paste action still goes in.
+     * final audit A01), and Cut deletes nothing. Checked on the semantics actions and on the platform actions a service
+     * sends through the view's `AccessibilityNodeProvider`, which report the refusal. The Paste action still goes in.
      */
     @Test
     fun accessibilityCopyAndCutActionsNeverReachTheClipboard() {
@@ -352,6 +354,19 @@ class PhraseKeyboardTest {
                 compose.waitForIdle()
                 assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "${action.name} put nothing on the clipboard ($keyboard)")
                 assertEquals("legal winner", phrase(), "${action.name} deleted nothing ($keyboard)")
+            }
+            for ((name, action) in listOf("ACTION_COPY" to AccessibilityNodeInfo.ACTION_COPY, "ACTION_CUT" to AccessibilityNodeInfo.ACTION_CUT)) {
+                selectAll()
+                val id = editor.fetchSemanticsNode().id
+                val performed = compose.runOnIdle {
+                    val provider = view.accessibilityNodeProvider
+                    assertNotNull(provider.createAccessibilityNodeInfo(id), "the editor has a node a service can act on ($keyboard)")
+                    provider.performAction(id, action, null)
+                }
+                compose.waitForIdle()
+                assertFalse(performed, "$name is refused ($keyboard)")
+                assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "$name put nothing on the clipboard ($keyboard)")
+                assertEquals("legal winner", phrase(), "$name deleted nothing ($keyboard)")
             }
         }
         assertCopyAndCutRefused(PhraseKeyboard.InApp)
