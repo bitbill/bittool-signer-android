@@ -281,6 +281,7 @@ class BiometricException(kind: Kind /* Unavailable, Lockout, Failed */, text: Ui
 interface BiometricAuthenticator { fun isAvailable(): Boolean; suspend fun authenticate(prompt: BiometricPromptSpec); fun cancel() }
 enum class ScenePhase { Active, Inactive, Background }; enum class LifecycleEvent { WillEnterForeground, DidBecomeActive, WillResignActive, DidEnterBackground }
 interface AppLifecycleMonitor { val phase; val events; val isCaptured; val screenshots; val foregroundActivity; fun attach(activity: FragmentActivity) } // §15.4
+    // isCaptured = recorded (API 35+ screen-recording callback) or mirrored to another display (every API level, QA audit A03; app-shell §15.8)
 interface RecoveryPrivacySession { isRevealed; prompt; start(); stop(); reveal(): Boolean; hide(); acknowledgeWarning() }       // §13.1
 interface RecoveryScreenshotSession { warning; start(onScreenshot); stop(); acknowledge(warning) }                               // §13.2
 interface RecoverySessionFactory { fun privacySession(): RecoveryPrivacySession; fun screenshotSession(): RecoveryScreenshotSession }
@@ -365,7 +366,7 @@ W1-design must not reference `:core:scanner` symbols (parallel compile); QR-bear
 | Component (signature) | Behaviour | Replaces iOS | Used by |
 |---|---|---|---|
 | `class ZxingQrCodeEncoder @Inject constructor() : QrCodeEncoder` (Hilt `@Binds`) | ZXing, EC from `QrErrorCorrection`, margin 1, UTF-8 hint only for non-ASCII (design-system §9.5) | `QRRenderer` (QRCodeView.swift) | `:core:data` (prefetched matrices), `QrCodeView` |
-| `QrCodeView(frames: List<String>, modifier, maxSide = 320.dp, intervalMillis = 250, initial: List<QrMatrix>? = null)` | encodes all frames off-main first, nearest-neighbour draw, animated player with pause and counter, keep-screen-on while animated | `QRCodeView` (QRCodeView.swift:29) | Connect, signature, activity QR sheet, recovery QR |
+| `QrCodeView(frames: List<String>, modifier, maxSide = 320.dp, intervalMillis = 250, initial: List<QrMatrix>? = null, maxBrightness = false)` | encodes all frames off-main first, nearest-neighbour draw, animated player with pause and counter; keeps the screen on only while an animated code **plays** (encoded, not paused, screen resumed) **and the window gate is open** (`LocalWindowGateOpen`: not under App Lock or the "recorded or mirrored" cover), on its hosting window; never for a one-frame code, so the recovery QR leaves the system auto-lock to conceal it (QA audit A02); brightness only when the caller opts in | `QRCodeView` (QRCodeView.swift:29) | Connect, signature, activity QR sheet, recovery QR |
 | `QrScannerScreen(title: String, hint: String, purpose: QrScanPurpose, progress: Float?, status: String?, error: String?, onReset: () -> Unit, onClose: () -> Unit, onScan: (String) -> Unit, modifier)` | full-screen dark camera, viewfinder with progress ring, torch, status panel, Back closes, `QrScanFrameGate` inside | `QRScannerView` (QRScannerView.swift:9) | `:feature:sign` ScannerRoute, `:feature:setup` import |
 | `rememberCameraPermissionState(): CameraPermissionState` (`status: Granted/NotAsked/Denied/PermanentlyDenied`, `request()`, `openSettings()`) | runtime CAMERA flow, re-check on resume (scan-sign §23.5) | AVCaptureDevice authorization | QrScannerScreen |
 | `internal class QrFrameAnalyzer(onValues: (List<String?>) -> Unit) : ImageAnalysis.Analyzer` | Y plane, `QRCodeMultiReader`, inverted retry, strict UTF-8 (§23.3) | `metadataOutput` (QRScannerView.swift:357) | QrScannerScreen |
@@ -400,9 +401,12 @@ fun NavGraphBuilder.settingsSharedDestinations(navController: NavController) // 
 
 ```
 MainActivity (AppCompatActivity, single task)
-  onCreate: DebugUiTestHarness.configure (debug) → installSplashScreen (keep while AppAccessState.resolving)
-            → SecureWindowPolicy.apply → setHideOverlayWindows(true) (API 31+) → AppLifecycleMonitor.attach
-            → AppLocales.ensureLatinDigits → super.onCreate → setContent { SignerTheme(appearance) { Root() } }
+  attachBaseContext: AppCompatLocaleSync.keepSystemChoice (API 33+) → super.attachBaseContext
+  onCreate: DebugUiTestHarness.configure + recreateForRunLocale (debug) → installSplashScreen (keep while
+            AppAccessState.resolving) → SecureWindowPolicy.apply (FLAG_SECURE, setHideOverlayWindows(true) API 31+)
+            → AppLifecycleMonitor.attach → AppearanceController.start
+            → AppLocales.ensureLatinDigits (API < 33) → super.onCreate → AppLocales.ensureLatinDigits (API 33+)
+            → enableEdgeToEdge → setContent { SignerTheme(appearance) { Root() } }
 Root()
   layer 1  RootStages: Loading → LaunchView | Failed → LoadFailureScreen | Welcome → WelcomeScreen | Main → MainScaffold
   layer 2  SetupOverlay (when AppRouter.setup != null): OnboardingPager (showsIntroduction) → SetupFlowHost
@@ -418,6 +422,14 @@ count 0 → `selectTab(Wallets)` + `resetNavigation()`; `navigationResetEpoch` �
 `willEnterForeground()`; `onStop` (not changing configurations) → `suspendSession()` then `didEnterBackground()`.
 
 Further `:app` duties fixed here so nobody guesses:
+- `AppLocales.ensureLatinDigits` (plain `ar` → `ar-u-nu-latn`) runs on the side of `super.onCreate` where AppCompat can
+  see the per-app list (QA audit A11): below API 33 AppCompat keeps the list itself, so it runs **before**
+  `super.onCreate` and the delegate's `onCreate` applies it to this activity in place; on API 33+ AppCompat reads and
+  writes the framework list only through a live activity delegate, which `super.onCreate` registers, so it runs
+  **after** it (before, the list reads as empty), and the system relaunches the activity once; the list then holds
+  `ar-u-nu-latn`, so it cannot loop. Debug only: below API 33 the harness recreates the activity once when it was
+  attached in another language than the run's `bts.uitest.locale` (QA round 3 activity-keyboard-06), so the run's
+  language survives the first configuration change and is what AppCompat stores.
 - `WindowGate.setOpen(!showsLock && !captured)` (closed in the same frame the lock engages, reopened ~450 ms after
   unlock) and `CompositionLocalProvider(LocalWindowGateOpen provides …)` around layers 1, 2 and 4 — **not** around the
   lock window's content. `LocalTokenIconSource` (Hilt `TokenIconSource`) at the root.
@@ -831,12 +843,12 @@ chevrons, LTR for addresses and hex). Test tags = the iOS `accessibilityIdentifi
 |---|---|---|
 | :core:common | `DispatchersModule`, `ClockModule`, `StorageModule`, `UiTestEnvironmentModule` | dispatchers, `@ApplicationScope`, `MonotonicClock`, `WallClock`, `@SignerDataDir File`, `Optional<UiTestEnvironment>` |
 | :core:engine | `EngineModule` (exists) | `SignerEngine` (needs `@Named(ENGINE_TEST_OPERATIONS) Boolean` from :app); `EngineCalls` by `@Inject` |
-| :core:crypto | `CryptoModule` | `WalletVault`, `DeviceKeyStore`, `Optional<@UiTestOverride DeviceKeyStore>`, `JournalCipher`, `Bip39`, `Bip39Seed`, `SecureRandomSource` |
+| :core:crypto | `CryptoModule` | `WalletVault`, `DeviceKeyStore`, `Optional<@UiTestOverride DeviceKeyStore>`, `JournalCipher`, `Optional<@UiTestOverride JournalCipher>`, `Bip39`, `Bip39Seed`, `SecureRandomSource` |
 | :core:data | `DataModule` | `SignerStore`, `SignerPreferences`, `PublicWalletRepository`, `ReceiptRepository`, `ReferenceDataRepository`, `LegalDocumentRepository`, `TokenIconSource` |
 | :core:security | `SecurityModule` | `AppAccessController`, `BiometricAuthenticator`, `Optional<@UiTestOverride BiometricAuthenticator>`, `AppLifecycleMonitor`, `RecoverySessionFactory`, `LockWindowController`, `WindowGate`, `SecureWindowPolicy` |
 | :core:scanner | `ScannerModule` | `QrCodeEncoder` |
 | :core:navigation | none | `AppRouter` (`@ActivityRetainedScoped @Inject`) |
-| :app | `AppModule` (+ `DebugUiTestModule` in `src/debug`) | `BuildInfo`, `@Named(ENGINE_TEST_OPERATIONS)`; debug: `UiTestEnvironment`, `@UiTestOverride DeviceKeyStore`, `@UiTestOverride BiometricAuthenticator` |
+| :app | `AppModule` (+ `DebugUiTestModule` in `src/debug`) | `BuildInfo`, `@Named(ENGINE_TEST_OPERATIONS)`; debug: `UiTestEnvironment`, `@UiTestOverride DeviceKeyStore`, `@UiTestOverride JournalCipher`, `@UiTestOverride BiometricAuthenticator` |
 
 ---
 
@@ -929,7 +941,9 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
       then records a one-time notice (`receipts.restarted`, no data) and removes the journal nobody can open, so the
       next record seals under a new key. `SignerState.activityRestarted` shows "Activity Started Again" until "OK"
       (`acknowledgeActivityRestart`). A journal whose key is not provably gone keeps the iOS behaviour (unreadable,
-      alert, never overwritten silently).
+      alert, never overwritten silently). Debug: `bts.uitest.loseJournalKey` (`tools/qa/ui.py launch
+      --lose-journal-key`) loses a harness run's journal key the same way, so the notice is reachable on an emulator
+      (QA round 3 activity-keyboard-07); `bts.uitest.unreadableJournal` keeps the key and shows the unreadable state.
     - **App Lock (L2):** `AppAccessController.hasNoUnlockPath` is true only while locked, with no strong biometric, and
       when the vault lists ≥ 1 wallet and proves every device key lost; the lock screen then explains it and offers
       "Continue Without App Lock", which proves it again and turns App Lock off (persisted). A wrong password, an

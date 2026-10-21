@@ -288,7 +288,23 @@ class UiToolTest(unittest.TestCase):
         self.assertNotIn('bts.uitest.reset', start)
 
     def test_a_plain_launch_leaves_the_journal_alone(self):
-        self.assertNotIn('bts.uitest.unreadableJournal', self.launch('--fixtures', '1'))
+        start = self.launch('--fixtures', '1')
+        self.assertNotIn('bts.uitest.unreadableJournal', start)
+        self.assertNotIn('bts.uitest.loseJournalKey', start)
+
+    def test_lose_journal_key_asks_the_harness_to_lose_the_activity_journal_key(self):
+        # QA round 3 activity-keyboard-07: the way to Activity's restart notice ("Activity Started Again").
+        start = self.launch('--fixtures', '1', '--lose-journal-key')
+        self.assertEqual('--ez', start[start.index('bts.uitest.loseJournalKey') - 1])
+        self.assertEqual('true', start[start.index('bts.uitest.loseJournalKey') + 1])
+        self.assertIn('bts.uitest.reset', start, 'a fresh run works: the harness gives it a journal the lost key sealed')
+        self.assertNotIn('bts.uitest.unreadableJournal', start)
+        # With --keep: the previous run's records are what the loss takes; the wallet keys are kept.
+        start = self.launch('--keep', '--lose-journal-key', run_id='11111111-2222-3333-4444-555555555555')
+        self.assertEqual('11111111-2222-3333-4444-555555555555', start[start.index('bts.uitest.run') + 1])
+        self.assertEqual('true', start[start.index('bts.uitest.loseJournalKey') + 1])
+        self.assertNotIn('bts.uitest.reset', start)
+        self.assertNotIn('bts.uitest.loseDeviceKeys', start)
 
     def test_long_text_is_typed_in_short_quoted_chunks(self):
         fake = self.fake([])

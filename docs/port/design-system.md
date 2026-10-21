@@ -878,7 +878,12 @@ Implementation notes per component
   circle (`pause`/`play_arrow`) in a 48 dp target, `LinearProgressIndicator` 140 dp, counter caption tabular LTR with fixed
   width of "n/n"; 14 dp gap. Timer: `LaunchedEffect(frames, ready, paused) { while (true) { delay(250); index = (index+1) % n } }`.
   TalkBack: announce "Animated QR code, part %lld of %lld" only while paused (Ownbit improvement; iOS changes it 4×/s).
-  Optional Android polish: `FLAG_KEEP_SCREEN_ON` while an animated code is visible (no brightness boost — iOS has none).
+  Android polish (decided, QA audit A02): `FLAG_KEEP_SCREEN_ON` on the hosting window (the sheet's own window inside a
+  bottom sheet, reference-counted) **only while an animated code plays**: encoded, not paused, screen resumed, and the
+  window gate open (`LocalWindowGateOpen`: not under App Lock or the "recorded or mirrored" cover). Never for a one-frame
+  code, which includes the recovery-phrase QR: iOS never disables its idle timer, and the system auto-lock is what
+  conceals an unattended code and starts the App Lock clock. No brightness boost unless a caller opts in
+  (`maxBrightness`; iOS has none).
 - **PayloadDisclosure**: `Column(spacedBy(10.dp))`, `Row` toggle with `chevron_right` (auto-mirrored) rotating via
   `animateFloatAsState(if (expanded) 90f else 0f, spring(dampingRatio = 0.85f, stiffness = 632f))`, `AnimatedVisibility(expandVertically)`;
   `stateDescription` "Shown"/"Hidden"; numbers formatted with `NumberFormat.getIntegerInstance(locale)`; insert U+200B exactly as §5.13;
@@ -1022,8 +1027,11 @@ SF Symbol → Material Symbol (used by shared components and chrome):
 ### 9.10 Privacy cover / capture (visual side only; mechanism decided by the security spec)
 - Cover content = `LaunchView(captured)`. The recents thumbnail cannot be reliably replaced by drawing in `onPause`; use
   `FLAG_SECURE` and/or `Activity.setRecentsScreenshotEnabled(false)` (API 33) — the placeholder then shows `launch_background`.
-- Captured state: Android 15 `WindowManager.addScreenRecordingCallback` (API 35) → show the "Hidden while your screen is recorded
-  or mirrored" line; `FLAG_SECURE` already blanks casting/recording on secure-surface-aware paths.
+- Captured state = recorded **or mirrored** (iOS `UIScreen.isCaptured`; app-shell §15.8): mirroring to another display on
+  every API level (a `DisplayManager` listener, QA audit A03), recording through Android 15's
+  `WindowManager.addScreenRecordingCallback` (API 35+) → show the "Hidden while your screen is recorded or mirrored" line.
+  `FLAG_SECURE` blanks screenshots, recordings and casts, but not a *secure* external display (HDMI, USB-C, HDCP
+  Miracast), which is why mirroring counts as captured.
 
 ### 9.11 Motion and haptics implementation
 - `SignerMotion` object: `fun <T> smooth(seconds: Double)`, `fun <T> snappy(seconds: Double)` built with Ownbit's

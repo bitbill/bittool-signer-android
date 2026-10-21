@@ -25,12 +25,22 @@ import javax.crypto.spec.SecretKeySpec
  * journal); [open] reports a bad tag, an unknown magic or version, a truncated file and a missing key as
  * [VaultError.AuthenticationFailed]. Debug builds only, and only while a run is active (`DebugUiTestModule`); the
  * release check `check<Variant>HasNoHarness` fails a release that still contains it.
+ *
+ * Lost key (QA round 3 activity-keyboard-07, the harness side of QA L1): unlike a wallet key, an absent journal key
+ * file is normal (a run that has not signed yet), so absence alone proves nothing. A key is provably lost only while
+ * the loss record `journal.key.lost` that [loseKey] writes sits next to a key file that is absent (or not a key) — the
+ * fixture's stand-in for `KeystoreLossProof` — and [discardLostKey] then answers true, as the Keystore cipher does after
+ * removing the screen lock. The next [seal] creates a new key, which ends the loss. A journal no key opens while a key is present (or no
+ * loss was recorded, `bts.uitest.unreadableJournal`) stays unreadable.
  */
 internal class FixtureJournalCipher(
     private val keyFile: File,
     private val random: SecureRandom = SecureRandom(),
 ) : JournalCipher {
     private val lock = Any()
+
+    /** [loseKey]'s record that the key in [keyFile] is gone for good. */
+    private val lossRecord = lossRecord(keyFile)
 
     @Volatile private var keyWorked = false
 
@@ -70,10 +80,29 @@ internal class FixtureJournalCipher(
         }
     }
 
-    /** The key, created when the file is absent and no key has worked in this process (the caller holds [lock]). */
+    /**
+     * Proven only by [loseKey]'s record next to a key that does not read (a plain absent key is a run that never
+     * sealed). As the Keystore cipher removes an invalidated entry, what is left of the key file is removed, so the next
+     * [seal] creates a new key.
+     */
+    override fun discardLostKey(): Boolean = synchronized(lock) {
+        try {
+            if (!lossRecord.isFile || read() != null) return@synchronized false
+            if (!AtomicFiles.delete(keyFile)) return@synchronized false
+            keyWorked = false
+            true
+        } catch (_: SecurityException) {
+            false
+        }
+    }
+
+    /**
+     * The key, created when the file is absent and no key has worked in this process, or one did but its loss is
+     * recorded (the caller holds [lock]). A new key ends a recorded loss.
+     */
     private fun keyForSealing(): ByteArray {
         read()?.let { return it }
-        if (keyWorked || keyFile.exists()) throw VaultError.DeviceKeyUnavailable()
+        if (keyFile.exists() || (keyWorked && !lossRecord.isFile)) throw VaultError.DeviceKeyUnavailable()
         val key = ByteArray(KEY_BYTES).also(random::nextBytes)
         try {
             AtomicFiles.write(keyFile, key)
@@ -81,6 +110,8 @@ internal class FixtureJournalCipher(
             key.wipe()
             throw VaultError.DeviceKeyUnavailable(e)
         }
+        // The new key works: nothing is lost any more. A record left behind is harmless (the key is present).
+        AtomicFiles.delete(lossRecord)
         return key
     }
 
@@ -108,6 +139,27 @@ internal class FixtureJournalCipher(
         fun makeUnreadable(journal: File) {
             AtomicFiles.write(journal, HEADER + ByteArray(IV_BYTES) + ByteArray(TAG_BYTES))
         }
+
+        /**
+         * `bts.uitest.loseJournalKey` (QA round 3 activity-keyboard-07): what removing the screen lock does to the
+         * Keystore journal key, for the run whose key is [keyFile] and whose journal is [journal]: the key is deleted
+         * and its loss recorded (`journal.key.lost`), so [discardLostKey] proves it. A run without a journal gets one the
+         * lost key sealed (as [makeUnreadable]: no key opens it), so the store always meets a journal it can never read
+         * again; an existing journal is kept, its records are what the loss takes. The store then starts the journal
+         * again and Activity shows "Activity Started Again" until "OK" (`SignerState.activityRestarted`); the next
+         * signature seals under a new key. Every launch with the switch loses the key again. Call before anything opens
+         * the run's storage.
+         */
+        fun loseKey(keyFile: File, journal: File) {
+            if (!journal.exists()) makeUnreadable(journal)
+            AtomicFiles.write(lossRecord(keyFile), ByteArray(0))
+            if (!AtomicFiles.delete(keyFile)) throw IOException("The journal key could not be deleted")
+        }
+
+        /** The loss record next to [keyFile] (`journal.key.lost`). */
+        private fun lossRecord(keyFile: File) = File(keyFile.parentFile, keyFile.name + LOSS_SUFFIX)
+
+        private const val LOSS_SUFFIX = ".lost"
 
         /** `"BTSR"` + format version 1, as `KeystoreJournalCipher`. */
         private val HEADER = byteArrayOf('B'.code.toByte(), 'T'.code.toByte(), 'S'.code.toByte(), 'R'.code.toByte(), 0x01)

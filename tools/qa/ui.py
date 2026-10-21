@@ -2,7 +2,7 @@
 """Drives the debug app on the emulator for QA tours (adb + uiautomator; no test APK needed).
 
     tools/qa/ui.py launch [--fixtures N] [--dark] [--locale zh-Hans] [--lock] [--keep] [--run UUID] [--lose-keys]
-                          [--unreadable-journal]
+                          [--unreadable-journal] [--lose-journal-key]
                                               fresh harness run (or --keep: the same run id again), capture allowed
     tools/qa/ui.py dump [--all]               list the app's visible nodes: [index] text | desc | resource-id | bounds
     tools/qa/ui.py tap TEXT_OR_ID [--nth K] [--all]
@@ -28,6 +28,17 @@ replaces the run's Activity journal with one no key opens, so Activity shows "Ac
 be read" alert at launch). It works on a fresh run (with --fixtures) and with --keep; the run keeps the unreadable
 journal on later launches, since the app never overwrites one (signatures still complete, with the "could not be
 saved" alert); only a fresh run starts a new journal.
+
+`--lose-journal-key` (`bts.uitest.loseJournalKey`) loses the run's Activity journal key for good, as removing the
+device's screen lock does (QA L1): the app proves the loss, starts a fresh journal without any alert, and Activity
+shows "Activity Started Again" with OK until it is tapped (also across a `--keep` relaunch without the flag). It works
+on a fresh run (with --fixtures: the run gets a journal the lost key sealed) and with --keep (the run's records are
+what the loss takes); the next signature is saved under a new key. Every launch with the flag loses the key again.
+With --unreadable-journal as well, the lost key wins.
+
+`--locale` (default en-US, also with --keep) wins over the language an earlier run or the Language page stored. Below
+API 33 a launch whose stored or device language differs relaunches the activity once right after the first frame
+(API 33+ the system does the same), so wait for the screen before the first dump.
 
 `dump` (and everything that finds nodes) deletes the previous dump first, asks uiautomator for every window
 (`--windows`: dialogs, sheets and the keyboard too, where the device supports it) and fails loudly when uiautomator
@@ -291,6 +302,8 @@ def command(cmd):
             extras += ['--ez', 'bts.uitest.loseDeviceKeys', 'true']
         if arg('--unreadable-journal'):
             extras += ['--ez', 'bts.uitest.unreadableJournal', 'true']
+        if arg('--lose-journal-key'):
+            extras += ['--ez', 'bts.uitest.loseJournalKey', 'true']
         print(adb('shell', 'am', 'start', '-W', '-n', f'{PKG}/{ACTIVITY}', *extras).strip())
         time.sleep(3)
     elif cmd == 'dump':

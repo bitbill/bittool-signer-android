@@ -76,8 +76,10 @@ object DeviceCrypto {
     }
 
     /**
-     * Deletes the Activity journal key `com.bittool.signer.activity.v1`, as if Keystore had lost it. A cipher that already
-     * used it then refuses to seal; a new process (a new `KeystoreJournalCipher`) creates a new key on its first seal.
+     * Deletes the Activity journal key `com.bittool.signer.activity.v1`, as removing the screen lock does (QA L1): the
+     * entry is absent while Keystore answers, so `KeystoreLossProof` proves it lost, `discardLostKey` is true and the
+     * store starts the journal again with its notice. The next seal creates a new key, also in a cipher that had used
+     * the old one (ARCHITECTURE §6 item 19).
      */
     fun deleteJournalKey() {
         val keystore = keystore()

@@ -1,14 +1,18 @@
 package com.bittool.signer.harness
 
+import android.app.Activity
 import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.LocaleList
+import android.os.Looper
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.ConfigurationCompat
 import androidx.core.os.LocaleListCompat
 import com.bittool.signer.core.common.coroutines.ApplicationScope
 import com.bittool.signer.core.common.harness.UiTestEnvironment
@@ -47,10 +51,11 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.fixtures=N` | 0…8 wallets "Public fixture 1…N" created through `SignerStore.createWallet` after the first load when none exist (onboarding marked done); a failure shows "UI fixture setup failed: …" |
  * | `bts.uitest.appLock=true` | App Lock preference on |
  * | `bts.uitest.appearance=dark\|light` | the Theme preference |
- * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition (API 33+: through `LocaleManager`; a change relaunches the activity once) |
+ * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition and winning over the language an earlier run or the Language page stored; a change relaunches the activity once (API 33+: `LocaleManager` does; below, [recreateForRunLocale]) |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
  * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
- * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); later launches of the run keep it, only a reset run starts a new journal |
+ * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); the journal key is not lost, so later launches of the run keep it (iOS behaviour), only a reset run starts a new journal |
+ * | `bts.uitest.loseJournalKey=true` | deletes the run's Activity journal key for good before anything is injected, as removing the screen lock does (QA L1, round 3 activity-keyboard-07): the store proves the loss, starts a fresh journal and Activity shows "Activity Started Again" until "OK"; a run without a journal gets one the lost key sealed. Wins over `unreadableJournal` |
  *
  * While a run is active, `DebugUiTestModule` binds the file-backed [FixtureDeviceKeyStore] (so a cold launch with the
  * same run id opens the same wallets), the file-backed [FixtureJournalCipher] (Activity works on an emulator without a
@@ -71,6 +76,7 @@ object DebugUiTestHarness : UiTestEnvironment {
     const val EXTRA_ALLOW_CAPTURE = "bts.uitest.allowCapture"
     const val EXTRA_LOSE_DEVICE_KEYS = "bts.uitest.loseDeviceKeys"
     const val EXTRA_UNREADABLE_JOURNAL = "bts.uitest.unreadableJournal"
+    const val EXTRA_LOSE_JOURNAL_KEY = "bts.uitest.loseJournalKey"
 
     private const val TAG = "UiTestHarness"
     private const val DEFAULT_LOCALE = "en-US"
@@ -85,6 +91,9 @@ object DebugUiTestHarness : UiTestEnvironment {
         private set
 
     private var configured = false
+
+    /** Below API 33: whether the activity of this process's configuration still has to be checked for its language. */
+    private var localeCheckPending = false
 
     /** Whether this device is an emulator ("simulator only" on iOS). Replaceable for JVM tests. */
     @VisibleForTesting
@@ -122,8 +131,20 @@ object DebugUiTestHarness : UiTestEnvironment {
                 Log.w(TAG) { "UI-test run: the Activity journal could not be replaced (${e.javaClass.simpleName})" }
             }
         }
+        if (extras.flag(EXTRA_LOSE_JOURNAL_KEY) == true) {
+            try {
+                FixtureJournalCipher.loseKey(
+                    File(parsed.root, "${FixtureDeviceKeyStore.DIRECTORY}/${FixtureJournalCipher.KEY_FILE}"),
+                    File(parsed.root, SignerFiles.RECEIPTS_FILE),
+                )
+                Log.i(TAG) { "UI-test run: Activity journal key lost" }
+            } catch (e: IOException) {
+                Log.w(TAG) { "UI-test run: the Activity journal key could not be lost (${e.javaClass.simpleName})" }
+            }
+        }
         run = parsed
         applyLocale(context, parsed.localeTag)
+        localeCheckPending = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
         if (createsFixtures && parsed.fixtures > 0) startFixtures(context, parsed)
         Log.i(TAG) { "UI-test run configured (${parsed.fixtures} fixtures)" }
         return parsed
@@ -154,10 +175,46 @@ object DebugUiTestHarness : UiTestEnvironment {
         DataStoreSignerPreferences.preferencesFile(context, run.preferencesName).delete()
     }
 
+    /**
+     * Below API 33 (QA round 3 activity-keyboard-06): recreates [activity] once when it was attached in another language
+     * than the run's, and returns whether it did. Call from `MainActivity.onCreate` **before** `super.onCreate`, after
+     * [configure].
+     *
+     * With `autoStoreLocales`, AppCompat applies the language it stored (an earlier run's `bts.uitest.locale`, or the
+     * Language page's choice) to the activity's base context in `attachBaseContext`, before the launch extras can be
+     * read. The run's `setApplicationLocales` in [configure] reaches that activity only through `super.onCreate`'s
+     * in-place resources update, and AppCompat stores a language requested while no activity is live only when the
+     * next activity is attached. So
+     * the first frame showed the run's language, but the first configuration change the activity handles itself (a
+     * rotation, a night-mode switch) rebuilt its resources from the base context, back in the stored language, and the
+     * next launch was attached in it again. The new instance is attached in the run's language and AppCompat stores it,
+     * so a later launch of the same language needs no recreation. Before `super.onCreate` the resources still show what
+     * the base context was attached with (afterwards the in-place update hides the difference).
+     *
+     * Only the activity of this process's configuration is checked, once: a language chosen later on the Language page
+     * recreates the activity itself. API 33+ needs nothing: setting `LocaleManager` in [configure] relaunches it.
+     */
+    @MainThread
+    fun recreateForRunLocale(activity: Activity): Boolean {
+        if (!localeCheckPending) return false
+        localeCheckPending = false
+        val run = run ?: return false
+        val attached = ConfigurationCompat.getLocales(activity.resources.configuration)[0]?.stripExtensions()
+        val wanted = LocaleListCompat.forLanguageTags(run.localeTag)[0]?.stripExtensions()
+        if (attached == wanted) return false
+        Log.i(TAG) { "UI-test run: recreating the activity in the run's language" }
+        // Posted: during onCreate the activity is not registered with ActivityThread yet, and API 31 drops the call.
+        Handler(Looper.getMainLooper()).post {
+            if (!activity.isFinishing && !activity.isDestroyed) activity.recreate()
+        }
+        return true
+    }
+
     /** Test hook: forget the configuration of this process. */
     @VisibleForTesting
     internal fun resetForTest() {
         configured = false
+        localeCheckPending = false
         run = null
         isEmulator = ::detectEmulator
         createsFixtures = true
@@ -169,7 +226,9 @@ object DebugUiTestHarness : UiTestEnvironment {
      * set nothing, so the framework `LocaleManager` is used directly there (a change makes the system relaunch the
      * activity once). Below API 33 AppCompat keeps the list itself and the delegate's onCreate applies it in place.
      * Already applied means the same locales apart from Unicode extensions: `MainActivity` turns `ar` into
-     * `ar-u-nu-latn`, and asking for `ar` again on every launch would only relaunch the activity again.
+     * `ar-u-nu-latn`, and asking for `ar` again on every launch would only relaunch the activity again. Below API 33 the
+     * activity was attached before this runs, in the language AppCompat stored: [recreateForRunLocale] then makes the
+     * run's language hold past the first configuration change (QA round 3 activity-keyboard-06).
      */
     private fun applyLocale(context: Context, tag: String) {
         val wanted = LocaleListCompat.forLanguageTags(tag)

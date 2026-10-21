@@ -915,7 +915,8 @@ otherwise lock. Ownbit's `LockTiming` uses 60 s and `>`; do **not** copy those v
 - **FLAG_SECURE on the activity window, set once in `onCreate` before `setContent`, never toggled** (toggling re-creates the
   surface and blinks on some devices — Ownbit `RecentsGuard.kt` notes). It gives, OS-enforced and on every API level ≥ 26:
   blank Recents thumbnail (the iOS app-switcher cover), black screenshots, black screen recordings and casts (the iOS
-  "recorded or mirrored" cover), no display on non-secure external/virtual displays. Compose dialogs/sheets/popups inherit it
+  "recorded or mirrored" cover), no display on non-secure external/virtual displays (a *secure* external display still
+  shows the app, so mirroring counts as captured below). Compose dialogs/sheets/popups inherit it
   with the default `SecureFlagPolicy.Inherit`; never use platform `Toast`/`PopupWindow` for anything sensitive. Provide a
   **debug-build-only** switch to disable it for screenshot tours. This is stricter than iOS (iOS allows screenshots and only
   reacts); Security.md:133 states iOS lacks such an API, so this matches the design intent — confirm with product.
@@ -925,11 +926,22 @@ otherwise lock. Ownbit's `LockTiming` uses 60 s and `>`; do **not** copy those v
   window when `lifecycle < RESUMED` (iOS inactive) or `captured`. Snapshot protection relies on FLAG_SECURE, not on this cover
   (drawing in `onPause` often lands after the thumbnail is taken — Ownbit measurement). Caveat: on API 26–28 split-screen, an
   unfocused app is paused, so the cover shows there (iPad Split View keeps both apps active).
-- `CaptureMonitor.isCaptured`: API 35+ `WindowManager.addScreenRecordingCallback(executor, consumer)` (permission
-  `android.permission.DETECT_SCREEN_RECORDING`, normal), `SCREEN_RECORDING_STATE_VISIBLE` → captured; register in `onStart`,
-  remove in `onStop`. Below 35 there is no API: `isCaptured = false` and FLAG_SECURE carries the protection. When it turns true:
-  `store.suspend()`, conceal recovery displays, refuse reveal, show the cover with `Hidden while your screen is recorded or mirrored`,
-  close the window gate, disable prefetch.
+- `CaptureMonitor.isCaptured` (implemented as `AppLifecycleMonitor.isCaptured`, `CaptureCallbacks`) = **recorded or
+  mirrored**, like iOS `UIScreen.isCaptured` (recorded, mirrored, AirPlayed or otherwise cloned). Both sources are
+  registered in `onStart` and removed in `onStop`, and each reports its current state at once:
+  - **Mirroring, on every API level ≥ 26** (QA audit A03; `DisplayMirroring`): a `DisplayManager.DisplayListener` and
+    the display list. A display counts as a mirror target when it is a presentation display (`FLAG_PRESENTATION`:
+    external, wireless and simulated secondary displays) that is switched on and is neither the built-in display, the
+    display the activity itself is on, nor a private display (only its owner sees those). FLAG_SECURE does **not**
+    cover this: the platform treats a wired external display (HDMI, USB-C DisplayPort) and an HDCP Miracast sink as
+    secure and composes the activity onto them.
+  - **Recording, API 35+**: `WindowManager.addScreenRecordingCallback(executor, consumer)` (permission
+    `android.permission.DETECT_SCREEN_RECORDING`, normal), `SCREEN_RECORDING_STATE_VISIBLE` → captured. It reports
+    MediaProjection recordings and casts only, never a mirror. Below 35 there is no recording API; FLAG_SECURE blanks
+    recordings and casts there.
+  When either turns true: `store.suspend()`, conceal recovery displays, refuse reveal, show the cover with `Hidden while
+  your screen is recorded or mirrored`, close the window gate (which also stops an animated QR from keeping the screen
+  on), disable prefetch. A platform refusal (missing permission, no display service) leaves that source off.
 - `ScreenshotEvents` (iOS `userDidTakeScreenshotNotification`): API 34+ `Activity.registerScreenCaptureCallback(mainExecutor, cb)`
   in `onStart`, `unregisterScreenCaptureCallback` in `onStop` (permission `android.permission.DETECT_SCREEN_CAPTURE`, normal).
   It fires after the fact, only for user-initiated captures. With FLAG_SECURE the capture is blocked anyway; do not rely on the

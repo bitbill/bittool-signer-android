@@ -975,11 +975,12 @@ No apk/play flavor differences in this area (both are offline, no INTERNET permi
   context on `suspend()`. Pass JSON strings only (never interpolate into script). Use kotlinx.serialization
   `JsonElement` end-to-end so integers stay integers (`version`, `index`, `depth`).
 - Prefetch: in `WalletStore` (singleton), a `Job` started 600 ms after the gate opens
-  (`ProcessLifecycleOwner` ≥ STARTED ∧ !appLocked ∧ !screenRecording ∧ wallets visible), `Dispatchers.Default`
+  (`ProcessLifecycleOwner` ≥ STARTED ∧ !appLocked ∧ !captured ∧ wallets visible), `Dispatchers.Default`
   low priority for QR encoding; cache `Map<walletId, PreparedConnect(payload, matrices)>` in memory only; drop on
   epoch change / reload / ON_STOP. Pass the matrices to the QR composable so the first frame is complete.
-- Security epoch: app-scoped `StateFlow<Long>` bumped on ON_STOP (background), App Lock, screen recording
-  (`WindowManager.addScreenRecordingCallback`, API 35) — sheets observe it to clear secrets and to drop late results
+- Security epoch: app-scoped `StateFlow<Long>` bumped on ON_STOP (background), App Lock, capture — recorded
+  (`WindowManager.addScreenRecordingCallback`, API 35+) or mirrored to another display (every API level, QA audit
+  A03; app-shell §15.8) — sheets observe it to clear secrets and to drop late results
   (port `WalletOperation` as a small class owning a `Job` + token + epoch check).
 
 ### 13.5 QR codes
@@ -999,9 +1000,13 @@ No apk/play flavor differences in this area (both are offline, no INTERNET permi
   48 dp target, `LinearProgressIndicator(progress = (i+1)/n, width 140 dp)`, counter `"%1$d/%2$d"` with tabular
   figures and fixed width. Content description "Animated QR code, part %1$d of %2$d" updated (polite live region)
   only while paused; "QR code" for static codes.
-- Keep screen on: `FLAG_KEEP_SCREEN_ON` while any pairing/address QR is composed (Ownbit `KeepScreenOn()`;
-  reference-counted, applied to the **dialog window** when inside a `ModalBottomSheet`). iOS relies on the system idle
-  timer; this is an Android addition.
+- Keep screen on (decided, QA audit A02): `FLAG_KEEP_SCREEN_ON` only while an **animated** code plays — the Wallet
+  Level code, or any multi-part frame set — that is encoded, not paused, on a resumed screen, with the window gate open
+  (`LocalWindowGateOpen`: not under App Lock or the "recorded or mirrored" cover). Reference-counted and applied to the
+  **dialog window** when inside a `ModalBottomSheet` (Ownbit `KeepScreenOn()`). A one-frame code (Coin Level, an
+  address) never holds the screen on, nor does a paused or covered one: iOS relies on the system idle timer, and the
+  auto-lock is what hides an unattended code and starts the App Lock clock. `QrCodeView` decides this for every caller
+  (ARCHITECTURE §1.12, design-system §9.5); this is an Android addition.
 - Brightness: `WindowManager.LayoutParams.screenBrightness = BRIGHTNESS_OVERRIDE_FULL`, restored on dispose
   (Ownbit `MaxBrightness()`). Recommended UX: Ownbit's opt-in "Normal / Bright" corner toggle on the plate
   (`QrBrightnessCorner`, product decision 2026-09-27) rather than forcing it; if forced, do it only while the
