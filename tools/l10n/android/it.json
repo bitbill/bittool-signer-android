@@ -315,7 +315,7 @@
   },
   "sign_acknowledgement_hint": {
    "source": "Check the box at the end of the review to sign.",
-   "value": "Per firmare, seleziona la casella alla fine della revisione."
+   "value": "Per firmare, seleziona la casella alla fine dell’analisi."
   },
   "sign_file_unreadable": {
    "source": "The file could not be read.",

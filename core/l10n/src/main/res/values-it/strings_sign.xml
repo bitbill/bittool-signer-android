@@ -10,7 +10,7 @@
     <string name="sign_reading_request">Lettura della richiesta…</string>
     <string name="sign_keep_animated_code_in_view">Tieni inquadrato il codice animato · %1$d parti</string>
     <string name="sign_psbt_payload_note">psbt_base64 è il PSBT esatto contenuto in questo codice QR; decoded ne è ricavato solo come riferimento.</string>
-    <string name="sign_acknowledgement_hint">Per firmare, seleziona la casella alla fine della revisione.</string>
+    <string name="sign_acknowledgement_hint">Per firmare, seleziona la casella alla fine dell’analisi.</string>
     <string name="sign_file_unreadable">Non è stato possibile leggere il file.</string>
     <string name="sign_file_not_saved">Non è stato possibile salvare il file.</string>
 </resources>
