@@ -236,17 +236,16 @@ class DeleteWalletViewModel @Inject constructor(
 
     /**
      * Asks the store whether the device key is provably gone (false when unsure; the latest answer wins). When the answer
-     * changes the page's statement, the switch is turned off again: it confirmed the other one. The first answer only
-     * ends the loading state (nothing could be confirmed before it).
+     * changes the page's statement, the switch is turned off again: it confirmed the other statement, or (the first
+     * answer, which ends the loading state) none at all, since no statement and no switch were shown before it.
      */
     private fun checkDeviceKey() {
         val id = walletId ?: return
         keyLossCheck?.cancel()
         keyLossCheck = viewModelScope.launch {
             val lost = runCatchingCancellable { store.isDeviceKeyLost(id) }.getOrDefault(false)
-            val previous = keyLost.value
-            if (lost != previous) {
-                if (previous != null) local.update { it.copy(confirmed = false, askingPassword = false, askingRemoval = false) }
+            if (lost != keyLost.value) {
+                local.update { it.copy(confirmed = false, askingPassword = false, askingRemoval = false) }
                 keyLost.value = lost
             }
         }

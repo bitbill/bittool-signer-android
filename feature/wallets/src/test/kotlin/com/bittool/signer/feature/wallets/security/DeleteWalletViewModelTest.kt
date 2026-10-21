@@ -395,6 +395,7 @@ class DeleteWalletViewModelTest {
         advanceUntilIdle()
         assertFalse(state.value.checkingDeviceKey)
         assertTrue(state.value.deviceKeyLost, "the first answer is the first statement shown")
+        assertFalse(state.value.confirmed, "a switch set before any statement was shown confirms none of them")
         store.suspendSession()
         advanceUntilIdle()
         assertFalse(state.value.checkingDeviceKey, "a later look keeps the page as it is meanwhile")

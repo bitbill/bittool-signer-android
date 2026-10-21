@@ -202,6 +202,11 @@ class WalletsUiTest {
         val added = compose.onNodeWithText("Added Oct 1, 2026", substring = true).getBoundsInRoot()
         assertTrue(fingerprint.height < 24.dp, "one footnote line, not a 48 dp row: ${fingerprint.height}")
         assertEquals(4.dp, added.top - fingerprint.bottom, "iOS VStack spacing 4")
+        // What TalkBack and Switch Access get (the node's touch bounds, AccessibilityNodeInfo.boundsInScreen).
+        val touchHeight = with(compose.density) {
+            compose.onNodeWithTag("detail.fingerprint").fetchSemanticsNode().touchBoundsInRoot.height.toDp()
+        }
+        assertTrue(touchHeight >= 48.dp, "a 48 dp accessibility target: $touchHeight")
         compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, -10.dp.toPx())) }
         assertEquals(1, copies, "a touch 10 dp above the line copies the fingerprint")
     }
