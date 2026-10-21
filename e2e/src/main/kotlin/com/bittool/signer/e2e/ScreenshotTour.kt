@@ -88,6 +88,11 @@ class ScreenshotTour {
         click(password)
         setText(password, FIXTURE_PASSWORD)
         imeAction(password)
+        // The shot is of the confirmation field focused above the keyboard: wait for the focus to get there.
+        val confirmation = ui.tag("Confirm password")
+        if (!ui.waitUntil(5_000) { confirmation.locate(ui)?.isFocused == true }) {
+            problems += "The keyboard's Next did not move to the confirmation field"
+        }
         settle()
         shot("06-password-confirm-focus")
         setText(ui.tag("Confirm password"), FIXTURE_PASSWORD)

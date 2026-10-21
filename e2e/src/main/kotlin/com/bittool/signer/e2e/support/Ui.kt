@@ -5,6 +5,7 @@ import android.app.UiAutomation
 import android.graphics.Point
 import android.graphics.Rect
 import android.os.SystemClock
+import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import androidx.test.platform.app.InstrumentationRegistry
@@ -311,6 +312,85 @@ class Ui {
         return false
     }
 
+    /**
+     * Whether [condition] holds anywhere on the current page. XCUITest's `exists` also sees what a scroll view holds off
+     * screen, UiAutomator only what is on screen (Compose reports no node outside the viewport), so an "is not there"
+     * check of iOS searches the page: from where it is up to the top, then down to the end (at most [maxSwipes] each
+     * way; a lazy list that pages in more rows ends there). When nothing is found the page is brought back to where it
+     * was (to the top, then as many drags down as it took to get there; drags never fling), so the steps after the
+     * check scroll as they would without it; when something is found it stays on screen for the failure's description.
+     * Only for pages, never on a bottom sheet, where a drag at the top would pull the sheet down.
+     */
+    fun anywhereOnPage(maxSwipes: Int = 12, condition: () -> Boolean): Boolean {
+        if (condition()) return true
+        val up = PageSearch()
+        val down = PageSearch()
+        val found = scrollUntilStill(revealBelow = false, maxSwipes, up, condition) ||
+            scrollUntilStill(revealBelow = true, maxSwipes, down, condition)
+        // How far the search went, for the test's logcat (an end reached is what makes an absence meaningful).
+        Log.i(LOG_TAG, "Page search: up ${up.describe()}; down ${down.describe()}")
+        if (!found) {
+            scrollUntilStill(revealBelow = false, maxSwipes + 2, PageSearch()) { false }
+            repeat(up.drags - if (up.endReached) 1 else 0) { drag(revealBelow = true, fraction = PAGE_FRACTION) }
+        }
+        return found
+    }
+
+    /** One direction of [anywhereOnPage]. */
+    private class PageSearch {
+        var drags = 0
+        var endReached = false
+        var found = false
+
+        fun describe() = "$drags drag(s), " + when {
+            found -> "found"
+            endReached -> "end reached"
+            else -> "stopped at the limit"
+        }
+    }
+
+    /** Page-sized drags in one direction until [found] holds (true) or the page stops moving (false). */
+    private fun scrollUntilStill(revealBelow: Boolean, maxSwipes: Int, search: PageSearch, found: () -> Boolean): Boolean {
+        repeat(maxSwipes) {
+            val before = pagePosition()
+            drag(revealBelow, PAGE_FRACTION)
+            search.drags++
+            if (found()) {
+                search.found = true
+                return true
+            }
+            if (pagePosition() == before) {
+                search.endReached = true
+                return false
+            }
+        }
+        return false
+    }
+
+    /**
+     * Where the page's content sits: the tags and tops of the main scroller's labelled nodes (fresh from the app).
+     * Texts are left out, so an animated QR code's changing part counter never reads as movement.
+     */
+    private fun pagePosition(): List<String> {
+        val scroller = mainScrollable() ?: return emptyList()
+        val root = try {
+            scroller.accessibilityNodeInfo
+        } catch (e: StaleObjectException) {
+            return emptyList()
+        }
+        val parts = mutableListOf<String>()
+        fun walk(node: AccessibilityNodeInfo, depth: Int) {
+            if (parts.size > MAX_BAND_NODES || depth > 30) return
+            if (depth > 0) node.refresh()
+            if (node.text != null || node.contentDescription != null || node.viewIdResourceName != null) {
+                parts += "${node.viewIdResourceName.orEmpty()}@${Rect().also(node::getBoundsInScreen).top}"
+            }
+            for (i in 0 until node.childCount) node.getChild(i)?.let { walk(it, depth + 1) }
+        }
+        walk(root, 0)
+        return parts
+    }
+
     /** iOS `scrollClear(of:_:)`: scrolls until [target] sits fully above [bar] (a control of a pinned bottom bar). */
     fun scrollClear(bar: Target, target: Target) {
         if (!scrollToExistence(target)) failWithScreen("Missing $target")
@@ -606,6 +686,7 @@ class Ui {
 
     companion object {
         const val BACK_TAG = "nav.back"
+        private const val LOG_TAG = "SignerE2E"
         const val BULLET = '•'
         private const val POLL_MS = 150L
         private const val IDLE_TIMEOUT_MS = 1_000L

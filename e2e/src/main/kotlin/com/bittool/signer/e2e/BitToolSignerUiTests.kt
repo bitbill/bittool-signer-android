@@ -268,7 +268,10 @@ class BitToolSignerUiTests : SignerTestCase() {
             ui.failWithScreen("Card 2 is missing.")
         }
         app.backgroundAndReactivate()
-        assertNotExists(firstCard, "Backgrounding conceals the cards.")
+        // The sheet was scrolled down to card 2, so card 1 may sit above the screen: no card and no "Hide Cards" at all
+        // (the revealed cards fill the sheet from the first card to that button; the sheet itself is never dragged).
+        assertNotExists(ui.tagPrefix("cards.card."), "Backgrounding conceals the cards.")
+        assertNotExists(ui.tag("cards.hide"), "Backgrounding conceals the cards.")
         if (ui.exists(ui.title("Recovery Cards"))) ui.click(ui.tag("cards.done"))
         ui.waitFor(ui.tag("recovery.reveal"), 5_000)
         ui.scrollToExistence(ui.tag("backup.continue"))
@@ -290,7 +293,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         ui.tap(qrReveal)
         ui.waitFor(ui.tag("backup.qr"), 5_000)
         assertEquals("Revealing the QR code asks nothing.", before, appWindowCount())
-        assertNotExists(ui.labeled("Save or Print"), "The plain QR code is never offered for sharing.")
+        assertNowhereOnPage(ui.labeled("Save or Print"), "The plain QR code is never offered for sharing.")
         // Content scrolls under the bottom bar.
         ui.scrollClear(ui.tag("backup.continue"), ui.tag("backup.qr.hide"))
         ui.tap(ui.tag("backup.qr.hide"))
@@ -396,8 +399,10 @@ class BitToolSignerUiTests : SignerTestCase() {
         ui.typePayload("unsupported-qr-test-fixture", into = payload)
         ui.tap(ui.tag("signing.decode"))
         ui.waitFor(ui.containing("Unsupported"), 10_000)
+        // iOS `navigationBars["Paste Request"].buttons["Cancel"]`: the error leaves the sheet open, and its Cancel closes it.
+        assertExists(ui.title("Paste Request"), "The paste sheet stays open with the error.")
         ui.click(ui.labeled("Cancel"))
-        ui.waitForNonExistence(ui.title("Paste Request"), 5_000)
+        assertTrue("Cancel closes the paste sheet.", ui.waitForNonExistence(ui.title("Paste Request"), 5_000))
 
         pasteRequest(PUBLIC_SIGNING_REQUEST)
 
@@ -513,7 +518,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertTrue("The notice names the deployment: $known", known.contains("Permit2") && known.contains("Uniswap"))
         assertTrue(known, known.contains("Known public contract"))
         assertScrolledTo(ui.containing("Spender (known contract)"), "Details repeat the identification as a field.")
-        assertNotExists(ui.containing("not in the bundled list"), "A listed spender is never also called unlisted.")
+        assertNowhereOnPage(ui.containing("not in the bundled list"), "A listed spender is never also called unlisted.")
         ui.click(ui.tag("signing.reject"))
 
         ui.waitFor(ui.tag("signing.scan"), 5_000)
@@ -616,9 +621,12 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertTrue("The address for index 123456 is exported.", ui.waitUntilEnabled(ui.tag("connect.copy")))
         // TRON wallets can only watch an address; none is listed as a QR signer, and Ownbit is gone.
         assertScrolledTo(ui.containing("Watch only"), "TRON wallets watch an address.")
-        assertNotExists(ui.containing("Watch and sign by QR"), "No TRON wallet signs by QR.")
+        // One search of the whole page for both absences (the animated QR makes every query on this page slow).
+        assertNoneOnPage(
+            ui.containing("Watch and sign by QR") to "No TRON wallet signs by QR.",
+            ui.containing("Ownbit") to "Ownbit is not listed.",
+        )
         assertScrolledTo(ui.containing("TokenPocket"), "TokenPocket is listed.")
-        assertNotExists(ui.containing("Ownbit"), "Ownbit is not listed.")
         repeat(4) { ui.swipeDown() }
         ui.tap(ui.tag("chain.bitcoin"))
         ui.waitFor(ui.title("Pair Bitcoin"), 5_000)
@@ -695,6 +703,8 @@ class BitToolSignerUiTests : SignerTestCase() {
         app.backgroundAndReactivate()
         ui.waitFor(password, 5_000, "Backgrounding discards the decrypted phrase.")
         assertNotExists(ui.tag("recovery.reveal"), "The decrypted phrase is gone.")
+        // iOS `navigationBars["Recovery Phrase"].buttons["Cancel"]`: the page asks for the password again, still open.
+        assertExists(ui.title("Recovery Phrase"), "The Recovery Phrase page stays open, asking for the password.")
         ui.click(ui.labeled("Cancel"))
         ui.waitFor(ui.tag("detail.recoveryPhrase"), 5_000)
     }
@@ -720,7 +730,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         val finish = ui.tag("setup.finish")
         ui.waitFor(ui.title("Reset Password"), 30_000, "An identical phrase offers to reset that wallet's password.")
         assertScrolledTo(finish, "The reset page has its button.")
-        assertNotExists(ui.containing("If you forget this password"), "The hint describes what this screen is already doing.")
+        assertNowhereOnPage(ui.containing("If you forget this password"), "The hint describes what this screen is already doing.")
 
         ui.type(RECOVERED_PASSWORD, into = ui.tag("Wallet password"))
         ui.type(RECOVERED_PASSWORD, into = ui.tag("Confirm password"))
@@ -887,7 +897,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertExists(ui.containing("BitTool is not responsible"), "BitTool is not responsible.")
         assertScrolledTo(ui.tag("directory.wallet.Sparrow"), "Every listed wallet appears in the directory.")
         assertExists(ui.containing("sparrowwallet.com"), "The site is shown as copyable text.")
-        assertFalse("No tappable links: the app has no network.", hasLinks())
+        assertFalse("No tappable links: the app has no network.", hasLinksOnPage())
 
         // Submitting a wallet is explained, not mailed: no mail client opens.
         val submit = ui.tag("directory.submit")
@@ -907,7 +917,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         ui.waitFor(ui.title("Contact Us"), 5_000)
         assertExists(ui.containing("BITTOOL PTE. LTD."), "The publisher is named.")
         assertExists(ui.containing("support@bittool.com"), "The address is shown.")
-        assertFalse("The address is text, not a mailto link.", hasLinks())
+        assertFalse("The address is text, not a mailto link.", hasLinksOnPage())
         ui.goBack()
 
         // Open Source: the addresses are text, and the build is described on device. Android shows its own repository
@@ -917,8 +927,11 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertScrolledTo(ui.containing("https://github.com/bitbill/bittool-signer-android"), "The app's repository is named.")
         assertScrolledTo(ui.containing("https://github.com/bitbill/bittool-signer-ios"), "The engine's repository is named.")
         assertScrolledTo(ui.containing("Signing engine"), "The engine is described.")
-        // The digest is read from the bundled engine, so it is 64 hex characters, never a placeholder.
-        val digest = Target("a 64-hex-digit digest") { u -> u.device.findObject(By.text(java.util.regex.Pattern.compile("[0-9a-f]{64}"))) }
+        // The digest is read from the bundled engine, so it is 64 hex characters, never a placeholder. On Android the
+        // signing certificate's SHA-256 is 64 hex digits too, so the value is looked for in the engine row only.
+        val digest = Target("the engine digest (64 hex digits) in openSource.digest") { u ->
+            u.device.findObject(By.res("openSource.digest"))?.findObject(By.text(java.util.regex.Pattern.compile("[0-9a-f]{64}")))
+        }
         assertScrolledTo(digest, "The engine digest is computed on device.")
         assertScrolledTo(ui.tag("openSource.notices"), "The notices are offered.")
         ui.tap(ui.tag("openSource.notices"))
@@ -935,7 +948,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         ui.waitFor(ui.title("Privacy Policy"), 5_000)
         ui.waitFor(ui.containing("collects nothing"), 5_000)
         ui.goBack()
-        assertNotExists(ui.containing("open in your browser"), "Nothing opens a browser.")
+        assertNowhereOnPage(ui.containing("open in your browser"), "Nothing opens a browser.")
 
         assertFalse("The guide is part of onboarding, not of Settings.", ui.scrollToExistence(ui.labeled("Offline Setup Guide")))
     }

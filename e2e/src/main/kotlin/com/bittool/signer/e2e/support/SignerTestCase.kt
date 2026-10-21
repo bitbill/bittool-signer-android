@@ -80,14 +80,19 @@ abstract class SignerTestCase {
         ui.waitFor(header, 13_000, "Expected setup step $step of $total.")
     }
 
-    /** iOS `assertEmptySecureField`: no text, or only the placeholder (a filled field reports one bullet per character). */
+    /**
+     * iOS `assertEmptySecureField`: no text, or only the placeholder (gaps.md G1.0). A filled field reports one bullet
+     * per character; the value is only described by its bullet count, never shown.
+     */
     protected fun assertEmptySecureField(field: Target, placeholder: String) {
         val obj = ui.waitFor(field, 5_000)
         val node = obj.accessibilityNodeInfo
+        node.refresh()
         val value = node.text?.toString().orEmpty()
         assertTrue(
-            "A password typed before backgrounding must be cleared (${value.count { it == Ui.BULLET }} characters remain).",
-            value.isEmpty() || value == placeholder || value.none { it == Ui.BULLET },
+            "A password typed before backgrounding must be cleared (${value.length} characters reported, " +
+                "${value.count { it == Ui.BULLET }} of them bullets).",
+            value.isEmpty() || value == placeholder,
         )
     }
 
@@ -192,6 +197,25 @@ abstract class SignerTestCase {
     protected fun assertNotExists(target: Target, message: String) {
         if (ui.exists(target)) ui.failWithScreen(message)
     }
+
+    /**
+     * iOS `XCTAssertFalse(element.exists)` on a page that scrolls: XCUITest also sees what is off screen, so the whole
+     * page is searched ([Ui.anywhereOnPage]; it leaves the page where it was).
+     */
+    protected fun assertNowhereOnPage(target: Target, message: String) = assertNoneOnPage(target to message)
+
+    /** [assertNowhereOnPage] for several targets in one search of the page; fails with the message of the one found. */
+    protected fun assertNoneOnPage(vararg checks: Pair<Target, String>) {
+        var found: String? = null
+        ui.anywhereOnPage {
+            found = checks.firstOrNull { (target, _) -> ui.exists(target) }?.second
+            found != null
+        }
+        found?.let { ui.failWithScreen(it) }
+    }
+
+    /** [hasLinks] over the whole page, not only the part on screen (iOS `app.links.firstMatch.exists`). */
+    protected fun hasLinksOnPage(): Boolean = ui.anywhereOnPage { hasLinks() }
 
     protected fun assertScrolledTo(target: Target, message: String) {
         if (!ui.scrollToExistence(target)) ui.failWithScreen(message)
