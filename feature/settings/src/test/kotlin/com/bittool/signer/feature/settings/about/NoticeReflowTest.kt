@@ -79,6 +79,25 @@ class NoticeReflowTest {
         assertTrue(trimmed.all { it.centered }, trimmed.toString())
     }
 
+    /**
+     * Apache §4 (a) is a paragraph of two short lines, under the wrap column the other paragraphs show: its second line
+     * starts under the item's text, so it is the item's continuation, not a line of its own (it was left as a ragged
+     * half line over a separately indented one).
+     */
+    @Test
+    fun aShortListItemFlowsIntoItsHangingContinuation() {
+        val item = "      (a) You must give any other recipients of the Work or\n" +
+            "          Derivative Works a copy of this License; and"
+        val line = (NoticeReflow.blocks(item).single() as NoticeBlock.Text).lines.single()
+        assertEquals("(a) You must give any other recipients of the Work or Derivative Works a copy of this License; and", line.text)
+        assertEquals(6, line.indent)
+        assertEquals(10, line.hangingIndent)
+        // A sub-item or an introduction keeps its own line.
+        val nested = "   4. Redistribution. You may reproduce and distribute copies of the\n" +
+            "      (a) You must give any other recipients of the Work or"
+        assertEquals(2, (NoticeReflow.blocks(nested).single() as NoticeBlock.Text).lines.size)
+    }
+
     /** Both bundled notices files: every word survives, in order; separators are the only thing drawn differently. */
     @Test
     fun theBundledNoticesKeepEveryWord() {
@@ -86,16 +105,21 @@ class NoticeReflowTest {
         val files = listOf("THIRD_PARTY_LICENSES.txt", "THIRD_PARTY_LICENSES_ANDROID.txt").map { File(legal, it) }
         assertTrue(files.all(File::isFile), "notices files at ${legal.absolutePath}")
         var joinedLines = 0
+        val apacheItemsA = mutableListOf<String>()
         for (file in files) {
             for (paragraph in file.readText().replace("\r\n", "\n").split("\n\n").map { it.trim('\n') }.filter { it.isNotEmpty() }) {
                 val blocks = NoticeReflow.blocks(paragraph)
                 val shown = blocks.flatMap { (it as? NoticeBlock.Text)?.lines.orEmpty() }
                 val original = paragraph.lines().filterNot { Regex("""^\s*([=\-_*~#])\1{9,}\s*$""").matches(it) }
                 joinedLines += original.count { it.isNotBlank() } - shown.size
+                apacheItemsA += shown.map { it.text }.filter { it.startsWith("(a) You must give") }
                 val words = { text: String -> text.replace(Regex("""(?<=\p{L})-\s+(?=\p{L})"""), "-").split(Regex("""\s+""")).filter(String::isNotEmpty) }
                 assertEquals(words(original.joinToString("\n")), words(shown.joinToString("\n") { it.text }), "in ${file.name}:\n$paragraph")
             }
         }
         assertTrue(joinedLines > 1_000, "the hard-wrapped licence texts are reflowed ($joinedLines line breaks joined)")
+        // Apache §4 (a), in both files, flows as one item.
+        assertEquals(2, apacheItemsA.size, apacheItemsA.toString())
+        assertTrue(apacheItemsA.all { it.endsWith("Derivative Works a copy of this License; and") }, apacheItemsA.toString())
     }
 }

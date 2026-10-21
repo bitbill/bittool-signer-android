@@ -1,6 +1,10 @@
 package com.bittool.signer.feature.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
@@ -18,6 +22,9 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.toSize
+import kotlin.math.abs
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -257,37 +264,76 @@ class SettingsScreensTest {
         compose.onNodeWithText("Registry \u20682026-09-22.1\u2069.", substring = true).assertExists()
     }
 
+    /** A network page with one token row (USDT). */
+    @Composable
+    private fun TokenPage() {
+        NetworkReferenceContent(
+            state = NetworkReferenceUiState(
+                loading = false,
+                title = ReferenceTitle.Network("Ethereum"),
+                tokenCount = 1,
+                contractCount = 0,
+                tokens = listOf(SettingsTestData.usdt),
+            ),
+            onBack = {},
+            onQueryChange = {},
+            onSegmentSelected = {},
+        )
+    }
+
+    /**
+     * Long-presses the token row at [x] px from its left and [fromBottom] px above its bottom; returns the press and the
+     * "Copy Contract Address" item, both in screen pixels.
+     */
+    private fun longPressTokenRow(x: Float, fromBottom: Float): Pair<Offset, Rect> {
+        val row = compose.onNodeWithTag(ReferenceTags.TOKEN_ROW)
+        val node = row.fetchSemanticsNode()
+        val press = node.positionOnScreen + Offset(x, node.size.height - fromBottom)
+        row.performTouchInput { longClick(Offset(x, height - fromBottom)) }
+        val item = compose.onNodeWithText("Copy Contract Address").fetchSemanticsNode()
+        return press to Rect(item.positionOnScreen, item.size.toSize())
+    }
+
     @Test
     fun aTokenOffersItsContractAddressOnLongPress() {
         val clipboard = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
             .getSystemService(android.content.ClipboardManager::class.java)
-        show {
-            NetworkReferenceContent(
-                state = NetworkReferenceUiState(
-                    loading = false,
-                    title = ReferenceTitle.Network("Ethereum"),
-                    tokenCount = 1,
-                    contractCount = 0,
-                    tokens = listOf(SettingsTestData.usdt),
-                ),
-                onBack = {},
-                onQueryChange = {},
-                onSegmentSelected = {},
-            )
-        }
+        show { TokenPage() }
         compose.onNodeWithText("6 dp", useUnmergedTree = true).assertExists()
-        val row = compose.onNodeWithTag(ReferenceTags.TOKEN_ROW)
-        val rowOnScreen = row.fetchSemanticsNode().positionOnScreen
-        val pressX = 240f
-        row.performTouchInput { longClick(androidx.compose.ui.geometry.Offset(pressX, centerY)) }
-        // QA sign-15: the menu opens at the finger, as iOS lifts the row where it is held, not at the row's start edge.
-        val menuOnScreen = compose.onNodeWithText("Copy Contract Address").fetchSemanticsNode().positionOnScreen
-        assertTrue(kotlin.math.abs(menuOnScreen.x - (rowOnScreen.x + pressX)) < 8f, "menu at ${menuOnScreen.x}, press at ${rowOnScreen.x + pressX}")
+        val (press, item) = longPressTokenRow(x = 240f, fromBottom = 60f)
+        // QA sign-15: the menu opens at the finger, as iOS lifts the row where it is held, not at the row's start edge:
+        // its start edge at the finger, its top just under it (the item sits inside the menu's 8 dp padding).
+        assertTrue(abs(item.left - press.x) < 8f, "menu at ${item.left}, press at ${press.x}")
+        assertTrue(item.top >= press.y && item.top - press.y < 24.dpPx, "menu item top ${item.top}, press at ${press.y}")
         compose.onNodeWithText("Copy Contract Address").performClick()
         assertEquals(SettingsTestData.usdt.assetAddress, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
         // No segmented control on a page with a single list.
         compose.onNodeWithTag(ReferenceTags.PICKER).assertDoesNotExist()
     }
+
+    /**
+     * QA sign-15, near the bottom of a short window (a row above the keyboard, the last row on a small phone): the menu
+     * has no room under the finger, so it opens above it, its bottom at the finger, not a row's height higher up.
+     */
+    @Test
+    @Config(qualifiers = "w400dp-h260dp-xhdpi")
+    fun withoutRoomBelowTheFingerTheCopyMenuOpensJustAboveIt() {
+        show { TokenPage() }
+        val (press, item) = longPressTokenRow(x = 240f, fromBottom = 8f)
+        assertTrue(item.bottom <= press.y && press.y - item.bottom < 24.dpPx, "menu item bottom ${item.bottom}, press at ${press.y}")
+        assertTrue(abs(item.left - press.x) < 8f, "menu at ${item.left}, press at ${press.x}")
+    }
+
+    /** QA sign-15, right to left: the menu's start (right) edge is at the finger. */
+    @Test
+    fun rightToLeftTheCopyMenuOpensAtTheFingerToo() {
+        show { CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) { TokenPage() } }
+        val (press, item) = longPressTokenRow(x = 240f, fromBottom = 60f)
+        assertTrue(abs(item.right - press.x) < 8f, "menu ends at ${item.right}, press at ${press.x}")
+        assertTrue(item.top >= press.y && item.top - press.y < 24.dpPx, "menu item top ${item.top}, press at ${press.y}")
+    }
+
+    private val Int.dpPx: Float get() = this * compose.density.density
 
     @Test
     fun openSourceShowsBothRepositoriesAndThisBuild() {

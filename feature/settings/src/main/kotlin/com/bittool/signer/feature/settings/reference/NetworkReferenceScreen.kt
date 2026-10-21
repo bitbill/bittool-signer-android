@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,16 +40,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -58,11 +57,8 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.EmptyState
@@ -295,9 +291,11 @@ private fun ContractRow(contract: KnownContractEntry, toast: StatusToastState) {
 /**
  * A plain-list row with the iOS context menu "Copy Contract Address". Holding the row shows the pressed ripple (the
  * Android counterpart of the iOS lift; not for a quick tap, which does nothing here, nor for a touch that turns into a
- * scroll), and the long press (with its haptic) opens the menu at the finger, as iOS shows it at the row (QA sign-15);
- * TalkBack gets the same as a long-click, the menu then at the row's start, and as a custom action. The copy goes
- * through [SignerClipboard] (expires after 120 s); Android 13+ confirms it itself, older versions get the "Copied" toast.
+ * scroll), and the long press (with its haptic) opens the menu at the finger, as iOS shows it at the row (QA sign-15):
+ * below and after the finger, or above / before it where the window has no room (near the keyboard, the bottom edge, the
+ * far side). TalkBack gets the same as a long-click, the menu then under the row's start, and as a custom action. The
+ * copy goes through [SignerClipboard] (expires after 120 s); Android 13+ confirms it itself, older versions get the
+ * "Copied" toast.
  */
 @Composable
 private fun CopyMenuRow(
@@ -308,20 +306,17 @@ private fun CopyMenuRow(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val density = LocalDensity.current
-    val direction = LocalLayoutDirection.current
     val copyLabel = stringResource(R.string.copy_contract_address)
     val copied = stringResource(R.string.copied)
     var menu by remember { mutableStateOf(false) }
-    // Where the long press happened, in the row (null: TalkBack's long-click, which has no position).
+    // Where the long press happened, from the row's top left (null: TalkBack's long-click, which has no position).
     var pressedAt by remember { mutableStateOf<Offset?>(null) }
-    var rowSize by remember { mutableStateOf(IntSize.Zero) }
     val interaction = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
     val copy = {
         if (SignerClipboard.copy(context, address) && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) toast.show(copied)
     }
-    Box(Modifier.onSizeChanged { rowSize = it }) {
+    Box {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -362,20 +357,30 @@ private fun CopyMenuRow(
         )
         // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
         if (menu && rememberWindowGateReleased()) {
-            DropdownMenu(
-                expanded = true,
-                onDismissRequest = { menu = false },
-                offset = pressedAt?.let { menuOffsetAt(it, rowSize, direction, density) } ?: DpOffset.Zero,
-                containerColor = SignerTheme.colors.elevatedCard,
-            ) {
-                DropdownMenuItem(
-                    text = { Text(copyLabel) },
-                    leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
-                    onClick = {
-                        menu = false
-                        copy()
-                    },
-                )
+            val menuContent: @Composable () -> Unit = {
+                DropdownMenu(
+                    expanded = true,
+                    onDismissRequest = { menu = false },
+                    containerColor = SignerTheme.colors.elevatedCard,
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(copyLabel) },
+                        leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
+                        onClick = {
+                            menu = false
+                            copy()
+                        },
+                    )
+                }
+            }
+            val at = pressedAt
+            if (at == null) {
+                menuContent()
+            } else {
+                // The menu's anchor is a point under the finger, so DropdownMenu opens it with a corner at the finger
+                // and flips it around that point near the window's edges. (An offset from the row would put a flipped
+                // menu a row's height above the finger.) The press is measured from the left in either direction.
+                Box(Modifier.align(AbsoluteAlignment.TopLeft).absoluteOffset { at.round() }) { menuContent() }
             }
         }
     }
@@ -399,18 +404,6 @@ private suspend fun PressGestureScope.showPress(offset: Offset, interaction: Mut
         interaction.emit(if (released) PressInteraction.Release(press) else PressInteraction.Cancel(press))
     }
 }
-
-/**
- * The offset that opens a `DropdownMenu` anchored to a row of [anchor] size with its top at [press] (the menu's start
- * edge at the finger, mirrored right to left), instead of under the row at its start edge. The menu still moves to stay
- * inside the window.
- */
-internal fun menuOffsetAt(press: Offset, anchor: IntSize, direction: LayoutDirection, density: Density): DpOffset =
-    with(density) {
-        // DropdownMenu offsets x from the anchor's start edge and y from the anchor's bottom.
-        val fromStart = if (direction == LayoutDirection.Rtl) anchor.width - press.x else press.x
-        DpOffset(fromStart.toDp(), (press.y - anchor.height).toDp())
-    }
 
 /** Compose `clickable`'s delay before a press inside a scrolling list is drawn (the system tap timeout). */
 private val TAP_INDICATION_DELAY_MILLIS: Long = ViewConfiguration.getTapTimeout().toLong()

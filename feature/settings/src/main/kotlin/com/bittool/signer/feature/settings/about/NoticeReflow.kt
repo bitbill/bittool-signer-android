@@ -75,12 +75,15 @@ internal object NoticeReflow {
         var joined = 0
         var indent = 0
         var hanging = 0
+        // Where the text of a list item starts ("   (a) You…" → 7): its continuation lines are indented to there.
+        var itemText: Int? = null
         physical.forEachIndexed { index, line ->
             val words = line.trim()
             when {
                 joined == 0 -> {
                     indent = line.leadingSpaces()
                     hanging = indent
+                    itemText = startsItem.find(words)?.let { indent + it.value.length }
                     text.append(words)
                 }
                 else -> {
@@ -92,7 +95,7 @@ internal object NoticeReflow {
             }
             joined++
             val next = physical.getOrNull(index + 1)
-            if (next == null || !wrapsInto(line, next, column)) {
+            if (next == null || !(wrapsInto(line, next, column) || continuesItem(line, next, itemText))) {
                 val centred = joined == 1 && indent >= CENTRED_INDENT
                 result += if (centred) NoticeLine(text.toString(), centered = true) else NoticeLine(text.toString(), indent, hanging)
                 text.clear()
@@ -112,11 +115,24 @@ internal object NoticeReflow {
 
     private fun wrapsInto(line: String, next: String, column: Int): Boolean {
         val length = line.trimEnd().length
-        val nextWords = next.trim()
         return column >= MIN_WRAP_COLUMN &&
             length <= WRAP_LIMIT &&
             length >= column - WRAP_SLACK &&
-            line.trim().length >= MIN_WRAPPED_TEXT &&
+            mayContinue(line, next)
+    }
+
+    /**
+     * A list item hard-wrapped in a paragraph of its own, too short for [wrapsInto] to see a wrap column: Apache's
+     * "      (a) You must give any other recipients of the Work or" over "          Derivative Works a copy of this
+     * License; and". The next line starting exactly under the item's text ([itemText]) is its continuation.
+     */
+    private fun continuesItem(line: String, next: String, itemText: Int?): Boolean =
+        itemText != null && line.trimEnd().length <= WRAP_LIMIT && next.leadingSpaces() == itemText && mayContinue(line, next)
+
+    /** [line] does not end a sentence or introduce what follows, and [next] does not start a line of its own. */
+    private fun mayContinue(line: String, next: String): Boolean {
+        val nextWords = next.trim()
+        return line.trim().length >= MIN_WRAPPED_TEXT &&
             !line.trimEnd().endsWith(':') &&
             nextWords.isNotEmpty() &&
             !startsItem.containsMatchIn(nextWords) &&
