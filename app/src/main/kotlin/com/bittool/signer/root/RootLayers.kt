@@ -97,9 +97,9 @@ fun LoadFailureScreen(retrying: Boolean, onRetry: () -> Unit, modifier: Modifier
  *
  * The message keeps its own direction (iOS `Text(store.error)`, natural direction; backlog B25): store and engine text
  * may be English, or carry an address, in an Arabic interface, and a right-to-left paragraph would move its punctuation
- * and numbers. Compose lays a plain `String` out by its first strong character today, but annotated or selectable text
- * takes the layout direction (QA round 1 sign-02), so the direction is explicit: drawn like the dialog's own message,
- * with `contentDirection()` as `Callout(verbatim)` does.
+ * and numbers. Compose resolves an unspecified text direction to the layout direction before it draws a paragraph, so
+ * the dialog's own `text` would force an English message right to left (QA round 1 sign-02): the message is drawn like
+ * that text, with `contentDirection()` as `Callout(verbatim)` does.
  */
 @Composable
 fun UnableToContinueDialog(error: UiText, onDismiss: () -> Unit) {

@@ -9,7 +9,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.test.core.app.ApplicationProvider
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
@@ -47,21 +49,37 @@ class UnableToContinueDialogTest {
         compose.waitForIdle()
     }
 
-    private fun SemanticsNodeInteraction.paragraphDirection(): ResolvedTextDirection {
+    /**
+     * The direction of the paragraph the node draws. The semantics layout of a plain `String` (`GetTextLayoutResult`) is
+     * a re-layout of the node's style as given, where an unspecified direction falls back to the first strong character;
+     * the drawn paragraph first resolves that style against the layout direction (an unspecified direction becomes the
+     * layout direction). [TextMeasurer] resolves it the same way, so it measures the node's input as drawn.
+     */
+    private fun SemanticsNodeInteraction.drawnParagraphDirection(): ResolvedTextDirection {
         val layouts = mutableListOf<TextLayoutResult>()
         fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
-        return layouts.single().getParagraphDirection(0)
+        val input = layouts.single().layoutInput
+        assertEquals(LayoutDirection.Rtl, input.layoutDirection, "the dialog is laid out right to left")
+        val drawn = TextMeasurer(input.fontFamilyResolver, input.density, input.layoutDirection).measure(
+            text = input.text,
+            style = input.style,
+            constraints = input.constraints,
+            layoutDirection = input.layoutDirection,
+            density = input.density,
+            fontFamilyResolver = input.fontFamilyResolver,
+        )
+        return drawn.getParagraphDirection(0)
     }
 
-    private fun messageDirection() = compose.onNodeWithTag(RootTags.ERROR_MESSAGE).paragraphDirection()
+    private fun messageDirection() = compose.onNodeWithTag(RootTags.ERROR_MESSAGE).drawnParagraphDirection()
 
     @Test
     fun anEnglishMessageKeepsItsDirectionInARightToLeftInterface() {
         val text = "Invalid base64 bytes (input 0)."
         var dismissed = 0
         show(UiText.Verbatim(text)) { dismissed++ }
-        // The dialog window is right-to-left: its interface text (the title) follows the layout direction.
-        assertEquals(ResolvedTextDirection.Rtl, compose.onNodeWithText(title).assertIsDisplayed().paragraphDirection())
+        // The dialog's interface text (the title) follows the layout direction.
+        assertEquals(ResolvedTextDirection.Rtl, compose.onNodeWithText(title).assertIsDisplayed().drawnParagraphDirection())
         compose.onNodeWithText(text).assertIsDisplayed()
         assertEquals(ResolvedTextDirection.Ltr, messageDirection())
         compose.onNodeWithTag(RootTags.ERROR_OK).performClick()
@@ -71,6 +89,13 @@ class UnableToContinueDialogTest {
     @Test
     fun anArabicMessageStaysRightToLeft() {
         show(UiText.Verbatim("تعذّر حفظ سجل النشاط المحلي."))
+        assertEquals(ResolvedTextDirection.Rtl, messageDirection())
+    }
+
+    @Test
+    fun anArabicMessageWithAnAddressStaysRightToLeft() {
+        // The direction follows the first strong character, as iOS natural direction does.
+        show(UiText.Verbatim("تعذّر قراءة bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"))
         assertEquals(ResolvedTextDirection.Rtl, messageDirection())
     }
 }
