@@ -4,7 +4,7 @@
     <string name="security_app_lock">قفل التطبيق</string>
     <string name="security_app_lock_footer_available">طلب إلغاء القفل بالمصادقة الحيوية لفتح BitTool Signer عند التشغيل وبعد دقيقتين في الخلفية. ويظل كل توقيع يحتاج كلمة مرور المحفظة.</string>
     <string name="security_app_lock_footer_unavailable">فعّل إلغاء القفل ببصمة الإصبع أو بالوجه من إعدادات Android لقفل BitTool Signer. ويظل كل توقيع يحتاج كلمة مرور المحفظة دائمًا.</string>
-    <string name="security_biometrics_name">المصادقة الحيوية</string>
+    <string name="security_unlock_with_biometrics">إلغاء القفل بالمصادقة الحيوية</string>
     <string name="security_use_biometrics_instead">استخدم المصادقة الحيوية بدلًا من ذلك</string>
     <string name="security_prompt_unlock_title">إلغاء قفل BitTool Signer</string>
     <string name="security_prompt_lock_title">قفل BitTool Signer</string>

@@ -2,9 +2,15 @@ package com.bittool.signer.core.l10n
 
 import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
+import android.os.LocaleList
+import com.bittool.signer.core.model.AppLanguage
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.review.ReviewText
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -38,14 +44,15 @@ class TextsTest {
     }
 
     /**
-     * The strings iOS ff2756f / f9092a7 stopped drawing verbatim: the scan status, the weak recovery-cards warning, the
-     * App Lock button and the resolver's matching messages (through `ReviewText.phrase`), with Android specifiers.
+     * The strings iOS ff2756f stopped drawing verbatim: the scan status, the weak recovery-cards warning and the
+     * resolver's matching messages (through `ReviewText.phrase`), with Android specifiers. The App Lock button keeps its
+     * G7.4 text rather than the catalogue's "Unlock with %@" (iOS f9092a7; strings_security.xml says why).
      */
     @Test
     fun theFormerlyVerbatimIosStringsFormatInEnglish() {
         assertEquals("Reading request…", resources.getString(R.string.reading_request))
         assertEquals("Keep the animated code in view · 3 parts", resources.getString(R.string.keep_the_animated_code_in_view_x_parts, 3))
-        assertEquals("Unlock with Biometrics", resources.getString(R.string.unlock_with_x, resources.getString(R.string.security_biometrics_name)))
+        assertEquals("Unlock with Biometrics", resources.getString(R.string.security_unlock_with_biometrics))
         assertEquals(
             "With a 12-word phrase each card shows 8 of the 12 words, and the other 4 could be worked out with enough " +
                 "computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
@@ -74,7 +81,7 @@ class TextsTest {
         assertEquals("钱包需要先完成设置", review.phrase("Wallet setup required"))
     }
 
-    /** Turkish also reorders the warning (1, 3, 2, 4), and its button starts with the unlock method. */
+    /** Turkish also reorders the warning (1, 3, 2, 4). */
     @Test
     @Config(qualifiers = "tr")
     fun turkishKeepsTheWarningsNumbersInPlace() {
@@ -83,6 +90,37 @@ class TextsTest {
                 "bulunabilir. Her kartı tam ifade kadar dikkatli saklayın ya da bölünmüş yedekler için 24 kelimelik bir ifade kullanın.",
             resources.getString(R.string.with_a_x_word_phrase_each_card_shows_x_of_the_x_words, 15, 10, 15, 5),
         )
-        assertEquals("Biyometri ile kilidi aç", resources.getString(R.string.unlock_with_x, resources.getString(R.string.security_biometrics_name)))
+        assertEquals("Biyometriyle kilidi aç", resources.getString(R.string.security_unlock_with_biometrics))
+    }
+
+    /**
+     * Every language formats the strings iOS ff2756f added: the warning shows each of its four values exactly once (the
+     * translations are positional), the part count appears with Latin digits (Arabic is `ar-u-nu-latn`), and the
+     * resolver's messages are translated.
+     */
+    @Test
+    fun everyLanguageFormatsTheNewCatalogueStrings() {
+        val messages = listOf("No matching wallet", "Missing signer information", "Ambiguous wallet match", "Wallet setup required", "Invalid signing request")
+        for (language in AppLanguage.entries.filter { it != AppLanguage.System && it != AppLanguage.English }) {
+            val localized = resourcesFor(language)
+            val tag = language.languageTag
+            val warning = localized.getString(R.string.with_a_x_word_phrase_each_card_shows_x_of_the_x_words, 1001, 2002, 3003, 4004)
+            for (value in listOf("1001", "2002", "3003", "4004")) {
+                assertEquals(1, warning.split(value).size - 1, "$tag: $value once in \"$warning\"")
+            }
+            val parts = localized.getString(R.string.keep_the_animated_code_in_view_x_parts, 37)
+            assertTrue("37" in parts && "%" !in parts, "$tag: \"$parts\"")
+            assertNotEquals("Reading request…", localized.getString(R.string.reading_request), tag)
+            val review = localized.reviewText()
+            for (message in messages) {
+                assertNotEquals(message, review.phrase(message), "$tag: $message")
+            }
+        }
+    }
+
+    private fun resourcesFor(language: AppLanguage): Resources {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val configuration = Configuration(context.resources.configuration).apply { setLocales(LocaleList.forLanguageTags(language.languageTag)) }
+        return context.createConfigurationContext(configuration).resources
     }
 }

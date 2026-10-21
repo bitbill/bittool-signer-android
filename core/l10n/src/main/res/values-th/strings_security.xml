@@ -4,7 +4,7 @@
     <string name="security_app_lock">ล็อกแอป</string>
     <string name="security_app_lock_footer_available">กำหนดให้ปลดล็อกด้วยชีวมิติเพื่อเปิด BitTool Signer เมื่อเริ่มแอปและหลังอยู่เบื้องหลัง 2 นาที ทุกลายเซ็นยังคงต้องใช้รหัสผ่านกระเป๋า</string>
     <string name="security_app_lock_footer_unavailable">ตั้งค่าการปลดล็อกด้วยลายนิ้วมือหรือใบหน้าในการตั้งค่า Android เพื่อล็อก BitTool Signer ทุกลายเซ็นยังคงต้องใช้รหัสผ่านกระเป๋าเสมอ</string>
-    <string name="security_biometrics_name">ชีวมิติ</string>
+    <string name="security_unlock_with_biometrics">ปลดล็อกด้วยชีวมิติ</string>
     <string name="security_use_biometrics_instead">ใช้ชีวมิติแทน</string>
     <string name="security_prompt_unlock_title">ปลดล็อก BitTool Signer</string>
     <string name="security_prompt_lock_title">ล็อก BitTool Signer</string>

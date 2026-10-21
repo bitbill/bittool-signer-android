@@ -4,7 +4,7 @@
     <string name="security_app_lock">Bloqueio do app</string>
     <string name="security_app_lock_footer_available">Exigir desbloqueio biométrico para abrir o BitTool Signer ao iniciar e após 2 minutos em segundo plano. Cada assinatura continua exigindo a senha da carteira.</string>
     <string name="security_app_lock_footer_unavailable">Configure o desbloqueio por impressão digital ou facial nas Configurações do Android para bloquear o BitTool Signer. Cada assinatura sempre exige a senha da carteira.</string>
-    <string name="security_biometrics_name">biometria</string>
+    <string name="security_unlock_with_biometrics">Desbloquear com biometria</string>
     <string name="security_use_biometrics_instead">Usar biometria no lugar</string>
     <string name="security_prompt_unlock_title">Desbloquear o BitTool Signer</string>
     <string name="security_prompt_lock_title">Bloquear o BitTool Signer</string>

@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "BitTool Signer를 잠그려면 Android 설정에서 지문 또는 얼굴 인식을 설정하세요. 서명에는 항상 지갑 암호가 필요합니다."
   },
-  "security_biometrics_name": {
-   "source": "Biometrics",
-   "value": "생체 인증"
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "생체 인증으로 잠금 해제"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",

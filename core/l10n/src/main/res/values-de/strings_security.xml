@@ -4,7 +4,7 @@
     <string name="security_app_lock">App-Sperre</string>
     <string name="security_app_lock_footer_available">Biometrische Entsperrung verlangen, um BitTool Signer beim Start und nach 2 Minuten im Hintergrund zu öffnen. Jede Signatur braucht weiterhin das Wallet-Passwort.</string>
     <string name="security_app_lock_footer_unavailable">Richten Sie die Entsperrung per Fingerabdruck oder Gesichtserkennung in den Android-Einstellungen ein, um BitTool Signer zu sperren. Jede Signatur braucht immer das Wallet-Passwort.</string>
-    <string name="security_biometrics_name">Biometrie</string>
+    <string name="security_unlock_with_biometrics">Mit Biometrie entsperren</string>
     <string name="security_use_biometrics_instead">Stattdessen Biometrie nutzen</string>
     <string name="security_prompt_unlock_title">BitTool Signer entsperren</string>
     <string name="security_prompt_lock_title">BitTool Signer sperren</string>

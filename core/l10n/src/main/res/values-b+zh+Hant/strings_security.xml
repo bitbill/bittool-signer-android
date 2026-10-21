@@ -4,7 +4,7 @@
     <string name="security_app_lock">App 鎖</string>
     <string name="security_app_lock_footer_available">啟動時以及退到背景 2 分鐘後，開啟 BitTool Signer 需要生物辨識解鎖。每次簽名仍需錢包密碼。</string>
     <string name="security_app_lock_footer_unavailable">在系統設定中啟用指紋或人臉解鎖即可鎖定 BitTool Signer。每次簽名始終需要錢包密碼。</string>
-    <string name="security_biometrics_name">生物辨識</string>
+    <string name="security_unlock_with_biometrics">使用生物辨識解鎖</string>
     <string name="security_use_biometrics_instead">改用生物辨識</string>
     <string name="security_prompt_unlock_title">解鎖 BitTool Signer</string>
     <string name="security_prompt_lock_title">鎖定 BitTool Signer</string>

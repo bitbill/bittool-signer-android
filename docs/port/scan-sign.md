@@ -50,7 +50,7 @@ All of this state lives in one app-wide store (`Models/AppStore.swift:17-36`). I
 |---|---|---|
 | `review` | `TransactionReview?` | The decoded request under review. Non-nil means the Scan tab shows the review page. |
 | `plan` | `SigningPlan?` | Fixed signing tasks after matching. |
-| `matchingError` | `String?` | Why the request cannot be signed. English and shown verbatim (§11.5). |
+| `matchingError` | `String?` | Why the request cannot be signed. English, drawn through `ReviewText.phrase` since iOS ff2756f (§11.5). |
 | `completedTaskIDs` | `Set<String>` | Tasks already signed. |
 | `signatureFrames` | `[String]` | Response QR frames. |
 | `signatureText` | `String` | Export text: `encoded.text ?? frames.joined("\n")`. |
@@ -903,6 +903,9 @@ A listing identifies a deployment. **It is never green.**
 
 - A box with padding 16, background danger at 10%, radius 22.
 - `Label(message, "xmark.octagon.fill")` in subheadline semibold, danger, verbatim [EN-only on iOS], id `signing.matchError`.
+  Since iOS ff2756f the label is `ReviewText.phrase(message)`: the messages the catalogue has (the resolver's five,
+  "Wallet information changed. Match this request again.", an engine error message that is a key) are translated, any
+  other text stays as it is.
 - The explanation in footnote secondary, wrapping. It is selected by the exact English message:
 
 | Engine status / source | Message (verbatim) | Explanation (localized) | Retry? |
@@ -1339,8 +1342,8 @@ Localized on iOS. Each has a key in `translations/*.json`:
 
 [EN-only on iOS]. No key exists, so iOS shows English:
 
-- Scanner and session: `"Reading request…"`, `"Keep the animated code in view · %d parts"`, the 6 frame-gate messages (§6.8), `"The scan session ended. Scan again."`.
-- Matching messages: `"Matching interrupted. Try again."`, `"Unsupported signing protocol"`, and the engine matching messages. `"Wallet information changed. Match this request again."` is shown verbatim even though a key exists.
+- Scanner and session: the 6 frame-gate messages (§6.8), `"The scan session ended. Scan again."`. (`"Reading request…"` and `"Keep the animated code in view · %lld parts"` are localized since iOS ff2756f.)
+- Matching messages: `"Matching interrupted. Try again."`, `"Unsupported signing protocol"`, and engine messages the catalogue lacks. (Since iOS ff2756f the match error goes through `ReviewText.phrase`, so the resolver's messages and `"Wallet information changed. Match this request again."` are translated.)
 - Values drawn verbatim: `"Setup required"`, `"Wallet"`, `"Payload (Hex)"`, `"Payload (Text)"`, the `QRPayloadView.summary` strings, `"psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference."`, `"NFT contract (not verified)"`, `"+%d more (see Details)"`, `"Partial signature created"`.
 - Records and results: `"The local activity record could not be saved. Any completed signature remains available."`, all engine warnings, notes, titles and summaries on the result page, and all engine error messages.
 - Engine host errors: `"The offline signing engine could not be started."`, `"The engine’s secure entropy source could not be installed."`, `"The bundled signing engine could not be loaded."`, `"The offline engine could not process this request."`, `"This request could not be signed."`, `"This signing operation is not supported."`, `"The signing request has an invalid format."`, `"This request exceeds the 1 MB offline signing limit."`, `"The bundled signing engine is unavailable. Reinstall BitTool Signer."`.

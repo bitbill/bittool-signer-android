@@ -246,11 +246,11 @@
    "formatted": true,
    "context": "Settings › Security footer while no strong biometric is enrolled (replaces the iOS \"Set up Face ID or Touch ID in iOS Settings…\")."
   },
-  "security_biometrics_name": {
+  "security_unlock_with_biometrics": {
    "area": "security",
-   "english": "Biometrics",
+   "english": "Unlock with Biometrics",
    "formatted": true,
-   "context": "The unlock method on the lock screen's primary button: the argument of the iOS catalogue's \"Unlock with %s\" (unlock_with_x), where iOS puts the system's untranslated name Face ID / Touch ID. Android has no such name. Used only there: translate it in the form that button's translation needs (e.g. genitive after Polish \"za pomocą\", Russian \"с помощью\", Ukrainian \"за допомогою\"; capitalised where it starts the Turkish button)."
+   "context": "Lock screen primary button (replaces the iOS \"Unlock with %@\")."
   },
   "security_use_biometrics_instead": {
    "area": "security",

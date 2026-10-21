@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "BitTool Signer’ı kilitlemek için Android Ayarları’nda parmak izi veya yüzle kilit açmayı kurun. Her imza yine de her zaman cüzdan parolasını gerektirir."
   },
-  "security_biometrics_name": {
-   "source": "Biometrics",
-   "value": "Biyometri"
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Biyometriyle kilidi aç"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",

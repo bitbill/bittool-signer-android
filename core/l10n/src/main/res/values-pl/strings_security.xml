@@ -4,7 +4,7 @@
     <string name="security_app_lock">Blokada aplikacji</string>
     <string name="security_app_lock_footer_available">Wymagaj odblokowania biometrycznego do otwarcia BitTool Signer przy starcie i po 2 minutach w tle. Każdy podpis nadal wymaga hasła portfela.</string>
     <string name="security_app_lock_footer_unavailable">Skonfiguruj odblokowywanie odciskiem palca lub twarzą w Ustawieniach Androida, aby blokować BitTool Signer. Każdy podpis zawsze wymaga hasła portfela.</string>
-    <string name="security_biometrics_name">biometrii</string>
+    <string name="security_unlock_with_biometrics">Odblokuj biometrią</string>
     <string name="security_use_biometrics_instead">Użyj zamiast tego biometrii</string>
     <string name="security_prompt_unlock_title">Odblokuj BitTool Signer</string>
     <string name="security_prompt_lock_title">Zablokuj BitTool Signer</string>

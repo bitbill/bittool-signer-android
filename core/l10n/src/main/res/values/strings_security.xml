@@ -2,8 +2,11 @@
 <!--
     Android-only strings of :core:security (owner: W1-security). English only until the translation pass.
     The App Lock set is the single replacement set of gaps.md G7.4 for the iOS "%@"-with-Face-ID keys; lock-screen and
-    Settings texts in :app and :feature:settings reference these resources. The lock screen's unlock button is the iOS
-    catalogue's "Unlock with %s" (unlock_with_x, iOS f9092a7) filled with security_biometrics_name.
+    Settings texts in :app and :feature:settings reference these resources. The catalogue keys "Unlock with %s"
+    (unlock_with_x, since iOS f9092a7), "Use %s Instead" and "%s Lock" are not used: their argument is the system's
+    untranslated Face ID / Touch ID, and their translations are written around such a Latin name (spaces around it in
+    Chinese, Japanese and Thai, the Korean "(으)로", a detached Arabic "بـ"), so a translated "Biometrics" would read
+    wrong in them. Keep these fixed texts.
 -->
 <resources>
     <!-- Settings › Security toggle title (replaces the iOS "%@ Lock", G7.4). -->
@@ -12,11 +15,8 @@
     <string name="security_app_lock_footer_available">Require biometric unlock to open BitTool Signer at launch and after 2 minutes in the background. Every signature still needs the wallet’s password.</string>
     <!-- Settings › Security footer while no strong biometric is enrolled (replaces the iOS "Set up Face ID or Touch ID in iOS Settings…"). -->
     <string name="security_app_lock_footer_unavailable">Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.</string>
-    <!-- The unlock method on the lock screen's primary button: the argument of the iOS catalogue's "Unlock with %s"
-         (unlock_with_x), where iOS puts the system's untranslated name Face ID / Touch ID. Android has no such name.
-         Used only there: translate it in the form that button's translation needs (e.g. genitive after Polish
-         "za pomocą", Russian "с помощью", Ukrainian "за допомогою"; capitalised where it starts the Turkish button). -->
-    <string name="security_biometrics_name">Biometrics</string>
+    <!-- Lock screen primary button (replaces the iOS "Unlock with %@"). -->
+    <string name="security_unlock_with_biometrics">Unlock with Biometrics</string>
     <!-- Lock screen password form: back to the biometric button (replaces the iOS "Use %@ Instead"). -->
     <string name="security_use_biometrics_instead">Use Biometrics Instead</string>
     <!-- BiometricPrompt title when unlocking the app. -->

@@ -26,9 +26,10 @@ specs cover them in full.
    `\(Int)` → `%lld`. Translated values may use positional forms such as `%1$@` and `%2$lld`.
    - Strings created with `String(localized:…, bundle: AppText.bundle)` are **localised**.
    - Strings that are plain Swift `String`s and are shown verbatim are **English only on iOS**. Examples are
-     `matchingError` values, `QRPayloadView.summary`, the "+N more" line and the weak-card warning. Each one is
-     flagged as *(not localised on iOS)*. Android may keep them English for parity, or add resources; translations
-     for most of them do not exist in the 21 tables.
+     `QRPayloadView.summary`, the "+N more" line and the `matchingError` values the catalogue lacks (until iOS
+     ff2756f also the weak-card warning and every `matchingError`, which it now draws through `ReviewText.phrase`).
+     Each one is flagged as *(not localised on iOS)*. Android may keep them English for parity, or add resources;
+     translations for most of them do not exist in the 21 tables.
 2. **Lenient-but-typed JSON reading.** iOS parses engine results with `JSONSerialization` and reads each field with
    `raw["k"] as? T`. A value of the wrong JSON type reads as *absent*. A string is never a number, and a number is
    never a string. `as? [String]` / `as? [[String: Any]]` fail **as a whole** when any element has the wrong type.

@@ -796,7 +796,7 @@ others reference that resource (all `strings_*.xml` compile into the one `com.bi
 | "Password changed" (toast announcement) | `strings_wallets.xml` (W2-wallets) | or reuse the key "Password Changed" |
 | "Deleted wallet", "Warnings shown", "High", "Partial signature created", "No Results for “%1$s”", "Check the spelling or try a new search.", the Distribution / Signing certificate rows | `strings_activity.xml` / `strings_settings.xml` (W2-activity-settings) | `resultType` values mapped, anything else verbatim |
 | "This document is missing from the app bundle." (`LegalDocumentParser.MISSING`) | `strings_settings.xml` (W2-activity-settings) | the repository returns the English block; the legal views map it |
-| The G7.4 App Lock set, `security_overlay_blocked` | `strings_security.xml` (W1-security) | lock-screen texts used by `:app` reference them; the unlock button is the catalogue's "Unlock with %s" (iOS f9092a7) filled with `security_biometrics_name` |
+| The G7.4 App Lock set, `security_overlay_blocked` | `strings_security.xml` (W1-security) | lock-screen texts used by `:app` reference them. The catalogue's "Unlock with %s" (iOS f9092a7), "Use %s Instead" and "%s Lock" stay unused: their argument is the system's untranslated Face ID / Touch ID, and their translations are written around such a Latin name (spaces in Chinese, Japanese, Thai; Korean "(으)로"; a detached Arabic "بـ") |
 | Onboarding Android wording (page 3 body, the replaced point) | `strings_onboarding.xml` (W2-shell) | |
 
 ### 4.4 Secrets

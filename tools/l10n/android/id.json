@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Atur buka kunci dengan sidik jari atau wajah di Pengaturan Android untuk mengunci BitTool Signer. Setiap tanda tangan tetap selalu memerlukan kata sandi dompet."
   },
-  "security_biometrics_name": {
-   "source": "Biometrics",
-   "value": "biometrik"
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Buka kunci dengan biometrik"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",

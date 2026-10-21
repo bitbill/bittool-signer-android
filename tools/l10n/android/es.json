@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Configura el desbloqueo con huella digital o facial en los Ajustes de Android para bloquear BitTool Signer. Cada firma siempre requiere la contraseña de la cartera."
   },
-  "security_biometrics_name": {
-   "source": "Biometrics",
-   "value": "biometría"
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Desbloquear con biometría"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",

@@ -4,7 +4,7 @@
     <string name="security_app_lock">App Lock</string>
     <string name="security_app_lock_footer_available">Humingi ng biometric unlock para buksan ang BitTool Signer kapag binuksan ito at pagkatapos ng 2 minuto sa background. Kailangan pa rin ng password ng wallet sa bawat lagda.</string>
     <string name="security_app_lock_footer_unavailable">I-set up ang fingerprint o face unlock sa Mga setting ng Android para ma-lock ang BitTool Signer. Laging kailangan pa rin ng password ng wallet sa bawat lagda.</string>
-    <string name="security_biometrics_name">biometrics</string>
+    <string name="security_unlock_with_biometrics">I-unlock gamit ang biometrics</string>
     <string name="security_use_biometrics_instead">Gamitin na lang ang biometrics</string>
     <string name="security_prompt_unlock_title">I-unlock ang BitTool Signer</string>
     <string name="security_prompt_lock_title">I-lock ang BitTool Signer</string>

@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Налаштуйте розблокування відбитком пальця або обличчям у «Налаштуваннях» Android, щоб блокувати BitTool Signer. Кожен підпис завжди потребує пароля гаманця."
   },
-  "security_biometrics_name": {
-   "source": "Biometrics",
-   "value": "біометрії"
+  "security_unlock_with_biometrics": {
+   "source": "Unlock with Biometrics",
+   "value": "Розблокувати біометрією"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",

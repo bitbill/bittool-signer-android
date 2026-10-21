@@ -11,8 +11,8 @@
 #   1. refuses unless the iOS languages are exactly import_ios_strings.LANGUAGES (a new or dropped language needs
 #      Android resource qualifiers first);
 #   2. copies translations/<lang>.json and engine/data/interface-strings.json, then compares them with cmp;
-#   3. prints the English keys iOS added or removed, so Android-only strings with the same meaning can be retired
-#      (DECISIONS §4: prefer the iOS string);
+#   3. prints the English keys iOS added or removed since the last successful import (strings-index.tsv), so
+#      Android-only strings with the same meaning can be retired (DECISIONS §4: prefer the iOS string);
 #   4. runs tools/l10n/import_ios_strings.py. Resource names recorded in strings-index.tsv never change. An override in
 #      tools/l10n/overrides/ whose iOS translation changed stops the import with the key and both texts: review it
 #      (delete it when iOS adopted the fix, else update its "ios"), then rerun this script;
@@ -41,10 +41,6 @@ if have != want:
              + (f'gone from iOS {", ".join(missing)}' if missing else ''))
 EOF
 
-OLD_KEYS=$(mktemp)
-trap 'rm -f "$OLD_KEYS"' EXIT
-cp "$L10N/interface-strings.json" "$OLD_KEYS"
-
 for f in "$IOS"/translations/*.json; do
   cp "$f" "$L10N/translations/$(basename "$f")"
   cmp "$f" "$L10N/translations/$(basename "$f")"
@@ -52,12 +48,16 @@ done
 cp "$SRC_KEYS" "$L10N/interface-strings.json"
 cmp "$SRC_KEYS" "$L10N/interface-strings.json"
 
-$PY - "$OLD_KEYS" "$L10N/interface-strings.json" <<'EOF'
-import json, sys
-old, new = (json.load(open(p, encoding='utf-8')) for p in sys.argv[1:3])
+# Against strings-index.tsv, the keys of the last successful import: a rerun after a stopped import lists them again.
+$PY - "$L10N/strings-index.tsv" "$L10N/interface-strings.json" <<'EOF'
+import json, pathlib, sys
+index = pathlib.Path(sys.argv[1])
+rows = index.read_text(encoding='utf-8').splitlines()[1:] if index.exists() else []
+old = [row.split('\t', 1)[1] for row in rows if not row.startswith('camera_usage_description\t')]
+new = json.load(open(sys.argv[2], encoding='utf-8'))
 added = [k for k in new if k not in set(old)]
 removed = [k for k in old if k not in set(new)]
-print(f'interface-strings.json: {len(old)} -> {len(new)} keys')
+print(f'interface-strings.json: {len(old)} keys imported -> {len(new)} in iOS')
 for k in added:
     print(f'  + {k}')
 for k in removed:

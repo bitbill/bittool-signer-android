@@ -4,7 +4,7 @@
     <string name="security_app_lock">Kunci aplikasi</string>
     <string name="security_app_lock_footer_available">Wajibkan buka kunci biometrik untuk membuka BitTool Signer saat diluncurkan dan setelah 2 menit di latar belakang. Setiap tanda tangan tetap memerlukan kata sandi dompet.</string>
     <string name="security_app_lock_footer_unavailable">Atur buka kunci dengan sidik jari atau wajah di Pengaturan Android untuk mengunci BitTool Signer. Setiap tanda tangan tetap selalu memerlukan kata sandi dompet.</string>
-    <string name="security_biometrics_name">biometrik</string>
+    <string name="security_unlock_with_biometrics">Buka kunci dengan biometrik</string>
     <string name="security_use_biometrics_instead">Gunakan biometrik saja</string>
     <string name="security_prompt_unlock_title">Buka kunci BitTool Signer</string>
     <string name="security_prompt_lock_title">Kunci BitTool Signer</string>

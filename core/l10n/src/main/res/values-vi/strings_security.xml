@@ -4,7 +4,7 @@
     <string name="security_app_lock">Khóa ứng dụng</string>
     <string name="security_app_lock_footer_available">Yêu cầu mở khóa bằng sinh trắc học để mở BitTool Signer khi khởi động và sau 2 phút ở chế độ nền. Mỗi chữ ký vẫn cần mật khẩu của ví.</string>
     <string name="security_app_lock_footer_unavailable">Thiết lập mở khóa bằng vân tay hoặc khuôn mặt trong Cài đặt Android để khóa BitTool Signer. Mỗi chữ ký vẫn luôn cần mật khẩu của ví.</string>
-    <string name="security_biometrics_name">sinh trắc học</string>
+    <string name="security_unlock_with_biometrics">Mở khóa bằng sinh trắc học</string>
     <string name="security_use_biometrics_instead">Dùng sinh trắc học thay thế</string>
     <string name="security_prompt_unlock_title">Mở khóa BitTool Signer</string>
     <string name="security_prompt_lock_title">Khóa BitTool Signer</string>
