@@ -68,7 +68,7 @@ enum class Distribution(val flavor: String) { DirectApk("apk"), GooglePlay("play
 data class BuildInfo(val applicationId: String, val versionName: String, val versionCode: Long,
                      val distribution: Distribution, val isDebug: Boolean, val repositoryUrl: String,
                      val signingCertificateSha256: String? = null) {   // activity-settings §14.8 "Signing certificate" row
-    val buildNumber: Long; val displayVersion: String }       // "1.0.0 (1)" on iOS; Android default build number 0 → see KDoc
+    val buildNumber: Long; val displayVersion: String }       // "1.0.0 (1)" as on iOS: default build number 1 (DECISIONS §10)
 // log/Log.kt: DECISIONS §6 (no secrets in logs); disabled in release, lambdas never evaluated
 object Log { @Volatile var enabled: Boolean; fun d(tag: String, message: () -> String) /* i, w, e */ }
 // storage/Storage.kt: vault-crypto §2.2–2.3, §17.8
@@ -685,10 +685,11 @@ activity-settings §14.5 pitfall (a): with "System" and a device list `[en-GB, d
   duties listed under §2.1), Welcome and onboarding (Android wording of app-shell §6.2), manifest permission set of
   G8, `BuildInfo` (incl. `signingCertificateSha256`) and `@Named(ENGINE_TEST_OPERATIONS)` providers,
   `SignerApplication` (engine `prewarm()`, nothing that opens storage), `DebugUiTestHarness` + debug Hilt module
-  (`UiTestEnvironment`, fixture `DeviceKeyStore` + public-data key, failing `BiometricAuthenticator`, fixtures created
+  (`UiTestEnvironment`, fixture `DeviceKeyStore` + public-data key, fixture `JournalCipher`, failing
+  `BiometricAuthenticator`, fixtures created
   through `SignerStore.createWallet`, failure → `setError("UI fixture setup failed: …")`), flavor About content, the
   flavor legal texts `app/src/{apk,play}/assets/legal/TERMS_OF_USE.txt` and `PRIVACY_POLICY.txt` (derived from the iOS
-  texts per activity-settings §10, marked for legal review), the default build number decision (`BuildInfo` KDoc).
+  texts per activity-settings §10, marked for legal review), the default build number (1, DECISIONS §10).
 - iOS tests: PrivacyShieldTests (2), AppNameTests (3), LegalDocumentTests `privacyPolicyDescribesWhatTheAppActuallyDoes`
   adapted to the Android claims per flavor (`LegalTextsTest` in `:app`); Robolectric root-stage and glue tests
   (Replace/Reset ordering, count 0, review → Scan, gate closed while locked), the `[en-GB, de]` resolution test.
@@ -963,8 +964,9 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
       a certainty about this device, and the Activity notice never says the wallets are unaffected (the same event
       usually deletes their keys).
 
-Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
-scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.
-Also: the default build number (iOS "1.0.0 (1)" vs Android "1.0.0 (0)", `BuildInfo` KDoc); whether "BitTool Wallet"
-lists "iOS · Android" (models-state §10.3; data unchanged until decided); whether Activity offers "Clear Activity" when
-the journal is unreadable (`activityUnreadable`).
+Open questions for the owner: none. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the scanner UI
+converts it. The questions this section used to list are decided (DECISIONS §10): the default build number is 1
+("1.0.0 (1)" as on iOS); "BitTool Wallet" and every other compatible-wallet entry stay exactly the iOS data
+(models-state §10.3); Activity hides "Clear Activity" while the journal is unreadable (`activityUnreadable`, iOS
+parity; item 19 is the one Android-only exception, a provably lost key); there is no Android-only "Allow camera"
+label (scan-sign §23.5).

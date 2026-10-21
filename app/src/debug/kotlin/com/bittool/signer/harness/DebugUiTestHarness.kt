@@ -54,7 +54,7 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition and winning over the language an earlier run or the Language page stored; a change relaunches the activity once (API 33+: `LocaleManager` does; below, [recreateForRunLocale]) |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
  * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
- * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); the journal key is not lost, so later launches of the run keep it (iOS behaviour), only a reset run starts a new journal |
+ * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); the journal key is not lost (a loss an earlier `loseJournalKey` launch left pending is forgotten), so later launches of the run keep it (iOS behaviour), only a reset run starts a new journal |
  * | `bts.uitest.loseJournalKey=true` | deletes the run's Activity journal key for good before anything is injected, as removing the screen lock does (QA L1, round 3 activity-keyboard-07): the store proves the loss, starts a fresh journal and Activity shows "Activity Started Again" until "OK"; a run without a journal gets one the lost key sealed. Wins over `unreadableJournal` |
  *
  * While a run is active, `DebugUiTestModule` binds the file-backed [FixtureDeviceKeyStore] (so a cold launch with the
@@ -123,20 +123,22 @@ object DebugUiTestHarness : UiTestEnvironment {
             val lost = FixtureDeviceKeyStore.loseWalletKeys(File(parsed.root, FixtureDeviceKeyStore.DIRECTORY))
             Log.i(TAG) { "UI-test run: $lost wallet device keys deleted (lost)" }
         }
+        val journalKey = File(parsed.root, "${FixtureDeviceKeyStore.DIRECTORY}/${FixtureJournalCipher.KEY_FILE}")
+        val losesJournalKey = extras.flag(EXTRA_LOSE_JOURNAL_KEY) == true
         if (extras.flag(EXTRA_UNREADABLE_JOURNAL) == true) {
             try {
                 FixtureJournalCipher.makeUnreadable(File(parsed.root, SignerFiles.RECEIPTS_FILE))
+                // The key is not lost: a loss an earlier launch recorded, which no signature has ended yet, would
+                // otherwise start this journal again instead of showing it unreadable.
+                if (!losesJournalKey) FixtureJournalCipher.forgetLoss(journalKey)
                 Log.i(TAG) { "UI-test run: Activity journal made unreadable" }
             } catch (e: IOException) {
                 Log.w(TAG) { "UI-test run: the Activity journal could not be replaced (${e.javaClass.simpleName})" }
             }
         }
-        if (extras.flag(EXTRA_LOSE_JOURNAL_KEY) == true) {
+        if (losesJournalKey) {
             try {
-                FixtureJournalCipher.loseKey(
-                    File(parsed.root, "${FixtureDeviceKeyStore.DIRECTORY}/${FixtureJournalCipher.KEY_FILE}"),
-                    File(parsed.root, SignerFiles.RECEIPTS_FILE),
-                )
+                FixtureJournalCipher.loseKey(journalKey, File(parsed.root, SignerFiles.RECEIPTS_FILE))
                 Log.i(TAG) { "UI-test run: Activity journal key lost" }
             } catch (e: IOException) {
                 Log.w(TAG) { "UI-test run: the Activity journal key could not be lost (${e.javaClass.simpleName})" }

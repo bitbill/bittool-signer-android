@@ -261,6 +261,33 @@ class SignerStoreRealCryptoTest {
     }
 
     /**
+     * The commonest journal that does not open while its key is fine: the file itself is damaged (one bit of the GCM
+     * tag flipped) and the key that sealed it is in place. `KeystoreLossProof` finds a usable key, so nothing is
+     * discarded: the journal is unreadable, never started again, and the key still opens what it seals.
+     */
+    @Test
+    fun aDamagedJournalWhoseKeyIsInPlaceStaysUnreadable() = DeviceStore.run {
+        store.reload()
+        createWallet("Journal key fixture")
+        signOnce()
+        val damaged = fixture.journalFile.readBytes().also { it[it.lastIndex] = (it[it.lastIndex].toInt() xor 1).toByte() }
+        fixture.journalFile.writeBytes(damaged)
+
+        val relaunched = fixture.relaunch()
+        relaunched.reload()
+        relaunched.state.value.let {
+            assertTrue(it.activityUnreadable)
+            assertFalse(it.activityRestarted, "a damaged file is not a lost key")
+            assertTrue(it.receipts.isEmpty())
+            assertEquals(UiText.Resource(R.string.data_activity_unreadable), it.error)
+        }
+        assertContentEquals(damaged, fixture.journalFile.readBytes(), "An unreadable journal is never overwritten.")
+        assertFalse(fixture.receiptRepository.restartNoticeFile.exists())
+        val probe = "[]".encodeToByteArray()
+        assertContentEquals(probe, DeviceCrypto.journalCipher().open(fixture.cipher.seal(probe)), "the key was kept")
+    }
+
+    /**
      * A wallet whose Android Keystore device key is gone (vault-crypto.md §17.3: a missing key is never recreated)
      * cannot be unlocked: signing fails with "This wallet’s device key is unavailable…" before the engine is called,
      * and the review, plan and public side are untouched.

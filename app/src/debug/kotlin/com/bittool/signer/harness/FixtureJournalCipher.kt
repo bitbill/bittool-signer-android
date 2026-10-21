@@ -30,8 +30,9 @@ import javax.crypto.spec.SecretKeySpec
  * file is normal (a run that has not signed yet), so absence alone proves nothing. A key is provably lost only while
  * the loss record `journal.key.lost` that [loseKey] writes sits next to a key file that is absent (or not a key) — the
  * fixture's stand-in for `KeystoreLossProof` — and [discardLostKey] then answers true, as the Keystore cipher does after
- * removing the screen lock. The next [seal] creates a new key, which ends the loss. A journal no key opens while a key is present (or no
- * loss was recorded, `bts.uitest.unreadableJournal`) stays unreadable.
+ * removing the screen lock. The next [seal] creates a new key, which ends the loss. A journal no key opens while a key
+ * is present, or while no loss is recorded (`bts.uitest.unreadableJournal`, whose launch removes an earlier record
+ * through [forgetLoss]), stays unreadable.
  */
 internal class FixtureJournalCipher(
     private val keyFile: File,
@@ -154,6 +155,17 @@ internal class FixtureJournalCipher(
             if (!journal.exists()) makeUnreadable(journal)
             AtomicFiles.write(lossRecord(keyFile), ByteArray(0))
             if (!AtomicFiles.delete(keyFile)) throw IOException("The journal key could not be deleted")
+        }
+
+        /**
+         * `bts.uitest.unreadableJournal` without `loseJournalKey`: the run's journal key is not lost. Removes a loss
+         * record an earlier [loseKey] launch left behind, which only the next [seal] would end otherwise (a run that
+         * did not sign since), so [discardLostKey] proves nothing and the unreadable journal stays unreadable. An
+         * absent key file is then a run that never sealed, as without the record. Call before anything opens the run's
+         * storage.
+         */
+        fun forgetLoss(keyFile: File) {
+            if (!AtomicFiles.delete(lossRecord(keyFile))) throw IOException("The journal key loss could not be forgotten")
         }
 
         /** The loss record next to [keyFile] (`journal.key.lost`). */

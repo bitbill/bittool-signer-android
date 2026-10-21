@@ -38,10 +38,15 @@ class HarnessJournalKeyLossTest {
 
     @Before
     fun setUp() {
+        newProcess()
+        root.deleteRecursively()
+    }
+
+    /** A cold launch: the harness configures again from the next launch's extras. */
+    private fun newProcess() {
         DebugUiTestHarness.resetForTest()
         DebugUiTestHarness.isEmulator = { true }
         DebugUiTestHarness.createsFixtures = false
-        root.deleteRecursively()
     }
 
     @After
@@ -126,6 +131,29 @@ class HarnessJournalKeyLossTest {
     fun theLostKeyWinsOverTheUnreadableJournal() = runTest {
         launch(UNREADABLE_JOURNAL, LOSE_JOURNAL_KEY, reset = true)
         assertTrue(repository().startOverIfKeyLost())
+    }
+
+    @Test
+    fun anUnreadableJournalAfterALostKeyThatNoSignatureEndedStaysUnreadable() = runTest {
+        // `launch --fixtures 1 --lose-journal-key`, the notice read, no signature (no new key), then
+        // `launch --keep --unreadable-journal`: the switch's journal key is not lost, whatever an earlier launch did.
+        launch(LOSE_JOURNAL_KEY, reset = true)
+        val lost = repository()
+        assertTrue(lost.startOverIfKeyLost())
+        lost.acknowledgeRestartNotice()
+
+        newProcess()
+        launch(UNREADABLE_JOURNAL)
+        val repository = repository()
+        val sealed = File(root, "receipts.bin").readBytes()
+        assertFailsWith<SignerException> { repository.read() }
+        assertFalse(repository.startOverIfKeyLost(), "Activity Unavailable, not started again")
+        assertFalse(repository.hasRestartNotice())
+        assertContentEquals(sealed, File(root, "receipts.bin").readBytes(), "never replaced")
+        // A later launch of the run without switches keeps it unreadable.
+        newProcess()
+        launch()
+        assertFalse(repository().startOverIfKeyLost())
     }
 
     @Test

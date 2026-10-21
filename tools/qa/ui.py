@@ -34,7 +34,8 @@ device's screen lock does (QA L1): the app proves the loss, starts a fresh journ
 shows "Activity Started Again" with OK until it is tapped (also across a `--keep` relaunch without the flag). It works
 on a fresh run (with --fixtures: the run gets a journal the lost key sealed) and with --keep (the run's records are
 what the loss takes); the next signature is saved under a new key. Every launch with the flag loses the key again.
-With --unreadable-journal as well, the lost key wins.
+With --unreadable-journal as well, the lost key wins; a later --unreadable-journal alone shows "Activity Unavailable"
+again even when no signature has replaced the lost key since.
 
 `--locale` (default en-US, also with --keep) wins over the language an earlier run or the Language page stored. Below
 API 33 a launch whose stored or device language differs relaunches the activity once right after the first frame
