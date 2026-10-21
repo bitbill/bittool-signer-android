@@ -191,9 +191,10 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
  * short for "Continue", the keyboard and the editor together (landscape phones), "Continue" steps aside while the
  * keyboard is up; Done brings it back. An error stays above the keyboard meanwhile: it is what the person is fixing
  * ("“xyzzy” is not in the BIP39 word list"), and typing does not clear it (iOS). On such a window, and at
- * accessibility text sizes, it is shortened to two lines while the keyboard is up, so the status line and the editor
- * keep their room (QA activity-keyboard-03); TalkBack reads it whole, Done shows it whole. The window height follows
- * rotations, which this activity handles itself (`windowHeight`, QA activity-keyboard-01).
+ * accessibility text sizes, it is shortened to two lines while a keyboard is up (the in-app one, or the system one
+ * under its suggestion bar), so the status line and the editor keep their room (QA activity-keyboard-03); TalkBack
+ * reads it whole, Done shows it whole. The window height follows rotations, which this activity handles itself
+ * (`windowHeight`, QA activity-keyboard-01).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -220,7 +221,8 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     // Read unconditionally: a composable read inside `&&` / `||` would only run sometimes, and that broke this
     // composition (the editor lost the focus it was given).
     val accessibilityText = SignerTheme.isAccessibilityTextSize
-    val shortenError = inAppKeyboardShown && (shortWindow || accessibilityText)
+    // Either keyboard: above the system one the bar also holds the suggestion row, so the error needs it even more.
+    val shortenError = (inAppKeyboardShown || suggestions) && (shortWindow || accessibilityText)
     val canContinue by remember { derivedStateOf { !fields.phraseIsBlank() } }
 
     LaunchedEffect(keyboard) {

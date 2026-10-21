@@ -452,12 +452,12 @@ internal fun BodyText(
  * A footer error (iOS `Callout(verbatim: error, tone: .danger)`): the shared `UiText` callout, so engine text keeps its
  * own direction. Tagged `setup.error`.
  *
- * With a [maxLines] (the import step while the in-app keyboard is up, at accessibility text sizes or on a short window:
- * QA activity-keyboard-03) the message is drawn on at most that many lines, ending in an ellipsis, so the bar leaves
- * the page room for what is being fixed; TalkBack still reads the whole message, and without the limit it is drawn
- * whole again. It is the same callout (tone at 12 %, radius 16, padding 14, the first-line glyph, subheadline in the
- * message's own direction), drawn here because the design system's has no line limit; its text is tagged
- * `setup.error.text`.
+ * With a [maxLines] (the import step while a keyboard is up, the in-app one or the system one, at accessibility text
+ * sizes or on a short window: QA activity-keyboard-03) the message is drawn on at most that many lines, ending in an
+ * ellipsis, so the bar leaves the page room for what is being fixed; TalkBack still reads the whole message, and
+ * without the limit it is drawn whole again. It is the same callout (tone at 12 %, radius 16, padding 14, the
+ * first-line glyph, subheadline in the message's own direction), drawn here because the design system's has no line
+ * limit.
  */
 @Composable
 internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier, maxLines: Int = Int.MAX_VALUE) {
@@ -486,16 +486,15 @@ internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier, maxLine
             color = colors.label,
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f).testTag(ERROR_TEXT_TAG),
+            modifier = Modifier.weight(1f),
         )
     }
 }
 
-/** How many lines a footer error keeps while the in-app keyboard is up and space is short ([ErrorCallout]). */
+/** How many lines a footer error keeps while a keyboard is up and space is short ([ErrorCallout]). */
 internal const val SHORTENED_ERROR_LINES = 2
 
 private const val ERROR_TAG = "setup.error"
-private const val ERROR_TEXT_TAG = "setup.error.text"
 
 /**
  * An inline tinted text button with an optional leading icon and trailing direction arrow (iOS `Button { Label(…) }`

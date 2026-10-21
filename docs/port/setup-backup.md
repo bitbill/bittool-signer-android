@@ -1170,7 +1170,7 @@ method. There is no iOS counterpart; iOS behaviour elsewhere is unchanged.
 
 **Where.** `ImportWalletStep` (`:feature:setup` `flow/FormSteps.kt`) is the only place a phrase is typed: import,
 resetting a forgotten password, a phrase that is already here, and re-importing after a lost device key. The components
-live in `:core:ui` `keyboard/`; the strings in `strings_keyboard.xml` (7 Android-only strings, translated into the 20
+live in `:core:ui` `keyboard/`; the strings in `strings_keyboard.xml` (8 Android-only strings, translated into the 20
 other languages; the keys otherwise reuse the iOS keys "Done", "Delete", "Paste from Clipboard", "Insert %@").
 
 **No input-method connection.** `RecoveryPhraseEditor` is hosted by `InAppKeyboardInput(inAppKeyboard = true)`, which
@@ -1229,10 +1229,12 @@ gesture leaves it up); only the next Back asks to discard the draft.
 so the editor keeps room; Done brings it back. Both follow a rotation while the keyboard is up, either way. An error is
 not hidden with it: it stays above the keyboard while the phrase is fixed (typing does not clear it, iOS). On a short
 window or at accessibility text sizes (font scale 1.6 and up) the error is shortened to two lines ending in an
-ellipsis while the keyboard is up (`ErrorCallout(maxLines = SHORTENED_ERROR_LINES)`, the same callout drawn with a
+ellipsis while a keyboard is up (`ErrorCallout(maxLines = SHORTENED_ERROR_LINES)`, the same callout drawn with a
 line limit), so the status line and the editor stay above it: at font scale 2.0 the length error alone took five
-lines, about 180 dp, and pushed the status line under the top bar (QA activity-keyboard-03). TalkBack still reads the
-whole message, and Done shows it whole again.
+lines, about 180 dp, and pushed the status line under the top bar (QA activity-keyboard-03). This holds for the system
+keyboard too, where the bar also carries "Continue" and the suggestion row: above a 260 dp system keyboard the
+five-line error left 55 dp between the top bar and the bar, with the status line out of view. TalkBack still reads the
+whole message, and Done (the keyboard's or the suggestion row's) shows it whole again.
 
 **System keyboard (Chinese, Japanese, Korean).** The globe key opens `SwitchToSystemKeyboardDialog` ("Switch to the
 system keyboard?", the system or a third-party keyboard can see and learn the words; "Keep BitTool keyboard" is the
@@ -1253,9 +1255,12 @@ The flag and incognito mode are hints; nothing an app can set makes Gboard drop 
 and keep the Chinese, Japanese and Korean layouts and their conversion candidates, which composing needs:
 - `TYPE_TEXT_VARIATION_VISIBLE_PASSWORD` (the usual workaround) and the password variations make Gboard switch to a
   Latin-only layout, so no CJK phrase can be typed; the password ones also mask the words.
-- Choosing the variation by the detected language would need `InputMethodManager.restartInput` mid-phrase, and the
-  Latin letters typed for Pinyin or romaji conversion read as a Latin phrase, so it would flip the editor to the
-  Latin-only layout in the middle of composing. Before the first word there is nothing to detect.
+- Choosing the variation by the detected language would need `InputMethodManager.restartInput` mid-phrase. Detected
+  from the whole text, the Latin letters typed for Pinyin or romaji conversion read as a Latin phrase, so it would
+  flip the editor to the Latin-only layout in the middle of composing; detected from committed words only, the first
+  word is still typed with candidates. Before the first word there is nothing to detect. Choosing it by the input
+  method's current subtype (`InputMethodManager.currentInputMethodSubtype`) fails at the start instead: a keyboard
+  left on English when the person switches would open the Latin-only layout before they reach Pinyin, kana or Hangul.
 - The email, URI and filter variations, which AOSP LatinIME treats as "no suggestions", are layout hints: input methods
   answer them with URL or email layouts (often ASCII only), and Gboard's candidates there are not specified.
 - `TYPE_TEXT_FLAG_AUTO_COMPLETE` ("the editor shows its own completions") is a hint of the same kind as
@@ -1272,17 +1277,18 @@ Continue, as is a wrong checksum; the BIP39 bar with the "BitTool keyboard" chip
 Input methods that honour the flag (AOSP LatinIME and its derivatives) show no candidates.
 
 **Tests.** `:core:ui` `Bip39KeyboardEditsTest` (Ownbit's edit cases), `Bip39KeyboardTest` (also Paste's availability,
-its "nothing to paste" answer, and no read of the clip before Paste), `Bip39KeyboardRotationTest` (rows after a
-rotation both ways, API 31 and 36) and Roborazzi component shots; instrumented `WindowHeightRotationDeviceTest` (a
-real rotation of an activity with `MainActivity`'s `configChanges`, both ways, on emulator-5554); `:feature:setup`
-`PhraseKeyboardTest` (no input connection, keys, suggestions, hardware keys, Copy / Cut refused, Done and Back,
-predictive back, switching both ways with the warning and the system keyboard's traits, short window with and without
-an error), `SetupRotationTest` (the import step with the keyboard up and the backup step through rotations both ways,
-API 31 and 36), `ImportErrorKeyboardLayoutTest` (font scale 2.0 with an error, real text layout),
-`PhraseKeyboardInsertTest` (Ownbit's suggestion cases on the Insert semantics), `PhraseEditorTest` (input traits),
-`KeyboardKeepInViewTest`, `PhraseKeyboardScreenshotTest`. The Robolectric rotations (`rotateItself`) are delivered in
-the platform's order for an activity that handles them itself: the Application's callbacks first, while the
-activity's resources are still the old ones, then the resources, the activity and its views, then the window's new
+including a clipboard change the app was not told of, found when the window gets the focus back, its "nothing to
+paste" answer, and no read of the clip before Paste), `Bip39KeyboardRotationTest` (rows after a rotation both ways,
+API 31 and 36) and Roborazzi component shots; instrumented `WindowHeightRotationDeviceTest` (a real rotation of an
+activity with `MainActivity`'s `configChanges`, both ways, on emulator-5554); `:feature:setup` `PhraseKeyboardTest`
+(no input connection, keys, suggestions, hardware keys, Copy / Cut refused, Done and Back, predictive back, switching
+both ways with the warning and the system keyboard's traits, short window with and without an error),
+`SetupRotationTest` (the import step with the keyboard up and the backup step through rotations both ways, API 31 and
+36), `ImportErrorKeyboardLayoutTest` (font scale 2.0 with an error above the in-app and the system keyboard, real text
+layout), `PhraseKeyboardInsertTest` (Ownbit's suggestion cases on the Insert semantics), `PhraseEditorTest` (input
+traits), `KeyboardKeepInViewTest`, `PhraseKeyboardScreenshotTest`. The Robolectric rotations (`rotateItself`) are
+delivered in the platform's order for an activity that handles them itself: the Application's callbacks first, while
+the activity's resources are still the old ones, then the resources, the activity and its views, then the window's new
 size.
 
 ### 15.9 Engine and crypto pitfalls

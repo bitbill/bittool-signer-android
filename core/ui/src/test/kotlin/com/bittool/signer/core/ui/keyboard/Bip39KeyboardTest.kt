@@ -71,6 +71,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowClipboardManager
 
 /**
  * The in-app keyboard over a real Compose text field (Robolectric, the real input stack): it types at the caret, deletes
@@ -268,6 +269,48 @@ class Bip39KeyboardTest {
         compose.runOnUiThread { clipboard.clearPrimaryClip() }
         compose.waitForIdle()
         key(Bip39KeyboardTags.PASTE).assert(unavailable)
+    }
+
+    /**
+     * The platform tells only the app with the focus that the clipboard changed: text copied in another app while this
+     * window had no focus is found when the window gets the focus back, and so is a clipboard emptied meanwhile.
+     */
+    @Test
+    fun thePasteKeyCatchesUpWithTheClipboardWhenTheWindowGetsTheFocusBack() {
+        val clipboard = platformClipboard()
+        clipboard.clearPrimaryClip()
+        show()
+        val unavailable = SemanticsMatcher.keyIsDefined(SemanticsProperties.Disabled)
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+
+        WindowSignals.windowFocus(view, hasFocus = false)
+        unheard { clipboard.setPrimaryClip(ClipData.newPlainText("phrase", "legal winner")) }
+        key(Bip39KeyboardTags.PASTE).assert(unavailable) // nothing told the keyboard
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+
+        WindowSignals.windowFocus(view, hasFocus = false)
+        unheard { clipboard.clearPrimaryClip() }
+        key(Bip39KeyboardTags.PASTE).assert(!unavailable)
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+        key(Bip39KeyboardTags.PASTE).assert(unavailable)
+    }
+
+    /** Changes the clipboard without telling its listeners, as the platform does while another app has the focus. */
+    private fun unheard(change: () -> Unit) {
+        val field = ShadowClipboardManager::class.java.getDeclaredField("listeners").apply { isAccessible = true }
+        @Suppress("UNCHECKED_CAST")
+        val listeners = field.get(null) as MutableCollection<ClipboardManager.OnPrimaryClipChangedListener>
+        val heard = listeners.toList()
+        listeners.clear()
+        try {
+            compose.runOnUiThread(change)
+        } finally {
+            listeners.addAll(heard)
+        }
+        compose.waitForIdle()
     }
 
     /**
