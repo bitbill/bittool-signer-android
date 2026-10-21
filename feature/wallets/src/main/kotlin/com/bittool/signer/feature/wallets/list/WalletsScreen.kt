@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +57,7 @@ import com.bittool.signer.core.designsystem.component.EmptyState
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.TonalPillButton
 import com.bittool.signer.core.designsystem.component.Tone
@@ -69,7 +69,6 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
-import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
@@ -214,30 +213,29 @@ private fun AddWalletMenu(onAddWallet: (SetupIntent) -> Unit) {
             onClick = { expanded = true },
             modifier = Modifier.testTag("wallets.add"),
         )
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10). Chosen with the
-        // keyboard, it leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12).
-        if (expanded && rememberWindowGateReleased()) {
-            WindowFocusReturnEffect()
-            DropdownMenu(expanded = true, onDismissRequest = { expanded = false }, containerColor = SignerTheme.colors.elevatedCard) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.create_new_wallet)) },
-                    leadingIcon = { Icon(SignerIcons.Add, contentDescription = null) },
-                    onClick = {
-                        expanded = false
-                        onAddWallet(SetupIntent.Create)
-                    },
-                    modifier = Modifier.testTag("wallets.add.create"),
-                )
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.import_recovery_phrase)) },
-                    leadingIcon = { Icon(SignerIcons.Download, contentDescription = null) },
-                    onClick = {
-                        expanded = false
-                        onAddWallet(SetupIntent.Restore)
-                    },
-                    modifier = Modifier.testTag("wallets.add.import"),
-                )
-            }
+        // A popup window, the design system's menu: it waits for the window gate (ARCHITECTURE §1.10), uses the elevated
+        // card colour and publishes its items' tags as resource ids in debuggable builds (backlog B26, B29). Chosen with
+        // the keyboard, it leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12).
+        if (expanded) WindowFocusReturnEffect()
+        SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.create_new_wallet)) },
+                leadingIcon = { Icon(SignerIcons.Add, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onAddWallet(SetupIntent.Create)
+                },
+                modifier = Modifier.testTag("wallets.add.create"),
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.import_recovery_phrase)) },
+                leadingIcon = { Icon(SignerIcons.Download, contentDescription = null) },
+                onClick = {
+                    expanded = false
+                    onAddWallet(SetupIntent.Restore)
+                },
+                modifier = Modifier.testTag("wallets.add.import"),
+            )
         }
     }
 }
