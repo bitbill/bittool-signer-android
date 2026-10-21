@@ -61,5 +61,30 @@
             android:exported="false">
             <meta-data android:name="autoStoreLocales" android:value="true" />
         </service>
+
+        <!--
+            Startup (androidx.startup) runs only what the app needs. EmojiCompat's initializer (merged by AppCompat and
+            Compose) asks a downloadable-font provider, Google Play services, for the emoji font on every launch: an IPC
+            to a network-capable app the offline signer must not make (QA round 1 sign-05). Text uses the system emoji
+            font. check<Variant>Components fails a build whose merged manifest has another provider or initializer.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                tools:node="remove" />
+        </provider>
+        <!--
+            profileinstaller's exported (DUMP-only) broadcast receiver serves benchmark tooling; the startup initializer
+            installs the baseline profile on its own. The only exported component stays the launcher activity.
+            (profileinstaller is a runtime-only dependency, so lint cannot see the class this removes.)
+        -->
+        <receiver
+            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+            tools:ignore="MissingClass"
+            tools:node="remove" />
     </application>
 </manifest>

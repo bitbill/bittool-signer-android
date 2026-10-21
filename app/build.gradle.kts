@@ -140,6 +140,9 @@ android {
 
     lint {
         checkDependencies = true
+        // Backlog B23: :core:crypto's test-support factory `testing.TestKeystore` builds weaker keys and is
+        // @VisibleForTesting; a call from production code anywhere in the app fails lint (and the release R8 check).
+        error += "VisibleForTests"
     }
 
     testOptions {
@@ -215,7 +218,9 @@ abstract class CheckMergedPermissions : DefaultTask() {
 
 /**
  * Release sanity after R8 (ARCHITECTURE §3 W2-shell): the debug UI-test harness (`app/src/debug`) must not exist in a
- * release build, neither as a class in the R8 mapping nor as its intent-extra keys in the dex.
+ * release build, neither as a class in the R8 mapping nor as its intent-extra keys in the dex. Neither may the
+ * test-support key stores of `:core:crypto` (backlog B23: `TestKeystore` builds keys usable while the device is locked,
+ * `InMemoryDeviceKeyStore` software keys): nothing in the app references them, so R8 must have removed them.
  */
 abstract class CheckReleaseHasNoHarness : DefaultTask() {
     @get:InputFile
@@ -231,7 +236,10 @@ abstract class CheckReleaseHasNoHarness : DefaultTask() {
 
     @TaskAction
     fun check() {
-        val forbidden = listOf("DebugUiTestHarness", "FixtureDeviceKeyStore", "FixtureBiometricAuthenticator", "DebugUiTestModule")
+        val forbidden = listOf(
+            "DebugUiTestHarness", "FixtureDeviceKeyStore", "FixtureJournalCipher", "FixtureBiometricAuthenticator",
+            "DebugUiTestModule", "TestKeystore", "InMemoryDeviceKeyStore",
+        )
         val mappingText = mapping.get().asFile.readText()
         val inMapping = forbidden.filter { name -> Regex("""(?m)^\S*\b$name\b\S* -> """).containsMatchIn(mappingText) }
         val apks = apkDirectory.get().asFile.walkTopDown().filter { it.isFile && it.extension == "apk" }.toList()
@@ -248,10 +256,10 @@ abstract class CheckReleaseHasNoHarness : DefaultTask() {
             }
         }
         report.get().asFile.apply { parentFile.mkdirs() }.writeText(
-            "harness classes in the R8 mapping: $inMapping\nharness intent extras in the dex: $inDex\n",
+            "harness and test-support classes in the R8 mapping: $inMapping\nharness intent extras in the dex: $inDex\n",
         )
         if (inMapping.isNotEmpty() || inDex.isNotEmpty()) {
-            throw GradleException("The debug UI-test harness reached a release build: classes $inMapping, dex $inDex")
+            throw GradleException("The debug UI-test harness or test support reached a release build: classes $inMapping, dex $inDex")
         }
     }
 
@@ -264,9 +272,153 @@ abstract class CheckReleaseHasNoHarness : DefaultTask() {
     }
 }
 
+/**
+ * The merged manifest of every variant declares exactly the components the app needs, and nothing reaches another app
+ * at startup (QA round 1 sign-05; DECISIONS §6, offline by design): `androidx.emoji2`'s startup initializer asked Google
+ * Play services' downloadable-font provider for the emoji font at every launch ("Failed to find provider info for
+ * com.google.android.gms.fonts"), an IPC to a network-capable app. A library added later cannot slip in a provider, a
+ * `<queries>` element (package visibility), an exported component, a startup initializer or a Play services / Firebase /
+ * Play Core dependency unnoticed. Debug builds add the Compose tooling activities only. The report lists what the variant
+ * declares (`build/reports/components/<variant>.txt`).
+ */
+abstract class CheckMergedComponents : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val mergedManifest: RegularFileProperty
+
+    /** `<tag>:<class name>` of every activity, activity-alias, service, receiver and provider the variant may declare. */
+    @get:Input
+    abstract val expectedComponents: SetProperty<String>
+
+    /** The subset of [expectedComponents] that may be exported. */
+    @get:Input
+    abstract val expectedExported: SetProperty<String>
+
+    /** The `androidx.startup` initializers the app needs. */
+    @get:Input
+    abstract val expectedInitializers: SetProperty<String>
+
+    /** `group:name` of every module on the variant's runtime classpath. */
+    @get:Input
+    abstract val runtimeModules: ListProperty<String>
+
+    /** Module groups that talk to Google Play services or the Play Store. */
+    @get:Input
+    abstract val forbiddenGroups: SetProperty<String>
+
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
+    @TaskAction
+    fun check() {
+        val android = "http://schemas.android.com/apk/res/android"
+        val document = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+            .apply { isNamespaceAware = true }
+            .newDocumentBuilder()
+            .parse(mergedManifest.get().asFile)
+        val components = sortedSetOf<String>()
+        val exported = sortedSetOf<String>()
+        val initializers = sortedSetOf<String>()
+        for (tag in listOf("activity", "activity-alias", "service", "receiver", "provider")) {
+            val nodes = document.getElementsByTagName(tag)
+            for (i in 0 until nodes.length) {
+                val element = nodes.item(i) as org.w3c.dom.Element
+                val component = "$tag:${element.getAttributeNS(android, "name")}"
+                components += component
+                // Without android:exported, a component with an intent filter is exported (targetSdk 31+ requires the
+                // attribute, so this is only a fallback).
+                val explicit = element.getAttributeNS(android, "exported")
+                val hasFilter = element.getElementsByTagName("intent-filter").length > 0
+                if (explicit == "true" || (explicit.isEmpty() && hasFilter)) exported += component
+                if (component == "provider:androidx.startup.InitializationProvider") {
+                    val metadata = element.getElementsByTagName("meta-data")
+                    for (j in 0 until metadata.length) {
+                        val entry = metadata.item(j) as org.w3c.dom.Element
+                        if (entry.getAttributeNS(android, "value") == "androidx.startup") {
+                            initializers += entry.getAttributeNS(android, "name")
+                        }
+                    }
+                }
+            }
+        }
+        val queries = document.getElementsByTagName("queries").length
+        val forbidden = forbiddenGroups.get()
+        val offending = runtimeModules.get().filter { module -> forbidden.any { module.startsWith("$it:") } }.sorted()
+        report.get().asFile.apply { parentFile.mkdirs() }.writeText(
+            buildString {
+                appendLine("components: $components")
+                appendLine("exported: $exported")
+                appendLine("startup initializers: $initializers")
+                appendLine("queries elements: $queries")
+                appendLine("Play services / Firebase / Play Store modules: $offending")
+            },
+        )
+        val problems = buildList {
+            val allowed = expectedComponents.get()
+            if (components != allowed.toSortedSet()) {
+                add("components differ; unexpected ${components - allowed}, missing ${allowed - components}")
+            }
+            val exportable = expectedExported.get()
+            if (!exportable.containsAll(exported)) add("unexpected exported components ${exported - exportable}")
+            val needed = expectedInitializers.get()
+            if (initializers != needed.toSortedSet()) {
+                add("startup initializers differ; unexpected ${initializers - needed}, missing ${needed - initializers}")
+            }
+            if (queries > 0) add("$queries <queries> element(s): the signer looks up no other app")
+            if (offending.isNotEmpty()) add("runtime modules that reach Google Play: $offending")
+        }
+        if (problems.isNotEmpty()) {
+            throw GradleException("Merged manifest / runtime check failed (QA round 1 sign-05):\n- " + problems.joinToString("\n- "))
+        }
+    }
+}
+
 androidComponents {
     onVariants { variant ->
         val cap = variant.name.replaceFirstChar(Char::uppercase)
+        val components = tasks.register<CheckMergedComponents>("check${cap}Components") {
+            mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
+            val required = setOf(
+                "activity:com.bittool.signer.MainActivity",
+                // Per-app language storage before API 33 (AppCompat), CameraX's default configuration: both disabled.
+                "service:androidx.appcompat.app.AppLocalesMetadataHolderService",
+                "service:androidx.camera.core.impl.MetadataHolderService",
+                "provider:androidx.startup.InitializationProvider",
+            )
+            // Debug builds only: Compose @Preview and the ui-test-manifest host activity of instrumented Compose tests.
+            val tooling = if (variant.buildType == "debug") {
+                setOf("activity:androidx.compose.ui.tooling.PreviewActivity", "activity:androidx.activity.ComponentActivity")
+            } else {
+                emptySet()
+            }
+            expectedComponents.set(required + tooling)
+            expectedExported.set(setOf("activity:com.bittool.signer.MainActivity") + tooling)
+            // ProcessLifecycleOwner (App Lock's background timing) and the baseline-profile writer (own files only).
+            expectedInitializers.set(
+                setOf("androidx.lifecycle.ProcessLifecycleInitializer", "androidx.profileinstaller.ProfileInstallerInitializer"),
+            )
+            forbiddenGroups.set(setOf("com.google.android.gms", "com.google.firebase", "com.google.android.play"))
+            runtimeModules.set(
+                variant.runtimeConfiguration.incoming.resolutionResult.rootComponent.map { root ->
+                    val modules = sortedSetOf<String>()
+                    val visited = mutableSetOf<org.gradle.api.artifacts.component.ComponentIdentifier>()
+                    val queue = ArrayDeque(listOf(root))
+                    while (queue.isNotEmpty()) {
+                        for (dependency in queue.removeFirst().dependencies) {
+                            if (dependency !is org.gradle.api.artifacts.result.ResolvedDependencyResult) continue
+                            val selected = dependency.selected
+                            if (!visited.add(selected.id)) continue
+                            selected.moduleVersion?.let { modules += "${it.group}:${it.name}" }
+                            queue += selected
+                        }
+                    }
+                    modules.toList()
+                },
+            )
+            report.set(layout.buildDirectory.file("reports/components/${variant.name}.txt"))
+        }
+        tasks.matching { it.name == "assemble$cap" || it.name == "bundle$cap" }.configureEach { dependsOn(components) }
+
         val permissions = tasks.register<CheckMergedPermissions>("check${cap}Permissions") {
             mergedManifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
             // gaps.md G8: scanning, App Lock (androidx.biometric adds USE_FINGERPRINT for API < 28), the screenshot and
