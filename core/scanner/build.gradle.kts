@@ -25,4 +25,6 @@ dependencies {
     // Robolectric Compose tests: Espresso ≥ 3.6 injects input through InputManagerGlobal on current SDKs
     // (ui-test-junit4 alone resolves 3.5.0, whose InputManager.getInstance() reflection fails).
     testImplementation(libs.androidx.espresso.core)
+    // QrFrameCache against the real NavHost tab switch (saveState / restoreState), not only a lifecycle double.
+    testImplementation(libs.androidx.navigation.compose)
 }

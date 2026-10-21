@@ -3,6 +3,9 @@ package com.bittool.signer.core.scanner
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -13,6 +16,7 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -24,6 +28,13 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
+import androidx.navigation.compose.rememberNavController
+import com.bittool.signer.core.designsystem.window.LocalWindowGateOpen
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.testing.urFrame
 import kotlin.test.assertEquals
@@ -160,6 +171,28 @@ class QrCodeViewTest {
         visible = false
         settle()
         assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun anAnimatedCodeUnderAppLockOrTheCaptureCoverDoesNotHoldTheScreenOn() {
+        // The window gate is closed while App Lock is up or the screen is recorded or mirrored: the code is covered
+        // (still resumed underneath), so the device must be free to sleep and lock (A02).
+        compose.mainClock.autoAdvance = false
+        var gateOpen by mutableStateOf(true)
+        compose.setContent {
+            CompositionLocalProvider(LocalWindowGateOpen provides gateOpen) {
+                QrCodeView(frames = frames, initial = prepared(frames))
+            }
+        }
+        settle()
+        val window = compose.activity.window
+        assertTrue(window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0, "Playing in view")
+        gateOpen = false
+        settle()
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON, "Covered: auto-lock applies again")
+        gateOpen = true
+        settle()
+        assertTrue(window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0, "In view again after unlock")
     }
 
     @Test
@@ -306,6 +339,90 @@ class QrCodeViewTest {
         assertEquals(encodesBefore + 2, QrFrames.renderCalls.get(), "Encoded again: not kept")
     }
 
+    @Test
+    fun anAnimatedCodeAtATabRootSurvivesTheRealTabSwitch() {
+        // A13 through navigation-compose itself, with the shell's tab switch (ShellNavigator.showTab): the Scan tab's
+        // entry is popped with saveState, so its composition goes while its store stays; restoreState brings it back.
+        lateinit var nav: NavHostController
+        compose.setContent {
+            nav = rememberNavController()
+            Tabs(nav) { QrCodeView(frames = frames) }
+        }
+        compose.runOnIdle { nav.showTab(SCAN_TAB) }
+        awaitEncodedPlate()
+        val encodes = QrFrames.renderCalls.get()
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 1_000) { counter() == "2/3" }
+
+        compose.runOnIdle { nav.showTab(WALLETS_TAB) }
+        // The Scan tab's composition goes, as in the app (the entry is below RESUMED from the switch on: no part runs).
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 2_000) { plateCount() == 0 }
+        compose.runOnIdle { nav.showTab(SCAN_TAB) }
+        // Parts run again only once the entry is resumed, a full interval after its content is back.
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 2_000) { plateCount() == 1 }
+
+        plate.assert(hasDescription) // no spinner
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("2/3")
+        assertEquals(encodes, QrFrames.renderCalls.get(), "Not encoded again")
+        // It plays on from there once the entry is resumed: the next part is 3/3.
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 2_000) { counter() != "2/3" }
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("3/3")
+    }
+
+    @Test
+    fun aPoppedScreenTakesItsCodesWithIt() {
+        // Back from a pushed page clears its entry's store: nothing of its code is kept for a later visit.
+        lateinit var nav: NavHostController
+        compose.setContent {
+            nav = rememberNavController()
+            Tabs(nav) { QrCodeView(frames = frames) }
+        }
+        compose.runOnIdle { nav.navigate(PUSHED) }
+        awaitEncodedPlate()
+        val encodes = QrFrames.renderCalls.get()
+
+        compose.runOnIdle { nav.popBackStack() }
+        compose.waitUntil(5_000) { plateCount() == 0 }
+        compose.runOnIdle { nav.navigate(PUSHED) }
+        awaitEncodedPlate()
+        assertEquals(encodes + 1, QrFrames.renderCalls.get(), "A new visit encodes again")
+    }
+
+    /** The shell in miniature (MainScaffold): Wallets is the start graph, the code sits at the Scan tab's root. */
+    @Composable
+    private fun Tabs(nav: NavHostController, code: @Composable () -> Unit) {
+        NavHost(
+            navController = nav,
+            startDestination = WALLETS_TAB,
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
+        ) {
+            navigation(startDestination = "wallets", route = WALLETS_TAB) {
+                composable("wallets") { Text("Wallets") }
+                composable(PUSHED) { code() }
+            }
+            navigation(startDestination = "scan", route = SCAN_TAB) {
+                composable("scan") { code() }
+            }
+        }
+    }
+
+    /** `ShellNavigator.showTab`. */
+    private fun NavHostController.showTab(tab: String) = navigate(tab) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+
+    private fun plateCount(): Int = compose.onAllNodesWithTag(QrCodeViewTags.PLATE).fetchSemanticsNodes().size
+
+    private fun awaitEncodedPlate() {
+        compose.waitUntil(5_000) { plateCount() == 1 }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+    }
+
     /** A navigation entry's owners: the lifecycle the NavHost drives and the store that outlives a tab switch. */
     private class ScreenEntry : LifecycleOwner, ViewModelStoreOwner {
         private val registry = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
@@ -336,6 +453,12 @@ class QrCodeViewTest {
         compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("1/3")
         // The parts still advance, at most once per display frame.
         compose.mainClock.advanceTimeUntil(timeoutMillis = 200) { counter() != "1/3" }
+    }
+
+    private companion object {
+        const val WALLETS_TAB = "walletsTab"
+        const val SCAN_TAB = "scanTab"
+        const val PUSHED = "pushed"
     }
 
     private fun counter(): String =

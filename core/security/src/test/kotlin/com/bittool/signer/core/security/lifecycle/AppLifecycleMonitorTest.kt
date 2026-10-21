@@ -186,6 +186,31 @@ class AppLifecycleMonitorTest {
     }
 
     @Test
+    @Config(sdk = [Build.VERSION_CODES.O, Build.VERSION_CODES.BAKLAVA])
+    fun mirroringIsCapturedFromTheMinimumSdkToTheTargetSdk() {
+        // Below 35 there is no recording callback at all, and FLAG_SECURE does not blank a secure external display:
+        // the display listener alone must catch the mirror (minSdk 26), and still does on the target SDK (36).
+        val monitor = DefaultAppLifecycleMonitor()
+        val signals = mutableListOf<PrivacySignal>()
+        monitor.privacySignals.observe { signals += it }
+        val controller = attached(monitor)
+        controller.create().start().resume()
+        assertFalse(monitor.isCaptured.value)
+        signals.clear()
+
+        val tv = connectDisplay(Display.FLAG_PRESENTATION or Display.FLAG_SECURE)
+        assertTrue(monitor.isCaptured.value)
+        setDisplayState(tv, Display.STATE_OFF)
+        assertFalse(monitor.isCaptured.value)
+        setDisplayState(tv, Display.STATE_ON)
+        assertTrue(monitor.isCaptured.value)
+        ShadowDisplayManager.removeDisplay(tv)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertFalse(monitor.isCaptured.value)
+        assertEquals(List(4) { PrivacySignal.CaptureChanged }, signals)
+    }
+
+    @Test
     fun aDisplayConnectedInTheBackgroundIsCapturedOnReturn() {
         val monitor = DefaultAppLifecycleMonitor()
         val controller = attached(monitor)

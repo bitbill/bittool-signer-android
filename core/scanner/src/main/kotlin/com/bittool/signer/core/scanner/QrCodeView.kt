@@ -74,6 +74,7 @@ import androidx.lifecycle.compose.currentStateAsState
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospacedDigit
+import com.bittool.signer.core.designsystem.window.LocalWindowGateOpen
 import com.bittool.signer.core.model.QrEncodingException
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.internal.QrWindowEffects
@@ -110,9 +111,10 @@ import com.bittool.signer.core.l10n.R as L10n
  *   never kept after it leaves. Pause is saved with the screen, as on iOS.
  * - TalkBack: "QR code" for one frame; "Animated QR code, part i of n" for several, updated (polite live region) only
  *   when the animation is paused, never four times a second (design-system.md §9.5, Ownbit improvement on iOS).
- * - Keep-screen-on only while an animated code plays (encoded, not paused, screen resumed), on the hosting window (the
- *   sheet's own window inside a bottom sheet): Android polish for a code that must stay in view until the other wallet
- *   has read every part (ARCHITECTURE §1.12, design-system.md §9.5). Never for a one-frame code, which includes the
+ * - Keep-screen-on only while an animated code plays in view (encoded, not paused, screen resumed, not under App Lock
+ *   or the "recorded or mirrored" cover: `LocalWindowGateOpen` open), on the hosting window (the sheet's own window
+ *   inside a bottom sheet): Android polish for a code that must stay in view until the other wallet has read every
+ *   part (ARCHITECTURE §1.12, design-system.md §9.5). Never for a one-frame code, which includes the
  *   recovery-phrase QR: iOS never disables its idle timer, and the system's auto-lock is what conceals an unattended
  *   code (the activity pauses) and starts the App Lock clock (QA audit A02). Brightness is left alone unless the caller
  *   opts in with [maxBrightness]: iOS never changes it, and a brighter screen also makes a recovery-phrase code easier
@@ -192,7 +194,10 @@ fun QrCodeView(
         }
     }
 
-    QrDisplayWindowEffects(keepScreenOn = animated && ready && !paused, maxBrightness = maxBrightness)
+    // Closed while App Lock is up or the screen is recorded or mirrored: the code is covered, so it must not hold the
+    // screen on beneath the lock or the cover (the device would then never sleep or lock).
+    val inView = LocalWindowGateOpen.current
+    QrDisplayWindowEffects(keepScreenOn = animated && ready && !paused && inView, maxBrightness = maxBrightness)
 
     val label = if (animated) {
         stringResource(L10n.string.animated_qr_code_part_x_of_x, describedPart, count)
