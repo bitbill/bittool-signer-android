@@ -83,7 +83,9 @@ internal interface LockWindowPresence {
  *   for the auto-prompt) but saves no state: secrets never reach a `Bundle`;
  * - while it is shown the activity window is hidden from accessibility services, so the lock screen is the only
  *   surface TalkBack can traverse (iOS `accessibilityViewIsModal`); before it is shown the activity loses focus and
- *   the IME (iOS `source.endEditing(true)`);
+ *   the IME (iOS `source.endEditing(true)`), and it takes no focus again until it has the window focus back after the
+ *   unlock ([WindowFocusReturn]): in keyboard mode Android would otherwise focus the page's first control ("Scan",
+ *   with its tooltip pinned) when the person unlocks with the Enter key (QA wallets-12);
  * - autofill and content capture never see it.
  *
  * Each lock engagement gets a new window and so a new composition (iOS creates a new window per lock, which is what
@@ -184,6 +186,7 @@ private class LockWindow(
 
     private var attached = false
     private var hiddenAccessibility: Int? = null
+    private var focusHold: WindowFocusReturn.Hold? = null
     private val mainHandler = Handler(Looper.getMainLooper())
     private val dismissAfterFade = Runnable { dismissNow() }
     private val destroyObserver = LifecycleEventObserver { _, event ->
@@ -221,9 +224,11 @@ private class LockWindow(
             dialog.show()
         } catch (e: WindowManager.BadTokenException) {
             Log.w(TAG, e) { "Lock window refused: activity not running" }
+            releaseFocusHold()
             return false
         } catch (e: IllegalStateException) {
             Log.w(TAG, e) { "Lock window refused" }
+            releaseFocusHold()
             return false
         }
         attached = true
@@ -240,6 +245,8 @@ private class LockWindow(
         if (!attached || isFadingOut) return
         isFadingOut = true
         restoreActivityAccessibility()
+        // The activity window gets the window focus back during the fade (this window stops being focusable below).
+        focusHold?.releaseOnWindowFocus()
         composeView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         composeView.clearFocus()
         dialog.window?.let { WindowCompat.getInsetsController(it, it.decorView).hide(WindowInsetsCompat.Type.ime()) }
@@ -279,6 +286,7 @@ private class LockWindow(
         composeView.animate().cancel()
         activity.lifecycle.removeObserver(destroyObserver)
         restoreActivityAccessibility()
+        focusHold?.releaseOnWindowFocus()
         onRemoved(this)
     }
 
@@ -289,11 +297,22 @@ private class LockWindow(
         Settings.Global.getFloat(activity.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
     }
 
-    /** iOS `source.endEditing(true)` before the lock window becomes key (AppLockView.swift:164). */
+    /**
+     * iOS `source.endEditing(true)` before the lock window becomes key (AppLockView.swift:164). The activity window is
+     * held first ([WindowFocusReturn.hold]): in keyboard mode clearing the focus would otherwise give it to the page's
+     * first control at once, and so would the activity window getting the window focus back after the unlock.
+     */
     private fun releaseActivityFocus() {
         val window = activity.window
+        val decor = window.peekDecorView()
+        if (focusHold == null && decor != null) focusHold = WindowFocusReturn.hold(decor)
         activity.currentFocus?.clearFocus()
-        window.peekDecorView()?.let { WindowCompat.getInsetsController(window, it).hide(WindowInsetsCompat.Type.ime()) }
+        decor?.let { WindowCompat.getInsetsController(window, it).hide(WindowInsetsCompat.Type.ime()) }
+    }
+
+    private fun releaseFocusHold() {
+        focusHold?.release()
+        focusHold = null
     }
 
     private fun hideActivityFromAccessibility() {

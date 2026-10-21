@@ -12,6 +12,8 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.Button
+import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
 import androidx.compose.foundation.text.BasicText
@@ -21,6 +23,7 @@ import java.time.Duration
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotSame
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import org.junit.Before
@@ -182,6 +185,42 @@ class LockWindowControllerTest {
         assertFalse(dialog.isShowing)
         assertFalse(lockWindow.isPresent)
         assertTrue(gate.isOpen.value)
+    }
+
+    /**
+     * QA wallets-12: unlocking with the Enter key (keyboard mode) used to leave a focus ring on the page's first control
+     * ("Scan", tooltip pinned): the focus Android gives a window that gets the window focus back with nothing focused.
+     * The app window takes no focus while locked and comes back with nothing focused; Tab or an arrow key focuses the
+     * first control as usual.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2, Build.VERSION_CODES.BAKLAVA])
+    fun unlockingWithTheKeyboardLeavesNothingFocusedInTheApp() {
+        lateinit var first: Button
+        activity.setContentView(
+            LinearLayout(activity).apply {
+                orientation = LinearLayout.VERTICAL
+                first = Button(activity).also(::addView)
+                addView(Button(activity))
+            },
+        )
+        idle()
+        val decor = activity.window.decorView
+        WindowSignals.setTouchMode(decor, inTouchMode = true)
+        WindowSignals.windowFocus(decor, hasFocus = true)
+        val lockWindow = DefaultLockWindowController(policy())
+        lockWindow.show(activity) { BasicText("Locked") }
+        idle()
+        WindowSignals.windowFocus(decor, hasFocus = false)
+        // The password typed into the lock screen takes the display out of touch mode.
+        WindowSignals.leaveTouchModeIn(checkNotNull(lockDialog().window).decorView, decor)
+        assertNull(decor.findFocus(), "Nothing in the app takes the focus while locked")
+
+        lockWindow.hide()
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(DefaultLockWindowController.FADE_OUT_MILLIS + 100))
+        WindowSignals.windowFocus(decor, hasFocus = true)
+        assertNull(decor.findFocus(), "No focus ring on the page's first control after the unlock")
+        assertTrue(first.requestFocus(), "The keyboard focuses the app's controls again")
     }
 
     @Test
