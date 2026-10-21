@@ -172,3 +172,16 @@ progress for create/import/repair/sign and never call the engine from the main t
 - "BitTool Wallet" platforms and every other compatible-wallet entry stay exactly as the iOS data.
 - Product and protocol names the iOS catalogue leaves untranslated (Taproot, Account XPUB, …) stay untranslated.
 - No Android-only "Allow camera" label: the camera-permission UI uses the iOS strings plus the system dialog.
+
+## 11. User requirements added during the port (binding)
+
+- **No network, ever.** No network code, no network permission, no network operation of any kind, and no in-app
+  update or install mechanism, in either flavor. Enforced three ways: the merged-manifest allowlist in
+  `app/build.gradle.kts` (`check*Permissions`), `tools/release/check-offline.sh` on every release APK (permissions,
+  dex references to java.net / SSL / WebView / DownloadManager / PackageInstaller / Play services / Firebase / Play
+  Core, socket symbols in native libraries), and code review. Verified on 1.0.0 apkRelease and playRelease: clean.
+- **In-app BIP39 keyboard (following Ownbit 5.0)** is the default for every recovery-phrase entry: the field has no
+  IME connection while it is up; a globe key switches to the system keyboard after a warning (needed for Chinese,
+  Japanese and Korean phrases). This is an Android-only addition with no iOS counterpart.
+- **One engine.** `signer.js` is the iOS file, copied byte for byte by `tools/engine/sync-from-ios.sh` and pinned by
+  `EngineBundle.EXPECTED_SHA256` (EngineDigestTest + runtime check). There is no second JS engine or bundle.
