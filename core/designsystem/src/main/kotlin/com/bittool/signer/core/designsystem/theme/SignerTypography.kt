@@ -1,7 +1,11 @@
 package com.bittool.signer.core.designsystem.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -9,7 +13,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -137,3 +144,48 @@ fun TextStyle.ltr(): TextStyle = copy(textDirection = TextDirection.Ltr, lineBre
  * strings: an Arabic sentence that starts with a Latin product name would be laid out left to right.
  */
 fun TextStyle.contentDirection(): TextStyle = copy(textDirection = TextDirection.Content)
+
+/**
+ * The size of a glyph drawn beside text in this style, [ratio] × its font size (an SF Symbol follows Dynamic Type the
+ * same way): a fixed `dp` icon would stay small next to text at large font scales. Never below the size it has at the
+ * default font scale.
+ */
+@Composable
+@ReadOnlyComposable
+fun TextStyle.glyphSize(ratio: Float): Dp {
+    if (!fontSize.isSp) return DEFAULT_GLYPH
+    val density = LocalDensity.current
+    val scaled = with(density) { (fontSize * ratio).toDp() }
+    val unscaled = (fontSize.value * ratio).dp
+    return maxOf(scaled, unscaled)
+}
+
+private val DEFAULT_GLYPH = 24.dp
+
+/**
+ * For text that is translated where a translation exists and falls back to English where it does not (engine phrases
+ * drawn through `ReviewText`, Android-only strings that have no translation yet): a right-to-left translation keeps
+ * the interface direction, so an Arabic sentence that starts with "BitTool Signer" stays right to left; text without
+ * any right-to-left letter (the English fallback) is laid out in its own direction ([contentDirection]), so in Arabic
+ * its full stop stays at its end (QA sign-02). In a left-to-right interface this is [contentDirection].
+ */
+@Composable
+@ReadOnlyComposable
+fun TextStyle.localizedDirection(text: String): TextStyle = localizedDirection(text, LocalLayoutDirection.current)
+
+/** [localizedDirection] for an explicit interface direction. Pure. */
+fun TextStyle.localizedDirection(text: String, layoutDirection: LayoutDirection): TextStyle =
+    if (layoutDirection == LayoutDirection.Rtl && containsRightToLeftLetters(text)) this else contentDirection()
+
+/** Whether [text] has a strong right-to-left character (Hebrew, Arabic, Syriac, Thaana, N'Ko…). Pure. */
+fun containsRightToLeftLetters(text: CharSequence): Boolean {
+    var index = 0
+    while (index < text.length) {
+        val codePoint = Character.codePointAt(text, index)
+        when (Character.getDirectionality(codePoint)) {
+            Character.DIRECTIONALITY_RIGHT_TO_LEFT, Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC -> return true
+        }
+        index += Character.charCount(codePoint)
+    }
+    return false
+}

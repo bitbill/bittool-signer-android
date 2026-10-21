@@ -40,6 +40,7 @@ import com.bittool.signer.core.designsystem.modifier.pressScale
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.glyphSize
 import com.bittool.signer.core.designsystem.theme.semibold
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -47,7 +48,8 @@ import kotlin.math.floor
 /**
  * The primary call to action (iOS `ActionLabel` in a `.prominentAction()` button, `Design/DesignSystem.swift:47-54,
  * 94-133`): a full-width accent capsule, at least 52 dp high, label `body` semibold in `onAccent`, optional leading
- * [icon] (20 dp, 8 dp gap).
+ * [icon] (20 dp at the default text size, 8 dp gap). The icon scales with the label like an SF Symbol with Dynamic
+ * Type ([BUTTON_GLYPH_RATIO] of the label's font size), so it never shrinks to a dot beside text at double size.
  *
  * - [busy]: a spinner replaces the content while the label stays laid out (opacity 0) so the width never changes and
  *   TalkBack still reads the label; taps are ignored while busy. The spinner is `onAccent`, or `secondaryLabel` when
@@ -111,6 +113,12 @@ fun SecondaryButton(
     )
 }
 
+/**
+ * A button glyph's size against its label's font size: 20 dp beside the 17 sp body label (iOS `ActionLabel`'s symbol at
+ * `.body`), scaled with the font from there (QA setup-12).
+ */
+internal const val BUTTON_GLYPH_RATIO = 20f / 17f
+
 /** Accent at 14 % on the surface: the tonal fill of secondary and pill buttons. */
 internal fun tonalFill(colors: SignerColors): Color = colors.accent.copy(alpha = 0.14f)
 
@@ -132,6 +140,7 @@ private fun SignerButton(
     val interaction = remember { MutableInteractionSource() }
     val accessibilityText = SignerTheme.isAccessibilityTextSize
     val labelStyle = typography.body.semibold()
+    val glyph = labelStyle.glyphSize(BUTTON_GLYPH_RATIO)
     Surface(
         onClick = { if (!busy) onClick() },
         modifier = modifier
@@ -153,12 +162,12 @@ private fun SignerButton(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = content)
+                if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(glyph), tint = content)
                 ShrinkingLabel(text, labelStyle.copy(color = content), maxLines = if (accessibilityText) 2 else 1)
             }
             if (busy) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp).clearAndSetSemantics {},
+                    modifier = Modifier.size(glyph).clearAndSetSemantics {},
                     color = if (enabled) content else SignerTheme.colors.secondaryLabel,
                     strokeWidth = 2.dp,
                 )

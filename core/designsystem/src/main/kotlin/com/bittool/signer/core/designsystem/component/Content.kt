@@ -134,6 +134,10 @@ fun StatusPill(text: String, icon: ImageVector, color: Color = SignerTheme.color
  * A large illustrated header (iOS `SymbolHero`, `Design/DesignSystem.swift:212-234`): the glyph at `size × 0.62` on a
  * 12 % disc of `size × 1.7`, inside a 1 dp ring at 18 % of `size × 2.2`. With [bounce] it bounces once on appear
  * (1 → 1.12 → 1), never under reduce motion. Decorative (hidden from accessibility).
+ *
+ * iOS sets `size × 0.62` as the symbol's font size, and an SF Symbol drawn at a font size is taller than that size,
+ * while a Material glyph fills only about 90 % of its box: the icon box is [SYMBOL_FONT_TO_ICON_BOX] times the font
+ * size, so the glyph covers the same part of the disc as on iOS (QA setup-11).
  */
 @Composable
 fun SymbolHero(
@@ -166,7 +170,7 @@ fun SymbolHero(
             contentDescription = null,
             tint = color,
             modifier = Modifier
-                .size(size * 0.62f)
+                .size(size * 0.62f * SYMBOL_FONT_TO_ICON_BOX)
                 .graphicsLayer {
                     scaleX = scale.value
                     scaleY = scale.value
@@ -174,6 +178,13 @@ fun SymbolHero(
         )
     }
 }
+
+/**
+ * How much larger a Material icon box is than the SF Symbol font size it stands for, for the two glyphs to match.
+ * Measured on the setup Done hero: the iOS seal covers 0.406 of the disc's diameter, the Material one 0.331 in a box of
+ * the font size; 0.406 / 0.331 = 1.23.
+ */
+internal const val SYMBOL_FONT_TO_ICON_BOX = 1.23f
 
 /**
  * A short instructional step (iOS `StepRow`, `Design/DesignSystem.swift:236-260`): a 36 dp accent-tinted (14 %) disc
