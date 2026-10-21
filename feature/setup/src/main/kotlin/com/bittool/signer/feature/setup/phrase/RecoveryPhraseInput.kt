@@ -43,6 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
@@ -137,6 +143,10 @@ internal fun RecoveryPhraseEditor(
                     .fillMaxWidth()
                     .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                     .onFocusChanged { onFocusChanged(it.isFocused) }
+                    // The menu offers no Copy / Cut, and neither do the keys: a physical keyboard (which types into the
+                    // editor directly with the in-app keyboard), or a keyboard app's own Copy button, never puts
+                    // recovery words on the clipboard.
+                    .onPreviewKeyEvent(::isCopyOrCutShortcut)
                     .secretTextMenu()
                     .testTag(EDITOR_TAG),
                 textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
@@ -176,6 +186,19 @@ internal fun RecoveryPhraseEditor(
             )
         }
     }
+}
+
+/**
+ * Whether [event] asks the focused editor to copy or cut its selection: Ctrl (or Meta) + C, X or Insert, and the Copy
+ * and Cut keys, which a keyboard app also sends for its own Copy / Cut buttons (Compose turns
+ * `performContextMenuAction(copy)` into `KEYCODE_COPY`). The phrase editor refuses them all, like its menu (the
+ * clipboard never holds recovery words, DECISIONS §6); Paste, Select All and every other key pass. Pure.
+ */
+internal fun isCopyOrCutShortcut(event: KeyEvent): Boolean {
+    val key = event.key
+    if (key == Key.Copy || key == Key.Cut) return true
+    return (event.isCtrlPressed || event.isMetaPressed) &&
+        (key == Key.C || key == Key.X || key == Key.Insert || key == Key.NumPadInsert)
 }
 
 /**

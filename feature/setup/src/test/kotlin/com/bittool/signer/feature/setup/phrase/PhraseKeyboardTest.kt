@@ -1,5 +1,7 @@
 package com.bittool.signer.feature.setup.phrase
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.view.KeyEvent
 import android.view.View
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.text.TextRange
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.navigation.SetupIntent
@@ -31,6 +34,7 @@ import com.bittool.signer.feature.setup.flow.SetupFlow
 import com.bittool.signer.feature.setup.flow.WalletSetupViewModel
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -231,6 +235,115 @@ class PhraseKeyboardTest {
         compose.runOnIdle { assertFalse(shadowOf(imm()).isSoftInputVisible, "the system keyboard was put away") }
         type(*letters("a"))
         assertEquals("aba", phrase())
+    }
+
+    /**
+     * A physical keyboard reaches the editor directly while the in-app keyboard is up, so its shortcuts must not do what
+     * the editor's menu refuses: Ctrl+C / Ctrl+Insert / Copy and Ctrl+X / Cut never put recovery words on the clipboard
+     * (DECISIONS §6), and Cut deletes nothing. The Copy and Cut keys are also what a keyboard app's own Copy / Cut buttons
+     * send through its connection (system keyboard mode). Paste keeps working.
+     */
+    @Test
+    fun hardwareCopyAndCutShortcutsNeverReachTheClipboard() {
+        flow()
+        tapEditor()
+        type(*letters("legal"), Bip39KeyboardTags.SPACE, *letters("winner"))
+        val clipboard = compose.activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("other", "zoo"))
+        fun press(code: Int, meta: Int = 0) = compose.runOnUiThread {
+            compose.activity.dispatchKeyEvent(KeyEvent(0, 0, KeyEvent.ACTION_DOWN, code, 0, meta))
+            compose.activity.dispatchKeyEvent(KeyEvent(0, 0, KeyEvent.ACTION_UP, code, 0, meta))
+        }
+        // Everything selected (Robolectric's key map would type Ctrl+A as "a": a real one sends no character with Ctrl).
+        compose.runOnIdle { model.fields.phrase.edit { selection = TextRange(0, length) } }
+        val ctrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+        for ((code, meta) in listOf(
+            KeyEvent.KEYCODE_COPY to 0, KeyEvent.KEYCODE_CUT to 0,
+            KeyEvent.KEYCODE_C to ctrl, KeyEvent.KEYCODE_X to ctrl, KeyEvent.KEYCODE_INSERT to ctrl,
+        )) {
+            press(code, meta)
+            compose.waitForIdle()
+            assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "key $code put nothing on the clipboard")
+            assertEquals("legal winner", phrase(), "key $code changed nothing")
+        }
+        // The Paste key still goes in, over the selection.
+        press(KeyEvent.KEYCODE_PASTE)
+        compose.waitUntil(5_000) { phrase() == "zoo" }
+        assertNoInputConnection()
+    }
+
+    /** With the system keyboard, a keyboard app's own Copy and Cut buttons (sent through its connection) do nothing either. */
+    @Test
+    fun aKeyboardAppsCopyAndCutButtonsDoNothing() {
+        flow()
+        tapEditor()
+        type(*letters("legal"))
+        compose.onNodeWithTag(Bip39KeyboardTags.SYSTEM).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(SwitchToSystemKeyboardDialogTags.SWITCH).performClick()
+        compose.waitForIdle()
+        editor.assertIsFocused()
+        val clipboard = compose.activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("other", "zoo"))
+        compose.runOnIdle {
+            val connection = assertNotNull(view.onCreateInputConnection(EditorInfo()), "the system keyboard is connected")
+            connection.setSelection(0, "legal".length)
+            connection.performContextMenuAction(android.R.id.copy)
+            connection.performContextMenuAction(android.R.id.cut)
+        }
+        compose.waitForIdle()
+        assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "nothing was copied")
+        assertEquals("legal", phrase(), "nothing was cut")
+    }
+
+    @Test
+    fun onlyCopyAndCutShortcutsAreRefused() {
+        fun event(code: Int, meta: Int = 0) = androidx.compose.ui.input.key.KeyEvent(KeyEvent(0, 0, KeyEvent.ACTION_DOWN, code, 0, meta))
+        val ctrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+        val meta = KeyEvent.META_META_ON or KeyEvent.META_META_LEFT_ON
+        for (refused in listOf(
+            event(KeyEvent.KEYCODE_C, ctrl), event(KeyEvent.KEYCODE_X, ctrl), event(KeyEvent.KEYCODE_INSERT, ctrl),
+            event(KeyEvent.KEYCODE_C, meta), event(KeyEvent.KEYCODE_X, meta), event(KeyEvent.KEYCODE_COPY), event(KeyEvent.KEYCODE_CUT),
+            event(KeyEvent.KEYCODE_C, ctrl or KeyEvent.META_SHIFT_ON),
+        )) {
+            assertTrue(isCopyOrCutShortcut(refused), "$refused is refused")
+        }
+        for (passed in listOf(
+            event(KeyEvent.KEYCODE_C), event(KeyEvent.KEYCODE_X), event(KeyEvent.KEYCODE_V, ctrl), event(KeyEvent.KEYCODE_A, ctrl),
+            event(KeyEvent.KEYCODE_PASTE), event(KeyEvent.KEYCODE_INSERT, KeyEvent.META_SHIFT_ON), event(KeyEvent.KEYCODE_DEL),
+            event(KeyEvent.KEYCODE_SPACE), event(KeyEvent.KEYCODE_ENTER),
+        )) {
+            assertFalse(isCopyOrCutShortcut(passed), "$passed passes")
+        }
+    }
+
+    /**
+     * Focus moving from a field typed with the system keyboard (the wallet name) to the editor: the system keyboard goes
+     * away and the in-app keyboard comes up, with no input connection; back to the name, the system keyboard returns.
+     */
+    @Test
+    fun theSystemKeyboardOfAnotherFieldGoesAwayWhenTheEditorIsFocused() {
+        flow()
+        compose.onNodeWithTag("setup.name").performClick()
+        compose.waitForIdle()
+        compose.runOnIdle {
+            assertTrue(view.onCheckIsTextEditor(), "the name is typed with the system keyboard")
+            assertTrue(shadowOf(imm()).isSoftInputVisible, "the name field asked for the system keyboard")
+        }
+        keyboard.assertDoesNotExist()
+        editor.performScrollTo()
+        tapEditor()
+        keyboard.assertIsDisplayed()
+        editor.assertIsFocused()
+        assertNoInputConnection()
+        compose.runOnIdle { assertFalse(shadowOf(imm()).isSoftInputVisible, "the system keyboard was put away") }
+        compose.onNodeWithTag("setup.name").performScrollTo().performClick()
+        compose.waitForIdle()
+        keyboard.assertDoesNotExist()
+        compose.runOnIdle {
+            assertTrue(view.onCheckIsTextEditor())
+            assertTrue(shadowOf(imm()).isSoftInputVisible, "the name field gets the system keyboard again")
+        }
     }
 
     /** Phones in landscape: "Continue" steps aside while the keyboard is up, so the editor keeps room; Done brings it back. */
