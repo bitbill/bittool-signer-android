@@ -19,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -29,7 +30,8 @@ import org.junit.runner.RunWith
  * What the store does on the production crypto that the Wave-1 doubles could not show (the English-only BIP39 double,
  * the in-memory vault without attempts file, the software journal key): wallets in other wordlist languages, the
  * persistent attempt throttling, and lost Keystore keys. Behavioural equivalents of the JVM suite's double-only cases
- * (`AesGcmJournalCipher.loseKey`). Published BIP39 vectors and synthetic offline requests only.
+ * (`AesGcmJournalCipher.loseKey` / `loseKeyForGood`, `LostKeyRecoveryStoreTest`). Published BIP39 vectors and synthetic
+ * offline requests only.
  */
 @RunWith(AndroidJUnit4::class)
 class SignerStoreRealCryptoTest {
@@ -121,41 +123,168 @@ class SignerStoreRealCryptoTest {
     }
 
     /**
-     * DECISIONS.md §9.3 with the real `KeystoreJournalCipher`: when the Keystore loses the journal key, the running
-     * process refuses to seal a replacement (the signature is still published and the old file is kept), a relaunch
-     * reports the journal as unreadable without overwriting it, and only the explicit "Clear Activity" starts a new
-     * journal under a new key.
+     * ARCHITECTURE §6 item 19, QA L1, with the real `KeystoreJournalCipher` and `KeystoreLossProof`: the Keystore lost the
+     * journal key for good (removing the screen lock deletes it; here the entry is deleted), so nothing can ever open the
+     * journal again. The next launch proves the loss against probe keys and starts a fresh journal **once**: no "Unable to
+     * Continue" alert, no unreadable state, the old file removed and the one-time notice recorded. The next signature is
+     * saved under a new key, the notice waits until "OK" (also across a relaunch), and after it the journal is never
+     * started again: its records read back under the new key.
      */
     @Test
-    fun aLostKeystoreJournalKeyIsReportedAndOnlyClearActivityStartsANewJournal() = DeviceStore.run {
+    fun aProvablyLostKeystoreJournalKeyStartsAFreshJournalOnceWithTheNotice() = DeviceStore.run {
+        store.reload()
+        createWallet("Journal key fixture")
+        signOnce()
+        assertEquals(1, state.receipts.size)
+        DeviceCrypto.deleteJournalKey()
+
+        val relaunched = fixture.relaunch()
+        relaunched.reload()
+        relaunched.state.value.let {
+            assertNull(it.error, "no \"could not be read\" alert: the journal could never be read again")
+            assertFalse(it.activityUnreadable)
+            assertTrue(it.receipts.isEmpty(), "the records the lost key sealed are gone")
+            assertTrue(it.activityRestarted, "the person is told once, in Activity")
+        }
+        assertFalse(fixture.journalFile.exists(), "the journal nothing can open is removed")
+        assertTrue(fixture.receiptRepository.restartNoticeFile.exists())
+
+        relaunched.prepare(request(nonce = 1))
+        PASSWORD.asSecret { relaunched.sign(relaunched.state.value.pendingTasks.single().id, it) }
+        relaunched.state.value.let {
+            assertTrue(it.hasSignedResponse)
+            assertNull(it.error, "not \"could not be saved\": the new journal is sealed under a new key")
+            assertEquals(1, it.receipts.size)
+            assertTrue(it.activityRestarted, "the notice waits until it was read")
+        }
+        val saved = relaunched.state.value.receipts
+
+        val again = fixture.relaunch()
+        again.reload()
+        again.state.value.let {
+            assertEquals(saved, it.receipts, "the new journal reads back under its new key")
+            assertTrue(it.activityRestarted, "a relaunch keeps the notice until \"OK\"")
+            assertNull(it.error)
+        }
+        again.acknowledgeActivityRestart()
+        assertFalse(again.state.value.activityRestarted)
+        assertFalse(fixture.receiptRepository.restartNoticeFile.exists())
+
+        val third = fixture.relaunch()
+        third.reload()
+        third.state.value.let {
+            assertFalse(it.activityRestarted, "read once: never again")
+            assertEquals(saved, it.receipts, "a journal whose key works is never started again")
+            assertFalse(it.activityUnreadable)
+        }
+    }
+
+    /**
+     * QA L1 inside one process: the key this process sealed with disappears while it runs. The next signature proves the
+     * loss (the cipher used the key, so only `KeystoreLossProof` lets it create another), starts the journal again with
+     * the notice and saves the new record instead of "could not be saved".
+     */
+    @Test
+    fun aJournalKeyLostWhileTheAppRunsIsReplacedAtTheNextSignature() = DeviceStore.run {
+        store.reload()
+        createWallet("Journal key fixture")
+        signOnce()
+        val sealed = fixture.journalFile.readBytes()
+        DeviceCrypto.deleteJournalKey()
+
+        signOnce(nonce = 1)
+        assertTrue(state.hasSignedResponse, "A completed signature remains available.")
+        assertNull(state.error, "not \"could not be saved\"")
+        assertEquals(1, state.receipts.size, "the new journal holds the new signature only")
+        assertTrue(state.activityRestarted)
+        assertFalse(state.activityUnreadable)
+        assertFalse(sealed.contentEquals(fixture.journalFile.readBytes()), "the journal was started again")
+
+        val relaunched = fixture.relaunch()
+        relaunched.reload()
+        assertEquals(state.receipts, relaunched.state.value.receipts, "sealed under the new key")
+        assertTrue(relaunched.state.value.activityRestarted)
+    }
+
+    /**
+     * DECISIONS.md §9.3 and §10, the iOS behaviour, for a journal that does not open while nothing proves its key gone:
+     * the Keystore holds a working key under the journal's alias, just not the one that sealed the file. The journal is
+     * unreadable ("could not be read", "Activity Unavailable"), never started again and never overwritten: a signature
+     * is still published with "could not be saved", a relaunch is unreadable again, and only the explicit "Clear
+     * Activity" starts a new journal.
+     */
+    @Test
+    fun aJournalWhoseKeyIsNotProvablyLostStaysUnreadableUntilClearActivity() = DeviceStore.run {
         store.reload()
         createWallet("Journal key fixture")
         signOnce()
         assertEquals(1, state.receipts.size)
         val sealed = fixture.journalFile.readBytes()
         DeviceCrypto.deleteJournalKey()
-
-        signOnce(nonce = 1)
-        assertTrue(state.hasSignedResponse, "A completed signature remains available.")
-        assertEquals(UiText.Resource(R.string.data_activity_not_saved), state.error)
-        assertContentEquals(sealed, fixture.journalFile.readBytes(), "An unreadable journal is never overwritten.")
+        // A new key under the same alias (a new process's first seal): Keystore answers with a usable key.
+        DeviceCrypto.journalCipher().seal(ByteArray(0))
 
         val relaunched = fixture.relaunch()
         relaunched.reload()
-        assertTrue(relaunched.state.value.activityUnreadable)
-        assertTrue(relaunched.state.value.receipts.isEmpty())
-        assertEquals(UiText.Resource(R.string.data_activity_unreadable), relaunched.state.value.error)
+        relaunched.state.value.let {
+            assertTrue(it.activityUnreadable)
+            assertFalse(it.activityRestarted, "a working key is not a lost one")
+            assertTrue(it.receipts.isEmpty())
+            assertEquals(UiText.Resource(R.string.data_activity_unreadable), it.error)
+        }
+        assertContentEquals(sealed, fixture.journalFile.readBytes(), "An unreadable journal is never overwritten.")
+        assertFalse(fixture.receiptRepository.restartNoticeFile.exists())
+
+        relaunched.setError(null)
+        relaunched.prepare(request(nonce = 1))
+        PASSWORD.asSecret { relaunched.sign(relaunched.state.value.pendingTasks.single().id, it) }
+        assertTrue(relaunched.state.value.hasSignedResponse, "A completed signature remains available.")
+        assertEquals(UiText.Resource(R.string.data_activity_not_saved), relaunched.state.value.error)
         assertContentEquals(sealed, fixture.journalFile.readBytes())
 
-        relaunched.clearHistory()
-        assertFalse(relaunched.state.value.activityUnreadable)
-        relaunched.prepare(request(nonce = 2))
-        PASSWORD.asSecret { relaunched.sign(relaunched.state.value.pendingTasks.single().id, it) }
-        assertEquals(1, relaunched.state.value.receipts.size)
+        val again = fixture.relaunch()
+        again.reload()
+        assertTrue(again.state.value.activityUnreadable)
+        assertFalse(again.state.value.activityRestarted)
+        assertContentEquals(sealed, fixture.journalFile.readBytes())
+
+        again.clearHistory()
+        assertFalse(again.state.value.activityUnreadable)
+        again.prepare(request(nonce = 2))
+        PASSWORD.asSecret { again.sign(again.state.value.pendingTasks.single().id, it) }
+        assertEquals(1, again.state.value.receipts.size)
         val next = fixture.relaunch()
         next.reload()
-        assertEquals(relaunched.state.value.receipts, next.state.value.receipts, "The new journal reads back under its new key.")
+        assertEquals(again.state.value.receipts, next.state.value.receipts, "The new journal reads back under the key.")
         assertFalse(next.state.value.activityUnreadable)
+        assertFalse(next.state.value.activityRestarted)
+    }
+
+    /**
+     * The commonest journal that does not open while its key is fine: the file itself is damaged (one bit of the GCM
+     * tag flipped) and the key that sealed it is in place. `KeystoreLossProof` finds a usable key, so nothing is
+     * discarded: the journal is unreadable, never started again, and the key still opens what it seals.
+     */
+    @Test
+    fun aDamagedJournalWhoseKeyIsInPlaceStaysUnreadable() = DeviceStore.run {
+        store.reload()
+        createWallet("Journal key fixture")
+        signOnce()
+        val damaged = fixture.journalFile.readBytes().also { it[it.lastIndex] = (it[it.lastIndex].toInt() xor 1).toByte() }
+        fixture.journalFile.writeBytes(damaged)
+
+        val relaunched = fixture.relaunch()
+        relaunched.reload()
+        relaunched.state.value.let {
+            assertTrue(it.activityUnreadable)
+            assertFalse(it.activityRestarted, "a damaged file is not a lost key")
+            assertTrue(it.receipts.isEmpty())
+            assertEquals(UiText.Resource(R.string.data_activity_unreadable), it.error)
+        }
+        assertContentEquals(damaged, fixture.journalFile.readBytes(), "An unreadable journal is never overwritten.")
+        assertFalse(fixture.receiptRepository.restartNoticeFile.exists())
+        val probe = "[]".encodeToByteArray()
+        assertContentEquals(probe, DeviceCrypto.journalCipher().open(fixture.cipher.seal(probe)), "the key was kept")
     }
 
     /**

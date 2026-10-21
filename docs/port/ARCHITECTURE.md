@@ -68,7 +68,7 @@ enum class Distribution(val flavor: String) { DirectApk("apk"), GooglePlay("play
 data class BuildInfo(val applicationId: String, val versionName: String, val versionCode: Long,
                      val distribution: Distribution, val isDebug: Boolean, val repositoryUrl: String,
                      val signingCertificateSha256: String? = null) {   // activity-settings §14.8 "Signing certificate" row
-    val buildNumber: Long; val displayVersion: String }       // "1.0.0 (1)" on iOS; Android default build number 0 → see KDoc
+    val buildNumber: Long; val displayVersion: String }       // "1.0.0 (1)" as on iOS: default build number 1 (DECISIONS §10)
 // log/Log.kt: DECISIONS §6 (no secrets in logs); disabled in release, lambdas never evaluated
 object Log { @Volatile var enabled: Boolean; fun d(tag: String, message: () -> String) /* i, w, e */ }
 // storage/Storage.kt: vault-crypto §2.2–2.3, §17.8
@@ -281,6 +281,7 @@ class BiometricException(kind: Kind /* Unavailable, Lockout, Failed */, text: Ui
 interface BiometricAuthenticator { fun isAvailable(): Boolean; suspend fun authenticate(prompt: BiometricPromptSpec); fun cancel() }
 enum class ScenePhase { Active, Inactive, Background }; enum class LifecycleEvent { WillEnterForeground, DidBecomeActive, WillResignActive, DidEnterBackground }
 interface AppLifecycleMonitor { val phase; val events; val isCaptured; val screenshots; val foregroundActivity; fun attach(activity: FragmentActivity) } // §15.4
+    // isCaptured = recorded (API 35+ screen-recording callback) or mirrored to another display (every API level, QA audit A03; app-shell §15.8)
 interface RecoveryPrivacySession { isRevealed; prompt; start(); stop(); reveal(): Boolean; hide(); acknowledgeWarning() }       // §13.1
 interface RecoveryScreenshotSession { warning; start(onScreenshot); stop(); acknowledge(warning) }                               // §13.2
 interface RecoverySessionFactory { fun privacySession(): RecoveryPrivacySession; fun screenshotSession(): RecoveryScreenshotSession }
@@ -365,7 +366,7 @@ W1-design must not reference `:core:scanner` symbols (parallel compile); QR-bear
 | Component (signature) | Behaviour | Replaces iOS | Used by |
 |---|---|---|---|
 | `class ZxingQrCodeEncoder @Inject constructor() : QrCodeEncoder` (Hilt `@Binds`) | ZXing, EC from `QrErrorCorrection`, margin 1, UTF-8 hint only for non-ASCII (design-system §9.5) | `QRRenderer` (QRCodeView.swift) | `:core:data` (prefetched matrices), `QrCodeView` |
-| `QrCodeView(frames: List<String>, modifier, maxSide = 320.dp, intervalMillis = 250, initial: List<QrMatrix>? = null)` | encodes all frames off-main first, nearest-neighbour draw, animated player with pause and counter, keep-screen-on while animated | `QRCodeView` (QRCodeView.swift:29) | Connect, signature, activity QR sheet, recovery QR |
+| `QrCodeView(frames: List<String>, modifier, maxSide = 320.dp, intervalMillis = 250, initial: List<QrMatrix>? = null, maxBrightness = false)` | encodes all frames off-main first, nearest-neighbour draw, animated player with pause and counter; keeps the screen on only while an animated code **plays** (encoded, not paused, screen resumed) **and the window gate is open** (`LocalWindowGateOpen`: not under App Lock or the "recorded or mirrored" cover), on its hosting window; never for a one-frame code, so the recovery QR leaves the system auto-lock to conceal it (QA audit A02); brightness only when the caller opts in | `QRCodeView` (QRCodeView.swift:29) | Connect, signature, activity QR sheet, recovery QR |
 | `QrScannerScreen(title: String, hint: String, purpose: QrScanPurpose, progress: Float?, status: String?, error: String?, onReset: () -> Unit, onClose: () -> Unit, onScan: (String) -> Unit, modifier)` | full-screen dark camera, viewfinder with progress ring, torch, status panel, Back closes, `QrScanFrameGate` inside | `QRScannerView` (QRScannerView.swift:9) | `:feature:sign` ScannerRoute, `:feature:setup` import |
 | `rememberCameraPermissionState(): CameraPermissionState` (`status: Granted/NotAsked/Denied/PermanentlyDenied`, `request()`, `openSettings()`) | runtime CAMERA flow, re-check on resume (scan-sign §23.5) | AVCaptureDevice authorization | QrScannerScreen |
 | `internal class QrFrameAnalyzer(onValues: (List<String?>) -> Unit) : ImageAnalysis.Analyzer` | Y plane, `QRCodeMultiReader`, inverted retry, strict UTF-8 (§23.3) | `metadataOutput` (QRScannerView.swift:357) | QrScannerScreen |
@@ -400,9 +401,12 @@ fun NavGraphBuilder.settingsSharedDestinations(navController: NavController) // 
 
 ```
 MainActivity (AppCompatActivity, single task)
-  onCreate: DebugUiTestHarness.configure (debug) → installSplashScreen (keep while AppAccessState.resolving)
-            → SecureWindowPolicy.apply → setHideOverlayWindows(true) (API 31+) → AppLifecycleMonitor.attach
-            → AppLocales.ensureLatinDigits → super.onCreate → setContent { SignerTheme(appearance) { Root() } }
+  attachBaseContext: AppCompatLocaleSync.keepSystemChoice (API 33+) → super.attachBaseContext
+  onCreate: DebugUiTestHarness.configure + recreateForRunLocale (debug) → installSplashScreen (keep while
+            AppAccessState.resolving) → SecureWindowPolicy.apply (FLAG_SECURE, setHideOverlayWindows(true) API 31+)
+            → AppLifecycleMonitor.attach → AppearanceController.start
+            → AppLocales.ensureLatinDigits (API < 33) → super.onCreate → AppLocales.ensureLatinDigits (API 33+)
+            → enableEdgeToEdge → setContent { SignerTheme(appearance) { Root() } }
 Root()
   layer 1  RootStages: Loading → LaunchView | Failed → LoadFailureScreen | Welcome → WelcomeScreen | Main → MainScaffold
   layer 2  SetupOverlay (when AppRouter.setup != null): OnboardingPager (showsIntroduction) → SetupFlowHost
@@ -418,6 +422,14 @@ count 0 → `selectTab(Wallets)` + `resetNavigation()`; `navigationResetEpoch` �
 `willEnterForeground()`; `onStop` (not changing configurations) → `suspendSession()` then `didEnterBackground()`.
 
 Further `:app` duties fixed here so nobody guesses:
+- `AppLocales.ensureLatinDigits` (plain `ar` → `ar-u-nu-latn`) runs on the side of `super.onCreate` where AppCompat can
+  see the per-app list (QA audit A11): below API 33 AppCompat keeps the list itself, so it runs **before**
+  `super.onCreate` and the delegate's `onCreate` applies it to this activity in place; on API 33+ AppCompat reads and
+  writes the framework list only through a live activity delegate, which `super.onCreate` registers, so it runs
+  **after** it (before, the list reads as empty), and the system relaunches the activity once; the list then holds
+  `ar-u-nu-latn`, so it cannot loop. Debug only: below API 33 the harness recreates the activity once when it was
+  attached in another language than the run's `bts.uitest.locale` (QA round 3 activity-keyboard-06), so the run's
+  language survives the first configuration change and is what AppCompat stores.
 - `WindowGate.setOpen(!showsLock && !captured)` (closed in the same frame the lock engages, reopened ~450 ms after
   unlock) and `CompositionLocalProvider(LocalWindowGateOpen provides …)` around layers 1, 2 and 4 — **not** around the
   lock window's content. `LocalTokenIconSource` (Hilt `TokenIconSource`) at the root.
@@ -673,10 +685,11 @@ activity-settings §14.5 pitfall (a): with "System" and a device list `[en-GB, d
   duties listed under §2.1), Welcome and onboarding (Android wording of app-shell §6.2), manifest permission set of
   G8, `BuildInfo` (incl. `signingCertificateSha256`) and `@Named(ENGINE_TEST_OPERATIONS)` providers,
   `SignerApplication` (engine `prewarm()`, nothing that opens storage), `DebugUiTestHarness` + debug Hilt module
-  (`UiTestEnvironment`, fixture `DeviceKeyStore` + public-data key, failing `BiometricAuthenticator`, fixtures created
+  (`UiTestEnvironment`, fixture `DeviceKeyStore` + public-data key, fixture `JournalCipher`, failing
+  `BiometricAuthenticator`, fixtures created
   through `SignerStore.createWallet`, failure → `setError("UI fixture setup failed: …")`), flavor About content, the
   flavor legal texts `app/src/{apk,play}/assets/legal/TERMS_OF_USE.txt` and `PRIVACY_POLICY.txt` (derived from the iOS
-  texts per activity-settings §10, marked for legal review), the default build number decision (`BuildInfo` KDoc).
+  texts per activity-settings §10, marked for legal review), the default build number (1, DECISIONS §10).
 - iOS tests: PrivacyShieldTests (2), AppNameTests (3), LegalDocumentTests `privacyPolicyDescribesWhatTheAppActuallyDoes`
   adapted to the Android claims per flavor (`LegalTextsTest` in `:app`); Robolectric root-stage and glue tests
   (Replace/Reset ordering, count 0, review → Scan, gate closed while locked), the `[en-GB, de]` resolution test.
@@ -831,12 +844,12 @@ chevrons, LTR for addresses and hex). Test tags = the iOS `accessibilityIdentifi
 |---|---|---|
 | :core:common | `DispatchersModule`, `ClockModule`, `StorageModule`, `UiTestEnvironmentModule` | dispatchers, `@ApplicationScope`, `MonotonicClock`, `WallClock`, `@SignerDataDir File`, `Optional<UiTestEnvironment>` |
 | :core:engine | `EngineModule` (exists) | `SignerEngine` (needs `@Named(ENGINE_TEST_OPERATIONS) Boolean` from :app); `EngineCalls` by `@Inject` |
-| :core:crypto | `CryptoModule` | `WalletVault`, `DeviceKeyStore`, `Optional<@UiTestOverride DeviceKeyStore>`, `JournalCipher`, `Bip39`, `Bip39Seed`, `SecureRandomSource` |
+| :core:crypto | `CryptoModule` | `WalletVault`, `DeviceKeyStore`, `Optional<@UiTestOverride DeviceKeyStore>`, `JournalCipher`, `Optional<@UiTestOverride JournalCipher>`, `Bip39`, `Bip39Seed`, `SecureRandomSource` |
 | :core:data | `DataModule` | `SignerStore`, `SignerPreferences`, `PublicWalletRepository`, `ReceiptRepository`, `ReferenceDataRepository`, `LegalDocumentRepository`, `TokenIconSource` |
 | :core:security | `SecurityModule` | `AppAccessController`, `BiometricAuthenticator`, `Optional<@UiTestOverride BiometricAuthenticator>`, `AppLifecycleMonitor`, `RecoverySessionFactory`, `LockWindowController`, `WindowGate`, `SecureWindowPolicy` |
 | :core:scanner | `ScannerModule` | `QrCodeEncoder` |
 | :core:navigation | none | `AppRouter` (`@ActivityRetainedScoped @Inject`) |
-| :app | `AppModule` (+ `DebugUiTestModule` in `src/debug`) | `BuildInfo`, `@Named(ENGINE_TEST_OPERATIONS)`; debug: `UiTestEnvironment`, `@UiTestOverride DeviceKeyStore`, `@UiTestOverride BiometricAuthenticator` |
+| :app | `AppModule` (+ `DebugUiTestModule` in `src/debug`) | `BuildInfo`, `@Named(ENGINE_TEST_OPERATIONS)`; debug: `UiTestEnvironment`, `@UiTestOverride DeviceKeyStore`, `@UiTestOverride JournalCipher`, `@UiTestOverride BiometricAuthenticator` |
 
 ---
 
@@ -929,7 +942,9 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
       then records a one-time notice (`receipts.restarted`, no data) and removes the journal nobody can open, so the
       next record seals under a new key. `SignerState.activityRestarted` shows "Activity Started Again" until "OK"
       (`acknowledgeActivityRestart`). A journal whose key is not provably gone keeps the iOS behaviour (unreadable,
-      alert, never overwritten silently).
+      alert, never overwritten silently). Debug: `bts.uitest.loseJournalKey` (`tools/qa/ui.py launch
+      --lose-journal-key`) loses a harness run's journal key the same way, so the notice is reachable on an emulator
+      (QA round 3 activity-keyboard-07); `bts.uitest.unreadableJournal` keeps the key and shows the unreadable state.
     - **App Lock (L2):** `AppAccessController.hasNoUnlockPath` is true only while locked, with no strong biometric, and
       when the vault lists ≥ 1 wallet and proves every device key lost; the lock screen then explains it and offers
       "Continue Without App Lock", which proves it again and turns App Lock off (persisted). A wrong password, an
@@ -949,8 +964,9 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
       a certainty about this device, and the Activity notice never says the wallets are unaffected (the same event
       usually deletes their keys).
 
-Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
-scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.
-Also: the default build number (iOS "1.0.0 (1)" vs Android "1.0.0 (0)", `BuildInfo` KDoc); whether "BitTool Wallet"
-lists "iOS · Android" (models-state §10.3; data unchanged until decided); whether Activity offers "Clear Activity" when
-the journal is unreadable (`activityUnreadable`).
+Open questions for the owner: none. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the scanner UI
+converts it. The questions this section used to list are decided (DECISIONS §10): the default build number is 1
+("1.0.0 (1)" as on iOS); "BitTool Wallet" and every other compatible-wallet entry stay exactly the iOS data
+(models-state §10.3); Activity hides "Clear Activity" while the journal is unreadable (`activityUnreadable`, iOS
+parity; item 19 is the one Android-only exception, a provably lost key); there is no Android-only "Allow camera"
+label (scan-sign §23.5).

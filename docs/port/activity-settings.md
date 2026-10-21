@@ -157,6 +157,9 @@ Conventions in this spec
   - iOS gap to be aware of: if the file is unreadable, `receipts` is empty, so the Clear button is hidden
     and new signatures are never recorded until reinstall. Android: keep "never silently overwrite", but
     the product owner may want a recovery path (e.g. Clear available when a read error is pending). Flag.
+    **Decided** (DECISIONS §10): iOS parity, no Clear while unreadable ("Activity Unavailable",
+    `SignerState.activityUnreadable`). Android-only exception (QA L1, ARCHITECTURE §6 item 19): a journal whose
+    Keystore key is provably gone starts again once with a notice (§14.2).
 - **Clear** (`:532-535`): `saveReceipts([])` then `receipts = []`; failure → same "could not be saved" error.
 - **Write** (`:592-600`): create directory with POSIX 0700 + `FileProtectionType.complete`; set
   `isExcludedFromBackup` on the directory and the file; atomic write with `.completeFileProtection`; file
@@ -933,8 +936,11 @@ password, or unlock your iPhone with its passcode first."); the onboarding repla
 - Stored JSON round-trip: keep the request as a `JsonElement`/raw string (kotlinx.serialization) so large
   integers are never coerced to Double; serialize with sorted keys (iOS canonical form).
 - QR sheet: `ModalBottomSheet(skipPartiallyExpanded = true)` or a full-screen dialog with top bar
-  "Signature" + "Done"; keep the screen on while a QR is shown (`FLAG_KEEP_SCREEN_ON` via
-  `LocalView.keepScreenOn`) — small Android polish.
+  "Signature" + "Done". The screen stays on only while an **animated** response code plays (a multi-part
+  `crypto-psbt`), as `QrCodeView` decides for every caller: encoded, not paused, screen resumed and the window gate
+  open (`LocalWindowGateOpen`: not under App Lock or the "recorded or mirrored" cover), on the sheet's own window
+  (QA audit A02; ARCHITECTURE §1.12, design-system §9.5). A one-frame signature QR never holds the screen on, as
+  iOS never changes its idle timer — small Android polish, not a parity item.
 - Export: `rememberLauncherForActivityResult(CreateDocument("text/plain"))`, suggested name
   `bittool-signer-signature.txt`, write UTF-8 via `ContentResolver.openOutputStream`; show failures inline in
   red. (If the user picks a cloud provider, that provider uploads — say so in the Privacy text.)
@@ -942,8 +948,12 @@ password, or unlock your iPhone with its passcode first."); the onboarding repla
   `magic | version | 12-byte IV | AES-256-GCM(ciphertext+tag)` with a Keystore key
   (`KeyGenParameterSpec`, `PURPOSE_ENCRYPT|DECRYPT`, GCM, NoPadding, `setUnlockedDeviceRequired(true)` on
   API ≥ 28, `setIsStrongBoxBacked` optional). Apply all iOS limits to the **plaintext** JSON (≤ 2,097,152
-  bytes, ≤ 100 records, field checks) and a ciphertext size cap before decrypting. Key invalidated / decrypt
-  failure → "could not be read" path (never crash, never overwrite silently). Manifest:
+  bytes, ≤ 100 records, field checks) and a ciphertext size cap before decrypting. Decrypt failure → "could not
+  be read" path (never crash, never overwrite silently), with one Android-only exception (QA L1, ARCHITECTURE §6
+  item 19): a journal key that is **provably** gone — removing the screen lock deletes it; `KeystoreLossProof`:
+  no entry while Keystore answers, or `KeyPermanentlyInvalidatedException` — starts a fresh journal once, with no
+  alert and the "Activity Started Again" notice until "OK". A damaged file, a key that only fails to load or any
+  other doubt keeps the "could not be read" path. Manifest:
   `android:allowBackup="false"`, `android:fullBackupContent="false"` (≤ API 30) and
   `android:dataExtractionRules` excluding all domains under both `<cloud-backup>` and `<device-transfer>`
   (Android 12+ ignores `allowBackup` for D2D).

@@ -53,8 +53,16 @@ object AppLocales {
     }
 
     /**
-     * Re-applies `ar-u-nu-latn` when Android's own "App languages" setting chose plain Arabic, so digits stay Latin.
-     * Call from `MainActivity.onCreate`.
+     * Re-applies `ar-u-nu-latn` when Android's own "App languages" setting (or the debug harness's `bts.uitest.locale=ar`)
+     * chose plain Arabic, so digits stay Latin.
+     *
+     * Call from `MainActivity.onCreate` on the side of `super.onCreate` where AppCompat can see the per-app list (QA
+     * audit A11, ARCHITECTURE §2.1):
+     * - below API 33 **before** `super.onCreate`: AppCompat keeps the list itself, and the delegate's `onCreate` then
+     *   applies the change to this activity in place;
+     * - on API 33+ **after** `super.onCreate`: AppCompat reads and writes the framework list only through a live
+     *   activity delegate, which `super.onCreate` registers. Before it the list reads as empty and nothing happens.
+     *   The change makes the system relaunch the activity once; the list then holds `ar-u-nu-latn`, so it cannot loop.
      */
     fun ensureLatinDigits() {
         val first = AppCompatDelegate.getApplicationLocales()[0] ?: return
