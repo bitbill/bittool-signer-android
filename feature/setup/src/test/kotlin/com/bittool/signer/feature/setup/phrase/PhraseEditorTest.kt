@@ -1,5 +1,8 @@
 package com.bittool.signer.feature.setup.phrase
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.text.InputType
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -8,7 +11,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.nativeClipboardManager
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -30,6 +37,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -110,6 +118,30 @@ class PhraseEditorTest {
         assertFalse(offers(filters, processTextKey(0)), "no PROCESS_TEXT action (Translate, Search…) receives the words")
         assertFalse(offers(filters, processTextKey(3)))
         assertFalse(offers(filters, Any()), "nor any other platform item, such as the smart-selection assistant action")
+    }
+
+    /**
+     * The clipboard the editor's text field is given reads the real one (Paste, and the check for text to paste) and
+     * never writes to it or clears it: whatever route a copy or a cut takes, the recovery words stay off the clipboard
+     * (ARCHITECTURE §4.4, final audit A01).
+     */
+    @Test
+    fun theEditorsClipboardReadsButNeverWrites() {
+        lateinit var noWrites: Clipboard
+        lateinit var context: Context
+        compose.setContent {
+            context = LocalContext.current
+            noWrites = rememberNoWriteClipboard()
+        }
+        val clipboard = compose.runOnIdle { context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
+        clipboard.setPrimaryClip(ClipData.newPlainText("other", "zoo"))
+        runBlocking {
+            noWrites.setClipEntry(ClipEntry(ClipData.newPlainText("plain text", "legal winner")))
+            noWrites.setClipEntry(null)
+            assertEquals("zoo", noWrites.getClipEntry()?.clipData?.getItemAt(0)?.text?.toString(), "Paste reads the real clipboard")
+        }
+        assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "nothing was written or cleared")
+        assertTrue(noWrites.nativeClipboardManager.primaryClipDescription?.hasMimeType("text/*") == true, "the field can tell there is text to paste")
     }
 
     @Test
