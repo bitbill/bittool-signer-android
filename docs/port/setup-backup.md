@@ -1164,11 +1164,66 @@ Apply `SecureScreen()` to the **whole setup graph**: words, QR, cards, chips, th
 
 ### 15.8 Keyboard trust (iOS rejects third-party keyboards; Android cannot)
 
-Android has no API to refuse a third-party IME. Options, in recommended order:
-1. Reuse Ownbit's in-app `Bip39Keyboard` (a–z, space, backspace, paste) as the **default** for the phrase editor, so typed words never reach any IME. Accent-insensitive matching means a–z covers English, Spanish, French, Italian, Czech and Portuguese. A globe key switches, after a warning, to the system IME (needed for Chinese, Japanese and Korean), wrapped in `NoPersonalizedLearning`.
-2. At minimum: system IME + `NoPersonalizedLearning` + autocorrect off. Optionally, a warning Callout when the current default IME is not a preinstalled system app (`InputMethodManager.currentInputMethodInfo` → `ServiceInfo.applicationInfo.flags & FLAG_SYSTEM`).
+Android has no API to refuse a third-party IME. Decided (DECISIONS §11) and implemented: the recovery phrase is typed
+on BitTool's own keyboard by default, a port of Ownbit 5.0's `Bip39Keyboard`, so the typed words never reach any input
+method. There is no iOS counterpart; iOS behaviour elsewhere is unchanged.
 
-Option 1 needs new strings for the switch warning; none exist in the translations. Treat this as a product decision.
+**Where.** `ImportWalletStep` (`:feature:setup` `flow/FormSteps.kt`) is the only place a phrase is typed: import,
+resetting a forgotten password, a phrase that is already here, and re-importing after a lost device key. The components
+live in `:core:ui` `keyboard/`; the strings in `strings_keyboard.xml` (7 Android-only strings, translated into the 20
+other languages; the keys otherwise reuse the iOS keys "Done", "Delete", "Paste from Clipboard", "Insert %@").
+
+**No input-method connection.** `RecoveryPhraseEditor` is hosted by `InAppKeyboardInput(inAppKeyboard = true)`, which
+swallows the platform text-input request of every Compose field inside it (`InterceptPlatformTextInput` that never
+forwards) and makes `SoftwareKeyboardController.show()` a no-op. No `InputConnection` is ever created, the view is not
+a text editor for the `InputMethodManager`, and no keyboard app, suggestion strip, clipboard tool or Autofill can attach.
+The field keeps its focus, caret, selection handles and the secret text menu (Paste and Select All only). Physical
+keyboards type into it directly; Copy and Cut keys and shortcuts are refused (`isCopyOrCutShortcut`), Paste works. When
+the editor gains the focus from a field typed with the system keyboard (the name, a passphrase), the system keyboard
+is put away (`hideSystemKeyboard`).
+
+**The keyboard** (`Bip39Keyboard`), in `SetupScaffold`'s bottom bar under the footer, full width, sliding up from the
+bottom edge (none without animations); `keepInViewAboveBar` keeps the status line and the editor, or the caret line,
+above it:
+- Top row: the editor's own completions as "Insert %@" chips (`suggestion.<word>`, the editor's Insert action, iOS
+  `RecoveryPhraseAssistant.complete(with:)`), or its hints ("Type a word to see suggestions", "No matching word", "Each
+  Chinese word is one character"). Fixed height, so the keys never jump.
+- `qwertyuiop` / `asdfghjkl` / paste · `zxcvbnm` · backspace / system keyboard (globe) · space · Done, lower case, left
+  to right in every language (RTL interfaces keep QWERTY; hints keep the interface direction). a–z covers English,
+  Spanish, French, Italian, Czech and Portuguese, which the editor matches without accents.
+- Paste inserts the clipboard text exactly as the editor's Paste menu does (`Bip39KeyboardEdits.paste`); backspace
+  deletes a grapheme on touch-down and repeats, faster, while held; Done hides the keyboard (clears the focus).
+- Edits go straight into the editor's `TextFieldState` (`KeyboardEdit`, redacted `toString`), nowhere else.
+- Keys never take the focus; the whole cell is the touch target; pressed colour and a letter preview drawn in this
+  window (no popup, so it stays under `FLAG_SECURE`); keyboard-tap haptic through the view (the system setting
+  decides; no sounds); TalkBack names every key; the window is accessibility-sensitive while shown (API 34+). Labels
+  grow with the font size up to 1.3×; keys at most 720 dp wide; shorter rows on short windows; light and dark from the
+  design-system palette.
+
+**Back.** Back and the predictive back gesture close the keyboard first (it sinks a little with the gesture; a cancelled
+gesture leaves it up); only the next Back asks to discard the draft.
+
+**Short windows.** Below 420 dp of window height (phones in landscape) "Continue" steps aside while the keyboard is up,
+so the editor keeps room; Done brings it back. An error is not hidden with it: it stays above the keyboard while the
+phrase is fixed (typing does not clear it, iOS).
+
+**System keyboard (Chinese, Japanese, Korean).** The globe key opens `SwitchToSystemKeyboardDialog` ("Switch to the
+system keyboard?", the system or a third-party keyboard can see and learn the words; "Keep BitTool keyboard" is the
+default, Back keeps it). "Switch anyway" sets `WalletSetupViewModel.phraseKeyboard = PhraseKeyboard.System` (snapshot
+state, not a secret, for the presentation; in-app again for the next one), recreates the editor and focuses it once
+the window has the focus, raising the system keyboard. The editor then asks the input method for:
+`IME_FLAG_NO_PERSONALIZED_LEARNING` (`NoPersonalizedLearning`, incognito), no autocorrection, no capitalisation, and
+`TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain text class (`NoSuggestions`, QA regression-01: no suggestion strip, no
+composing underline, no clipboard chip on Latin keyboards; CJK input methods keep their conversion candidates). No
+password or visible-password variation, which would give Latin-only layouts. Above the system keyboard the suggestion
+bar (`RecoverySuggestionBar`) starts with a "BitTool keyboard" chip (`keyboard.inApp`) that switches back and puts the
+system keyboard away.
+
+**Tests.** `:core:ui` `Bip39KeyboardEditsTest` (Ownbit's edit cases), `Bip39KeyboardTest` and Roborazzi component
+shots; `:feature:setup` `PhraseKeyboardTest` (no input connection, keys, suggestions, hardware keys, Copy / Cut refused,
+Done and Back, predictive back, switching both ways with the warning and the system keyboard's traits, short window
+with and without an error), `PhraseKeyboardInsertTest` (Ownbit's suggestion cases on the Insert semantics),
+`PhraseEditorTest` (input traits), `KeyboardKeepInViewTest`, `PhraseKeyboardScreenshotTest`.
 
 ### 15.9 Engine and crypto pitfalls
 

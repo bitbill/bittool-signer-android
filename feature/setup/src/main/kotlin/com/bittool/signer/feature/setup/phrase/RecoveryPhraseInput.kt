@@ -1,5 +1,8 @@
 package com.bittool.signer.feature.setup.phrase
 
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
@@ -54,7 +58,11 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.PlatformTextInputInterceptor
+import androidx.compose.ui.platform.PlatformTextInputMethodRequest
+import androidx.compose.ui.platform.PlatformTextInputSession
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -96,9 +104,10 @@ import com.bittool.signer.core.l10n.R as L10n
  * a plain multiline field, at least 132 dp high, body monospaced and left to right in every language, on the card
  * colour with radius 16, placeholder "Enter your words separated by spaces".
  *
- * Input traits (port of iOS `RecoveryInputViewTests`): a text keyboard (CJK input methods must stay usable, so no
- * password type and no "no suggestions" flag), no capitalisation, no autocorrection, no personalised learning
- * (incognito keyboard), no autofill content type and the hosting window excluded from Autofill. Pasting works through
+ * Input traits (port of iOS `RecoveryInputViewTests`): a plain text keyboard (CJK input methods must stay usable, so no
+ * password or visible-password type, which Gboard answers with a Latin-only layout), no capitalisation, no
+ * autocorrection, **no suggestions** ([NoSuggestions]), no personalised learning (incognito keyboard), no autofill
+ * content type and the hosting window excluded from Autofill. Pasting works through
  * the system menu, which offers only Paste and Select All ([secretTextMenu]): typed recovery words never reach the
  * clipboard (ARCHITECTURE §4.4; iOS offers Copy) nor another app's text action such as "Translate". The text is never
  * masked. While it holds text the view is accessibility-sensitive (gaps G5), and a
@@ -116,8 +125,8 @@ import com.bittool.signer.core.l10n.R as L10n
  * the editor is typed on BitTool's own `Bip39Keyboard` and has **no input-method connection at all**
  * ([InAppKeyboardInput]): no keyboard app, the system's or a third party's, ever sees the words. Caret, selection,
  * Paste / Select All and physical keyboards keep working. Without it (the person chose the system keyboard for a
- * Chinese, Japanese or Korean phrase) the traits above apply. Switching recreates the field: [focusRequester] focuses
- * the new one.
+ * Chinese, Japanese or Korean phrase) the traits above apply: incognito, no autocorrection, no suggestions. Switching
+ * recreates the field: [focusRequester] focuses the new one.
  */
 @Composable
 internal fun RecoveryPhraseEditor(
@@ -136,55 +145,99 @@ internal fun RecoveryPhraseEditor(
     ExcludeFromAutofill()
     val interfaceDirection = LocalLayoutDirection.current
     InAppKeyboardInput(inAppKeyboard) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-            BasicTextField(
-                state = state,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-                    .onFocusChanged { onFocusChanged(it.isFocused) }
-                    // The menu offers no Copy / Cut, and neither do the keys: a physical keyboard (which types into the
-                    // editor directly with the in-app keyboard), or a keyboard app's own Copy button, never puts
-                    // recovery words on the clipboard.
-                    .onPreviewKeyEvent(::isCopyOrCutShortcut)
-                    .secretTextMenu()
-                    .testTag(EDITOR_TAG),
-                textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.None,
-                    autoCorrectEnabled = false,
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Default,
-                ),
-                lineLimits = TextFieldLineLimits.MultiLine(),
-                cursorBrush = SolidColor(colors.accent),
-                decorator = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = EDITOR_MIN_HEIGHT)
-                            .background(colors.card, SignerShapes.callout)
-                            .padding(horizontal = 14.dp, vertical = 16.dp)
-                            // The field's name, read after its text (a merged label, not a content description: TalkBack
-                            // would read a description instead of the words).
-                            .semantics { text = AnnotatedString(label) },
-                    ) {
-                        if (state.text.isEmpty()) {
-                            // A translated sentence: in the interface direction, from the interface's start edge.
-                            CompositionLocalProvider(LocalLayoutDirection provides interfaceDirection) {
-                                Text(
-                                    placeholder,
-                                    style = typography.body.monospaced(),
-                                    color = colors.tertiaryLabel,
-                                    modifier = Modifier.fillMaxWidth().clearAndSetSemantics {},
-                                )
+        // With the in-app keyboard the request never reaches an input method anyway; with the system keyboard it asks
+        // for no suggestion strip, inside InAppKeyboardInput's incognito session.
+        NoSuggestions {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                BasicTextField(
+                    state = state,
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                        .onFocusChanged { onFocusChanged(it.isFocused) }
+                        // The menu offers no Copy / Cut, and neither do the keys: a physical keyboard (which types into
+                        // the editor directly with the in-app keyboard), or a keyboard app's own Copy button, never
+                        // puts recovery words on the clipboard.
+                        .onPreviewKeyEvent(::isCopyOrCutShortcut)
+                        .secretTextMenu()
+                        .testTag(EDITOR_TAG),
+                    textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Default,
+                    ),
+                    lineLimits = TextFieldLineLimits.MultiLine(),
+                    cursorBrush = SolidColor(colors.accent),
+                    decorator = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = EDITOR_MIN_HEIGHT)
+                                .background(colors.card, SignerShapes.callout)
+                                .padding(horizontal = 14.dp, vertical = 16.dp)
+                                // The field's name, read after its text (a merged label, not a content description:
+                                // TalkBack would read a description instead of the words).
+                                .semantics { text = AnnotatedString(label) },
+                        ) {
+                            if (state.text.isEmpty()) {
+                                // A translated sentence: in the interface direction, from the interface's start edge.
+                                CompositionLocalProvider(LocalLayoutDirection provides interfaceDirection) {
+                                    Text(
+                                        placeholder,
+                                        style = typography.body.monospaced(),
+                                        color = colors.tertiaryLabel,
+                                        modifier = Modifier.fillMaxWidth().clearAndSetSemantics {},
+                                    )
+                                }
                             }
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                },
-            )
+                    },
+                )
+            }
         }
+    }
+}
+
+/**
+ * The system keyboard shows no suggestions for the recovery phrase (QA regression-01; DECISIONS §6 "no
+ * autocorrect/suggestions"; iOS `.autocorrectionDisabled()` hides the QuickType bar, `RecoveryPhraseViews.swift:196`).
+ * Compose's `KeyboardOptions(autoCorrectEnabled = false)` only leaves out `TYPE_TEXT_FLAG_AUTO_CORRECT`: Gboard still
+ * showed its suggestion strip and composing underline, one tap from words that are not BIP39 words ("abandoned"), and
+ * a clipboard chip. Every text field inside [content] asks for `InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain
+ * text class ([applyNoSuggestions]). That is a hint for dictionary candidates only: Chinese and Japanese input methods
+ * keep their conversion candidates, which composing needs, and Korean composes syllables as before, unlike the
+ * visible-password variation, which makes Gboard switch to a Latin-only layout. Wraps the platform input request
+ * like `NoPersonalizedLearning`, which stays in place around it.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+internal fun NoSuggestions(content: @Composable () -> Unit) {
+    InterceptPlatformTextInput(interceptor = NoSuggestionsInterceptor, content = content)
+}
+
+/** Asks the input method of [editorInfo] for no suggestions, on a text field only (pure, unit-tested). */
+internal fun applyNoSuggestions(editorInfo: EditorInfo) {
+    if (editorInfo.inputType and InputType.TYPE_MASK_CLASS != InputType.TYPE_CLASS_TEXT) return
+    editorInfo.inputType = editorInfo.inputType or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+private object NoSuggestionsInterceptor : PlatformTextInputInterceptor {
+    override suspend fun interceptStartInputMethod(
+        request: PlatformTextInputMethodRequest,
+        nextHandler: PlatformTextInputSession,
+    ): Nothing {
+        val noSuggestions = object : PlatformTextInputMethodRequest {
+            override fun createInputConnection(outAttributes: EditorInfo): InputConnection {
+                val connection = request.createInputConnection(outAttributes)
+                applyNoSuggestions(outAttributes)
+                return connection
+            }
+        }
+        nextHandler.startInputMethod(noSuggestions)
     }
 }
 

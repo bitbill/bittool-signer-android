@@ -185,7 +185,8 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
  * chip that switches back. The choice holds for the presentation ([WalletSetupViewModel.phraseKeyboard]). Back, and the
  * predictive back gesture, first put the in-app keyboard away (it follows the gesture down a little). On a window too
  * short for "Continue", the keyboard and the editor together (landscape phones), "Continue" steps aside while the
- * keyboard is up; Done brings it back.
+ * keyboard is up; Done brings it back. An error stays above the keyboard meanwhile: it is what the person is fixing
+ * ("“xyzzy” is not in the BIP39 word list"), and typing does not clear it (iOS).
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -206,6 +207,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     val inAppKeyboardShown = inAppKeyboard && phraseFocused
     val suggestions = !inAppKeyboard && phraseFocused && WindowInsets.isImeVisible
     val shortWindow = windowInfo.containerDpSize.height < SHORT_WINDOW_HEIGHT
+    val continueAside = inAppKeyboardShown && shortWindow
     val canContinue by remember { derivedStateOf { !fields.phraseIsBlank() } }
 
     LaunchedEffect(keyboard) {
@@ -263,7 +265,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
         title = stringResource(L10n.string.import_a_wallet),
         message = stringResource(L10n.string.enter_the_12_15_18_21_or_24_words_of_an_existing_bip39),
         footerBottomPadding = if (suggestions) 0.dp else 8.dp,
-        footerVisible = !(inAppKeyboardShown && shortWindow),
+        footerVisible = !continueAside || state.error != null,
         keyboardVisible = inAppKeyboardShown,
         keyboard = {
             Bip39Keyboard(
@@ -278,13 +280,15 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
         },
         footer = {
             ErrorCallout(state.error)
-            PrimaryButton(
-                text = stringResource(L10n.string.continue_text),
-                onClick = model::startImport,
-                busy = state.busy,
-                enabled = !state.busy && canContinue && state.deviceSecure,
-                modifier = Modifier.testTag("setup.import"),
-            )
+            if (!continueAside) {
+                PrimaryButton(
+                    text = stringResource(L10n.string.continue_text),
+                    onClick = model::startImport,
+                    busy = state.busy,
+                    enabled = !state.busy && canContinue && state.deviceSecure,
+                    modifier = Modifier.testTag("setup.import"),
+                )
+            }
             AnimatedVisibility(
                 visible = suggestions,
                 enter = expandVertically(SignerMotion.quick()) + fadeIn(SignerMotion.quick()),
@@ -322,7 +326,10 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     }
 }
 
-/** Below this window height (phones in landscape) "Continue" steps aside while the in-app keyboard is up. */
+/**
+ * Below this window height (phones in landscape) "Continue" steps aside while the in-app keyboard is up; an error does
+ * not.
+ */
 private val SHORT_WINDOW_HEIGHT = 420.dp
 
 /** How far, as a fraction of its height, the in-app keyboard sinks during a full back gesture before it goes. */

@@ -61,11 +61,14 @@ class PhraseEditorTest {
             assertNotNull(view.onCreateInputConnection(info), "the focused editor has an input session")
             val inputType = info.inputType
             assertEquals(InputType.TYPE_CLASS_TEXT, inputType and InputType.TYPE_MASK_CLASS, "a text keyboard: CJK input methods stay usable")
-            assertEquals(0, inputType and InputType.TYPE_MASK_VARIATION and InputType.TYPE_TEXT_VARIATION_PASSWORD, "not a password field")
+            assertEquals(InputType.TYPE_TEXT_VARIATION_NORMAL, inputType and InputType.TYPE_MASK_VARIATION, "no password or visible-password variation (Latin-only layouts)")
             assertEquals(0, inputType and InputType.TYPE_TEXT_FLAG_CAP_SENTENCES, "no capitalisation")
             assertEquals(0, inputType and InputType.TYPE_TEXT_FLAG_CAP_WORDS)
             assertEquals(0, inputType and InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS)
             assertEquals(0, inputType and InputType.TYPE_TEXT_FLAG_AUTO_CORRECT, "no autocorrection")
+            assertEquals(0, inputType and InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE, "no completions")
+            // QA regression-01: Gboard showed its suggestion strip ("abandoned", a clipboard chip) without this flag.
+            assertTrue(inputType and InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS != 0, "no suggestion strip")
             assertTrue(inputType and InputType.TYPE_TEXT_FLAG_MULTI_LINE != 0, "multiline")
             assertTrue(info.imeOptions and EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING != 0, "incognito keyboard")
             assertFalse(view.isImportantForAutofill, "the window is excluded from Autofill")
@@ -73,6 +76,17 @@ class PhraseEditorTest {
         }
         compose.onNodeWithTag(EDITOR_TAG).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.ContentType))
         compose.onNodeWithTag(EDITOR_TAG).assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Password))
+    }
+
+    /** The no-suggestions flag goes on text fields only (a number or phone field has no such flag to set). */
+    @Test
+    fun noSuggestionsMarksTextFieldsOnly() {
+        val text = EditorInfo().apply { inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE }
+        applyNoSuggestions(text)
+        assertEquals(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS, text.inputType)
+        val number = EditorInfo().apply { inputType = InputType.TYPE_CLASS_NUMBER }
+        applyNoSuggestions(number)
+        assertEquals(InputType.TYPE_CLASS_NUMBER, number.inputType)
     }
 
     /**
