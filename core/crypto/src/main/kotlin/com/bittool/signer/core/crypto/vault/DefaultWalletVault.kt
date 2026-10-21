@@ -96,10 +96,9 @@ class DefaultWalletVault @Inject constructor(
         password: SecretText,
         id: WalletId,
     ): VaultMetadata = mutex.withLock {
-        // A lone UTF-16 surrogate cannot exist in a Swift string and would be stored as "?", so the header would not
-        // read back as the name returned here.
-        val trimmed = VaultMetadata.validName(name)?.takeUnless { hasUnpairedSurrogate(it.toCharArray()) }
-            ?: throw VaultError.InvalidName()
+        // 1–40 graphemes (iOS), no lone surrogate, and a header the reader accepts (QA audit A04): refused before any
+        // key, KDF or file exists.
+        val trimmed = WalletNames.valid(name) ?: throw VaultError.InvalidName()
         withContext(io) {
             tidyOnce()
             if (Files.exists(vaultFile(id).toPath(), LinkOption.NOFOLLOW_LINKS)) throw VaultError.StorageFailure()
@@ -111,6 +110,9 @@ class DefaultWalletVault @Inject constructor(
         val metadata = VaultMetadata(id, trimmed, clock.currentTimeMillis())
         val salt = random.bytes(VaultFormat.SALT_BYTES)
         val headerBytes = VaultFormat.encodeHeader(metadata, salt)
+        // WalletNames measured the header with the longest creation time, so this holds; it is checked again because a
+        // header the reader refuses would make every wallet unavailable.
+        if (headerBytes.size > VaultFormat.MAX_HEADER_BYTES) throw VaultError.InvalidName()
         val inner = sealPasswordLayer(mnemonic, passphrase, password, salt, headerBytes)
         commit {
             // vault-crypto.md §17.3: the Keystore key must exist before the outer layer, so the iOS order changes to
@@ -261,28 +263,48 @@ class DefaultWalletVault @Inject constructor(
         if (chars.isEmpty() || password.utf8Size() > MAX_PASSWORD_BYTES || hasUnpairedSurrogate(chars)) {
             throw VaultError.AuthenticationFailed()
         }
-        val cleartext = secretWork(cpu) {
-            val job = coroutineContext[Job]
-            val passwordBytes = utf8Bytes(chars)
-            val key = try {
-                passwordLayer.deriveKey(passwordBytes, vault.header.salt, vault.header.iterations.toInt()) { job?.ensureActive() }
-            } finally {
-                passwordBytes.wipe()
-            }
-            PasswordLayer.withKey(key) {
-                // AES-GCM cannot tell a wrong password from tampering: every failure of either layer reads
-                // "The password is incorrect." (`Core/VaultCrypto.swift:32-35, 190-192`).
-                try {
-                    val inner = deviceKeys.open(id, vault.ciphertext, VaultFormat.deviceAad(vault.headerBytes))
+        val cleartext = try {
+            secretWork(cpu) {
+                val job = coroutineContext[Job]
+                val passwordBytes = utf8Bytes(chars)
+                val key = try {
+                    passwordLayer.deriveKey(passwordBytes, vault.header.salt, vault.header.iterations.toInt()) { job?.ensureActive() }
+                } finally {
+                    passwordBytes.wipe()
+                }
+                PasswordLayer.withKey(key) {
+                    // AES-GCM cannot tell a wrong password from tampering: every authentication failure of either layer
+                    // reads "The password is incorrect." (`Core/VaultCrypto.swift:32-35, 190-192`). Keystore refusing the
+                    // device key itself (a provider or binder failure, a key the locked screen made unusable) is not one:
+                    // it stays [VaultError.DeviceKeyUnavailable], as on iOS, where the device key is read before
+                    // anything is counted (`Core/WalletVault.swift:137`; QA audit A05).
+                    val inner = try {
+                        deviceKeys.open(id, vault.ciphertext, VaultFormat.deviceAad(vault.headerBytes))
+                    } catch (e: VaultError.DeviceKeyUnavailable) {
+                        throw e
+                    } catch (_: VaultError) {
+                        throw VaultError.AuthenticationFailed()
+                    }
                     try {
                         passwordLayer.open(it, inner, VaultFormat.passwordAad(vault.headerBytes))
+                    } catch (_: VaultError) {
+                        throw VaultError.AuthenticationFailed()
                     } finally {
                         inner.wipe()
                     }
-                } catch (_: VaultError) {
-                    throw VaultError.AuthenticationFailed()
                 }
             }
+        } catch (e: VaultError.DeviceKeyUnavailable) {
+            // The device layer opens first, so the password was never tested: withdraw the attempt counted above, so a
+            // Keystore failure with the right password cannot lead to the 5th-failure delays. Best effort: Keystore
+            // usually refuses this write as well, and then the attempt stays counted.
+            withContext(io) {
+                try {
+                    attempts.write(id, previous)
+                } catch (_: VaultError) {
+                }
+            }
+            throw e
         }
         val secret = try {
             SecretJson.decode(cleartext)
@@ -382,19 +404,24 @@ class DefaultWalletVault @Inject constructor(
         } catch (e: IOException) {
             throw VaultError.MalformedVault(e)
         } ?: throw VaultError.WalletNotFound()
-        val vault = try {
-            VaultFormat.decode(bytes)
-        } catch (e: VaultError) {
-            throw e
-        } catch (e: RuntimeException) {
-            throw VaultError.MalformedVault(e)
-        }
-        VaultFormat.validate(vault)
-        if (vault.header.metadata.id != id) throw VaultError.MalformedVault()
-        return vault
+        return VaultFormat.decodeStored(id, bytes)
     }
 
+    /**
+     * Atomically writes the container of [id], but only one that [load] reads back: a single unreadable file fails
+     * [list] for every wallet on the device (`:78-94`), so the vault's own writer must never produce one (QA audit A04).
+     * The callers refuse first what they can name (a name or a secret too large for the format); anything else that
+     * would not read back is [VaultError.EncryptionFailure], and nothing is written.
+     */
     private fun writeVault(id: WalletId, bytes: ByteArray) {
+        val readsBack = bytes.size <= VaultFormat.MAX_FILE_BYTES &&
+            try {
+                VaultFormat.decodeStored(id, bytes)
+                true
+            } catch (_: VaultError) {
+                false
+            }
+        if (!readsBack) throw VaultError.EncryptionFailure()
         try {
             AtomicFiles.write(vaultFile(id), bytes)
         } catch (e: IOException) {
@@ -421,10 +448,14 @@ class DefaultWalletVault @Inject constructor(
         if (hasUnpairedSurrogate(password.chars())) throw VaultError.InvalidPassword(UiText.Ios("Control characters are not allowed."))
     }
 
-    /** iOS `encrypt` bounds (`:154-155`): phrase non-empty ≤ 8,192 UTF-8 bytes, passphrase ≤ 1,024. */
+    /**
+     * iOS `encrypt` bounds (`:154-155`): phrase non-empty ≤ 8,192 UTF-8 bytes, passphrase ≤ 1,024; and (Android, QA
+     * audit A04) a secret JSON whose ciphertext the reader accepts, which only escaped control characters could exceed.
+     */
     private fun requireSecretBounds(mnemonic: SecretText, passphrase: SecretText) {
         if (mnemonic.isEmpty() || mnemonic.utf8Size() > MAX_PHRASE_BYTES || passphrase.utf8Size() > MAX_PASSPHRASE_BYTES ||
-            hasUnpairedSurrogate(mnemonic.chars()) || hasUnpairedSurrogate(passphrase.chars())
+            hasUnpairedSurrogate(mnemonic.chars()) || hasUnpairedSurrogate(passphrase.chars()) ||
+            SecretJson.size(mnemonic.chars(), passphrase.chars()) > VaultFormat.MAX_CLEARTEXT_BYTES
         ) {
             throw VaultError.InvalidSecret()
         }

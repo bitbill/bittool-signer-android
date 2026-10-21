@@ -9,6 +9,7 @@ import com.bittool.signer.core.crypto.Bip39Seed
 import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.bip39.Bip39
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.crypto.vault.WalletNames
 import com.bittool.signer.core.crypto.vault.WalletVault
 import com.bittool.signer.core.engine.EngineCalls
 import com.bittool.signer.core.engine.EngineException
@@ -476,12 +477,16 @@ class DefaultSignerStore @Inject constructor(
                     ) {
                         throw AppIssue("This recovery phrase and passphrase already belong to an existing wallet.")
                     }
+                    // QA audit A04: a name whose vault header the reader would refuse (40 graphemes of stacked marks) is
+                    // the iOS name error before anything is written; the vault refuses it too, before any key.
+                    val trimmedName = name.trimWhitespacesAndNewlines()
+                    if (!WalletNames.fitsVaultHeader(trimmedName)) throw VaultError.InvalidName()
                     // Prepare the public sidecar first. It is invisible without a committed vault, so a crash cannot leave
                     // a visible new wallet with missing setup.
                     val id = WalletId.random()
                     val key = withContext(default) { vault.publicDataKey(createIfMissing = true) } ?: throw VaultError.DeviceKeyUnavailable()
                     try {
-                        publicRepository.save(index, id, name.trimWhitespacesAndNewlines(), key)
+                        publicRepository.save(index, id, trimmedName, key)
                         requireSession(epoch)
                     } catch (e: Throwable) {
                         withContext(NonCancellable) { runCatching { publicRepository.remove(id) } }

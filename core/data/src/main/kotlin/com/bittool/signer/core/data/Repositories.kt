@@ -57,7 +57,10 @@ interface PublicWalletRepository {
     /** Writes the index with [displayName] (or the name of a valid existing file). */
     suspend fun save(metadata: WalletPublicMetadata, walletId: WalletId, displayName: String?, key: PublicDataKey)
 
-    /** Sets the display name (trimmed, 1–40 graphemes, else `VaultError.InvalidName`), keeping a valid existing index. */
+    /**
+     * Sets the display name (trimmed, 1–40 graphemes and a name a vault header could hold, `WalletNames.fitsVaultHeader`;
+     * else `VaultError.InvalidName`), keeping a valid existing index.
+     */
     suspend fun rename(walletId: WalletId, name: String, key: PublicDataKey)
 
     /** Deletes the sidecar if present. */

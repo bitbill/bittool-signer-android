@@ -61,12 +61,14 @@ interface WalletVault {
     suspend fun list(): List<VaultMetadata>
 
     /**
-     * Creates wallet [id]: name trimmed and 1–40 graphemes ([VaultError.InvalidName]); [password] must pass
-     * `PasswordPolicy` ([VaultError.InvalidPassword]); [mnemonic] is the canonical phrase (non-empty, ≤ 8,192 UTF-8
-     * bytes) and [passphrase] ≤ 1,024 bytes ([VaultError.InvalidSecret]); requires a secure lock screen
+     * Creates wallet [id]: the name must pass [WalletNames.valid] (trimmed, 1–40 graphemes, and a header within the
+     * reader's 4,096 bytes; else [VaultError.InvalidName]); [password] must pass `PasswordPolicy`
+     * ([VaultError.InvalidPassword]); [mnemonic] is the canonical phrase (non-empty, ≤ 8,192 UTF-8 bytes) and
+     * [passphrase] ≤ 1,024 bytes ([VaultError.InvalidSecret]); requires a secure lock screen
      * ([VaultError.DevicePasscodeRequired]); an existing file for [id] is [VaultError.StorageFailure]. Order: policy →
      * PBKDF2 + inner layer → new Keystore key (fails if the alias exists) → outer layer → atomic write; any failure after
-     * key generation deletes the alias. `createdAt` is the current time floored to milliseconds.
+     * key generation deletes the alias. Nothing is written that this vault would not read back: such a container is
+     * [VaultError.EncryptionFailure] (no file, no key). `createdAt` is the current time floored to milliseconds.
      */
     suspend fun create(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText, id: WalletId): VaultMetadata
 
@@ -79,7 +81,9 @@ interface WalletVault {
      * delay **before** any password work (sealing with a missing device key → [VaultError.DeviceKeyUnavailable], an I/O
      * failure → [VaultError.StorageFailure]; both abort uncounted, iOS reads the device key at this point too) → an
      * empty password or one over 1,024 UTF-8 bytes is
-     * [VaultError.AuthenticationFailed] (counted) → PBKDF2 + both layers (any failure [VaultError.AuthenticationFailed])
+     * [VaultError.AuthenticationFailed] (counted) → PBKDF2 + both layers (a failed authentication of either layer, i.e. a
+     * wrong password or tampering, is [VaultError.AuthenticationFailed], counted; Keystore refusing the device-layer key
+     * is [VaultError.DeviceKeyUnavailable], and as the password was never tested the attempt is withdrawn, best effort)
      * → success resets the counter. The caller closes the returned secret.
      */
     suspend fun unlock(id: WalletId, password: SecretText): VaultSecret

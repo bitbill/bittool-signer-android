@@ -6,6 +6,7 @@ import com.bittool.signer.core.common.storage.SignerDataDir
 import com.bittool.signer.core.crypto.vault.PublicDataKey
 import com.bittool.signer.core.crypto.vault.SignerFiles
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.crypto.vault.WalletNames
 import com.bittool.signer.core.data.PublicWalletRepository
 import com.bittool.signer.core.model.AppIssue
 import com.bittool.signer.core.model.PublicMetadataStatus
@@ -96,7 +97,9 @@ class FilePublicWalletRepository @Inject constructor(
     override suspend fun rename(walletId: WalletId, name: String, key: PublicDataKey) = locked {
         // PublicWalletRepository.swift:53-59: an unreadable existing file loses its index (the wallet needs repair).
         val trimmed = name.trimWhitespacesAndNewlines()
-        if (!validName(trimmed)) throw VaultError.InvalidName()
+        // A new name also obeys the creation rule (QA audit A04): one a vault header could not hold is refused like a
+        // 41-character one. Stored names are still read with the iOS rule alone, so no existing file turns invalid.
+        if (!validName(trimmed) || !WalletNames.fitsVaultHeader(trimmed)) throw VaultError.InvalidName()
         val body = LinkedHashMap<String, JsonElement>(
             readOrNull(walletId, key) ?: JsonObject(mapOf("localWalletId" to JsonPrimitive(walletId.toString()))),
         )

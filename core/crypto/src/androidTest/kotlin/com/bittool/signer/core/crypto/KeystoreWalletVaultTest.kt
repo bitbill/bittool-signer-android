@@ -5,6 +5,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bittool.signer.core.common.storage.AtomicFiles
 import com.bittool.signer.core.common.testing.FakeWallClock
 import com.bittool.signer.core.crypto.kdf.Pbkdf2
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
@@ -119,6 +120,32 @@ class KeystoreWalletVaultTest {
         val list = async(Dispatchers.Default) { vault.list() }
         assertEquals(1, list.await().size)
         unlock.await()
+    }
+
+    @Test
+    fun aNameOfFortyHeavyClustersMakesNoKeystoreKeyAndKeepsTheListReadable(): Unit = runBlocking {
+        // QA audit A04 with real Keystore keys: refused before key generation, so no alias is left behind.
+        val vault = vault()
+        val kept = WalletId.random().also { created += it }
+        vault.create("Kept", s(ABANDON), s(""), s(password), kept)
+        val id = WalletId.random().also { created += it }
+        val heavy = ("e" + "́".repeat(60)).repeat(40)
+        assertThrows(VaultError.InvalidName::class.java) { runBlocking { vault.create(heavy, s(ABANDON), s(""), s(password), id) } }
+        assertFalse(keys.containsKey(id))
+        assertEquals(listOf(kept), vault().list().map { it.id })
+    }
+
+    @Test
+    fun everyWriteFsyncsItsDirectoryOnTheDevice(): Unit = runBlocking {
+        // QA audit A06 (vault-crypto.md §17.8): after the rename the directory itself is fsynced, so a counted attempt
+        // survives a hard reset. A JVM test only sees the stubbed platform; here Os.open(dir) + Os.fsync really run.
+        val id = WalletId.random().also { created += it }
+        vault().create("Durable", s(ABANDON), s(""), s(password), id)
+        assertThrows(VaultError.AuthenticationFailed::class.java) { runBlocking { vault().unlock(id, s("Wrong-Password1")) } }
+        val vaults = File(dataDir, "Vaults")
+        assertTrue(File(vaults, ".$id.attempts").isFile)
+        assertTrue("the vault directory can be fsynced", AtomicFiles.syncDirectory(vaults))
+        assertFalse("a refused fsync is reported, not thrown", AtomicFiles.syncDirectory(File(vaults, "missing")))
     }
 
     private fun log(message: String) = Log.i("KeystoreVaultTest", message)

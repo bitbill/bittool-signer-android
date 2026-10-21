@@ -47,12 +47,21 @@ internal object VaultFormat {
     const val SALT_BYTES = 32
     const val MAX_FILE_BYTES = 65_536
     const val MAX_HEADER_BYTES = 4_096
+    /** Two AES-GCM layers, each a 12-byte nonce and a 16-byte tag. */
+    const val LAYERS_OVERHEAD = 56
+    private const val MAX_CIPHERTEXT_BYTES = 32_768
     /** `len(cleartext) + 56` (two GCM layers of nonce 12 + tag 16). */
-    val ACCEPTED_CIPHERTEXT = 56..32_768
+    val ACCEPTED_CIPHERTEXT = LAYERS_OVERHEAD..MAX_CIPHERTEXT_BYTES
+    /** The largest secret JSON whose ciphertext the reader accepts ([ACCEPTED_CIPHERTEXT]). */
+    const val MAX_CLEARTEXT_BYTES = MAX_CIPHERTEXT_BYTES - LAYERS_OVERHEAD
     private const val MAX_UINT32 = 0xFFFF_FFFFL
 
     /** 2001-01-01T00:00:00Z in epoch milliseconds: iOS `Date`'s reference date (`JSONEncoder` `.deferredToDate`). */
     private const val REFERENCE_DATE_MILLIS = 978_307_200_000L
+
+    /** The creation time with the longest `createdAt` text (`-9223372036854775.808`, 21 characters). */
+    private const val LONGEST_CREATED_AT_MILLIS = Long.MIN_VALUE + REFERENCE_DATE_MILLIS
+    private val TEMPLATE_ID = WalletId(java.util.UUID(0L, 0L))
 
     private val PASSWORD_PREFIX = "com.bittool.signer.vault.v2/password\u0000".encodeToByteArray()
     private val DEVICE_PREFIX = "com.bittool.signer.vault.v2/device\u0000".encodeToByteArray()
@@ -82,6 +91,32 @@ internal object VaultFormat {
             ),
         )
         return header.canonicalJson().encodeToByteArray()
+    }
+
+    /**
+     * Whether the header of a vault named [name] stays within [MAX_HEADER_BYTES] for any wallet id, salt and creation
+     * time: the header is measured with the longest possible `createdAt`, so the answer does not depend on the clock.
+     * What counts is the name as the header stores it (escaped, UTF-8): about 3,880 bytes are left for it.
+     */
+    fun headerFits(name: String): Boolean =
+        encodeHeader(VaultMetadata(TEMPLATE_ID, name, LONGEST_CREATED_AT_MILLIS), ByteArray(SALT_BYTES)).size <= MAX_HEADER_BYTES
+
+    /**
+     * The stored container [bytes] of wallet [id] as the vault reads it, in iOS `load` order: [decode], [validate], the
+     * header id equal to [id]; any other failure is [VaultError.MalformedVault]. Used by the reader and, before every
+     * write, by the writer, so the vault never writes a file it would refuse to read back.
+     */
+    fun decodeStored(id: WalletId, bytes: ByteArray): EncryptedVault {
+        val vault = try {
+            decode(bytes)
+        } catch (e: VaultError) {
+            throw e
+        } catch (e: RuntimeException) {
+            throw VaultError.MalformedVault(e)
+        }
+        validate(vault)
+        if (vault.header.metadata.id != id) throw VaultError.MalformedVault()
+        return vault
     }
 
     fun encodeContainer(headerBytes: ByteArray, ciphertext: ByteArray): ByteArray = JsonObject(
