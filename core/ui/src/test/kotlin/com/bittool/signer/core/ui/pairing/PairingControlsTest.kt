@@ -1,6 +1,10 @@
 package com.bittool.signer.core.ui.pairing
 
+import android.text.InputType
+import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -8,7 +12,10 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -33,12 +40,14 @@ import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.AccountProfile
 import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.CompatibleWallets
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -120,6 +129,73 @@ class PairingControlsTest {
         // The other button still works.
         compose.onNodeWithContentDescription("Increase").performClick()
         compose.runOnIdle { assertEquals(1L, index) }
+    }
+
+    /**
+     * QA wallets-03: "Address index" was cut without an ellipsis ("Address" at 1.3×, "アドレスインデック" in Japanese),
+     * squeezed beside the field and the stepper. iOS gives the label its full width (`layoutPriority(1)`): it stays on
+     * one line beside the controls when it fits, and otherwise moves above them, never clipped.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun theIndexLabelIsNeverClipped() {
+        var fontScale by mutableStateOf(1f)
+        var width by mutableStateOf(361.dp)
+        compose.setContent {
+            val density = LocalDensity.current
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                    Column(Modifier.width(width)) { AddressIndexControl(7, {}, AccountProfiles.TRON_PATH_PREFIX) }
+                }
+            }
+        }
+        /** Lays the label out and checks that every character is on a line drawn inside its node. */
+        fun wholeLabel(what: String): Pair<TextLayoutResult, androidx.compose.ui.geometry.Rect> {
+            val node = compose.onNodeWithText("Address index", useUnmergedTree = true).fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            val last = layout.lineCount - 1
+            assertEquals("Address index".length, layout.getLineEnd(last), "$what: every character is on a line")
+            assertTrue((0..last).all { layout.getLineRight(it) <= node.size.width + 1f }, "$what: no line is cut at the end")
+            assertTrue(layout.getLineBottom(last) <= node.size.height + 1f, "$what: no line is cut at the bottom")
+            return layout to node.boundsInRoot
+        }
+        val field = { compose.onNodeWithTag("connect.tronIndex.field").fetchSemanticsNode().boundsInRoot }
+        // A phone at the default size: one line, beside the field.
+        val (normal, normalBounds) = wholeLabel("1.0")
+        assertEquals(1, normal.lineCount)
+        assertTrue(normalBounds.top < field().bottom && normalBounds.bottom > field().top, "beside the field at 1.0")
+        // 1.3× on a 320 dp card: no room beside the controls, so above them, whole.
+        fontScale = 1.3f
+        width = 320.dp
+        compose.waitForIdle()
+        val (_, largeBounds) = wholeLabel("1.3")
+        assertTrue(largeBounds.bottom <= field().top + 1f, "above the field at 1.3")
+    }
+
+    /**
+     * QA wallets-11: iOS `.numberPad` is digits only; Android's number keyboard also has "-", ",", "." and space. The
+     * field asks for the number-password input type (a digits-only pad), and still shows and reports its digits.
+     */
+    @Test
+    fun theIndexFieldAsksForADigitsOnlyKeyboard() {
+        lateinit var view: View
+        compose.setContent {
+            view = LocalView.current
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                Column { AddressIndexControl(7, {}, AccountProfiles.TRON_PATH_PREFIX) }
+            }
+        }
+        val field = compose.onNodeWithTag("connect.tronIndex.field")
+        field.performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.waitForIdle()
+        val editorInfo = EditorInfo()
+        compose.runOnIdle { assertNotNull(view.onCreateInputConnection(editorInfo), "an input session is open") }
+        assertEquals(InputType.TYPE_CLASS_NUMBER, editorInfo.inputType and InputType.TYPE_MASK_CLASS)
+        assertEquals(InputType.TYPE_NUMBER_VARIATION_PASSWORD, editorInfo.inputType and InputType.TYPE_MASK_VARIATION)
+        field.assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.Password))
+            .assert(SemanticsMatcher("shows its digits") { it.config.getOrNull(SemanticsProperties.EditableText)?.text == "7" })
     }
 
     @Test

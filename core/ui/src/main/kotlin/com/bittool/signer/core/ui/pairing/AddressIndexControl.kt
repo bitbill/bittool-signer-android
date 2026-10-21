@@ -31,17 +31,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDataType
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
@@ -50,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -96,7 +100,8 @@ object AddressIndexInput {
  * digits, both scaled with the font) and a stepper of two buttons that repeat while held, then the path
  * `m/44'/195'/0'/0/<index>` (caption, monospaced, secondary; read as "Derivation path …"). Any index 0…2,147,483,647:
  * see [AddressIndexInput]. The field always shows the exported index — the stepper updates it while editing, and losing
- * focus rewrites it (`007` → `7`, empty → the index). At accessibility text sizes the label sits above the controls.
+ * focus rewrites it (`007` → `7`, empty → the index). The label sits above the controls at accessibility text sizes
+ * and whenever it would not fit beside them on one line. The keyboard is a digits-only pad.
  * Tags: `connect.tronIndex.field`, `connect.tronIndex`.
  */
 @Composable
@@ -138,10 +143,21 @@ fun AddressIndexControl(
                 .background(colors.tertiaryFill)
                 .padding(vertical = 6.dp, horizontal = 8.dp)
                 .onFocusChanged { if (!it.isFocused) state.setTextAndPlaceCursorAtEnd(currentIndex.toString()) }
-                .semantics { contentDescription = fieldLabel }
+                .semantics {
+                    contentDescription = fieldLabel
+                    // The digits keyboard below makes Compose hint "password" to Autofill; an index is public data.
+                    contentDataType = ContentDataType.None
+                }
                 .testTag("connect.tronIndex.field"),
             textStyle = typography.body.monospacedDigit().semibold().ltr().copy(color = colors.label, textAlign = TextAlign.Center),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done, autoCorrectEnabled = false),
+            // iOS `.numberPad`: digits only. `NumberPassword` is the Android input type whose keyboard has no "-", ","
+            // "." or space keys (QA wallets-11); a plain `BasicTextField` still draws the digits (no masking) and
+            // reports them to accessibility. The variation also keeps the keyboard from learning the number.
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.NumberPassword,
+                imeAction = ImeAction.Done,
+                autoCorrectEnabled = false,
+            ),
             onKeyboardAction = KeyboardActionHandler { focusManager.clearFocus() },
             lineLimits = TextFieldLineLimits.SingleLine,
             cursorBrush = SolidColor(colors.accent),
@@ -184,19 +200,16 @@ fun AddressIndexControl(
             .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (stacked) {
-            Text(fieldLabel, style = typography.subheadline, color = colors.label, maxLines = 2)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                field()
-                stepper()
-            }
-        } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(fieldLabel, style = typography.subheadline, color = colors.label, maxLines = 1, modifier = Modifier.weight(1f))
-                field()
-                stepper()
-            }
-        }
+        IndexRow(
+            stacked = stacked,
+            label = { Text(fieldLabel, style = typography.subheadline, color = colors.label) },
+            controls = {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    field()
+                    stepper()
+                }
+            },
+        )
         val pathLabel = stringResource(R.string.derivation_path_x, path)
         Text(
             text = path,
@@ -204,6 +217,41 @@ fun AddressIndexControl(
             color = colors.secondaryLabel,
             modifier = Modifier.semantics { contentDescription = pathLabel },
         )
+    }
+}
+
+/**
+ * "Address index" and its controls (iOS: `lineLimit(1)` with `layoutPriority(1)`, so the label always wins): the label
+ * on one line at the start and the field and stepper at the end when the whole label fits beside them. Otherwise (a
+ * larger font, a long translation such as Japanese, German or Russian, a narrow screen) and always at accessibility
+ * text sizes ([stacked]), the label takes the full width above the controls, wrapping if it must. It is never clipped
+ * (QA wallets-03).
+ */
+@Composable
+private fun IndexRow(stacked: Boolean, label: @Composable () -> Unit, controls: @Composable () -> Unit) {
+    Layout(contents = listOf(label, controls)) { (labelMeasurables, controlMeasurables), constraints ->
+        val gap = 10.dp.roundToPx()
+        val labelMeasurable = labelMeasurables.single()
+        val controlsPlaceable = controlMeasurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val oneLine = labelMeasurable.maxIntrinsicWidth(Constraints.Infinity)
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else oneLine + gap + controlsPlaceable.width
+        val room = width - controlsPlaceable.width - gap
+        if (!stacked && oneLine <= room) {
+            val labelPlaceable = labelMeasurable.measure(Constraints(maxWidth = room))
+            val height = maxOf(labelPlaceable.height, controlsPlaceable.height)
+            layout(width, height) {
+                labelPlaceable.placeRelative(0, (height - labelPlaceable.height) / 2)
+                val controlsX = width - controlsPlaceable.width
+                controlsPlaceable.placeRelative(controlsX, (height - controlsPlaceable.height) / 2)
+            }
+        } else {
+            val labelPlaceable = labelMeasurable.measure(Constraints(maxWidth = width))
+            val below = labelPlaceable.height + 8.dp.roundToPx()
+            layout(width, below + controlsPlaceable.height) {
+                labelPlaceable.placeRelative(0, 0)
+                controlsPlaceable.placeRelative(0, below)
+            }
+        }
     }
 }
 
