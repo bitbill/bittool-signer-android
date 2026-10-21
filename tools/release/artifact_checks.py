@@ -11,7 +11,8 @@ prints one line per finding and exits 0 when everything holds, 1 otherwise. An a
 
     artifact_checks.py badging AAPT2 VERSION_NAME VERSION_CODE ARTIFACT...
         Package name, versionName, versionCode, minSdk 26, targetSdk 36, label and ABIs of each artifact (aapt2 dump
-        badging), and that all artifacts agree.
+        badging), the release manifest flags (not debuggable, not testOnly, allowBackup false: aapt2 dump xmltree),
+        and that all artifacts agree.
 
     artifact_checks.py assets LISTING_DIR ARTIFACT...
         The assets of each artifact are exactly the signer's own (gaps.md G8) plus ART's baseline profile; writes
@@ -29,9 +30,10 @@ prints one line per finding and exits 0 when everything holds, 1 otherwise. An a
 
     artifact_checks.py notices SDK_DEPENDENCIES_TXT NOTICES_TXT OUT_LIST
         Writes the release runtime classpath (AGP's sdkDependencies.txt) as group:artifact:version lines to OUT_LIST,
-        and names every non-AndroidX library that THIRD_PARTY_LICENSES_ANDROID.txt mentions neither by version nor by
-        name (BOMs carry no code). AndroidX and Compose are covered by their blanket Apache-2.0 sections, so they are
-        listed for the manual review (backlog B19) but not matched.
+        and names every non-AndroidX library that no component entry of THIRD_PARTY_LICENSES_ANDROID.txt names
+        (notice_covers: its name with its version in one entry, or a distinctive artifactId; BOMs carry no code).
+        AndroidX and Compose are covered by their blanket Apache-2.0 sections, so they are listed for the manual review
+        (backlog B19) but not matched.
 """
 import hashlib
 import json
@@ -60,6 +62,7 @@ EXPECTED_LABEL = 'BitTool Signer'
 EXPECTED_MIN_SDK = '26'
 EXPECTED_TARGET_SDK = '36'
 EXPECTED_ABIS = ['arm64-v8a', 'armeabi-v7a', 'x86_64']
+EXPECTED_FLAGS = {'debuggable': False, 'testOnly': False, 'allowBackup': 'false'}
 
 
 def is_bundle(path):
@@ -128,6 +131,22 @@ def badging(aapt2, artifact):
         'label': (re.search(r"^application-label:'([^']*)'", text, re.M) or [None, None])[1],
         'abis': re.findall(r"'([^']+)'", (re.search(r'^native-code:(.*)$', text, re.M) or [None, ''])[1]),
     }
+    # Release manifest flags (DECISIONS §6): never debuggable or test-only, no backup. `aapt2 dump xmltree` reads the
+    # binary manifest of an APK and the proto manifest of the bundle's base module alike.
+    tree = subprocess.run([aapt2, 'dump', 'xmltree', '--file', 'AndroidManifest.xml', target],
+                          capture_output=True, text=True)
+    if tree.returncode != 0:
+        raise RuntimeError(tree.stderr.strip() or f'aapt2 dump xmltree failed ({tree.returncode})')
+
+    def attribute(name):
+        m = re.search(r'android:' + name + r'\(0x[0-9a-f]+\)=(\S+)', tree.stdout)
+        return m.group(1) if m else None
+
+    facts['flags'] = {
+        'debuggable': 'application-debuggable' in text or attribute('debuggable') == 'true',
+        'testOnly': attribute('testOnly') == 'true',
+        'allowBackup': attribute('allowBackup'),
+    }
     return facts
 
 
@@ -135,6 +154,7 @@ def cmd_badging(aapt2, version_name, version_code, artifacts):
     expected = {
         'package': EXPECTED_PACKAGE, 'versionName': version_name, 'versionCode': version_code,
         'minSdk': EXPECTED_MIN_SDK, 'targetSdk': EXPECTED_TARGET_SDK, 'label': EXPECTED_LABEL, 'abis': EXPECTED_ABIS,
+        'flags': EXPECTED_FLAGS,
     }
     bad = 0
     seen = []
@@ -150,13 +170,16 @@ def cmd_badging(aapt2, version_name, version_code, artifacts):
         bad += bool(problems)
         print(('BAD  ' if problems else 'OK   ') + f"{short(artifact)}: {facts['package']} {facts['versionName']} "
               f"({facts['versionCode']}), minSdk {facts['minSdk']}, targetSdk {facts['targetSdk']}, "
-              f"'{facts['label']}', {' '.join(facts['abis'])}" + (': ' + '; '.join(problems) if problems else ''))
+              f"'{facts['label']}', {' '.join(facts['abis'])}, debuggable {facts['flags']['debuggable']}, "
+              f"testOnly {facts['flags']['testOnly']}, allowBackup {facts['flags']['allowBackup']}"
+              + (': ' + '; '.join(problems) if problems else ''))
     if len({json.dumps(f, sort_keys=True) for f in seen}) > 1:
         print('BAD  the artifacts disagree (one versionCode for both flavors)')
         bad += 1
     if not bad:
         print(f'all {len(artifacts)}: {EXPECTED_PACKAGE} {version_name} ({version_code}), minSdk {EXPECTED_MIN_SDK}, '
-              f'targetSdk {EXPECTED_TARGET_SDK}, {" ".join(EXPECTED_ABIS)}')
+              f'targetSdk {EXPECTED_TARGET_SDK}, {" ".join(EXPECTED_ABIS)}; not debuggable, not testOnly, '
+              f'allowBackup false')
     return 1 if bad else 0
 
 
@@ -259,14 +282,50 @@ def cmd_data(root, ios, pairs):
                 if f.read() != shipped[name]:
                     problems.append(f'assets/{name} is not app/src/{flavor}/assets/{name}')
         bad += bool(problems)
-        source = f'{compared} files equal the iOS resources' if ios != '-' else 'iOS repository not available'
-        print(('BAD  ' if problems else 'OK   ') + f'{short(artifact)} ({flavor}): {source}; Terms and Privacy are the '
-              f'{flavor} texts' + (': ' + '; '.join(problems) if problems else ''))
+        if problems:
+            print(f'BAD  {short(artifact)} ({flavor}): ' + '; '.join(problems))
+        else:
+            source = f'{compared} files equal the iOS resources' if ios != '-' else 'iOS repository not available'
+            print(f'OK   {short(artifact)} ({flavor}): {source}; Terms and Privacy are the {flavor} texts')
     if not bad:
         print(f'all {len(pairs)}: {len(DATA_FROM_IOS)} data files '
               + ('= iOS resources' if ios != '-' else 'present (iOS not compared)')
               + '; Terms of Use and Privacy Policy = the flavor texts (app/src/<flavor>/assets/legal)')
     return 1 if bad else 0
+
+
+# Words of a Maven coordinate that name no particular project, so they never identify a library on their own.
+GENERIC_WORDS = {
+    'com', 'org', 'io', 'net', 'dev', 'google', 'android', 'androidx', 'github', 'code', 'core', 'jvm', 'common',
+    'api', 'annotation', 'annotations', 'lib', 'libs', 'library', 'runtime', 'ktx', 'aar', 'lint', 'java',
+}
+
+
+def notice_entries(notices):
+    """The component entries of a notices file: the blocks between separator lines that name a component ("… (full
+    text below)"), without the license texts, whose "Version 2.0" or copyright years would match any version."""
+    blocks = re.split(r'^={10,}$', notices, flags=re.M)
+    return [b for b in blocks if 'full text below' in b]
+
+
+def notice_covers(entries, group, artifact, version):
+    """A library is covered when one entry names it together with its version (its artifactId, or a non-generic word
+    of its group or artifactId, as "Dagger and Hilt 2.60.1" covers com.google.dagger:hilt-android:2.60.1), or names
+    its artifactId alone when that is distinctive (Guava's failureaccess and listenablefuture, whose versions are
+    placeholders). A version found anywhere else, or a generic artifactId like "core", is not enough."""
+    def has(text, word, version_like=False):
+        tail = r'(?![\w.])' if version_like else r'(?!\w)'
+        return re.search(r'(?<![\w.])' + re.escape(word) + tail, text, re.I) is not None
+
+    words = {w for w in re.split(r'[.\-_]', group) + re.split(r'[.\-_]', artifact)
+             if len(w) >= 3 and w.lower() not in GENERIC_WORDS} | {artifact}
+    distinctive = artifact.lower() not in GENERIC_WORDS and len(artifact) >= 4
+    for entry in entries:
+        if has(entry, version, version_like=True) and any(has(entry, w) for w in words):
+            return True
+        if distinctive and has(entry, artifact):
+            return True
+    return False
 
 
 def cmd_notices(deps_file, notices_file, out_list):
@@ -277,16 +336,17 @@ def cmd_notices(deps_file, notices_file, out_list):
     if not libs:
         print(f'BAD  no library found in {deps_file}')
         return 1
+    entries = notice_entries(notices)
+    if not entries:
+        print(f'BAD  no component entry ("… (full text below)") in {notices_file}')
+        return 1
     os.makedirs(os.path.dirname(os.path.abspath(out_list)), exist_ok=True)
     with open(out_list, 'w') as f:
         f.writelines(f'{g}:{a}:{v}\n' for g, a, v in sorted(set(libs)))
 
-    def mentioned(word):
-        return re.search(r'(?<![\w.])' + re.escape(word) + r'(?![\w.])', notices) is not None
-
     unmatched = sorted({f'{g}:{a}:{v}' for g, a, v in libs
                         if not g.startswith('androidx.') and not a.endswith('-bom')
-                        and not mentioned(v) and not mentioned(a)})
+                        and not notice_covers(entries, g, a, v)})
     others = len({(g, a) for g, a, _ in libs if not g.startswith('androidx.')})
     if unmatched:
         print(f'BAD  not in {os.path.basename(notices_file)}: {", ".join(unmatched)}')

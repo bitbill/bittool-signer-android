@@ -86,7 +86,7 @@ def check(path: str) -> tuple[int, int]:
                 align, bits, machine = min_load_align(z.read(info))
                 if align < PAGE:
                     problems.append(f'LOAD p_align {align} < {PAGE}')
-            except ValueError as e:
+            except (ValueError, struct.error, zipfile.BadZipFile) as e:  # not ELF, truncated headers, bad CRC
                 align, bits, machine = 0, 0, '?'
                 problems.append(str(e))
             placement = ''
@@ -114,7 +114,11 @@ def main(argv):
         return 2
     total = failures = 0
     for path in argv[1:]:
-        n, b = check(path)
+        try:
+            n, b = check(path)
+        except (OSError, zipfile.BadZipFile, ValueError) as e:  # missing or unreadable artifact: a finding, not a crash
+            print(f'  BAD cannot read {path}: {e}')
+            n, b = 0, 0
         total += n
         failures += b + (n == 0)
     print(f'{total} native libraries checked, {failures} problem(s)')

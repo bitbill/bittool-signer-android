@@ -9,10 +9,12 @@
 # Options:
 #   --release          strict mode: a missing release key, a dirty tree, a missing iOS repository or a skipped step
 #                      fails instead of warning.
-#   --checks-only      skip the three Gradle steps (build, unit tests, lint) and check the artifacts already built.
+#   --checks-only      skip the three Gradle steps (build, unit tests, lint) and check the artifacts already built
+#                      (archived under a separate -checks-only name).
 #   --build-number N   re-issue the same versionName with BUILD = N (-Psigner.buildNumber=N, default 1).
 #   --ios PATH|none    the iOS repository the engine and data are compared with (default $SIGNER_IOS_REPO or
-#                      ~/Documents/bitsigner-ios/BitSigner); "none" compares with the Android pins only.
+#                      ~/Documents/bitsigner-ios/BitSigner); "none" compares with the Android pins only. A path
+#                      without engine/bundle-manifest.json is a usage error.
 #
 # What it does, in order (each line of the summary is one of these):
 #   1. Git: commit, clean tree, tag android-v<versionName>.  2. Signing mode: release key / Play upload key / DEBUG.
@@ -25,12 +27,13 @@
 #   5. Unit tests of every module (testDebugUnitTest, :core:model:test, :app:test{Apk,Play}DebugUnitTest).
 #   6. Lint of both release variants (checkDependencies: every module).
 #   7. Artifact checks on app-apk-release.apk, app-play-release.apk and app-play-release.aab (its base module in APK
-#      layout): version and SDK levels, signatures and certificate SHA-256, offline (check-offline.sh), 16 KB alignment
-#      of every .so (check-16kb.py, zipalign -P 16), engine digest from the artifact = EngineBundle pin = iOS,
-#      data assets = iOS resources and the flavor's legal texts, permissions = gaps.md G8 set, assets listing, sizes.
-#   8. Archive in build/release/BitToolSigner-<versionName>-<versionCode>[-DEBUG-SIGNED]/: the APK and AAB, both R8
-#      mapping.txt files and native debug symbols, SHA256SUMS, release-manifest.json, tracked-files.txt, the logs and
-#      this summary.
+#      layout): version, SDK levels and manifest flags (not debuggable, no backup), signatures and certificate
+#      SHA-256, offline (check-offline.sh), 16 KB alignment of every .so (check-16kb.py, zipalign -P 16), engine digest
+#      from the artifact = EngineBundle pin = iOS, data assets = iOS resources and the flavor's legal texts,
+#      permissions = gaps.md G8 set, components and harness reports, assets listing, third-party notices, sizes.
+#   8. Archive in build/release/BitToolSigner-<versionName>-<versionCode>[-DEBUG-SIGNED][-checks-only]/: the APK and
+#      AAB, both R8 mapping.txt files and native debug symbols, SHA256SUMS, release-manifest.json, tracked-files.txt,
+#      the logs and this summary; and the AAB carries the same R8 mapping and native symbol tables for Play.
 # Exit status 0 when no check failed (warnings allowed outside --release), 1 otherwise, 2 for a usage error.
 set -u
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -53,6 +56,11 @@ while [ $# -gt 0 ]; do
 done
 case "$BUILD_NUMBER" in ''|[0-9]|[0-9][0-9]) ;; *) echo "--build-number must be 0-99" >&2; exit 2 ;; esac
 [ "$IOS" = none ] && IOS=""
+# A wrong or missing path is a usage error, not a pile of engine/data failures: name it, or say "--ios none".
+if [ -n "$IOS" ] && [ ! -f "$IOS/engine/bundle-manifest.json" ]; then
+  echo "no iOS repository at $IOS (no engine/bundle-manifest.json): pass --ios PATH, set SIGNER_IOS_REPO, or --ios none" >&2
+  exit 2
+fi
 
 # ---------------------------------------------------------------------------------------------------------- tools
 SDK=${ANDROID_HOME:-$HOME/Library/Android/sdk}
@@ -83,7 +91,12 @@ ENGINE_KT=core/engine/src/main/kotlin/com/bittool/signer/core/engine/internal/En
 PIN_SHA=$(sed -nE 's/.*const val EXPECTED_SHA256 = "([0-9a-f]{64})".*/\1/p' "$ENGINE_KT")
 PIN_BYTES=$(sed -nE 's/.*const val EXPECTED_BYTES = ([0-9_]+).*/\1/p' "$ENGINE_KT" | tr -d _)
 [ -n "$PIN_SHA" ] && [ -n "$PIN_BYTES" ] || { echo "cannot read the engine pin from $ENGINE_KT" >&2; exit 2; }
-COMMIT=$(git rev-parse HEAD 2>/dev/null || echo unknown)
+# A source export (git archive, a copied directory, also one inside another repository) has no commit of its own to
+# record or tag: never a release (the git line warns).
+IN_GIT=0
+toplevel=$(git rev-parse --show-toplevel 2>/dev/null) && [ "$(cd "$toplevel" && pwd -P)" = "$(pwd -P)" ] && IN_GIT=1
+COMMIT=unknown
+[ $IN_GIT = 1 ] && COMMIT=$(git rev-parse HEAD 2>/dev/null || echo unknown)
 TAG="android-v$VERSION_NAME"
 
 # gaps.md G8 / app/build.gradle.kts check*Permissions: the exact set every release variant must request.
@@ -130,7 +143,9 @@ else
 fi
 NAME="BitToolSigner-$VERSION_NAME-$VERSION_CODE"
 [ $SIGNING = debug ] && NAME="$NAME-DEBUG-SIGNED"
+# A --checks-only run never replaces the archive of a full run (its Gradle logs, the summary that passed --release).
 OUT=build/release/$NAME
+[ $GRADLE_STEPS = 0 ] && OUT="$OUT-checks-only"
 rm -rf "$OUT"
 mkdir -p "$OUT/logs" "$OUT/work"
 LOGS=$OUT/logs
@@ -170,6 +185,14 @@ gradle() {
   # shellcheck disable=SC2086
   tools/gradle-slot.sh ./gradlew "$@" $GRADLE_PROPS > "$log" 2>&1
 }
+# The reason Gradle gives for a failed build: the two lines after "* What went wrong:" (the task and its message),
+# else the first compiler error or failed task.
+gradle_why() {
+  local why
+  why=$(awk '/^\* What went wrong:/ { getline a; getline b; print a " " b; exit }' "$1")
+  [ -n "$why" ] || why=$(grep -E '^e: |FAILED' "$1" | head -2 | tr '\n' ' ')
+  printf '%s' "$why" | cut -c1-200
+}
 size_of() { wc -c < "$1" | tr -d ' '; }
 mb() { awk -v b="$1" 'BEGIN { printf "%.1f MB", b / 1000000 }'; }
 
@@ -177,9 +200,17 @@ echo "[verify] BitTool Signer $VERSION_NAME ($VERSION_CODE), commit ${COMMIT:0:1
 echo "[verify] output: $OUT"
 
 # 1. Git ----------------------------------------------------------------------------------------------------------
-dirty=$(git status --porcelain 2>/dev/null | grep -v '^?? build/' | head -5)
-if [ -z "$dirty" ]; then record PASS "git: clean tree" "commit $COMMIT"
-else record WARN "git: clean tree" "uncommitted changes: $(echo "$dirty" | tr '\n' ' ' | cut -c1-120)"; fi
+if [ $IN_GIT = 0 ]; then
+  dirty="not a git checkout"
+  record WARN "git: clean tree" "not the top of a git checkout (an export or a copy?): no commit to record, the tree cannot be checked"
+elif ! dirty=$(git status --porcelain 2>&1); then
+  record WARN "git: clean tree" "git status failed: $(echo "$dirty" | head -1 | cut -c1-120)"
+  dirty="git status failed"
+else
+  dirty=$(printf '%s\n' "$dirty" | grep -v '^?? build/' | head -5)
+  if [ -z "$dirty" ]; then record PASS "git: clean tree" "commit $COMMIT"
+  else record WARN "git: clean tree" "uncommitted changes: $(echo "$dirty" | tr '\n' ' ' | cut -c1-120)"; fi
+fi
 if [ "$(git rev-parse -q --verify "refs/tags/$TAG^{commit}" 2>/dev/null)" = "$COMMIT" ]; then
   record PASS "git: tag $TAG" "on HEAD"
 else
@@ -196,7 +227,7 @@ if [ -n "$PBXPROJ" ] && [ -f "$PBXPROJ" ]; then
     record WARN "version: $VERSION_NAME ($VERSION_CODE)" "iOS MARKETING_VERSION is $ios_version: confirm the Android version is meant to differ"
   fi
 else
-  record WARN "version: $VERSION_NAME ($VERSION_CODE)" "iOS repository not found: versionName not compared with iOS"
+  record WARN "version: $VERSION_NAME ($VERSION_CODE)" "$([ -n "$IOS" ] && echo "no $PBXPROJ" || echo "--ios none"): versionName not compared with iOS"
 fi
 
 # 2. Signing mode ---------------------------------------------------------------------------------------------------
@@ -236,7 +267,7 @@ if [ -n "$IOS" ] && [ -d "$IOS/translations" ]; then
     record FAIL "l10n: catalogue copies = iOS" "differ from $IOS:$stale (copy them, then rerun import_ios_strings.py)"
   fi
 else
-  record WARN "l10n: catalogue copies = iOS" "iOS repository not found (${IOS:---ios none})"
+  record WARN "l10n: catalogue copies = iOS" "$([ -n "$IOS" ] && echo "no $IOS/translations" || echo "--ios none"): catalogue copies not compared"
 fi
 
 # 4.-6. Gradle ------------------------------------------------------------------------------------------------------
@@ -251,7 +282,7 @@ if [ $GRADLE_STEPS = 1 ]; then
     record PASS "gradle: build apkRelease + playRelease" "$(( $(date +%s) - start )) s; ${modes:-signing mode not logged (up to date)}"
   else
     BUILD_OK=0
-    record FAIL "gradle: build apkRelease + playRelease" "$(grep -E '^\* What went wrong|^e: |FAILED' -A2 "$LOGS/gradle-build.log" | head -3 | tr '\n' ' ' | cut -c1-200) (log: $LOGS/gradle-build.log)"
+    record FAIL "gradle: build apkRelease + playRelease" "$(gradle_why "$LOGS/gradle-build.log") (log: $LOGS/gradle-build.log)"
   fi
   start=$(date +%s)
   gradle "$LOGS/gradle-tests.log" --continue testDebugUnitTest :core:model:test :app:testApkDebugUnitTest :app:testPlayDebugUnitTest
@@ -291,7 +322,7 @@ EOF
   if [ $lint_status = 0 ]; then
     record PASS "gradle: lint apkRelease + playRelease" "$lint_counts (app/build/reports/lint-results-*.html)"
   else
-    record FAIL "gradle: lint apkRelease + playRelease" "$lint_counts (log: $LOGS/gradle-lint.log)"
+    record FAIL "gradle: lint apkRelease + playRelease" "$lint_counts; $(gradle_why "$LOGS/gradle-lint.log") (log: $LOGS/gradle-lint.log)"
   fi
 else
   record SKIP "gradle: build apkRelease + playRelease" "--checks-only: checking the outputs already in app/build"
@@ -309,12 +340,13 @@ else
   check "artifact: bundle base module readable" "$LOGS/aab-base.log" $PY tools/release/artifact_checks.py aab-base "$AAB" "$BASE"
   ARTS="$APK_A $APK_P $BASE"
 
-  check "artifact: version, SDK levels, ABIs" "$LOGS/badging.log" \
+  check "artifact: version, SDK levels, ABIs, flags" "$LOGS/badging.log" \
     $PY tools/release/artifact_checks.py badging "$AAPT2" "$VERSION_NAME" "$VERSION_CODE" $ARTS
 
   # Signatures. apksigner for the APKs, jarsigner + keytool for the bundle.
   sig_problems=""
   sig_detail=""
+  fp_note=""
   : > "$LOGS/signatures.log"
   for apk in "$APK_A" "$APK_P"; do
     out=$("$APKSIGNER" verify --print-certs -v "$apk" 2>&1)
@@ -347,6 +379,9 @@ else
     if [ -n "${SIGNER_RELEASE_CERT_SHA256:-}" ]; then
       want=$(printf '%s' "$SIGNER_RELEASE_CERT_SHA256" | tr -d ': ' | tr 'A-F' 'a-f')
       [ "$want" = "$CERT_APK" ] || sig_problems="$sig_problems apk certificate is not SIGNER_RELEASE_CERT_SHA256;"
+      fp_note="= SIGNER_RELEASE_CERT_SHA256"
+    else
+      fp_note="not compared: SIGNER_RELEASE_CERT_SHA256 unset, acceptable for the first release only"
     fi
   fi
   if [ -n "$sig_problems" ]; then
@@ -354,7 +389,7 @@ else
   elif [ $SIGNING = debug ]; then
     record WARN "artifact: signatures" "verified, but DEBUG-SIGNED:$sig_detail"
   else
-    record PASS "artifact: signatures" "apk certificate SHA-256 $CERT_APK;$sig_detail"
+    record PASS "artifact: signatures" "apk certificate SHA-256 $CERT_APK ($fp_note);$sig_detail"
   fi
 
   check "artifact: offline (check-offline.sh)" "$LOGS/offline.log" tools/release/check-offline.sh $ARTS
@@ -369,7 +404,7 @@ else
 
   check "artifact: engine digest = pin = iOS" "$LOGS/engine.log" \
     $PY tools/release/artifact_checks.py engine "$PIN_SHA" "$PIN_BYTES" "${IOS:--}" "$APK_A" "$APK_P" "$AAB"
-  [ -z "$IOS" ] && record WARN "artifact: engine compared with iOS" "no iOS repository: compared with the Android pin only"
+  [ -z "$IOS" ] && record WARN "artifact: engine and data vs iOS" "--ios none: engine compared with the Android pin only, data files not compared"
 
   check "artifact: data = iOS, legal = flavor texts" "$LOGS/data.log" \
     $PY tools/release/artifact_checks.py data "$ROOT" "${IOS:--}" "apk=$APK_A" "play=$APK_P" "play=$AAB"
@@ -450,20 +485,37 @@ else
       arch_problems="$arch_problems no R8 mapping $m;"
     fi
     s=app/build/outputs/native-debug-symbols/$v/native-debug-symbols.zip
-    [ -f "$s" ] && mkdir -p "$OUT/native-debug-symbols" && cp "$s" "$OUT/native-debug-symbols/$v.zip"
+    if [ -s "$s" ]; then
+      mkdir -p "$OUT/native-debug-symbols" && cp "$s" "$OUT/native-debug-symbols/$v.zip"
+    else
+      arch_problems="$arch_problems no native debug symbols $s;"
+    fi
   done
-  git ls-files -s > "$OUT/tracked-files.txt" 2>/dev/null
+  # What Play receives inside the bundle (docs/release.md §7): the R8 mapping, the same file as the archived one, and
+  # the native symbol tables, so Play Console can deobfuscate and symbolicate without a manual upload.
+  aab_entries=$(unzip -Z1 "$AAB" 2>/dev/null)
+  if ! printf '%s\n' "$aab_entries" | grep -qx 'BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map'; then
+    arch_problems="$arch_problems the AAB carries no R8 mapping (BUNDLE-METADATA/…obfuscation/proguard.map);"
+  elif ! unzip -p "$AAB" BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map \
+      | cmp -s - app/build/outputs/mapping/playRelease/mapping.txt; then
+    arch_problems="$arch_problems the AAB's R8 mapping is not app/build/outputs/mapping/playRelease/mapping.txt;"
+  fi
+  printf '%s\n' "$aab_entries" | grep -qE '^BUNDLE-METADATA/com\.android\.tools\.build\.debugsymbols/[^/]+/[^/]+\.so\.(sym|dbg)$' \
+    || arch_problems="$arch_problems the AAB carries no native debug symbols (BUNDLE-METADATA/…debugsymbols);"
+  if [ $IN_GIT = 1 ]; then git ls-files -s > "$OUT/tracked-files.txt" 2>/dev/null
+  else echo "not a git checkout: no tracked files" > "$OUT/tracked-files.txt"; fi
   if [ $SIGNING = debug ]; then
     printf '%s\n' "DEBUG-SIGNED BUILD: NOT FOR DISTRIBUTION." \
       "Built by tools/release/verify-release.sh without a release key (-Psigner.allowDebugSigning=true)." \
       "Install it only on test devices. A distributed build is signed with the release key (docs/release.md)." \
       > "$OUT/NOT-FOR-DISTRIBUTION.txt"
   fi
-  (cd "$OUT" && shasum -a 256 *.apk *.aab mapping/*/mapping.txt > SHA256SUMS)
+  (cd "$OUT" && shasum -a 256 *.apk *.aab mapping/*/mapping.txt native-debug-symbols/*.zip > SHA256SUMS 2>/dev/null)
   ENGINE_APK=$(unzip -p "$APK_A" assets/engine/signer.js | shasum -a 256 | cut -d' ' -f1)
   COMMIT="$COMMIT" VERSION_NAME="$VERSION_NAME" VERSION_CODE="$VERSION_CODE" SIGNING="$SIGNING" \
   SIGNING_LABEL="$SIGNING_LABEL" CERT_APK="${CERT_APK:-}" CERT_PLAY="${CERT_PLAY:-}" ENGINE_APK="$ENGINE_APK" \
-  TREE_CLEAN="$([ -z "$dirty" ] && echo true || echo false)" OUT="$OUT" $PY - <<'EOF' || arch_problems="$arch_problems release-manifest.json not written;"
+  TREE_CLEAN="$([ -z "$dirty" ] && echo true || echo false)" CHECKS_ONLY="$([ $GRADLE_STEPS = 0 ] && echo true || echo false)" \
+  OUT="$OUT" $PY - <<'EOF' || arch_problems="$arch_problems release-manifest.json not written;"
 import datetime, hashlib, json, os
 out = os.environ['OUT']
 files = {}
@@ -478,6 +530,8 @@ manifest = {
     'versionCode': int(os.environ['VERSION_CODE']),
     'commit': os.environ['COMMIT'],
     'treeClean': os.environ['TREE_CLEAN'] == 'true',
+    # --checks-only: the artifacts were not built by this run, so the commit above need not be the one they came from.
+    'checksOnly': os.environ['CHECKS_ONLY'] == 'true',
     'builtAt': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
     'signing': {'mode': os.environ['SIGNING'], 'label': os.environ['SIGNING_LABEL'],
                 'apkCertificateSha256': os.environ['CERT_APK'], 'playCertificateSha256': os.environ['CERT_PLAY']},
@@ -489,9 +543,9 @@ with open(os.path.join(out, 'release-manifest.json'), 'w') as f:
     f.write('\n')
 EOF
   if [ -z "$arch_problems" ]; then
-    record PASS "archive: APK, AAB, mappings, SHA256SUMS" "$OUT"
+    record PASS "archive: APK, AAB, mappings, symbols" "$OUT"
   else
-    record FAIL "archive: APK, AAB, mappings, SHA256SUMS" "$arch_problems"
+    record FAIL "archive: APK, AAB, mappings, symbols" "$arch_problems"
   fi
 fi
 

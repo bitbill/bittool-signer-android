@@ -5,7 +5,7 @@ This is the checklist for shipping both distributions of BitTool Signer for Andr
 - `apkRelease`, the direct download from bittool.com/signer (a universal APK);
 - `playRelease`, the Google Play App Bundle.
 
-Both are offline and functionally identical (DECISIONS §1, §11). They have the same applicationId `com.bittool.signer`, the same versionCode, the same engine byte for byte, and the same permission set. They differ only in their legal texts, their About / Open Source content and their signing.
+Both are offline and functionally identical (DECISIONS §1, §11). They have the same applicationId `com.bittool.signer`, the same versionCode, the same engine byte for byte, and the same permission set. They differ only in their legal texts, their About / Open Source content, their signing and their packaging (a universal APK, or an App Bundle from which Play builds split APKs).
 
 The checklist has two halves:
 
@@ -94,7 +94,7 @@ A partially configured key fails the build and names the missing values.
 
 **What `verify-release.sh` does with them:**
 
-- **Release key configured:** both flavors are signed with it, and `play` with the upload key when one is configured. Set `SIGNER_RELEASE_CERT_SHA256=<published fingerprint>` (either format, see below) to have the script compare the `apk` certificate with it. Do this for every release after the first.
+- **Release key configured:** both flavors are signed with it, and `play` with the upload key when one is configured. Set `SIGNER_RELEASE_CERT_SHA256=<published fingerprint>` (either format, see below) to have the script compare the `apk` certificate with it. Do this for every release after the first. Without it the signatures line says "not compared"; that is acceptable only for the first release, which defines the fingerprint.
 - **No release key:** the script adds `-Psigner.allowDebugSigning=true`, so the checks can still run on any machine. Everything is then labelled **DEBUG-SIGNED — NOT FOR DISTRIBUTION**:
   - the output directory and file names end in `-DEBUG-SIGNED`;
   - a `NOT-FOR-DISTRIBUTION.txt` file is added;
@@ -110,6 +110,8 @@ A partially configured key fails the build and names the missing values.
 
 **Fingerprint formats.** `apksigner verify --print-certs` prints the certificate SHA-256 as 64 lowercase hex digits. That is the form the `apk` Terms of Use tell users to compare. The app's Settings › Fully Open Source › This build › Signing certificate shows the same digest as uppercase, colon-separated hex, the `keytool` and Play Console form (`SigningCertificate.kt`). Publish both forms on bittool.com/signer.
 
+This is an open point for the owner of `app/**` and the legal review (§8). The `apk` Terms say "the same value appears in Settings › Fully Open Source › This build", but the app shows that digest in the other format. ownbit-build-release §11 recommended the `apksigner` form (lowercase, no separators), so users can compare character by character. Either the app shows that form, or the Terms name both forms. Until then, the website must show both forms side by side.
+
 ---
 
 ## 5. The automated verification: `tools/release/verify-release.sh`
@@ -122,6 +124,8 @@ tools/release/verify-release.sh --build-number 2   # re-issue 1.0.0 as 1000002
 tools/release/verify-release.sh --ios none         # no iOS repository: compare with the Android pins only (warns)
 ```
 
+An iOS path without `engine/bundle-manifest.json` (a wrong `--ios`, `SIGNER_IOS_REPO`, or a machine without the default checkout) stops the script at once with exit status 2. It does not turn into a list of failed comparisons.
+
 **Run time.** A cold run takes 5–15 minutes: the release build is about 5 minutes, lint about 2, plus the unit tests. A run with a warm Gradle build cache takes under a minute.
 
 **Output.** One line per check, then the summary. The exit status is 0 when no check failed; outside `--release`, warnings are allowed.
@@ -131,14 +135,14 @@ tools/release/verify-release.sh --ios none         # no iOS repository: compare 
 - **SKIP** marks a step `--checks-only` left out. `--release` fails it too.
 - **INFO** facts never fail: the tag is not yet set, no upload key.
 
-**Archive.** Everything is written to `build/release/BitToolSigner-<versionName>-<versionCode>[-DEBUG-SIGNED]/`:
+**Archive.** Everything is written to `build/release/BitToolSigner-<versionName>-<versionCode>[-DEBUG-SIGNED]/`. A `--checks-only` run writes to the same name with `-checks-only` appended, so it never replaces the archive of a full run, and its `release-manifest.json` says `"checksOnly": true`: it did not build the artifacts, so the recorded commit need not be theirs.
 
 | File | Contents |
 |---|---|
 | `BitToolSigner-…-apk.apk`, `BitToolSigner-…-play.aab` | the two distributables |
-| `mapping/{apkRelease,playRelease}/mapping.txt`, `native-debug-symbols/*.zip` | R8 mappings and native symbols (§7) |
-| `SHA256SUMS` | `shasum -a 256` of the APK, the AAB and both mappings |
-| `release-manifest.json` | versionName and versionCode, commit, clean-tree flag, build time, signing mode, certificate SHA-256 of `apk` and `play`, engine SHA-256 read from the APK, artifact hashes and sizes |
+| `mapping/{apkRelease,playRelease}/mapping.txt`, `native-debug-symbols/{apkRelease,playRelease}.zip` | R8 mappings and native symbol tables (§7) |
+| `SHA256SUMS` | `shasum -a 256` of the APK, the AAB, both mappings and both symbol archives |
+| `release-manifest.json` | versionName and versionCode, commit, clean-tree flag, `checksOnly` flag, build time, signing mode, certificate SHA-256 of `apk` and `play`, engine SHA-256 read from the APK, artifact hashes and sizes |
 | `tracked-files.txt` | `git ls-files -s`: the blob hash of every tracked file at the build |
 | `dependencies-{apkRelease,playRelease}.txt` | the release runtime classpath, `group:artifact:version` (input for the notices review, §8) |
 | `assets/*.assets.txt` | the asset listing of each artifact (size, stored or deflated) |
@@ -149,7 +153,7 @@ tools/release/verify-release.sh --ios none         # no iOS repository: compare 
 
 | Line | Proves | How |
 |---|---|---|
-| `git: clean tree`, `git: tag android-v<version>` | The build is reproducible from a commit. The tag line is information only; tag the commit that passed `--release`. | `git status --porcelain`, `git rev-parse` |
+| `git: clean tree`, `git: tag android-v<version>` | The build is reproducible from a commit. A directory that is not a git checkout (an export, a copy) warns, so `--release` fails there. The tag line is information only; tag the commit that passed `--release`. | `git status --porcelain`, `git rev-parse` |
 | `version` | versionName = iOS `MARKETING_VERSION` | iOS `project.pbxproj` |
 | `signing: release key`, `signing: Play upload key` | Which keys are configured (values are never read out) | `local.properties` or the environment, as the build reads them |
 | `l10n: iOS catalogue import up to date` | `strings_ios.xml` × 21 and `IosStrings.kt` are what the importer generates from the catalogue copies | `tools/l10n/import_ios_strings.py --check` |
@@ -160,7 +164,7 @@ tools/release/verify-release.sh --ios none         # no iOS repository: compare 
 | `gradle: unit tests (every module)` | `testDebugUnitTest` of all 16 Android modules, `:core:model:test`, and `:app:test{Apk,Play}DebugUnitTest`. These include `EngineDigestTest` (the engine pin), `LegalTextsTest` (both flavors' legal texts) and the Roborazzi screenshot recordings. | Gradle `--continue`; counts read from the JUnit XML |
 | `gradle: lint apkRelease + playRelease` | No lint error in any module (`checkDependencies = true`; `VisibleForTests` is an error). Warnings are counted only. | `:app:lintApkRelease :app:lintPlayRelease`; reports in `app/build/reports/lint-results-*.html` |
 | `artifact: bundle base module readable` | The AAB's base module, repackaged in APK layout, so `aapt2` and `check-offline.sh` can read what Play will deliver without bundletool | `artifact_checks.py aab-base` |
-| `artifact: version, SDK levels, ABIs` | §3, for all three | `aapt2 dump badging` |
+| `artifact: version, SDK levels, ABIs, flags` | §3, for all three; and the release manifest flags: not debuggable, not `testOnly`, `allowBackup="false"` (DECISIONS §6) | `aapt2 dump badging`, `aapt2 dump xmltree` |
 | `artifact: signatures` | §4 | `apksigner`, `jarsigner`, `keytool` |
 | `artifact: offline (check-offline.sh)` | No network permission, no networking, WebView, DownloadManager or PackageInstaller class reference in the dex, no Play services / Firebase / Play Core, and no socket symbol in any native library (DECISIONS §11) | `tools/release/check-offline.sh` on both APKs and on the AAB base |
 | `artifact: 16 KB alignment of every .so` | Every PT_LOAD segment of every `.so` (all ABIs, 32-bit included) is aligned to 16 KB or more, every `.so` in the APKs is stored and starts on a 16 KB ZIP boundary, and `zipalign -c -P 16 4` passes. This is the Android 15+ and Google Play requirement. | `tools/release/check-16kb.py`, `zipalign` |
@@ -169,9 +173,9 @@ tools/release/verify-release.sh --ios none         # no iOS repository: compare 
 | `artifact: permissions = G8 allowlist` | Exactly `CAMERA`, `USE_BIOMETRIC`, `USE_FINGERPRINT`, `DETECT_SCREEN_CAPTURE`, `DETECT_SCREEN_RECORDING`, `HIDE_OVERLAY_WINDOWS` and `com.bittool.signer.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, in all three artifacts and in the Gradle reports (`app/build/reports/permissions/`) | `aapt2 dump permissions` |
 | `artifact: components, no debug harness` | The Gradle component and harness reports are clean: only `MainActivity` is exported, there are no `<queries>` and no Play services, and the mapping and dex are free of the harness | `app/build/reports/{components,release}/` |
 | `artifact: assets listing` | The assets are exactly the signer's own 19 (gaps.md G8), plus ART's `dexopt/baseline.prof{,m}` in the APKs: no library test assets, nothing fetched | `artifact_checks.py assets` |
-| `artifact: third-party notices` | Every non-AndroidX runtime library is named, or given at its version, in `THIRD_PARTY_LICENSES_ANDROID.txt`. AndroidX and Compose fall under the blanket sections and are reviewed by hand (§8). | `artifact_checks.py notices` on AGP's `sdkDependencies.txt` |
+| `artifact: third-party notices` | Every non-AndroidX runtime library is named by a component entry of `THIRD_PARTY_LICENSES_ANDROID.txt` (a block ending "(full text below)"). It counts when the entry gives its artifactId or a non-generic word of its coordinates together with its version, as "Dagger and Hilt 2.60.1" covers `hilt-android:2.60.1`, or a distinctive artifactId alone, such as Guava's `failureaccess`. A version that appears only somewhere else, for example "Apache-2.0" for a library at 2.0, does not count, and neither does a generic artifactId like `core`. A version bump of a library that is already named is not caught: that is the B19 refresh (§8). AndroidX and Compose fall under the blanket sections and are reviewed by hand. | `artifact_checks.py notices` on AGP's `sdkDependencies.txt` |
 | `artifact: sizes` | APK ≤ 26 MB and AAB ≤ 30 MB (1.0.0: 20.7 MB and 24.2 MB; `TokenIcons.pack` alone is 11.2 MB). The budgets catch an accidental dependency or asset. Raise them deliberately in the script (`SIGNER_MAX_APK_BYTES` / `SIGNER_MAX_AAB_BYTES` override them for a single run). | `wc -c` |
-| `archive` | The archive is complete (above) | |
+| `archive: APK, AAB, mappings, symbols` | The archive is complete (above), with both R8 mappings and both native symbol archives. The AAB carries its R8 mapping (`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`), byte-identical with the archived `mapping/playRelease/mapping.txt`, and the native symbol tables (`BUNDLE-METADATA/com.android.tools.build.debugsymbols/<abi>/*.so.sym`) that Play Console reads (§7) | `unzip`, `cmp` |
 
 **Fixing a failure.**
 
@@ -201,8 +205,8 @@ Publish the engine SHA-256 next to the APK SHA-256 on bittool.com/signer. The ap
 ## 7. R8 mapping and native symbols
 
 - **Archive.** Keep `mapping/{apkRelease,playRelease}/mapping.txt` and `native-debug-symbols/*.zip` from the archive (§5), with `SHA256SUMS` and `release-manifest.json`, for as long as the release can be installed. Without them, a stack trace a user sends cannot be read. The mapping depends on the exact build, so archive the files of the build you ship, not of a rebuild.
-- **Play.** The AAB already carries its R8 mapping (`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`) and the native symbols of the engine and crypto libraries (`BUNDLE-METADATA/com.android.tools.build.debugsymbols/`). They are built from source, so Play's "missing native debug symbols" warning that ownbit-build-release §7.2.11 expected for prebuilt QuickJS should not appear. After the upload, check in Play Console › App bundle explorer that the deobfuscation file and the native symbols are listed. Upload `mapping/playRelease/mapping.txt` by hand only if they are missing.
-- **Retrace.** Use `retrace mapping.txt stacktrace.txt` (Android SDK cmdline-tools, `cmdline-tools/latest/bin/retrace`) or Android Studio › Analyze Stack Trace.
+- **Play.** The AAB already carries its R8 mapping (`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`) and the native symbol tables of the engine, crypto and DataStore libraries (`BUNDLE-METADATA/com.android.tools.build.debugsymbols/`); the `archive` line of `verify-release.sh` checks both, and that the bundled mapping is the archived one. The engine and crypto libraries are built from source, so Play's "missing native debug symbols" warning that ownbit-build-release §7.2.11 expected for prebuilt QuickJS should not appear. The CameraX and AndroidX Graphics libraries are prebuilt without symbols, so their frames stay unsymbolicated. After the upload, check in Play Console › App bundle explorer that the deobfuscation file and the native symbols are listed. Upload `mapping/playRelease/mapping.txt` by hand only if they are missing.
+- **Retrace.** Use `retrace mapping.txt stacktrace.txt` (Android SDK cmdline-tools, `cmdline-tools/latest/bin/retrace`) or Android Studio › Analyze Stack Trace. The cmdline-tools are not part of the build prerequisites and were not installed on the 1.0.0 dry-run machine; install them from Android Studio › SDK Manager › SDK Tools › Android SDK Command-line Tools.
 - **Release smoke (manual, R8).** Install the release APK on a device. A debug-signed copy from `verify-release.sh` is fine on a test device. Run every flow once in airplane mode, then search logcat:
 
   ```
@@ -228,6 +232,7 @@ The review covers:
 
 - the Android platform wording: Keystore, TEE / StrongBox, no backup, FLAG_SECURE, the clipboard;
 - the distribution clauses;
+- the `apk` Terms' verification clause: it says the in-app Signing certificate shows "the same value" as `apksigner`, but the app shows it in the colon-separated uppercase form (§4);
 - the claims `LegalTextsTest` enforces: no networking code, "Clear Activity", the two-minute clipboard clearing, the platform-security and backup claims;
 - the effective date.
 
@@ -314,7 +319,7 @@ The list comes from `CompatibleWallets.kt`. Official documentation does not coun
 | EVM (`crypto-hdkey`, then `eth-sign-request`) | MetaMask, Rabby, imToken, TokenPocket, Ambire | Rabby, TokenPocket, OKX Wallet, Trust Wallet |
 | Solana (`crypto-multi-accounts`, then `sol-sign-request`) | Solflare, Helium Wallet | Phantom, Backpack, Jupiter, OKX Wallet, TokenPocket |
 | TRON | — (address only) | TokenPocket, TronLink, OKX Wallet, OneKey |
-| Wallet level (`bittool-signer-wallet` v1, 4-frame animated QR) | BitTool Wallet: one full loop imports 9 addresses (4 BTC, EVM, TRON, 3 Solana), each equal to the verification list on the page | — |
+| Wallet level (`bittool-signer-wallet` v1, animated QR: 4 frames for the reference phrase) | BitTool Wallet: one full loop imports 9 accounts (4 Bitcoin address types, EVM, TRON, 3 Solana), and the first address of each equals the verification list on the page | — |
 
 Cover, separately:
 
@@ -330,7 +335,7 @@ App Lock uses `BiometricPrompt` with `BIOMETRIC_STRONG` only, and "Use a Wallet 
 
 - [ ] Enabling App Lock needs an enrolled strong biometric. Cancelling the prompt leaves App Lock off. On a phone whose only biometric is a weak (class 2) face unlock, enabling App Lock must fail with an explanation, not silently. Record the text shown.
 - [ ] A cold launch locks and prompts at once. "Use a Wallet Password" unlocks with the password of any wallet.
-- [ ] 110–119 s in the background: still unlocked, same page. 121 s or more: locked. Background, power button, about 3 minutes of real sleep, then return: locked, because sleep counts.
+- [ ] 110–119 s in the background: still unlocked, same page. 120 s or more: locked (`DefaultAppAccessController`: unlocked only while less than 120 s have passed). Background, power button, about 3 minutes of real sleep, then return: locked, because sleep counts.
 - [ ] Five failed fingerprints cause a lockout. The prompt reports it, and the wallet password still unlocks.
 - [ ] Delete a wallet with App Lock on: biometric first, then the password. Cancelling the biometric aborts. With App Lock off: password only.
 - [ ] App Lock never authorizes a signature: every signature asks for its wallet's password. A half-typed signing password and the risk acknowledgement are cleared when the app goes to the background.
@@ -340,6 +345,8 @@ App Lock uses `BiometricPrompt` with `BIOMETRIC_STRONG` only, and "Use a Wallet 
 
 On the emulator, QA round 2 saw that removing the screen lock deletes every Keystore key created with `setUnlockedDeviceRequired`, and the enrolled fingerprints with them. Confirm on a Pixel and on a Samsung. The expected behaviour is the one the build under test implements. The lost-key recovery work (L1–L5) is in progress; run this item on the release candidate that contains it.
 
+A rehearsal on the debug build needs no phone: `tools/qa/ui.py launch --fixtures 2`, then `tools/qa/ui.py launch --lose-keys` deletes the run's fixture wallet keys, so every wallet has a lost device key (step 3 onwards). It does not replace the real-phone run, which is the only one that exercises the platform's key deletion.
+
 1. Create a wallet on the device and import the reference phrase as a second wallet. Sign once with each. Turn App Lock on.
 2. Settings › Security › Screen lock › None.
 3. Reopen the app:
@@ -347,16 +354,16 @@ On the emulator, QA round 2 saw that removing the screen lock deletes every Keys
    - both wallets show "This Wallet Can’t Be Unlocked" with Remove, on the card and on the detail page (L4);
    - Activity starts a fresh journal and says so once (L1);
    - no phrase can be revealed and nothing can be signed.
-4. Remove This Wallet: no password, its own confirmation dialog. The other wallet stays until it is removed too.
-5. Set a screen lock again, then re-import the reference phrase. Expected: no duplicate wallet (L3), master fingerprint 73C5DA0A, the same addresses, and signing works.
+4. Remove the wallet created on the device with Remove This Wallet: no password, its own "Remove This Wallet?" dialog (a biometric check comes first only when App Lock is on and a strong biometric is still enrolled). The reference wallet stays until it is removed too.
+5. Set a screen lock again. Import the reference phrase while its lost-key wallet is still listed. Expected (L3): no second wallet with the same keys; the app points to Remove This Wallet for the lost one. Remove it and import again: master fingerprint 73C5DA0A, the same addresses, and signing works.
 6. Unlike iOS (Device-Self-Test A1, step 4), restoring the screen lock does **not** bring a lost-key wallet back on Android, because its key is gone. Only the recovery phrase brings it back. The release notes and support texts must say this.
 
 ### 11.4 StrongBox
 
 Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone reports `FEATURE_STRONGBOX_KEYSTORE`, and fall back to the TEE otherwise. The public-data HMAC key stays in the TEE by design, because it runs on every reload (`KeystoreKeys.kt`). Check:
 
-- [ ] On a StrongBox phone with a screen lock, check the feature with `adb shell pm list features | grep -i strongbox`. Then run `ANDROID_SERIAL=<serial> tools/gradle-slot.sh ./gradlew :core:crypto:connectedDebugAndroidTest` and look at `adb logcat -s KeystoreTest`. It must show "production device key on a secure device: StrongBox", and "StrongBox requested on a device with StrongBox: StrongBox".
-- [ ] On a phone without StrongBox, the same run shows "TEE", and create, import and sign work.
+- [ ] On a StrongBox phone with a screen lock, check the feature with `adb shell pm list features | grep -i strongbox`. Then run `ANDROID_SERIAL=<serial> tools/gradle-slot.sh ./gradlew :core:crypto:connectedDebugAndroidTest` and look at `adb logcat -s KeystoreTest`. It must show "production device key on a secure device: StrongBox", and "StrongBox requested on a device with StrongBox: StrongBox". The test can read the security level only on API 31 or later; below that it logs `insideSecureHardware=true`, which does not tell StrongBox from the TEE, so use an Android 12 or later phone for this item.
+- [ ] On a phone without StrongBox, the same run shows "TEE" (API 31+) or `insideSecureHardware=true`, and create, import and sign work.
 - [ ] On the StrongBox phone, time create, unlock and sign with the release build. StrongBox is slow, so progress must stay visible and nothing may freeze or ANR.
 - [ ] API 26–27 has no StrongBox API: the TEE path works.
 
@@ -380,6 +387,9 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
 - [ ] Light and dark, the largest font, TalkBack (amounts, addresses, risk texts), a small screen, a tablet, landscape, Arabic RTL.
 - [ ] Under option A (§1): install the `apk` build, create a wallet, then install the Play internal-testing build of the same or a higher versionCode over it. It must update in place with the wallet intact; then do the reverse.
 - [ ] Play install: a language switch works for every language. There is no language split, so a missing language here means a packaging fault.
+- [ ] The flavor content, on each install. The screenshot tour (§10) covers only the `apk` debug build, so check the `play` build here:
+  - Settings › Fully Open Source › This build. The `apk` release shows Distribution "Direct download (APK)", and its Signing certificate equals the published fingerprint (§4). The Play internal-testing install shows "Google Play", and the Play app signing certificate, which equals the `apk` one under option A.
+  - Terms of Use and Privacy Policy. The `apk` build shows the direct-download clauses, with the `apksigner` verification steps. The Play build shows the Google Play clauses (Terms §15, Privacy §10).
 
 ---
 
@@ -408,6 +418,7 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
    - Permissions declarations: camera only, as user-facing.
    - Privacy policy URL: `https://bittool.com/signer`.
    - Financial features declaration: a non-custodial cryptocurrency wallet. Re-read the current Play policy for cryptocurrency exchanges and software wallets before each release.
+   - The other App content answers: no ads; app access needs no account or login; the content rating questionnaire; a target audience of adults only (the app is not designed for children).
 4. Promote to production with a staged rollout.
 
 **Both channels:**
@@ -423,6 +434,7 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
 Release:            BitTool Signer for Android <versionName> (<versionCode>)      commit: ____________   tag: android-v____
 verify-release.sh --release:  PASS on ____-__-__  (attach summary.txt and release-manifest.json)
 Signing:            apk cert SHA-256 ____________________   Play app signing cert SHA-256 ____________________ (equal under A)
+                    compared with SIGNER_RELEASE_CERT_SHA256: [ ] yes  [ ] no (first release only)
 Engine SHA-256:     ____________________ (= iOS engine/bundle-manifest.json)
 Legal sign-off:     reviewer ________  date ____  sha256 apk Terms ____ Privacy ____ / play Terms ____ Privacy ____
 Translations:       languages reviewed by native speakers: ________________________
@@ -456,6 +468,31 @@ Facts recorded by that run:
 - **Permissions:** exactly the G8 set.
 - **Assets:** 19 signer assets, plus the baseline profile.
 - **Sizes:** APK 20.7 MB, AAB 24.2 MB.
+- **Manifest flags and Play metadata:** none of the three artifacts is debuggable or `testOnly`, and all have `allowBackup="false"`. The AAB carries the R8 mapping, identical to the archived one, and the native symbol tables of the engine, crypto and DataStore libraries.
+
+**Review of the script (chore/release-checklist-reviewed).** Every check was broken on purpose, one at a time, in a scratch copy: a `git archive` export plus copies of `app/build/outputs` and `app/build/reports`, and a copy of the iOS files the script reads. The repository itself was never changed. Each break turned its own line FAIL and gave exit status 1:
+
+- the engine pin, the iOS engine manifest, an iOS data file, an iOS translation and the iOS version (WARN, FAIL with `--release`);
+- a flavor legal text, the Gradle permission report (an extra INTERNET, a missing report), the component and harness reports;
+- the notices: a removed entry, a new library at version 2.0, a new library called `core`;
+- the size budget, the versionName, `--build-number`, a missing or changed R8 mapping, and missing native symbols;
+- in the APKs: a changed `signer.js`, a stray `test_*.js`, deflated `.so` files, one `.so` with a 4 KB `p_align` patched in place (alignment otherwise intact), and a `java/net/Socket` reference in the dex;
+- a missing AAB, a truncated AAB and a truncated APK;
+- the l10n checks: a generated `strings_<area>.xml`, a generated `strings_ios.xml`, and a failing importer test;
+- the signing configurations: a partial release key, an upload key without a release key, and a release key set up with debug-signed outputs and the wrong `SIGNER_RELEASE_CERT_SHA256`;
+- `--release` on a debug-signed build, on a copy that is not a git checkout, and with `--ios none`.
+
+A full run on a second scratch copy combined three breaks: INTERNET in the app manifest, a failing `:core:model` test, and a lint NewApi error. It reported the build (`checkApkReleasePermissions`), the unit tests (1 of 1,830 failed) and lint (1 error per variant) as FAIL, and skipped the artifact checks as not built.
+
+Gaps the review found and fixed in `tools/release/`:
+
+- a copy outside git passed "clean tree";
+- the notices check accepted any library whose version appeared anywhere in the file, for example "2.0" from "Apache-2.0", or whose artifactId was a generic word such as `core`;
+- missing native symbols were silently left out of the archive;
+- a `--checks-only` run replaced the archive of a full run;
+- a wrong iOS path produced a list of confusing failures instead of a usage error;
+- `check-16kb.py` crashed on an unreadable artifact instead of reporting it;
+- the debuggable, `testOnly` and backup flags of the release manifests were not checked.
 
 Open items that block or condition the first release. Each one is owned outside `docs/release.md` and `tools/release/`:
 
@@ -466,3 +503,4 @@ Open items that block or condition the first release. Each one is owned outside 
 5. The **native-speaker review** of the Android-only translations (§9).
 6. **All of §11** on real phones.
 7. The APKs are v2-signed only (§4). This is not a defect; it is a note for the owner of `app/**` if v3 is wanted.
+8. The **signing-certificate format** (§4, §8). The app shows the digest as uppercase colon-separated hex, while the `apk` Terms promise "the same value" that `apksigner` prints in lowercase. This is for the owner of `app/**` and the legal review: change the in-app format or the Terms wording.
