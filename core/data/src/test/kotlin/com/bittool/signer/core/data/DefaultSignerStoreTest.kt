@@ -162,6 +162,23 @@ class DefaultSignerStoreTest {
     }
 
     @Test
+    fun aNameTheVaultHeaderCannotHoldIsTheNameErrorBeforeAnythingIsWritten() = JvmStore.run {
+        // QA audit A04: 40 grapheme clusters of a letter and 60 combining marks pass the grapheme limit, but a vault
+        // header holding them would not read back. The person gets the iOS name error and every wallet stays available.
+        store.reload()
+        val kept = create("Kept", passphrase = "Public alternate test wallet")
+        val heavy = ("e" + "́".repeat(60)).repeat(40)
+        val refused = assertFailsWith<VaultError.InvalidName> { create(heavy) }
+        assertEquals(UiText.Ios("Choose a wallet name of 1–40 characters."), refused.text)
+        assertTrue(state.walletLoadSucceeded)
+        assertEquals(listOf(kept.id), state.wallets.map { it.id })
+        assertEquals(listOf("${kept.id}.json"), fixture.publicRepository.directory.list().orEmpty().filter { it.endsWith(".json") })
+        // A rename follows the same rule.
+        assertFailsWith<VaultError.InvalidName> { store.renameWallet(kept.id, heavy) }
+        assertEquals("Kept", state.displayName(kept.id))
+    }
+
+    @Test
     fun theCollectionMustBeReadableBeforeAWalletIsAdded() = JvmStore.run {
         store.reload()
         vault.failList = VaultError.StorageFailure()

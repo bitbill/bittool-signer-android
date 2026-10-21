@@ -14,9 +14,16 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
 
+/**
+ * The QuickJS [SignerEngine]. Everything of a call happens on [EngineThread], including building the request: sorting
+ * the keys of, encoding and size-checking up to 1 MiB of JSON is as heavy as the response decode, and the store calls
+ * from the main thread (QA audit A07/A12; iOS does the same work inside its `SigningEngine` actor). [createHost] makes a
+ * runtime from the verified bundle; tests replace it to observe what engine code can reach.
+ */
 internal class QuickJsSignerEngine(
     private val appContext: Context,
     private val allowTestOperations: Boolean,
+    private val createHost: (EngineBundle) -> QuickJsContextHost = QuickJsContextHost::create,
 ) : SignerEngine {
 
     // Confined to EngineThread.
@@ -28,31 +35,32 @@ internal class QuickJsSignerEngine(
         if (!operation.production && !allowTestOperations) {
             throw EngineException(EngineException.UNSUPPORTED_OPERATION, "This signing operation is not supported.")
         }
-        val json = requestJson(operation.wireName, parameters)
-        try {
-            return runOn(operation, json)
-        } finally {
-            // The request may carry a seed: wipe this copy (the JsonObject strings themselves cannot be wiped).
-            json.fill(0)
+        return withContext(EngineThread.dispatcher) {
+            val json = requestJson(operation.wireName, parameters)
+            try {
+                runOn(operation, json)
+            } finally {
+                // The request may carry a seed: wipe this copy (the JsonObject strings themselves cannot be wiped).
+                json.fill(0)
+            }
         }
     }
 
-    private suspend fun runOn(operation: EngineOperation, json: ByteArray): JsonObject =
-        withContext(EngineThread.dispatcher) {
-            if (operation.isWarm) {
-                val host = warm ?: newHost().also { warm = it }
-                val response = try {
-                    host.call(json)
-                } catch (e: EngineException) {
-                    // A native failure leaves the runtime in an unknown state: destroy it so the next call starts clean.
-                    host.close()
-                    warm = null
-                    throw e
-                }
-                decode(response)
-            } else {
-                newHost().use { decode(it.call(json)) }
+    /** On [EngineThread]. */
+    private fun runOn(operation: EngineOperation, json: ByteArray): JsonObject =
+        if (operation.isWarm) {
+            val host = warm ?: newHost().also { warm = it }
+            val response = try {
+                host.call(json)
+            } catch (e: EngineException) {
+                // A native failure leaves the runtime in an unknown state: destroy it so the next call starts clean.
+                host.close()
+                warm = null
+                throw e
             }
+            decode(response)
+        } else {
+            newHost().use { decode(it.call(json)) }
         }
 
     override suspend fun beginScanSession() = withContext(EngineThread.dispatcher) {
@@ -68,19 +76,17 @@ internal class QuickJsSignerEngine(
         scanHost = host
     }
 
-    override suspend fun scan(frame: String): JsonObject {
+    override suspend fun scan(frame: String): JsonObject = withContext(EngineThread.dispatcher) {
         val json = requestJson("scanAdd", JsonObject(mapOf("frame" to JsonPrimitive(frame))))
-        return withContext(EngineThread.dispatcher) {
-            val host = scanHost ?: throw EngineException(EngineException.SCAN, "The scan session ended. Scan again.")
-            val response = try {
-                host.call(json)
-            } catch (e: EngineException) {
-                host.close()
-                scanHost = null
-                throw e
-            }
-            decode(response)
+        val host = scanHost ?: throw EngineException(EngineException.SCAN, "The scan session ended. Scan again.")
+        val response = try {
+            host.call(json)
+        } catch (e: EngineException) {
+            host.close()
+            scanHost = null
+            throw e
         }
+        decode(response)
     }
 
     override suspend fun endScanSession() = withContext(EngineThread.dispatcher) {
@@ -104,9 +110,10 @@ internal class QuickJsSignerEngine(
 
     private fun newHost(): QuickJsContextHost {
         val b = bundle ?: EngineBundle.load(appContext).also { bundle = it }
-        return QuickJsContextHost.create(b)
+        return createHost(b)
     }
 
+    /** On [EngineThread]: the sorted-key UTF-8 request, at most [MAX_REQUEST_BYTES]. */
     private fun requestJson(operation: String, parameters: JsonObject): ByteArray {
         val request = JsonObject(parameters + ("operation" to JsonPrimitive(operation)))
         val bytes = Json.encodeToString(JsonElement.serializer(), sortKeys(request)).toByteArray(Charsets.UTF_8)

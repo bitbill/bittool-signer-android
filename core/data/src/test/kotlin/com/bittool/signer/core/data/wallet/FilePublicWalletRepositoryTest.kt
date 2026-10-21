@@ -154,6 +154,25 @@ class FilePublicWalletRepositoryTest {
     }
 
     @Test
+    fun aRenameToFortyHeavyClustersIsRefusedButAStoredNameStillReads() = runTest {
+        // QA audit A04: 40 grapheme clusters of a letter and 60 combining marks pass the iOS rule but could not be a
+        // vault name, so a rename refuses them like a 41-character name and leaves the file as it was.
+        val heavy = ("e" + "́".repeat(60)).repeat(40)
+        val repository = repository(this)
+        val id = WalletId.random()
+        repository.save(index, id, "Before", key)
+        val before = repository.file(id).readBytes()
+        assertFailsWith<VaultError.InvalidName> { repository.rename(id, heavy, key) }
+        assertTrue(before.contentEquals(repository.file(id).readBytes()))
+        assertEquals("Before", repository.snapshot(id, key).displayName)
+        // Reading keeps the iOS rule only, so a name stored before this rule existed does not make the wallet invalid.
+        repository.save(index, id, heavy, key)
+        val stored = repository.snapshot(id, key)
+        assertEquals(PublicMetadataStatus.Ready, stored.status)
+        assertEquals(heavy, stored.displayName)
+    }
+
+    @Test
     fun oversizedAndNonRegularFilesAreInvalid() = runTest {
         val repository = repository(this)
         val id = WalletId.random()

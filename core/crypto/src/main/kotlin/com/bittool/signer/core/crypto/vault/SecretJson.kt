@@ -17,8 +17,12 @@ internal object SecretJson {
     private const val MNEMONIC = "mnemonic"
     private const val PASSPHRASE = "passphrase"
 
+    /** The byte size of [encode]'s result, measured without building it (no copy of the secret is made). */
+    fun size(mnemonic: CharArray, passphrase: CharArray): Int =
+        2 + member(MNEMONIC, mnemonic, null, 0) + 1 + member(PASSPHRASE, passphrase, null, 0)
+
     fun encode(mnemonic: CharArray, passphrase: CharArray): ByteArray {
-        val size = 2 + member(MNEMONIC, mnemonic, null, 0) + 1 + member(PASSPHRASE, passphrase, null, 0)
+        val size = size(mnemonic, passphrase)
         val out = ByteArray(size)
         var o = 0
         out[o++] = '{'.code.toByte()

@@ -2,6 +2,7 @@ package com.bittool.signer.core.data.doubles
 
 import com.bittool.signer.core.crypto.vault.PublicDataKey
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.crypto.vault.WalletNames
 import com.bittool.signer.core.crypto.vault.WalletVault
 import com.bittool.signer.core.model.PasswordPolicy
 import com.bittool.signer.core.model.SecretText
@@ -9,8 +10,6 @@ import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.VaultSecret
 import com.bittool.signer.core.model.WalletId
-import com.bittool.signer.core.model.util.Graphemes
-import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
 import com.bittool.signer.core.model.util.utf8Size
 import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.sync.Mutex
@@ -101,8 +100,7 @@ class InMemoryWalletVault : WalletVault {
 
     override suspend fun create(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText, id: WalletId): VaultMetadata {
         val created = mutex.withLock {
-            val trimmed = name.trimWhitespacesAndNewlines()
-            if (trimmed.isEmpty() || Graphemes.exceeds(trimmed, VaultMetadata.MAX_NAME_LENGTH)) throw VaultError.InvalidName()
+            val trimmed = WalletNames.valid(name) ?: throw VaultError.InvalidName()
             val policy = PasswordPolicy.evaluate(password.view())
             if (!policy.isValid) throw VaultError.InvalidPassword(policy.message)
             if (mnemonic.isEmpty() || mnemonic.utf8Size() > 8_192 || passphrase.utf8Size() > 1_024) throw VaultError.InvalidSecret()

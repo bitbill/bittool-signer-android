@@ -1,5 +1,6 @@
 package com.bittool.signer.core.engine.internal
 
+import androidx.annotation.VisibleForTesting
 import com.bittool.signer.core.engine.EngineException
 
 /**
@@ -35,7 +36,17 @@ internal class QuickJsContextHost private constructor(private var handle: Long) 
         const val MAX_STACK_BYTES = 8L * 1024 * 1024
 
         /** Creates a fresh runtime, installs entropy, evaluates the engine bytecode and binds `dispatch`. */
-        fun create(bundle: EngineBundle): QuickJsContextHost {
+        fun create(bundle: EngineBundle): QuickJsContextHost = start(bundle, probe = null)
+
+        /**
+         * Test hook ([create] for the engine isolation tests): the same runtime, with [probe] (bytecode from
+         * [EngineBundle.compile]) evaluated after the engine and before `dispatch` is bound, so a probe that replaces
+         * `BitToolSignerEngine` reports what code in an engine runtime can reach once the real bundle has run.
+         */
+        @VisibleForTesting
+        fun createProbed(bundle: EngineBundle, probe: ByteArray): QuickJsContextHost = start(bundle, probe)
+
+        private fun start(bundle: EngineBundle, probe: ByteArray?): QuickJsContextHost {
             val handle = try {
                 NativeQuickJs.newRuntime(MEMORY_LIMIT_BYTES, MAX_STACK_BYTES, compiler = false)
             } catch (t: Throwable) {
@@ -52,6 +63,7 @@ internal class QuickJsContextHost private constructor(private var handle: Long) 
                 }
                 try {
                     NativeQuickJs.evalBytecode(handle, bundle.engine)
+                    if (probe != null) NativeQuickJs.evalBytecode(handle, probe)
                 } catch (t: Throwable) {
                     throw EngineException(EngineException.ENGINE_INVALID, "The bundled signing engine could not be loaded.")
                 }

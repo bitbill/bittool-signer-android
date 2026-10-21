@@ -115,7 +115,9 @@ interface SignerStore {
      * canonical words (`Bip39.validatedCanonical`, exact spellings), native seed → `derivePublicIndex` → index
      * validation → reload (must succeed: "The existing wallet collection could not be read. Retry before adding a
      * wallet.") → duplicate `walletKeyId` refused ("This recovery phrase and passphrase already belong to an existing
-     * wallet.") → public sidecar written first (trimmed [name]) → vault create (sidecar removed on failure) → reload.
+     * wallet.") → a trimmed [name] whose vault header would exceed the reader's bound is `VaultError.InvalidName`
+     * before anything is written (`WalletNames`, QA audit A04) → public sidecar written first (trimmed [name]) → vault
+     * create (sidecar removed on failure) → reload.
      * Pass [passphrase] empty when the passphrase option is off. Returns the stored metadata.
      */
     suspend fun createWallet(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText): VaultMetadata
@@ -157,7 +159,8 @@ interface SignerStore {
     suspend fun completeSetup(walletId: WalletId, password: SecretText)
 
     /**
-     * Changes only the sidecar display name (trimmed, 1–40 graphemes, `VaultError.InvalidName`); requires the
+     * Changes only the sidecar display name (trimmed, 1–40 graphemes and a name a vault header could hold, else
+     * `VaultError.InvalidName`); requires the
      * public-data key ("Repair this wallet before renaming it."); never changes identity or invalidates a plan.
      */
     suspend fun renameWallet(walletId: WalletId, name: String)
