@@ -67,7 +67,6 @@ import com.bittool.signer.core.model.review.ReviewText
 import com.bittool.signer.core.model.review.TransactionReview
 import com.bittool.signer.core.ui.address.HashText
 import com.bittool.signer.core.ui.review.ContractNotice
-import com.bittool.signer.core.ui.review.ReviewDetailsCard
 import com.bittool.signer.core.ui.review.ReviewSummaryCard
 import com.bittool.signer.core.ui.review.ReviewWarnings
 import com.bittool.signer.core.ui.text.rememberReviewText
@@ -263,8 +262,8 @@ private fun ReviewPage(
                 modifier = Modifier.fillMaxSize().testTag(SignTags.REVIEW_LIST),
                 state = listState,
                 contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = padding.calculateBottomPadding() + 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                // No item spacing: the Details rows are items of one card; each section brings its own `sectionGap`.
                 reviewSections(shown, review, reviewText, onRetry)
                 if (!pinned && shown.showsAcknowledgement) {
                     item(key = "acknowledgement", contentType = "acknowledgement") {
@@ -273,7 +272,7 @@ private fun ReviewPage(
                             fullyDecoded = review.decodeStatus == DecodeStatus.FullyDecoded,
                             onToggle = onToggleRisk,
                             onObscuredTouch = blocked,
-                            modifier = Modifier.readableWidth().padding(horizontal = SignerMetrics.pagePadding),
+                            modifier = Modifier.sectionGap().readableWidth().padding(horizontal = SignerMetrics.pagePadding),
                         )
                     }
                 }
@@ -296,19 +295,22 @@ private fun LazyListScope.reviewSections(
     onRetry: () -> Unit,
 ) {
     val page = Modifier.readableWidth().padding(horizontal = SignerMetrics.pagePadding)
+    // Every section after the summary sits 16 dp below the one before it.
+    val section = Modifier.sectionGap().then(page)
     item(key = "summary", contentType = "summary") { ReviewSummaryCard(review, reviewText, page) }
     // The summary already carries the notice when the authorized address is its counterparty; a token transfer
     // authorizes the token contract instead, a different address with its own card.
     val contract = review.contract
     if (contract != null && ReviewPresentation.showsNoticeCard(review)) {
-        item(key = "contract", contentType = "contract") { ContractNotice(contract, page) }
+        item(key = "contract", contentType = "contract") { ContractNotice(contract, section) }
     }
     if (review.warnings.isNotEmpty()) {
-        item(key = "warnings", contentType = "warnings") { ReviewWarnings(review.warnings, page) }
+        item(key = "warnings", contentType = "warnings") { ReviewWarnings(review.warnings, section) }
     }
-    item(key = "wallets", contentType = "wallets") { SigningWalletsSection(state, review, onRetry, page) }
-    item(key = "details", contentType = "details") { ReviewDetailsCard(review.fields, reviewText, page) }
-    item(key = "fingerprint", contentType = "fingerprint") { RequestFingerprint(review.requestHash, page) }
+    item(key = "wallets", contentType = "wallets") { SigningWalletsSection(state, review, onRetry, section) }
+    // One item per field, so only the rows on screen are composed (a PSBT can carry thousands).
+    reviewDetails(review.fields, reviewText, page)
+    item(key = "fingerprint", contentType = "fingerprint") { RequestFingerprint(review.requestHash, section) }
 }
 
 /** "Request fingerprint" and the hash in groups of 8 (`RequestReviewView.swift:28-33`). */

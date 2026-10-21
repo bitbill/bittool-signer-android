@@ -34,6 +34,8 @@ object SignTags {
     const val AUTHORIZE_SHEET = "authorize.sheet"
     /** Android-only: the review's scrolling content and its pinned bar (absent while the wallet is matched). */
     const val REVIEW_LIST = "scan.review.list"
+    /** Android-only: one Details row of the review (each its own list item, audit A10). */
+    const val REVIEW_FIELD = "scan.review.field"
     const val SIGN_BAR = "signing.bar"
     /** Android-only: the bar's pointer to the acknowledgement while it scrolls with the page (backlog B32). */
     const val RISK_HINT = "signing.riskHint"
