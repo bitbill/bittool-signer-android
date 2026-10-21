@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -41,6 +42,7 @@ import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.ui.password.wipe
 import com.bittool.signer.core.ui.text.Callout
@@ -50,6 +52,9 @@ import com.bittool.signer.core.ui.text.Callout
  * Android, ARCHITECTURE §6 item 7): an inline title, the close button, a scrolling form that stays above the keyboard,
  * and the page's toast. While [busy] neither the close button nor Back leaves (iOS `interactiveDismissDisabled`);
  * otherwise the close button runs [onCancel] (cancel, wipe, pop) and Back pops with the predictive animation.
+ *
+ * The close button is the cross of every modal page, read as the iOS "Cancel" (`WalletSecuritySheets.swift:169, 248,
+ * 327`) like the Recovery Phrase page's (QA wallets-10): it discards the form. Its e2e tag stays `nav.close`.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,6 +79,7 @@ internal fun SecurityPage(
                 navigation = NavIcon.Close,
                 onNavigate = { if (!busy) onCancel() },
                 scrollBehavior = scrollBehavior,
+                navigationLabel = stringResource(R.string.cancel),
             )
         },
     ) { padding ->

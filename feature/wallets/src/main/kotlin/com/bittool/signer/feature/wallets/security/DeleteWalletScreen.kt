@@ -1,18 +1,30 @@
 package com.bittool.signer.feature.wallets.security
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.Callout
@@ -28,12 +40,14 @@ import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
+import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.password.wipe
 import com.bittool.signer.feature.wallets.common.DestructiveButton
 import com.bittool.signer.feature.wallets.common.WalletIdentityCard
 import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
+import kotlinx.coroutines.delay
 
 /** What the Delete Wallet page can ask for. */
 internal data class DeleteWalletActions(
@@ -56,6 +70,8 @@ internal data class DeleteWalletActions(
  * Android-only (QA backlog B9): when the wallet's device key is provably gone ([DeleteWalletUiState.deviceKeyLost]) no
  * password can unlock it, so the page says so and becomes "Remove This Wallet": the same switch (confirming that only
  * the recovery phrase restores it), the biometric check when App Lock is on, then the "Remove This Wallet?" dialog.
+ * Until the first look at the device key answers, the page shows only the wallet and a neutral loading indicator (QA
+ * backlog B22), so it never shows one statement and then swaps it for the other.
  */
 @Composable
 fun DeleteWalletScreen(
@@ -91,7 +107,6 @@ fun DeleteWalletScreen(
 @Composable
 internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToastState, actions: DeleteWalletActions) {
     val blocked = rememberOverlayBlockedNotice(toast)
-    val lost = uiState.deviceKeyLost
     SecurityPage(
         title = stringResource(R.string.delete_wallet),
         busy = uiState.busy || uiState.confirming,
@@ -99,50 +114,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
         toast = toast,
     ) {
         WalletIdentityCard(uiState.identity)
-        if (lost) {
-            Callout(
-                text = stringResource(R.string.wallets_lost_key_message),
-                title = stringResource(R.string.wallets_lost_key_title),
-                tone = Tone.Danger,
-                modifier = Modifier.testTag("delete.deviceKeyLost"),
-            )
-        } else {
-            Callout(
-                text = stringResource(R.string.this_removes_the_encrypted_wallet_and_its_public_data),
-                title = stringResource(R.string.delete_this_wallet),
-                tone = Tone.Danger,
-            )
-        }
-        GroupedSection(
-            footer = stringResource(
-                when {
-                    lost && uiState.asksForBiometrics -> R.string.wallets_lost_key_footer_biometric
-                    lost -> R.string.wallets_lost_key_footer
-                    uiState.asksForBiometrics -> R.string.security_delete_footer_biometric
-                    else -> R.string.deleting_asks_for_this_wallets_password
-                },
-            ),
-        ) {
-            item {
-                SwitchRow(
-                    title = stringResource(if (lost) R.string.wallets_lost_key_confirm else R.string.i_confirm_i_want_to_delete_this_wallet),
-                    icon = null,
-                    checked = uiState.confirmed,
-                    onCheckedChange = actions.onConfirmedChange,
-                    enabled = !uiState.busy,
-                    modifier = Modifier.testTag("delete.backupConfirmed").obscuredTouchGuard(blocked),
-                )
-            }
-        }
-        SecurityError(uiState.error)
-        DestructiveButton(
-            text = stringResource(if (lost) R.string.wallets_lost_key_remove else R.string.delete_wallet),
-            icon = SignerIcons.Delete,
-            onClick = actions.onDelete,
-            busy = uiState.busy || uiState.confirming,
-            enabled = uiState.confirmed && !uiState.busy && !uiState.confirming,
-            modifier = Modifier.testTag("vaultManagement.submit").obscuredTouchGuard(blocked),
-        )
+        if (uiState.checkingDeviceKey) CheckingDeviceKey() else DeleteForm(uiState, actions, blocked)
     }
     if (uiState.askingPassword) {
         DeletePasswordDialog(onDelete = actions.onSubmitPassword, onCancel = actions.onCancelPassword, onBlocked = blocked)
@@ -152,6 +124,85 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
     }
 }
 
+/** The page's statement, its confirmation switch, the failure and the destructive button (password or removal path). */
+@Composable
+private fun DeleteForm(uiState: DeleteWalletUiState, actions: DeleteWalletActions, blocked: () -> Unit) {
+    val lost = uiState.deviceKeyLost
+    if (lost) {
+        Callout(
+            text = stringResource(R.string.wallets_lost_key_message),
+            title = stringResource(R.string.wallets_lost_key_title),
+            tone = Tone.Danger,
+            modifier = Modifier.testTag("delete.deviceKeyLost"),
+        )
+    } else {
+        Callout(
+            text = stringResource(R.string.this_removes_the_encrypted_wallet_and_its_public_data),
+            title = stringResource(R.string.delete_this_wallet),
+            tone = Tone.Danger,
+        )
+    }
+    GroupedSection(
+        footer = stringResource(
+            when {
+                lost && uiState.asksForBiometrics -> R.string.wallets_lost_key_footer_biometric
+                lost -> R.string.wallets_lost_key_footer
+                uiState.asksForBiometrics -> R.string.security_delete_footer_biometric
+                else -> R.string.deleting_asks_for_this_wallets_password
+            },
+        ),
+    ) {
+        item {
+            SwitchRow(
+                title = stringResource(if (lost) R.string.wallets_lost_key_confirm else R.string.i_confirm_i_want_to_delete_this_wallet),
+                icon = null,
+                checked = uiState.confirmed,
+                onCheckedChange = actions.onConfirmedChange,
+                enabled = !uiState.busy,
+                modifier = Modifier.testTag("delete.backupConfirmed").obscuredTouchGuard(blocked),
+            )
+        }
+    }
+    SecurityError(uiState.error)
+    DestructiveButton(
+        text = stringResource(if (lost) R.string.wallets_lost_key_remove else R.string.delete_wallet),
+        icon = SignerIcons.Delete,
+        onClick = actions.onDelete,
+        busy = uiState.busy || uiState.confirming,
+        enabled = uiState.canDelete,
+        modifier = Modifier.testTag("vaultManagement.submit").obscuredTouchGuard(blocked),
+    )
+}
+
+/**
+ * The neutral state while the device key is looked at (QA backlog B22): an indeterminate spinner in the secondary label
+ * colour where the statement will appear, shown only after [CHECKING_SPINNER_DELAY_MILLIS] so a quick answer replaces
+ * empty space rather than a flashing spinner. Its space is kept from the start, so nothing moves when it appears.
+ */
+@Composable
+private fun CheckingDeviceKey() {
+    var showSpinner by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(CHECKING_SPINNER_DELAY_MILLIS)
+        showSpinner = true
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 96.dp)
+            .testTag("delete.checking")
+            .semantics { progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (showSpinner) {
+            CircularProgressIndicator(color = SignerTheme.colors.secondaryLabel, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+/** How long a device-key look may take before its spinner shows (a look usually answers within a second). */
+internal const val CHECKING_SPINNER_DELAY_MILLIS = 300L
+
 /**
  * "Remove This Wallet?" (QA backlog B9, Android-only): the last, explicit confirmation before a wallet whose device key
  * is provably gone is removed without its password. The destructive "Remove" (`delete.removeConfirm`) refuses touches
@@ -159,6 +210,7 @@ internal fun DeleteWalletContent(uiState: DeleteWalletUiState, toast: StatusToas
  */
 @Composable
 internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
+    WindowFocusReturnEffect()
     SignerAlertDialog(
         title = stringResource(R.string.wallets_lost_key_dialog_title),
         text = stringResource(R.string.wallets_lost_key_dialog_message),
@@ -181,6 +233,7 @@ internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, 
  */
 @Composable
 internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
+    WindowFocusReturnEffect()
     val password = remember { TextFieldState() }
     DisposableEffect(password) { onDispose { password.wipe() } }
     val focus = remember { FocusRequester() }

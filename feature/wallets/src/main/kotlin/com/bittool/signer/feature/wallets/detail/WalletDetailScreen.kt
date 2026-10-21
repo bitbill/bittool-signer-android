@@ -260,13 +260,15 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
                 textAlign = TextAlign.Center,
             )
             val canCopy = identity?.fingerprint != null
+            // Laid out at the line's own height, so name, fingerprint and date stay 4 dp apart as on iOS (QA wallets-08).
+            // The 48 dp target comes from Compose itself: a clickable smaller than the minimum touch target size takes
+            // touches around it and reports the enlarged bounds to accessibility services.
             Text(
                 text = stringResource(R.string.fingerprint_x, fingerprintText(identity?.fingerprint)),
                 style = typography.footnote.monospaced(),
                 color = colors.secondaryLabel,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .heightIn(min = SignerMetrics.minTouchTarget)
                     .clickable(
                         enabled = canCopy,
                         onClickLabel = stringResource(R.string.copies_the_master_fingerprint),
@@ -276,7 +278,7 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
                         onClick = onCopyFingerprint,
                     )
                     .testTag("detail.fingerprint")
-                    .padding(horizontal = 12.dp, vertical = 14.dp),
+                    .padding(horizontal = 12.dp),
             )
             if (added != null) {
                 Text(

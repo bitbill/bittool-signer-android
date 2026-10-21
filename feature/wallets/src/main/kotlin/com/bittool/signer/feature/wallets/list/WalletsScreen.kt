@@ -73,6 +73,7 @@ import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
+import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.logo.NetworkLogoStack
 import com.bittool.signer.core.ui.wallet.WalletAvatar
 import com.bittool.signer.core.ui.wallet.isolate
@@ -213,8 +214,10 @@ private fun AddWalletMenu(onAddWallet: (SetupIntent) -> Unit) {
             onClick = { expanded = true },
             modifier = Modifier.testTag("wallets.add"),
         )
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
+        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10). Chosen with the
+        // keyboard, it leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12).
         if (expanded && rememberWindowGateReleased()) {
+            WindowFocusReturnEffect()
             DropdownMenu(expanded = true, onDismissRequest = { expanded = false }, containerColor = SignerTheme.colors.elevatedCard) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.create_new_wallet)) },

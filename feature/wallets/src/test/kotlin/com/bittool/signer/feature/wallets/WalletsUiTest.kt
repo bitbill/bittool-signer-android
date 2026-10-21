@@ -12,15 +12,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -32,6 +37,8 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.Chain
@@ -54,6 +61,7 @@ import com.bittool.signer.feature.wallets.detail.WalletDetailViewModel
 import com.bittool.signer.feature.wallets.list.WalletsActions
 import com.bittool.signer.feature.wallets.list.WalletsContent
 import com.bittool.signer.feature.wallets.list.WalletsUiState
+import com.bittool.signer.feature.wallets.security.ChangePasswordContent
 import com.bittool.signer.feature.wallets.security.DeletePasswordDialog
 import com.bittool.signer.feature.wallets.security.DeleteWalletActions
 import com.bittool.signer.feature.wallets.security.DeleteWalletContent
@@ -171,6 +179,91 @@ class WalletsUiTest {
         compose.onNodeWithTag("detail.repair").performClick()
         compose.onNodeWithTag("detail.recoveryPhrase").performScrollTo().assertExists()
         assertEquals(1, repaired.size)
+    }
+
+    /**
+     * QA wallets-08 (`WalletDetailView.swift:137` `VStack(spacing: 4)`): name, fingerprint and "Added" stay 4 dp apart;
+     * the fingerprint is laid out at its line's height while a touch beside it still copies (Compose's minimum touch
+     * target), so the header is not loosened by a 48 dp row.
+     */
+    @Test
+    fun theHeaderStacksTightlyAndTheFingerprintStillTakesTouchesAroundIt() {
+        var copies = 0
+        content {
+            WalletDetailContent(
+                uiState = WalletDetailUiState(walletId = WalletFixtures.readyId, identity = identities.first()),
+                actions = WalletDetailActions(),
+                toast = rememberStatusToastState(),
+                onCopyFingerprint = { copies++ },
+                onRename = {},
+            )
+        }
+        val fingerprint = compose.onNodeWithTag("detail.fingerprint").getBoundsInRoot()
+        val added = compose.onNodeWithText("Added Oct 1, 2026", substring = true).getBoundsInRoot()
+        assertTrue(fingerprint.height < 24.dp, "one footnote line, not a 48 dp row: ${fingerprint.height}")
+        assertEquals(4.dp, added.top - fingerprint.bottom, "iOS VStack spacing 4")
+        // What TalkBack and Switch Access get (the node's touch bounds, AccessibilityNodeInfo.boundsInScreen).
+        val touchHeight = with(compose.density) {
+            compose.onNodeWithTag("detail.fingerprint").fetchSemanticsNode().touchBoundsInRoot.height.toDp()
+        }
+        assertTrue(touchHeight >= 48.dp, "a 48 dp accessibility target: $touchHeight")
+        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, -10.dp.toPx())) }
+        assertEquals(1, copies, "a touch 10 dp above the line copies the fingerprint")
+    }
+
+    /**
+     * QA wallets-10 (`WalletSecuritySheets.swift:169, 248, 327`): Change Password, Delete Wallet and Repair Wallet close
+     * with the cross read "Cancel", the iOS button, like the Recovery Phrase page; the e2e tag stays `nav.close`.
+     */
+    @Test
+    fun theSecurityPagesCloseWithCancel() {
+        var page by mutableStateOf(0)
+        content {
+            val identity = identities.first()
+            when (page) {
+                0 -> ChangePasswordContent(
+                    uiState = SecurityPageUiState(identity = identity),
+                    fields = remember { PasswordFields(3) },
+                    toast = rememberStatusToastState(),
+                    onSubmit = {},
+                    onCancel = {},
+                )
+                1 -> DeleteWalletContent(uiState = DeleteWalletUiState(identity = identity), toast = rememberStatusToastState(), actions = DeleteWalletActions())
+                else -> RepairWalletContent(
+                    uiState = SecurityPageUiState(identity = identity),
+                    fields = remember { PasswordFields(1) },
+                    toast = rememberStatusToastState(),
+                    onSubmit = {},
+                    onCancel = {},
+                )
+            }
+        }
+        repeat(3) {
+            page = it
+            compose.onNodeWithTag("nav.close").assertContentDescriptionEquals("Cancel")
+        }
+    }
+
+    /**
+     * QA backlog B22: until the device key check answers, Delete Wallet shows the wallet and a neutral loading state,
+     * neither the password path's statement nor "This Wallet Can’t Be Unlocked", and nothing can be confirmed.
+     */
+    @Test
+    fun deleteShowsANeutralStateUntilTheDeviceKeyCheckAnswers() {
+        var state by mutableStateOf(DeleteWalletUiState(identity = identities.first(), checkingDeviceKey = true))
+        content { DeleteWalletContent(uiState = state, toast = rememberStatusToastState(), actions = DeleteWalletActions()) }
+        compose.onNodeWithTag("delete.checking")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate))
+        compose.onNodeWithText("Public fixture 1", substring = true).assertExists()
+        listOf("delete.deviceKeyLost", "delete.backupConfirmed", "vaultManagement.submit").forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+        compose.onNodeWithText("Delete this wallet?").assertDoesNotExist()
+        compose.onNodeWithText("This Wallet Can’t Be Unlocked").assertDoesNotExist()
+        compose.onNodeWithTag("nav.close").assertIsEnabled()
+
+        state = state.copy(checkingDeviceKey = false)
+        compose.onNodeWithTag("delete.checking").assertDoesNotExist()
+        compose.onNodeWithTag("delete.backupConfirmed").assertExists()
+        compose.onNodeWithTag("vaultManagement.submit").assertIsNotEnabled()
     }
 
     @Test

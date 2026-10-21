@@ -58,8 +58,14 @@ data class DeleteWalletUiState(
     val deviceKeyLost: Boolean = false,
     /** The "Remove This Wallet?" dialog is up (only while [deviceKeyLost]). */
     val askingRemoval: Boolean = false,
+    /**
+     * Android-only (QA backlog B22): the first look at the device key has not answered yet (about a second on a device),
+     * so the page cannot tell yet whether it deletes with the password or removes a wallet that can't be unlocked. It
+     * shows a neutral loading state instead of either statement; later looks keep the last answer on screen.
+     */
+    val checkingDeviceKey: Boolean = false,
 ) {
-    val canDelete: Boolean get() = confirmed && !busy && !confirming
+    val canDelete: Boolean get() = confirmed && !busy && !confirming && !checkingDeviceKey
 }
 
 @HiltViewModel
@@ -82,8 +88,11 @@ class DeleteWalletViewModel @Inject constructor(
 
     private val local = MutableStateFlow(Local())
 
-    /** What the store last proved about the device key (a fact about the wallet: [clear] keeps it). */
-    private val keyLost = MutableStateFlow(false)
+    /**
+     * What the store last proved about the device key (a fact about the wallet: [clear] keeps it); null until the first
+     * look answers (QA backlog B22). A page without a wallet has nothing to look at.
+     */
+    private val keyLost = MutableStateFlow<Boolean?>(if (walletId == null) false else null)
     private var keyLossCheck: Job? = null
 
     val uiState: StateFlow<DeleteWalletUiState> = combine(store.state, access.state, operation.state, local, keyLost, ::uiStateOf)
@@ -93,7 +102,7 @@ class DeleteWalletViewModel @Inject constructor(
             uiStateOf(store.state.value, access.state.value, operation.state.value, local.value, keyLost.value),
         )
 
-    private fun uiStateOf(state: SignerState, accessState: AppAccessState, op: WalletOperation.State, l: Local, lost: Boolean) =
+    private fun uiStateOf(state: SignerState, accessState: AppAccessState, op: WalletOperation.State, l: Local, lost: Boolean?) =
         DeleteWalletUiState(
             identity = walletId?.let { WalletIdentity.of(state, it) },
             confirmed = l.confirmed,
@@ -103,8 +112,9 @@ class DeleteWalletViewModel @Inject constructor(
             error = op.error,
             asksForBiometrics = accessState.isEnabled && accessState.biometricsAvailable,
             gone = WalletIdentity.isGone(state, walletId),
-            deviceKeyLost = lost,
-            askingRemoval = l.askingRemoval && lost,
+            deviceKeyLost = lost == true,
+            askingRemoval = l.askingRemoval && lost == true,
+            checkingDeviceKey = lost == null,
         )
 
     val pageEvents: Flow<SecurityPageEvent> = events.receiveAsFlow()
@@ -132,7 +142,7 @@ class DeleteWalletViewModel @Inject constructor(
      */
     fun confirm() {
         val current = local.value
-        if (!current.confirmed || operation.busy || current.confirming) return
+        if (!current.confirmed || operation.busy || current.confirming || keyLost.value == null) return
         operation.setError(null)
         local.update { it.copy(confirming = true) }
         viewModelScope.launch {
@@ -148,7 +158,7 @@ class DeleteWalletViewModel @Inject constructor(
             }
             // A device-key answer that arrived during the prompt changed the page's statement and turned the switch off
             // (checkDeviceKey): nothing was confirmed for the page as it is now, so no dialog opens.
-            val lost = keyLost.value
+            val lost = keyLost.value == true
             local.update {
                 if (it.confirmed) it.copy(confirming = false, askingPassword = !lost, askingRemoval = lost) else it.copy(confirming = false)
             }
@@ -203,7 +213,7 @@ class DeleteWalletViewModel @Inject constructor(
         val id = walletId
         val asked = local.value.askingRemoval
         local.update { it.copy(askingRemoval = false) }
-        if (id == null || !asked || !local.value.confirmed || !keyLost.value || operation.busy) return
+        if (id == null || !asked || !local.value.confirmed || keyLost.value != true || operation.busy) return
         operation.run {
             try {
                 store.removeWalletWithLostDeviceKey(id)
@@ -226,7 +236,8 @@ class DeleteWalletViewModel @Inject constructor(
 
     /**
      * Asks the store whether the device key is provably gone (false when unsure; the latest answer wins). When the answer
-     * changes the page's statement, the switch is turned off again: it confirmed the other one.
+     * changes the page's statement, the switch is turned off again: it confirmed the other statement, or (the first
+     * answer, which ends the loading state) none at all, since no statement and no switch were shown before it.
      */
     private fun checkDeviceKey() {
         val id = walletId ?: return

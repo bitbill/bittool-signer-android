@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -247,8 +248,10 @@ internal fun rememberOverlayBlockedNotice(toast: StatusToastState): () -> Unit {
  * A QR code with the Android-only brightness switch on its top-end corner (wallets-pairing.md §13.5, the Ownbit
  * `QrBrightnessCorner` product decision): pairing pages never change the brightness by themselves (iOS never does);
  * switched to "Bright" the window runs at full brightness while the code is shown, and leaving the page (or switching
- * back) restores it. The capsule sits half outside the always-white plate, so it never covers a module, and is drawn
- * in the light palette like the plate. Starts at "Normal" on every visit (a configuration change keeps the choice).
+ * back) restores it. The capsule is centred on the always-white plate's top edge and inset from its top-end corner by
+ * the plate's corner radius: its lower half lies in the 18 dp quiet zone, so it never covers a module, and it never
+ * reaches past the plate's end edge into the page gutter (QA wallets-06). It is drawn in the light palette like the
+ * plate. Starts at "Normal" on every visit (a configuration change keeps the choice).
  *
  * [content] draws the code (a `QrCodeView` at most [maxSide] wide) and receives whether full brightness is wanted.
  * [enabled] false hides the switch (the code is still loading).
@@ -270,8 +273,8 @@ internal fun QrBrightnessCorner(
                     onBrightChange = { bright = it },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        // Centred on the plate's top edge, 8 dp beyond its end edge (the 18 dp white margin is free).
-                        .offset(x = 8.dp, y = -(BRIGHTNESS_TARGET / 2)),
+                        // Centred on the plate's top edge, where the end corner's curve has ended (mirrored in RTL).
+                        .offset(x = -QR_PLATE_CORNER_RADIUS, y = -(BRIGHTNESS_TARGET / 2)),
                 )
             }
         }
@@ -293,6 +296,7 @@ internal fun QrBrightnessToggle(bright: Boolean, onBrightChange: (Boolean) -> Un
         Box(
             modifier = modifier
                 .height(BRIGHTNESS_TARGET)
+                .testTag(QR_BRIGHTNESS_TAG)
                 .toggleable(
                     value = bright,
                     interactionSource = interaction,
@@ -333,6 +337,12 @@ internal fun QrBrightnessToggle(bright: Boolean, onBrightChange: (Boolean) -> Un
 }
 
 private val BRIGHTNESS_TARGET = 48.dp
+
+/** The corner radius of `QrCodeView`'s plate (`:core:scanner`, design-system §5.12: `RoundedCornerShape(24.dp)`). */
+internal val QR_PLATE_CORNER_RADIUS = 24.dp
+
+/** Android-only test tag of the brightness switch (iOS has no such control). */
+internal const val QR_BRIGHTNESS_TAG = "qr.brightness"
 
 /**
  * [value] (a protocol line such as `ur:crypto-account · CBOR · 170 bytes`) kept left to right inside a right-to-left
