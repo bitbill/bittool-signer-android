@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -87,8 +88,10 @@ import com.bittool.signer.core.ui.text.formatInteger
  * Wallets, Scan (badge "1" while a request waits unsigned), Activity, Settings, in that order, over the one NavHost.
  *
  * - A Material 3 navigation bar on compact widths and a navigation rail from 600 dp (tablets, landscape: the iPad
- *   layout). "The tab bar stays expanded": no hide-on-scroll. It slides away on the modal routes and while the keyboard
- *   is up (iOS keeps it under the keyboard), without fading.
+ *   layout). "The tab bar stays expanded": no hide-on-scroll. It slides away on the modal routes and while this
+ *   window's keyboard is up (iOS keeps it under the keyboard), without fading. A keyboard of a window above (a dialog,
+ *   a sheet, the lock window) leaves it in place, so the page behind never changes size ([rememberOwnKeyboardShown],
+ *   QA regression-04).
  * - A tap goes through `AppRouter.onTabClicked`: another tab is shown with its own stack restored; the selected tab
  *   pops to its root (and its screen scrolls to the top).
  * - The bar's own insets (navigation bar / cutout) are consumed for the pages above it, so their bottom bars do not pad
@@ -111,7 +114,7 @@ fun MainScaffold(
     val navigator = remember(navController) { ShellNavigator(navController) }
     // The shown page's tab; on a root-level page the tab it was opened from (read through the observed entry).
     val selected = entry?.let { navigator.selectedTab } ?: routerTab
-    val showBar = destination?.isModal() != true && !WindowInsets.isImeVisible
+    val showBar = destination?.isModal() != true && !rememberOwnKeyboardShown()
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val transitions = remember(rtl) { NavTransitions(rtl) }
     // A tap is judged against the tab whose stack is actually shown (for a root-level page, the tab it was opened from):
@@ -186,6 +189,23 @@ fun MainScaffold(
         }
         RouterGlue(navigator, router)
     }
+}
+
+/**
+ * Whether the keyboard on screen is this window's: it came up while this window had the window focus, so a field of
+ * the page (or of the shell) is being typed into. The IME inset reaches every window of the app, also the activity
+ * window under a dialog, a bottom sheet or the lock window whose own field has the keyboard; those windows take the
+ * window focus before their keyboard can come up. The answer is decided when the keyboard appears and kept until it
+ * goes: a dialog opened over the page's keyboard does not bring the bar back behind it, and the page getting the focus
+ * back while a dialog's keyboard is still going away does not hide the bar for a moment (QA regression-04: the page
+ * grew and shrank behind "Rename Wallet").
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun rememberOwnKeyboardShown(): Boolean {
+    val imeVisible = WindowInsets.isImeVisible
+    val windowFocused = LocalWindowInfo.current.isWindowFocused
+    return remember(imeVisible) { imeVisible && windowFocused }
 }
 
 /** The bottom bar: the page's card colour under a hairline, accent-tinted selection pill. */

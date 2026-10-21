@@ -151,7 +151,8 @@ sealed interface KeyboardSuggestions {
  *
  * Behaviour: a pressed key changes colour, a letter shows its preview above it (drawn in this window, so it is as
  * secure as the window: no popup), every press plays the keyboard-tap haptic through the view (the system's touch
- * feedback setting decides; no sound is played), backspace deletes on touch-down and repeats, faster, while held.
+ * feedback setting decides; no sound is played), backspace deletes on touch-down and repeats, faster, while held,
+ * until there is nothing left to delete: the first activation that changes nothing ends the repeat and its haptic.
  * Keys never take the focus, so the editor keeps its caret and selection. TalkBack reads every key by name and
  * activates it with a double tap. While it is shown the window is marked accessibility-sensitive (API 34+): only
  * accessibility tools see the keys being pressed.
@@ -181,8 +182,13 @@ fun Bip39Keyboard(
             Unit
         }
     }
-    val change: ((CharSequence, TextRange) -> KeyboardEdit?) -> Unit = remember(state) {
-        { edit -> edit(state.text, state.selection)?.let(state::applyKeyboardEdit) }
+    // Whether the edit changed the field: a held backspace stops repeating once nothing is left to delete.
+    val change: ((CharSequence, TextRange) -> KeyboardEdit?) -> Boolean = remember(state) {
+        { edit ->
+            val applied = edit(state.text, state.selection)
+            applied?.let(state::applyKeyboardEdit)
+            applied != null
+        }
     }
     AccessibilitySensitive(active = true)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
@@ -245,11 +251,12 @@ fun Bip39Keyboard(
                         },
                     ) { KeyIcon(SignerIcons.Paste, colors.functionContent) }
                     ROWS[2].forEach { c -> letter(c, 1f, Alignment.Center, PreviewEdge.Center) }
+                    val deleteBackward = { change(Bip39KeyboardEdits::deleteBackward) }
                     Key(
                         weight = 1.5f, style = KeyStyle.Function, tag = Bip39KeyboardTags.BACKSPACE,
                         description = stringResource(L10n.string.delete), colors = colors, metrics = metrics, onPress = tick,
-                        repeating = true,
-                        onActivate = { change(Bip39KeyboardEdits::deleteBackward) },
+                        onActivate = { deleteBackward() },
+                        onRepeat = deleteBackward,
                     ) { KeyIcon(Icons.AutoMirrored.Rounded.Backspace, colors.functionContent) }
                 }
                 KeyRow(metrics) {
@@ -509,8 +516,10 @@ private class KeyPreview(val layout: TextLayoutResult, val edge: PreviewEdge)
 
 /**
  * One key: the whole cell takes touches (no dead gaps between keys); the visible key is inset by half the gaps. Fires
- * on release inside the key ([repeating]: on touch-down, then repeatedly while held). Never focusable. TalkBack: a
- * button named by [description] or by its text, activated by [onActivate].
+ * [onActivate] on release inside the key. With [onRepeat] (backspace) it fires that instead, on touch-down and then
+ * repeatedly while held, for as long as it changes something: the first activation that returns false ends the repeat,
+ * so a held backspace on an empty phrase plays no more haptics (the touch-down press keeps its one, like every key).
+ * Never focusable. TalkBack: a button named by [description] or by its text, activated by [onActivate].
  */
 @Composable
 private fun RowScope.Key(
@@ -522,7 +531,7 @@ private fun RowScope.Key(
     metrics: KeyboardMetrics,
     onPress: () -> Unit,
     onActivate: () -> Unit,
-    repeating: Boolean = false,
+    onRepeat: (() -> Boolean)? = null,
     visualFraction: Float = 1f,
     visualAlignment: Alignment = Alignment.Center,
     preview: KeyPreview? = null,
@@ -531,6 +540,8 @@ private fun RowScope.Key(
     var pressed by remember { mutableStateOf(false) }
     val latestPress by rememberUpdatedState(onPress)
     val latestActivate by rememberUpdatedState(onActivate)
+    val latestRepeat by rememberUpdatedState(onRepeat)
+    val repeating = onRepeat != null
     val (fill, pressedFill) = when (style) {
         KeyStyle.Letter -> colors.key to colors.keyPressed
         KeyStyle.Function -> colors.functionKey to colors.functionKeyPressed
@@ -547,14 +558,13 @@ private fun RowScope.Key(
                         awaitFirstDown(requireUnconsumed = false).consume()
                         pressed = true
                         latestPress()
-                        val repeater = if (repeating) {
-                            latestActivate()
+                        // A repeating key acts on touch-down and repeats only while that changes something.
+                        val repeater = if (repeating && latestRepeat?.invoke() == true) {
                             launch {
                                 delay(REPEAT_DELAY_MS)
                                 var interval = REPEAT_INTERVAL_MS
-                                while (true) {
+                                while (latestRepeat?.invoke() == true) {
                                     latestPress()
-                                    latestActivate()
                                     delay(interval)
                                     interval = (interval - 5).coerceAtLeast(REPEAT_MIN_INTERVAL_MS)
                                 }

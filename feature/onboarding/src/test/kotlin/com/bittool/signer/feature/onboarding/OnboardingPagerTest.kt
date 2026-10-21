@@ -1,7 +1,9 @@
 package com.bittool.signer.feature.onboarding
 
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -10,9 +12,11 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.LineBreak
+import com.bittool.signer.core.designsystem.theme.PhraseBreaks
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.navigation.SetupIntent
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -124,5 +128,23 @@ class OnboardingPagerTest {
         val results = mutableListOf<TextLayoutResult>()
         compose.onNodeWithText("Offline by Design").fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
         assertEquals(LineBreak.Heading, results.single().layoutInput.style.lineBreak)
+    }
+
+    /**
+     * QA regression-13 below API 33: a Japanese page title keeps its phrases together through word joiners in the drawn
+     * copy ("はじめから" / "オフライン"), and TalkBack and the tree read it as written, as a heading.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S], qualifiers = "ja-w400dp-h800dp")
+    fun belowApi33AJapanesePageTitleBreaksBetweenPhrasesAndReadsAsWritten() {
+        show()
+        val title = "はじめからオフライン"
+        val node = compose.onNodeWithText(title).fetchSemanticsNode()
+        assertEquals(listOf(title), node.config[SemanticsProperties.Text].map { it.text })
+        assertTrue(SemanticsProperties.Heading in node.config)
+        val results = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
+        assertEquals(PhraseBreaks.forSdk(title, Build.VERSION_CODES.S), results.single().layoutInput.text.text)
+        assertTrue(PhraseBreaks.WORD_JOINER in results.single().layoutInput.text.text, "the drawn copy keeps the phrases together")
     }
 }

@@ -157,8 +157,9 @@ fun WalletIdentityHeader(
  * The "Fingerprint %@" line (iOS `Text("Fingerprint \(value)").font(.caption.monospaced())`) for [value], the
  * upper-cased fingerprint or "Setup required": the value isolated in a right-to-left interface only
  * ([isolateInRightToLeft]; left to right the plain "Fingerprint 73C5DA0A" every list shows), with the monospaced family
- * on the value itself ([monospacedRun]) so it keeps its face after an Arabic word (QA regression-10). Draw it in a
- * `monospaced()` style.
+ * on the value itself ([monospacedRun]), so it keeps that face whatever the sentence around it is drawn in (QA
+ * regression-10). Draw it in a `monospaced()` style. Every "Fingerprint %@" line uses it: the identity header, the
+ * Wallets card, the wallet page and the review's signing wallet (QA production-07, regression-06).
  */
 @Composable
 @ReadOnlyComposable

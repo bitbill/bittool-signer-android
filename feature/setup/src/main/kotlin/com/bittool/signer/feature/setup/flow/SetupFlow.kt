@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
@@ -49,6 +48,7 @@ import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.navigation.WalletRoute
 import com.bittool.signer.core.l10n.resolve
@@ -126,12 +126,13 @@ private fun SetupSteps(state: WalletSetupUiState, model: WalletSetupViewModel, c
     val screen = state.screen
     val transitionState = remember { SeekableTransitionState(screen) }
     val scope = rememberCoroutineScope()
-    val focusManager = LocalFocusManager.current
+    // In keyboard mode a plain clearFocus() would focus the new step's first control (QA regression-02/03).
+    val clearFocus = rememberClearFocus()
     val latestState by rememberUpdatedState(state)
     var seeking by remember { mutableStateOf(false) }
 
     LaunchedEffect(screen) {
-        focusManager.clearFocus()
+        clearFocus()
         if (!seeking) transitionState.animateTo(screen)
     }
 

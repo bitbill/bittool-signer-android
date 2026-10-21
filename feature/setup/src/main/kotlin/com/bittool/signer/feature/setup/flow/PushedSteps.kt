@@ -36,7 +36,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -57,6 +56,7 @@ import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
@@ -68,6 +68,7 @@ import com.bittool.signer.feature.setup.backup.RecoveryBackupPanel
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.backup.SecurityTipsButton
 import com.bittool.signer.feature.setup.backup.SecurityTipsSheet
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.CancelAction
 import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.LinkButton
@@ -121,7 +122,7 @@ internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewM
                 modifier = Modifier.testTag("backup.continue"),
             )
             if (!state.hasRevealedBackup) {
-                Text(
+                BodyText(
                     stringResource(L10n.string.reveal_the_words_first),
                     style = SignerTheme.typography.footnote,
                     color = SignerTheme.colors.secondaryLabel,
@@ -243,7 +244,7 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
 @Composable
 internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
-    val focusManager = LocalFocusManager.current
+    val clearFocus = rememberClearFocus()
     val lostKey = state.duplicateKeyLost && state.duplicateOf != null
     val needsRepair = !lostKey && state.duplicateUnverified && state.duplicateOf != null
     val cannotReset = lostKey || needsRepair
@@ -303,7 +304,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
                         },
                     ),
                     onClick = {
-                        focusManager.clearFocus()
+                        clearFocus()
                         if (resetting) model.resetPassword() else model.createWallet()
                     },
                     // Passwords typed before the duplicate check answered: the action shows it is still being decided.
@@ -428,7 +429,7 @@ internal fun SetupCompleteStep(state: WalletSetupUiState, model: WalletSetupView
                 SymbolHero(SignerIcons.VerifiedFilled, color = colors.success, size = 64.dp, bounce = true, modifier = Modifier.padding(top = 24.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     LargeTitle(stringResource(title), textAlign = TextAlign.Center, modifier = Modifier.testTag("setup.doneTitle"))
-                    Text(stringResource(message), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.Center)
+                    BodyText(stringResource(message), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.Center)
                 }
                 state.identity?.let { identity ->
                     SignerCard {

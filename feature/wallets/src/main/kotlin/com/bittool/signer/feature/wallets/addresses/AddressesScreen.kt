@@ -68,7 +68,6 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.PublicAccount
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.address.AddressText
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.core.ui.pairing.ChainPicker
@@ -293,10 +292,9 @@ private fun AddressRow(account: PublicAccount, chain: Chain, labelWidth: Dp?, on
             Icon(SignerIcons.QrCode, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
         }
         // A popup window, the design system's menu: it waits for the window gate (ARCHITECTURE §1.10), uses the elevated
-        // card colour and publishes its items' tags as resource ids in debuggable builds (backlog B26, B29; iOS gives the
-        // context menu's buttons no identifiers, these two are Android e2e hooks). Chosen with the keyboard, it leaves no
-        // focus ring on the back arrow (QA wallets-12).
-        if (menu) WindowFocusReturnEffect()
+        // card colour, publishes its items' tags as resource ids in debuggable builds (backlog B26, B29; iOS gives the
+        // context menu's buttons no identifiers, these two are Android e2e hooks) and, chosen with the keyboard, leaves no
+        // focus ring on the back arrow (QA wallets-12, backlog B30).
         SignerDropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text(copyLabel) },

@@ -154,6 +154,49 @@ class Bip39KeyboardTest {
         assertTrue("abandon ability able".startsWith(left))
     }
 
+    /**
+     * Held on a phrase that runs out (setup-backup §15.8): the repeat that finds nothing left to delete ends it, so no
+     * further keyboard-tap haptic plays while the key stays down. A sentinel haptic played once the phrase is empty
+     * would be replaced by the next repeat's.
+     */
+    @Test
+    fun aHeldBackspaceStopsRepeatingAndTickingOnceNothingIsLeftToDelete() {
+        show()
+        compose.runOnIdle { state.edit { replace(0, length, "ab"); placeCursorAtEnd() } }
+        compose.mainClock.autoAdvance = false
+        key(Bip39KeyboardTags.BACKSPACE).performTouchInput { down(center) }
+        compose.mainClock.advanceTimeByFrame()
+        assertEquals("a", composeText(), "deleted on touch-down")
+        compose.mainClock.advanceTimeBy(600)
+        assertEquals("", composeText(), "the first repeat deletes the rest")
+        compose.runOnIdle { view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS) }
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.runOnIdle {
+            assertEquals(HapticFeedbackConstants.LONG_PRESS, shadowOf(view).lastHapticFeedbackPerformed(), "no haptic after the phrase ran out")
+        }
+        key(Bip39KeyboardTags.BACKSPACE).performTouchInput { up() }
+        compose.mainClock.autoAdvance = true
+        assertEquals("", composeText())
+    }
+
+    /** Held on an empty phrase: the press plays its haptic like every key, and nothing repeats. */
+    @Test
+    fun aBackspaceHeldOnAnEmptyPhraseDoesNotRepeat() {
+        show()
+        compose.mainClock.autoAdvance = false
+        key(Bip39KeyboardTags.BACKSPACE).performTouchInput { down(center) }
+        compose.mainClock.advanceTimeByFrame()
+        compose.runOnIdle {
+            assertEquals(HapticFeedbackConstants.KEYBOARD_TAP, shadowOf(view).lastHapticFeedbackPerformed(), "the press itself")
+            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
+        compose.mainClock.advanceTimeBy(2_000)
+        compose.runOnIdle { assertEquals(HapticFeedbackConstants.LONG_PRESS, shadowOf(view).lastHapticFeedbackPerformed(), "no repeat") }
+        key(Bip39KeyboardTags.BACKSPACE).performTouchInput { up() }
+        compose.mainClock.autoAdvance = true
+        assertEquals("", composeText())
+    }
+
     @Test
     fun pasteInsertsTheClipboardTextUnchangedAtTheCaret() {
         show()

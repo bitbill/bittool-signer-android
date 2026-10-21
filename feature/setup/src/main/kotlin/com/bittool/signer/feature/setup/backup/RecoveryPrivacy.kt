@@ -31,6 +31,7 @@ import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.security.RecoveryPrivacySession
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.LocalRecoverySessions
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -129,7 +130,7 @@ internal fun RevealPrompt(modifier: Modifier = Modifier) {
     ) {
         Icon(SignerIcons.VisibilityOff, contentDescription = null, tint = colors.label, modifier = Modifier.size(iconSize))
         Text(stringResource(L10n.string.tap_to_reveal), style = typography.headline, color = colors.label, textAlign = TextAlign.Center)
-        Text(
+        BodyText(
             stringResource(L10n.string.make_sure_no_one_can_see_your_screen_2),
             style = typography.footnote,
             color = colors.secondaryLabel,

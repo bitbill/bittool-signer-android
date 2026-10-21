@@ -49,10 +49,11 @@ import org.robolectric.annotation.Config
 
 /**
  * QA regression-04: scrolled to the bottom of the wallet page, "Rename Wallet" → Cancel or Save left the page about
- * 128 dp lower, with Delete Wallet under the tab bar. The dialog's keyboard hides the tab bar (it slides away while a
- * keyboard is up) and brings it back afterwards. The page grows and shrinks behind the dialog, and the list kept its
+ * 128 dp lower, with Delete Wallet under the tab bar. The dialog's keyboard hid the tab bar (it slid away while any
+ * keyboard was up) and brought it back afterwards. The page grew and shrank behind the dialog, and the list kept its
  * first row instead of undoing the scroll back it made while it grew. iOS leaves the page where it was
- * (`WalletDetailView.swift:117-125`).
+ * (`WalletDetailView.swift:117-125`). The shell now leaves the bar in place for a dialog's keyboard (app
+ * `TabBarKeyboardTest`); these tests keep the page's own guarantee for any bar change while the dialog is up.
  *
  * The shell is modelled as `MainScaffold` builds it on the QA device (mdpi here, so 1 px = 1 dp): a 48 dp navigation
  * bar inset, and under the page an 80 dp tab bar that pads itself by that inset (128 dp in all). While the bar is

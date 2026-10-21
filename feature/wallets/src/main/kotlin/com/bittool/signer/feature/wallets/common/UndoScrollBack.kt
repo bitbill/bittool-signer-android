@@ -18,9 +18,11 @@ import androidx.compose.ui.unit.Constraints
  * empty space after its last row, so near its end it scrolls back by itself when it gets taller (or when the space
  * after its last row gets shorter). It does not scroll forward again when it gets its old height back; it keeps the
  * first row and cuts the end off instead. On the wallet page that happened behind the "Rename Wallet" dialog: the
- * dialog's keyboard hides the tab bar, so the page grows and shrinks again (and its bottom padding follows the
+ * dialog's keyboard hid the tab bar, so the page grew and shrank again (and its bottom padding followed the
  * navigation bar inset the bar stops and starts consuming). After Cancel or Save the page sat up to about 128 dp lower
- * than before, with Delete Wallet under the tab bar. iOS leaves the page where it was.
+ * than before, with Delete Wallet under the tab bar. iOS leaves the page where it was. The shell now keeps the bar for
+ * a dialog's keyboard (`MainScaffold`, only this window's keyboard moves it); this node still keeps the rows in place
+ * whenever the page's height changes back and forth (the bar going for a keyboard of the page, a window resize).
  *
  * Place it before the list's size modifiers (`Modifier.undoesScrollBackOnShrink(state).fillMaxSize()`). It adds up how
  * far the list moved its rows down by itself since it was last scrolled, and when the list's maximum height shrinks it

@@ -38,7 +38,6 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.PublicAccount
 import com.bittool.signer.core.scanner.QrCodeView
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.address.CopyableAddress
 import com.bittool.signer.feature.wallets.common.QrBrightnessCorner
 
@@ -50,7 +49,6 @@ import com.bittool.signer.feature.wallets.common.QrBrightnessCorner
  */
 @Composable
 internal fun AddressDetailSheet(account: PublicAccount, title: String, onDismiss: () -> Unit) {
-    WindowFocusReturnEffect()
     SignerBottomSheet(onDismissRequest = onDismiss, testTag = "address.sheet") {
         // Read inside the sheet: its content runs one surface level up (the dark elevated palette), so the card is
         // `#2C2C2E` on the `#1C1C1E` sheet like the iOS `.cardBackground()`. The page palette read outside the sheet

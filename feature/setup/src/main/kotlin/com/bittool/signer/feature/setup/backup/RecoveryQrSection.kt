@@ -43,6 +43,7 @@ import com.bittool.signer.core.scanner.QrCodeView
 import com.bittool.signer.core.security.RecoveryPrivacySession
 import com.bittool.signer.core.ui.qr.QrCardFrame
 import com.bittool.signer.feature.setup.flow.RecoveryWords
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.LinkButton
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
 import com.bittool.signer.core.l10n.R as L10n
@@ -95,7 +96,7 @@ internal fun RecoveryQrSection(
                 ConcealedQrCode(onReveal = { session.reveal() })
             }
         }
-        Text(
+        BodyText(
             text = stringResource(L10n.string.this_qr_code_is_your_recovery_phrase_anyone_who_scans),
             style = typography.footnote.medium(),
             // Small text: the darker danger variant keeps it legible on the page in both themes.

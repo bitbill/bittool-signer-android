@@ -34,6 +34,7 @@ import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.SheetTitleBar
 import com.bittool.signer.feature.setup.ui.iconSizeFor
 import com.bittool.signer.core.l10n.R as L10n
@@ -112,7 +113,7 @@ private fun TipRow(tip: SecurityTip) {
         Icon(tip.icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(iconSizeFor(typography.headline, 1.41f)))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(stringResource(tip.title), style = typography.headline, color = colors.label)
-            Text(stringResource(tip.detail), style = typography.subheadline, color = colors.secondaryLabel)
+            BodyText(stringResource(tip.detail), style = typography.subheadline, color = colors.secondaryLabel)
         }
     }
 }

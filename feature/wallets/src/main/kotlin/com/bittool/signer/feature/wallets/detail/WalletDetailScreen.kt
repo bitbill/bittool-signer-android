@@ -67,10 +67,10 @@ import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.core.ui.text.currentLocale
 import com.bittool.signer.core.ui.text.localizedLongName
 import com.bittool.signer.core.ui.wallet.WalletAvatar
+import com.bittool.signer.core.ui.wallet.fingerprintLine
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import com.bittool.signer.feature.wallets.common.ownsItsTouches
 import com.bittool.signer.feature.wallets.common.undoesScrollBackOnShrink
-import com.bittool.signer.feature.wallets.list.fingerprintText
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -289,7 +289,7 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
             // covers the gaps and the sides and never the line above or below (QA regression-09). A wallet that no
             // repair can fix (QA L4) shows no "Fingerprint Setup required": the notice under the header says why.
             if (identity == null || identity.ready || identity.needsRepair) Text(
-                text = stringResource(R.string.fingerprint_x, fingerprintText(identity?.fingerprint)),
+                text = fingerprintLine(identity?.fingerprint ?: stringResource(R.string.ui_setup_required)),
                 style = typography.footnote.monospaced(),
                 color = colors.secondaryLabel,
                 textAlign = TextAlign.Center,

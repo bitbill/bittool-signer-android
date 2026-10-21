@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -32,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.l10n.R
 
 /**
@@ -49,7 +49,8 @@ internal fun SearchField(
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val keyboard = LocalSoftwareKeyboardController.current
-    val focus = LocalFocusManager.current
+    // Nothing stays focused after Search, also in keyboard mode (no ring on the page's first control).
+    val clearFocus = rememberClearFocus()
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -65,7 +66,7 @@ internal fun SearchField(
         ),
         keyboardActions = KeyboardActions(onSearch = {
             keyboard?.hide()
-            focus.clearFocus()
+            clearFocus()
         }),
         decorationBox = { field ->
             Row(

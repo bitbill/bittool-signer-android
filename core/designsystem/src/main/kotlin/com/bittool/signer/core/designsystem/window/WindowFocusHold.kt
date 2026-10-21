@@ -191,17 +191,19 @@ fun WindowFocusHoldEffect() {
 /**
  * `FocusManager.clearFocus()` that leaves nothing focused, also in keyboard mode, where Android would otherwise hand
  * the focus to the window's first control at once ([WindowFocusHold.clearingFocus]; iOS `focused = false`, QA
- * regression-03). For a field's Done / Enter action and other "stop editing" moments.
+ * regression-02, regression-03). For a field's Done / Enter action and other "stop editing" moments: every feature
+ * clears the focus through it, never through `LocalFocusManager.current.clearFocus()` directly. [force] is
+ * `FocusManager.clearFocus(force)`: also when a component has captured the focus.
  */
 @Composable
-fun rememberClearFocus(): () -> Unit {
+fun rememberClearFocus(force: Boolean = false): () -> Unit {
     val view = LocalView.current
     val focusManager = LocalFocusManager.current
-    return remember(view, focusManager) { { clearFocusQuietly(view, focusManager) } }
+    return remember(view, focusManager, force) { { clearFocusQuietly(view, focusManager, force) } }
 }
 
 /** [rememberClearFocus] outside composition. */
 @MainThread
-fun clearFocusQuietly(view: View, focusManager: FocusManager) {
-    WindowFocusHold.clearingFocus(view) { focusManager.clearFocus() }
+fun clearFocusQuietly(view: View, focusManager: FocusManager, force: Boolean = false) {
+    WindowFocusHold.clearingFocus(view) { focusManager.clearFocus(force) }
 }

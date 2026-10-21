@@ -152,6 +152,21 @@ class DialogFocusReturnTest {
         assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, decor.descendantFocusability, "the page takes the focus again")
     }
 
+    /**
+     * What the design system's windows hold (`WindowFocusHold`): the decor's child that holds the page, so the page's
+     * views take no focus while the dialog or sheet is up.
+     */
+    private val pageGroup: ViewGroup
+        get() {
+            var child: View = view
+            while ((child.parent as? View) !== decor) child = child.parent as View
+            return child as ViewGroup
+        }
+
+    /**
+     * The design system's dialog and sheet hold the page themselves (backlog B30); the Wallets dialogs no longer add
+     * a hold of their own.
+     */
     @Test
     fun everyWalletsDialogAndTheAddressSheetHoldTheFocusWhileShown() {
         var shown by mutableStateOf(0)
@@ -163,15 +178,18 @@ class DialogFocusReturnTest {
             { AddressDetailSheet(account = WalletFixtures.accounts(Chain.Bitcoin, 0, 1).first(), title = "Bitcoin address #0", onDismiss = {}) },
         )
         content { if (shown in 1..dialogs.size) dialogs[shown - 1]() }
+        val pageFocusability = pageGroup.descendantFocusability
+        val windowFocusability = decor.descendantFocusability
         dialogs.indices.forEach { index ->
             shown = index + 1
             compose.waitForIdle()
-            assertEquals(ViewGroup.FOCUS_BLOCK_DESCENDANTS, decor.descendantFocusability, "dialog ${index + 1} holds the page's focus")
+            assertEquals(ViewGroup.FOCUS_BLOCK_DESCENDANTS, pageGroup.descendantFocusability, "dialog ${index + 1} holds the page's focus")
             WindowSignals.windowFocus(view, hasFocus = false)
             shown = 0
             compose.waitForIdle()
             WindowSignals.windowFocus(view, hasFocus = true)
-            assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, decor.descendantFocusability, "released after dialog ${index + 1}")
+            assertEquals(pageFocusability, pageGroup.descendantFocusability, "released after dialog ${index + 1}")
+            assertEquals(windowFocusability, decor.descendantFocusability, "the window itself is never blocked")
         }
     }
 }

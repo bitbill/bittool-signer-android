@@ -36,6 +36,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.bittool.signer.core.designsystem.theme.SignerMonospace
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.window.exposesTestTags
 import com.bittool.signer.core.model.SecretText
@@ -231,6 +232,31 @@ class SignScreensTest {
         direction = LayoutDirection.Rtl
         compose.waitForIdle()
         compose.onNodeWithText("Fingerprint ⁨73C5DA0A⁩", useUnmergedTree = true).assertExists()
+    }
+
+    /**
+     * QA production-07 / regression-10: the signing wallet's line is core:ui's `fingerprintLine`, like the Wallets list
+     * and the identity header: the value itself is in the monospaced family, in both directions.
+     */
+    @Test
+    fun theSigningWalletsFingerprintValueIsMonospaced() {
+        var direction by mutableStateOf(LayoutDirection.Ltr)
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                    RequestReviewContent(ReviewStates.bitcoinReady, onReject = {}, onToggleRisk = {}, onRetry = {}, onAuthorize = {})
+                }
+            }
+        }
+        fun monospacedRuns(text: String): List<String> {
+            val line = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+                .config[SemanticsProperties.Text].single()
+            return line.spanStyles.filter { it.item.fontFamily == SignerMonospace }.map { line.text.substring(it.start, it.end) }
+        }
+        assertEquals(listOf("73C5DA0A"), monospacedRuns("Fingerprint 73C5DA0A"))
+        direction = LayoutDirection.Rtl
+        compose.waitForIdle()
+        assertEquals(listOf("73C5DA0A"), monospacedRuns("Fingerprint \u206873C5DA0A\u2069"))
     }
 
     @Test

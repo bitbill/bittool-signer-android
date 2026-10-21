@@ -57,6 +57,7 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.model.RecoveryCards
 import com.bittool.signer.core.security.RecoveryPrivacySession
 import com.bittool.signer.feature.setup.flow.RecoveryWords
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.LinkButton
 import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import com.bittool.signer.feature.setup.ui.SheetTitleBar
@@ -95,7 +96,7 @@ internal fun RecoveryCardsPage(words: RecoveryWords, hasPassphrase: Boolean, ses
             .padding(top = 4.dp, bottom = SignerMetrics.pagePadding),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
+        BodyText(
             text = stringResource(
                 if (weak) L10n.string.keep_these_three_cards_in_three_different_places_any_2 else L10n.string.keep_these_three_cards_in_three_different_places_any,
             ),

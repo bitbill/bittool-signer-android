@@ -44,8 +44,8 @@ QA round 1 adds device findings in `docs/qa/round1-*.md`. ✅ = fixed and review
 | # | Owner | Item |
 |---|---|---|
 | B29 | app, feature:settings, feature:wallets | Raw `DropdownMenu` calls (AppLockScreen.kt:380, NetworkReferenceScreen.kt:332, AddressesScreen.kt:289, WalletsScreen.kt:218) → `SignerDropdownMenu`, so their tags are resource ids (rest of B26). |
-| B30 | core:designsystem / core:ui | Put `WindowFocusReturnEffect` inside `SignerAlertDialog`, `SignerBottomSheet`, `SignerDropdownMenu` and the core:ui menus, so every dialog, sheet and popup returns or clears focus like the Wallets ones (rest of wallets-12). |
-| B31 | core:designsystem | `SwitchRow` subtitle: `LineBreak.Heading` / phrase breaking on API 33+ (rest of setup-15). |
+| B30 ✅ | core:designsystem / core:ui | Put `WindowFocusReturnEffect` inside `SignerAlertDialog`, `SignerBottomSheet`, `SignerDropdownMenu` and the core:ui menus, so every dialog, sheet and popup returns or clears focus like the Wallets ones (rest of wallets-12). Done as `WindowFocusHoldEffect` (QA round 2); fix/polish removed the feature-local duplicates and moved every feature `clearFocus()` to `rememberClearFocus()`. |
+| B31 ✅ | core:designsystem | `SwitchRow` subtitle: `LineBreak.Heading` / phrase breaking on API 33+ (rest of setup-15). Done (QA round 2); fix/polish shares it as `PhraseText` (setup titles and running text, onboarding titles, read as written by TalkBack). |
 | B32 | feature:sign | When the acknowledgement scrolls into the list (font ≥ ~1.6), the disabled Sign gives no hint; and first frame shows the acknowledgement in the bar before it moves. |
 | B33 | app / feature:sign | Whether the tab bar should hide on the review page (iOS parity check of the pushed review). |
 
@@ -57,4 +57,4 @@ QA round 1 adds device findings in `docs/qa/round1-*.md`. ✅ = fixed and review
 | L2 | P1 | production-02: App Lock locks the person out when no wallet password can verify (all device keys lost) and no biometric is enrolled. App Lock guards public pages only; when no unlock path can succeed, the lock screen must explain why and let the person continue (turning App Lock off). |
 | L3 | P1 | production-03: re-importing the phrase of a lost-key wallet creates a second wallet with the same keys (the duplicate check needs the lost public-index key). Detect it from the unauthenticated sidecar identity and route to "Remove This Wallet" (B21 intent). |
 | L4 | P2 | production-04: lost-key wallets (and wallets on a device without a screen lock) show "Repair needed", which cannot succeed; show "This Wallet Can’t Be Unlocked" with Remove where the person looks first (list card, detail). |
-| L5 | P3 | production-05: the lock screen back-off message stays frozen (also iOS). production-06: default wallet names can repeat (also iOS). production-07: Signing Wallet fingerprint keeps FSI/PDI isolates in LTR (rest of wallets-15; also regression-06). |
+| L5 | P3 | production-05: the lock screen back-off message stays frozen (also iOS). production-06: default wallet names can repeat (also iOS; fixed on fix/lost-key). production-07: Signing Wallet fingerprint keeps FSI/PDI isolates in LTR (rest of wallets-15; also regression-06; fixed in QA round 2, and fix/polish draws every "Fingerprint …" line through `fingerprintLine`). |

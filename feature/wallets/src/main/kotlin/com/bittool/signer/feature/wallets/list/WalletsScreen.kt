@@ -52,7 +52,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -76,11 +75,10 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.logo.NetworkLogoStack
 import com.bittool.signer.core.ui.security.openScreenLockSettings
 import com.bittool.signer.core.ui.wallet.WalletAvatar
-import com.bittool.signer.core.ui.wallet.isolate
+import com.bittool.signer.core.ui.wallet.fingerprintLine
 import com.bittool.signer.feature.wallets.common.IconAction
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import kotlinx.coroutines.coroutineScope
@@ -232,9 +230,8 @@ private fun AddWalletMenu(onAddWallet: (SetupIntent) -> Unit) {
             modifier = Modifier.testTag("wallets.add"),
         )
         // A popup window, the design system's menu: it waits for the window gate (ARCHITECTURE §1.10), uses the elevated
-        // card colour and publishes its items' tags as resource ids in debuggable builds (backlog B26, B29). Chosen with
-        // the keyboard, it leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12).
-        if (expanded) WindowFocusReturnEffect()
+        // card colour, publishes its items' tags as resource ids in debuggable builds (backlog B26, B29) and, chosen
+        // with the keyboard, leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12, backlog B30).
         SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.create_new_wallet)) },
@@ -312,8 +309,9 @@ internal fun WalletCard(
                 when {
                     wallet.keyLost -> CardStatus(stringResource(R.string.wallets_lost_key_title), colors.danger)
                     wallet.screenLockRequired -> CardStatus(stringResource(R.string.setup_screen_lock_required), colors.warning)
+                    // "Fingerprint 73C5DA0A", the value in the monospaced face and, right to left, isolated (core:ui).
                     else -> Text(
-                        text = stringResource(R.string.fingerprint_x, fingerprintText(wallet.fingerprint)),
+                        text = fingerprintLine(wallet.fingerprint ?: stringResource(R.string.ui_setup_required)),
                         style = typography.caption.monospaced(),
                         color = colors.secondaryLabel,
                     )
@@ -390,17 +388,6 @@ private fun CardAction(icon: ImageVector, text: String, color: Color, tag: Strin
         Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
         Text(text = text, style = SignerTheme.typography.subheadline.semibold(), color = color, modifier = Modifier.weight(1f))
     }
-}
-
-/**
- * The "Fingerprint %@" value: the upper-case fingerprint, or "Setup required" (V on iOS) without public data. In a
- * right-to-left interface the value is wrapped in Unicode isolates so it stays left to right inside the translated
- * sentence; left-to-right text stays plain (the e2e suite matches "Fingerprint 73C5DA0A" literally).
- */
-@Composable
-internal fun fingerprintText(fingerprint: String?): String {
-    val value = fingerprint ?: stringResource(R.string.ui_setup_required)
-    return if (LocalLayoutDirection.current == LayoutDirection.Rtl) isolate(value) else value
 }
 
 @Composable
