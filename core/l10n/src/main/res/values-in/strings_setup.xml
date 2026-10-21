@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">Frasa sudah disembunyikan lagi, tetapi tangkapan layarnya mungkin sudah memuatnya. Hapus dari galeri Anda dan dari semua salinan tersinkronisasi, lalu simpan cadangan tertulis secara luring.</string>
     <string name="setup_screenshot_may_contain">Tangkapan layar mungkin memuat frasa pemulihan Anda atau sebagian kata-katanya. Hapus dari galeri Anda dan dari semua salinan tersinkronisasi, lalu simpan cadangan tertulis secara luring.</string>
     <string name="setup_screen_lock_required">Kunci layar diperlukan</string>
-    <string name="setup_lost_key_message">Frasa pemulihan ini milik dompet di perangkat ini yang kunci perangkatnya sudah hilang, jadi kata sandinya tidak bisa disetel ulang. Buka dompet itu, pilih “Hapus dompet”, lalu “Keluarkan dompet ini”, dan impor lagi frasanya.</string>
+    <string name="setup_lost_key_message">Frasa pemulihan ini milik dompet di perangkat ini yang kunci perangkatnya sudah hilang, jadi kata sandinya tidak bisa disetel ulang. Buka dompet itu, pilih “Keluarkan dompet ini”, lalu impor lagi frasanya.</string>
     <string name="setup_lost_key_open_wallet">Buka dompet</string>
+    <string name="setup_repair_duplicate_title">Dompet ini perlu diperbaiki</string>
+    <string name="setup_repair_duplicate_message">Frasa pemulihan ini milik dompet di perangkat ini yang data publiknya perlu diperbaiki. Buka dompet itu dan pilih “Perbaiki data dompet” dengan kata sandinya. Mengimpor lagi frasa ini hanya akan menambahkan dompet kedua dengan kunci yang sama.</string>
 </resources>

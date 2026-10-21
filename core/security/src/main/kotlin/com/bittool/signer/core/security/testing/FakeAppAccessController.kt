@@ -45,6 +45,21 @@ class FakeAppAccessController(
     /** Thrown by [confirmSensitiveAction] when non-null (a `CancellationException` = the person dismissed it). */
     var sensitiveActionFailure: Throwable? = null
 
+    /**
+     * QA L2: what [hasNoUnlockPath] and [continueWithoutUnlockPath] prove (the real controller asks the vault and the
+     * biometric adapter each time). False by default.
+     */
+    @Volatile
+    var noUnlockPath: Boolean = false
+
+    /** Thrown by [continueWithoutUnlockPath] (after recording) when non-null. */
+    var continueFailure: Throwable? = null
+
+    var noUnlockPathChecks: Int = 0
+        private set
+    var continueCalls: Int = 0
+        private set
+
     val walletCounts: MutableList<Int> = mutableListOf()
     val setEnabledCalls: MutableList<Boolean> = mutableListOf()
     var biometricUnlockCalls: Int = 0
@@ -79,6 +94,22 @@ class FakeAppAccessController(
         passwordUnlocks += walletId
         fail(passwordFailure)
         mutableState.update { it.copy(isLocked = false, error = null) }
+    }
+
+    override suspend fun hasNoUnlockPath(): Boolean {
+        noUnlockPathChecks += 1
+        val state = mutableState.value
+        return state.isEnabled && state.isLocked && noUnlockPath
+    }
+
+    override suspend fun continueWithoutUnlockPath(): Boolean {
+        continueCalls += 1
+        continueFailure?.let { throw it }
+        val state = mutableState.value
+        if (!state.isEnabled || !state.isLocked) return true
+        if (!noUnlockPath) return false
+        mutableState.update { it.copy(isEnabled = false, isLocked = false, error = null) }
+        return true
     }
 
     override suspend fun confirmSensitiveAction(reason: UiText) {

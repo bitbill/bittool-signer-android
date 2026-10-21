@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">Biometrik terkunci setelah terlalu banyak percobaan. Gunakan kata sandi dompet, atau buka dulu kunci ponsel Anda dengan kunci layarnya.</string>
     <string name="security_delete_footer_biometric">Menghapus akan meminta konfirmasi biometrik, lalu kata sandi dompet ini.</string>
     <string name="security_overlay_blocked">Aplikasi lain sedang tampil di atas BitTool Signer. Tutup aplikasi itu, lalu coba lagi.</string>
+    <string name="security_no_unlock_path_title">Tidak ada cara membuka kunci</string>
+    <string name="security_no_unlock_path_message">Kunci perangkat semua dompet di sini terhapus saat kunci layar perangkat ini dihapus, jadi tidak ada kata sandi dompet yang bisa membuka kunci BitTool Signer, dan buka kunci dengan sidik jari atau wajah belum diatur. Lanjutkan tanpa kunci aplikasi untuk membuka aplikasi, lalu keluarkan dompet-dompet ini dan impor lagi frasa pemulihannya. Dana tidak terpengaruh.</string>
+    <string name="security_no_unlock_path_continue">Lanjutkan tanpa kunci aplikasi</string>
     <string name="security_app_lock_save_failed">Kunci aplikasi tidak bisa diubah. Coba lagi.</string>
 </resources>

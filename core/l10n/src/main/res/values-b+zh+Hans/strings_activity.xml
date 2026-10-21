@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">已显示警告</string>
     <string name="activity_partial_signature_created">已生成部分签名</string>
     <string name="activity_unreadable_title">活动记录不可用</string>
+    <string name="activity_restarted_title">活动记录已重新开始</string>
+    <string name="activity_restarted_message">保护先前活动记录的密钥在移除这台设备的屏幕锁定时已被删除，因此无法再读取那份记录。新的签名会重新列在这里。你的钱包和已创建的签名不受影响。</string>
     <string name="activity_export_failed">无法保存文件。</string>
 </resources>

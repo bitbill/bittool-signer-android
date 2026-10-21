@@ -266,8 +266,8 @@
    "value": "Wymagana blokada ekranu"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego klucza urządzenia już nie ma, więc jego hasła nie da się zresetować. Otwórz ten portfel, wybierz „Usuń portfel”, a potem „Usuń ten portfel” i zaimportuj frazę ponownie."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego klucza urządzenia już nie ma, więc jego hasła nie da się zresetować. Otwórz ten portfel, wybierz „Usuń ten portfel” i zaimportuj frazę ponownie."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Usuń"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Ten portfel wymaga naprawy"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego dane publiczne wymagają naprawy. Otwórz ten portfel i wybierz „Napraw dane portfela”, podając jego hasło. Ponowny import frazy dodałby tylko drugi portfel z tymi samymi kluczami."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Aktywność rozpoczęta od nowa"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "value": "Klucz, który chronił wcześniejszy rejestr aktywności, został usunięty razem z blokadą ekranu tego urządzenia, więc tego rejestru nie da się już odczytać. Nowe podpisy znów pojawiają się tutaj. Nie ma to wpływu na Twoje portfele ani na już utworzone podpisy."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Nie da się odblokować"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "value": "Klucze urządzenia wszystkich portfeli zostały usunięte, gdy z tego urządzenia usunięto blokadę ekranu, więc żadne hasło portfela nie odblokuje BitTool Signer, a odblokowywanie odciskiem palca lub twarzą nie jest skonfigurowane. Kontynuuj bez blokady aplikacji, aby ją otworzyć, a potem usuń te portfele i ponownie zaimportuj ich frazy odzyskiwania. Środki nie są naruszone."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Kontynuuj bez blokady aplikacji"
   }
  }
 }

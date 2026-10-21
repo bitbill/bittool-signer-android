@@ -50,7 +50,8 @@ import com.bittool.signer.core.model.WalletId
  * meanwhile. A `CancellationException` from these four therefore always means that no wallet, password or file was
  * changed. Main-safe: every file and Keystore call runs on the injected dispatchers. Members added after Wave 1
  * ([isDeviceKeyLost], [removeWithLostDeviceKey]) have conservative defaults so every existing implementation keeps
- * compiling; [removeWithLostDeviceKey]'s commit follows the same cancellation rule as [delete].
+ * compiling; [removeWithLostDeviceKey]'s commit follows the same cancellation rule as [delete]. [isDeviceSecure] (QA L4)
+ * has a default as well.
  */
 interface WalletVault {
     /**
@@ -138,6 +139,16 @@ interface WalletVault {
     suspend fun removeWithLostDeviceKey(id: WalletId) {
         throw VaultError.DeviceKeyLossUnconfirmed()
     }
+
+    /**
+     * Android-only (QA L4): whether the device has a secure lock screen right now (`DeviceKeyStore.isDeviceSecure()`),
+     * without which every create and secret operation refuses with [VaultError.DevicePasscodeRequired] and
+     * [isDeviceKeyLost] is false. A stateless query: it reads no file, counts nothing and does not wait for other vault
+     * calls (so a running unlock never delays it).
+     *
+     * The default is true: an implementation that cannot tell leaves the verdict to the operations themselves.
+     */
+    suspend fun isDeviceSecure(): Boolean = true
 
     /**
      * The app-wide public-data HMAC key (Keystore HMAC-SHA256, alias `com.bittool.signer.vault.device-key.v1/

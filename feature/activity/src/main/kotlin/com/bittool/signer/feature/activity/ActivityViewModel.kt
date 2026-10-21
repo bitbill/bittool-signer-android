@@ -36,6 +36,11 @@ data class ActivityUiState(
     val days: List<ActivityDay> = emptyList(),
     /** "Clear all activity?" is up. */
     val showsClearConfirmation: Boolean = false,
+    /**
+     * Android-only (QA L1, `SignerState.activityRestarted`): the record's key was deleted with the screen lock, so the
+     * store started a new, empty record; the tab says so once, until "OK".
+     */
+    val restartNotice: Boolean = false,
 ) {
     /** iOS shows "Clear" only while there are records. */
     val canClear: Boolean get() = days.isNotEmpty()
@@ -74,6 +79,11 @@ class ActivityViewModel @Inject constructor(
         confirmationEpoch.value = null
     }
 
+    /** "OK" of the notice that the record was started again (QA L1): it is not shown again, also after a relaunch. */
+    fun onRestartNoticeDismissed() {
+        viewModelScope.launch { store.acknowledgeActivityRestart() }
+    }
+
     /** "Clear Activity": the store saves an empty journal; a failed write is reported by the store's own alert. */
     fun onClearConfirmed() {
         if (confirmationEpoch.value != store.state.value.securityEpoch) return
@@ -95,6 +105,7 @@ class ActivityViewModel @Inject constructor(
         val unreadable: Boolean,
         val entries: List<ActivityEntry>,
         val securityEpoch: Long,
+        val restarted: Boolean,
     ) {
         fun toUiState(confirmationEpoch: Long?): ActivityUiState {
             val days = ActivityGrouping.sections(entries, ZoneId.systemDefault())
@@ -103,6 +114,7 @@ class ActivityViewModel @Inject constructor(
                 unreadable = unreadable && entries.isEmpty(),
                 days = days,
                 showsClearConfirmation = confirmationEpoch != null && confirmationEpoch == securityEpoch && days.isNotEmpty(),
+                restartNotice = restarted && !(unreadable && entries.isEmpty()),
             )
         }
 
@@ -122,6 +134,7 @@ class ActivityViewModel @Inject constructor(
                     )
                 },
                 securityEpoch = state.securityEpoch,
+                restarted = state.activityRestarted,
             )
         }
     }

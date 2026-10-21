@@ -918,6 +918,27 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
     under its lock) and then commits like `deleteWallet`. A public-data key this process used is created again only
     when the same proof shows it gone, so the phrase imports again without a relaunch. Every other deletion keeps the
     iOS biometric-then-password path. Strings: `wallets_lost_key_*`, `crypto_device_key_loss_unconfirmed`.
+19. **Removing the screen lock (QA round 2 L1–L4, Android-only; iOS never meets it):** Android then deletes every
+    `setUnlockedDeviceRequired` key — the wallets' device keys, the public-data HMAC key, the journal key — and the
+    enrolled fingerprints; a new lock brings none back. Every "lost" verdict rests on one proof, `KeystoreLossProof`
+    (item 18's three agreeing looks against probe keys, one process-wide lock), and only ever unlocks a way *out*:
+    - **Activity (L1):** `JournalCipher.discardLostKey` proves the journal key gone; `ReceiptRepository.startOverIfKeyLost`
+      then records a one-time notice (`receipts.restarted`, no data) and removes the journal nobody can open, so the
+      next record seals under a new key. `SignerState.activityRestarted` shows "Activity Started Again" until "OK"
+      (`acknowledgeActivityRestart`). A journal whose key is not provably gone keeps the iOS behaviour (unreadable,
+      alert, never overwritten silently).
+    - **App Lock (L2):** `AppAccessController.hasNoUnlockPath` is true only while locked, with no strong biometric, and
+      when the vault lists ≥ 1 wallet and proves every device key lost; the lock screen then explains it and offers
+      "Continue Without App Lock", which proves it again and turns App Lock off (persisted). A wrong password, an
+      unreadable wallet list or one live key keeps App Lock closed. It authorises nothing about a wallet.
+    - **Re-import (L3):** for wallets whose sidecar cannot be authenticated, the store keeps the `walletKeyId` the sidecar
+      *claims* (`PublicWalletRepository.unverifiedWalletKeyId`, private to the store) for duplicate detection only:
+      `findExistingWallet` reports it as unverified, `createWallet` refuses it, setup leads to that wallet (Remove when
+      its key is gone, else Repair). It never resets a password, matches a request, signs or is displayed.
+    - **Wallets (L4):** each reload (and `refreshDeviceKeys`, called by `:app` on every foreground) proves the loss for
+      wallets without a ready index only (cached once proven: a loss is final) and records the lock-screen state
+      (`SignerState.lostKeyWalletIds`, `deviceSecure`). Cards and wallet pages then say "This Wallet Can’t Be Unlocked"
+      with Remove, or "Screen Lock Required" with Open Settings; Repair is offered only where it can work.
 
 Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
 scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.

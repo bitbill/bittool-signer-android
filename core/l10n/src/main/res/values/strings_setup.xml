@@ -19,9 +19,15 @@
     <!-- Android only (QA wallets-04): title of the screen-lock requirement, shown with crypto_device_lock_required on
          the first setup step and in Welcome's dialog (strings_onboarding has no copy of it) before anything is typed. -->
     <string name="setup_screen_lock_required">Screen Lock Required</string>
-    <!-- Android only (QA backlog B21): the password step when the phrase belongs to a wallet here whose device key is
-         provably gone (title: wallets_lost_key_title). "Delete Wallet" and "Remove This Wallet" name the controls of
-         the wallet page (delete_wallet, wallets_lost_key_remove). -->
-    <string name="setup_lost_key_message">This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.</string>
+    <!-- Android only (QA backlog B21, L4): the password step when the phrase belongs to a wallet here whose device key is
+         provably gone (title: wallets_lost_key_title). "Remove This Wallet" names the control of the wallet page
+         (wallets_lost_key_remove): use the same words. -->
+    <string name="setup_lost_key_message">This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.</string>
     <string name="setup_lost_key_open_wallet">Open Wallet</string>
+    <!-- Android only (QA L3): the password step when the phrase belongs to a wallet here whose public data can no longer
+         be verified (its key is fine), so it needs the wallet page's Repair (with its password) instead of a second
+         import. Title of the step. -->
+    <string name="setup_repair_duplicate_title">This Wallet Needs Repair</string>
+    <!-- Text of that step; "Repair Wallet Data" names the control of the wallet page (iOS repair_wallet_data). -->
+    <string name="setup_repair_duplicate_message">This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.</string>
 </resources>

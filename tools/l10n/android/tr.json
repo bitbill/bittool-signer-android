@@ -266,8 +266,8 @@
    "value": "Ekran kilidi gerekli"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Bu kurtarma ifadesi, bu cihazda cihaz anahtarı yok olmuş bir cüzdana ait; bu yüzden parolası sıfırlanamaz. O cüzdanı açın, “Cüzdanı sil”i, ardından “Bu cüzdanı kaldır”ı seçin ve ifadeyi yeniden içe aktarın."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Bu kurtarma ifadesi, bu cihazda cihaz anahtarı yok olmuş bir cüzdana ait; bu yüzden parolası sıfırlanamaz. O cüzdanı açın, “Bu cüzdanı kaldır”ı seçin ve ifadeyi yeniden içe aktarın."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Kaldır"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Bu cüzdanın onarılması gerekiyor"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Bu kurtarma ifadesi, bu cihazda genel verisinin onarılması gereken bir cüzdana ait. O cüzdanı açın ve parolasıyla “Cüzdan verisini onar”ı seçin. İfadeyi yeniden içe aktarmak yalnızca aynı anahtarlara sahip ikinci bir cüzdan ekler."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Etkinlik yeniden başladı"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "value": "Önceki etkinlik kaydını koruyan anahtar, bu cihazın ekran kilidi kaldırıldığında silindi; bu yüzden o kayıt artık okunamıyor. Yeni imzalar burada yeniden listelenir. Cüzdanlarınız ve zaten oluşturduğunuz imzalar bundan etkilenmez."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Kilidi açmanın yolu yok"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "value": "Bu cihazın ekran kilidi kaldırıldığında buradaki tüm cüzdanların cihaz anahtarları silindi; bu yüzden hiçbir cüzdan parolası BitTool Signer’ın kilidini açamaz ve parmak izi ya da yüzle kilit açma da kurulu değil. Uygulamayı açmak için uygulama kilidi olmadan devam edin, ardından bu cüzdanları kaldırın ve kurtarma ifadelerini yeniden içe aktarın. Paranız etkilenmez."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Uygulama kilidi olmadan devam et"
   }
  }
 }

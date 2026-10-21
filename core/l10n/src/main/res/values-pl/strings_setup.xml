@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">Fraza jest znów ukryta, ale zrzut ekranu może już ją zawierać. Usuń go z galerii i ze wszystkich zsynchronizowanych kopii, a zapisaną kopię trzymaj offline.</string>
     <string name="setup_screenshot_may_contain">Zrzut ekranu może zawierać Twoją frazę odzyskiwania lub niektóre jej słowa. Usuń go z galerii i ze wszystkich zsynchronizowanych kopii, a zapisaną kopię trzymaj offline.</string>
     <string name="setup_screen_lock_required">Wymagana blokada ekranu</string>
-    <string name="setup_lost_key_message">Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego klucza urządzenia już nie ma, więc jego hasła nie da się zresetować. Otwórz ten portfel, wybierz „Usuń portfel”, a potem „Usuń ten portfel” i zaimportuj frazę ponownie.</string>
+    <string name="setup_lost_key_message">Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego klucza urządzenia już nie ma, więc jego hasła nie da się zresetować. Otwórz ten portfel, wybierz „Usuń ten portfel” i zaimportuj frazę ponownie.</string>
     <string name="setup_lost_key_open_wallet">Otwórz portfel</string>
+    <string name="setup_repair_duplicate_title">Ten portfel wymaga naprawy</string>
+    <string name="setup_repair_duplicate_message">Ta fraza odzyskiwania należy do portfela na tym urządzeniu, którego dane publiczne wymagają naprawy. Otwórz ten portfel i wybierz „Napraw dane portfela”, podając jego hasło. Ponowny import frazy dodałby tylko drugi portfel z tymi samymi kluczami.</string>
 </resources>

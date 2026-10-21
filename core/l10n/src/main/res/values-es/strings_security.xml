@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">La biometría está bloqueada tras demasiados intentos. Usa una contraseña de cartera o desbloquea antes tu teléfono con su bloqueo de pantalla.</string>
     <string name="security_delete_footer_biometric">Para eliminarla se pedirá una confirmación biométrica y después la contraseña de esta cartera.</string>
     <string name="security_overlay_blocked">Otra app se superpone a BitTool Signer. Ciérrala e inténtalo de nuevo.</string>
+    <string name="security_no_unlock_path_title">No hay forma de desbloquear</string>
+    <string name="security_no_unlock_path_message">Las claves de dispositivo de todas las carteras de aquí se eliminaron al quitar el bloqueo de pantalla de este dispositivo, así que ninguna contraseña de cartera puede desbloquear BitTool Signer, y no hay configurado ningún desbloqueo con huella digital o facial. Continúa sin el bloqueo de la app para abrirla; después quita estas carteras e importa de nuevo sus frases de recuperación. Los fondos no se ven afectados.</string>
+    <string name="security_no_unlock_path_continue">Continuar sin bloqueo de la app</string>
     <string name="security_app_lock_save_failed">No se ha podido cambiar el bloqueo de la app. Inténtalo de nuevo.</string>
 </resources>

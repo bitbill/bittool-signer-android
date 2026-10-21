@@ -53,6 +53,25 @@ data class SignerState(
      * exists so the Activity screen *may* offer "Clear Activity" as the explicit recovery path if product decides so.
      */
     val activityUnreadable: Boolean = false,
+    /**
+     * Android-only (QA L1): the journal's Keystore key was provably lost (removing the device's screen lock deletes
+     * it), so the store started a new, empty journal instead of reporting "could not be read" on every load. The Activity
+     * tab tells the person once, until [SignerStore.acknowledgeActivityRestart]; persisted across launches.
+     */
+    val activityRestarted: Boolean = false,
+    /**
+     * Android-only (QA L4): the wallets without a ready public index whose device key is provably gone
+     * (`WalletVault.isDeviceKeyLost`), looked at by every reload and [SignerStore.refreshDeviceKeys]. Such a wallet can
+     * never be unlocked or repaired; the only way on is "Remove This Wallet" and a new import. A proven loss is final,
+     * so it is not proven again for as long as the wallet is listed. Empty without a secure lock screen ([deviceSecure]).
+     * Wallets with a ready index are not looked at here (the Delete page and every password operation still are).
+     */
+    val lostKeyWalletIds: Set<WalletId> = emptySet(),
+    /**
+     * Android-only (QA L4): the device had a secure lock screen at the last look (reload, [SignerStore.refreshDeviceKeys]).
+     * Without one no wallet can be unlocked or repaired ("Set a screen lock…").
+     */
+    val deviceSecure: Boolean = true,
     /** A signature is in flight (Sign buttons show a spinner, the authorize sheet cannot be dismissed). */
     val busy: Boolean = false,
     /**
@@ -95,6 +114,9 @@ data class SignerState(
     fun fingerprint(id: WalletId): String? = publicWallets[id]?.displayFingerprint
 
     fun isDuplicate(id: WalletId): Boolean = id in duplicateWalletIds
+
+    /** QA L4: [id]'s device key is provably gone (see [lostKeyWalletIds]); only "Remove This Wallet" helps. */
+    fun hasLostDeviceKey(id: WalletId): Boolean = id in lostKeyWalletIds
 }
 
 /**

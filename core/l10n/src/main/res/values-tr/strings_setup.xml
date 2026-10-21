@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">İfade yeniden gizlendi ama ekran görüntüsü onu çoktan içeriyor olabilir. Galerinizden ve eşitlenmiş tüm kopyalardan silin; yazılı bir yedeği çevrimdışı saklayın.</string>
     <string name="setup_screenshot_may_contain">Ekran görüntüsü kurtarma ifadenizi veya bazı kelimelerini içeriyor olabilir. Galerinizden ve eşitlenmiş tüm kopyalardan silin; yazılı bir yedeği çevrimdışı saklayın.</string>
     <string name="setup_screen_lock_required">Ekran kilidi gerekli</string>
-    <string name="setup_lost_key_message">Bu kurtarma ifadesi, bu cihazda cihaz anahtarı yok olmuş bir cüzdana ait; bu yüzden parolası sıfırlanamaz. O cüzdanı açın, “Cüzdanı sil”i, ardından “Bu cüzdanı kaldır”ı seçin ve ifadeyi yeniden içe aktarın.</string>
+    <string name="setup_lost_key_message">Bu kurtarma ifadesi, bu cihazda cihaz anahtarı yok olmuş bir cüzdana ait; bu yüzden parolası sıfırlanamaz. O cüzdanı açın, “Bu cüzdanı kaldır”ı seçin ve ifadeyi yeniden içe aktarın.</string>
     <string name="setup_lost_key_open_wallet">Cüzdanı aç</string>
+    <string name="setup_repair_duplicate_title">Bu cüzdanın onarılması gerekiyor</string>
+    <string name="setup_repair_duplicate_message">Bu kurtarma ifadesi, bu cihazda genel verisinin onarılması gereken bir cüzdana ait. O cüzdanı açın ve parolasıyla “Cüzdan verisini onar”ı seçin. İfadeyi yeniden içe aktarmak yalnızca aynı anahtarlara sahip ikinci bir cüzdan ekler.</string>
 </resources>

@@ -1,11 +1,5 @@
 package com.bittool.signer.feature.setup.flow
 
-import android.app.Activity
-import android.app.admin.DevicePolicyManager
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.ui.security.openScreenLockSettings
 import com.bittool.signer.feature.setup.ui.LinkButton
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -48,24 +43,6 @@ internal fun DeviceLockNotice(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Opens the system page that sets a screen lock ("Choose a screen lock"), or the security settings, or Settings, the
- * first one this device has. Nothing is returned: the flow re-checks the lock screen when it resumes.
- */
-internal fun openScreenLockSettings(context: Context) {
-    val actions = listOf(DevicePolicyManager.ACTION_SET_NEW_PASSWORD, Settings.ACTION_SECURITY_SETTINGS, Settings.ACTION_SETTINGS)
-    for (action in actions) {
-        val intent = Intent(action).apply { if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-        try {
-            context.startActivity(intent)
-            return
-        } catch (_: ActivityNotFoundException) {
-            // The next, more general page.
-        } catch (_: SecurityException) {
-            // A restricted profile can refuse the direct page; the next one is plain Settings navigation.
-        }
-    }
-}
 
 internal const val DEVICE_LOCK_NOTICE_TAG = "setup.deviceLock"
 internal const val OPEN_LOCK_SETTINGS_TAG = "setup.openLockSettings"

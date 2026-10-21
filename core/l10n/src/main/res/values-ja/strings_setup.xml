@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">フレーズは再び隠しましたが、スクリーンショットにはすでに写っている可能性があります。ギャラリーや同期されたコピーからも削除し、手書きのバックアップをオフラインで保管してください。</string>
     <string name="setup_screenshot_may_contain">スクリーンショットにリカバリーフレーズ、またはその一部の単語が写っている可能性があります。ギャラリーや同期されたコピーからも削除し、手書きのバックアップをオフラインで保管してください。</string>
     <string name="setup_screen_lock_required">画面ロックが必要です</string>
-    <string name="setup_lost_key_message">このリカバリーフレーズは、この端末にあるウォレットのものですが、そのウォレットのデバイス鍵が失われているため、パスワードを再設定できません。そのウォレットを開いて「ウォレットを削除」、続いて「このウォレットを削除」を選んでから、フレーズをもう一度インポートしてください。</string>
+    <string name="setup_lost_key_message">このリカバリーフレーズは、この端末にあるウォレットのものですが、そのウォレットのデバイス鍵が失われているため、パスワードを再設定できません。そのウォレットを開いて「このウォレットを削除」を選んでから、フレーズをもう一度インポートしてください。</string>
     <string name="setup_lost_key_open_wallet">ウォレットを開く</string>
+    <string name="setup_repair_duplicate_title">このウォレットは修復が必要です</string>
+    <string name="setup_repair_duplicate_message">このリカバリーフレーズは、この端末にある、公開データの修復が必要なウォレットのものです。そのウォレットを開き、パスワードを使って「ウォレットデータを修復」を選んでください。フレーズをもう一度インポートしても、同じ鍵を持つ2つ目のウォレットが追加されるだけです。</string>
 </resources>

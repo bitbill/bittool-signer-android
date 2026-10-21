@@ -266,8 +266,8 @@
    "value": "Kailangan ng screen lock"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero wala na ang device key ng wallet na iyon, kaya hindi ma-reset ang password nito. Buksan ang wallet na iyon, piliin ang “Burahin ang wallet”, tapos ang “Alisin ang wallet na ito”, at i-import muli ang phrase."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero wala na ang device key ng wallet na iyon, kaya hindi ma-reset ang password nito. Buksan ang wallet na iyon, piliin ang “Alisin ang wallet na ito”, at i-import muli ang phrase."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Alisin"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Kailangang ayusin ang wallet na ito"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero kailangang ayusin ang public data ng wallet na iyon. Buksan ang wallet na iyon at piliin ang “Ayusin ang data ng wallet” gamit ang password nito. Kapag in-import muli ang phrase, magdadagdag lang ito ng pangalawang wallet na may parehong mga key."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Nagsimula muli ang aktibidad"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "value": "Nabura ang key na nagpoprotekta sa dating talaan ng aktibidad nang alisin ang screen lock ng device na ito, kaya hindi na mababasa ang talaang iyon. Muling nakalista rito ang mga bagong lagda. Hindi apektado ang mga wallet mo at ang mga lagdang nagawa mo na."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Walang paraan para mag-unlock"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "value": "Nabura ang mga device key ng lahat ng wallet dito nang alisin ang screen lock ng device na ito, kaya walang password ng wallet na makakapag-unlock sa BitTool Signer, at walang naka-set up na fingerprint o face unlock. Magpatuloy nang walang App Lock para buksan ang app, tapos alisin ang mga wallet na ito at i-import muli ang mga recovery phrase nila. Hindi apektado ang pondo."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Magpatuloy nang walang App Lock"
   }
  }
 }

@@ -95,7 +95,7 @@ data class RootUiState(
  * | App Lock engages, or screen capture starts | `SignerStore.suspendSession()` |
  * | resumed ∧ unlocked ∧ not captured ∧ stage Main changes | `setConnectPrefetchAllowed` (also initially) |
  * | lock or capture changes | the window gate: open only when unlocked and not captured |
- * | `onStart` / `onStop` (not a configuration change) | [onEnterForeground] / [onEnterBackground] |
+ * | `onStart` / `onStop` (not a configuration change) | [onEnterForeground] (+ `SignerStore.refreshDeviceKeys`, QA L4) / [onEnterBackground] |
  *
  * Lives as long as the activity's `ViewModelStore` (configuration changes included); every collector runs on the main
  * thread (`viewModelScope`, `Main.immediate`).
@@ -186,9 +186,14 @@ class RootViewModel @Inject constructor(
     // ---------------------------------------------------------------------------------------------------------------
     // Lifecycle (MainActivity)
 
-    /** `onStart`: App Lock's grace decision, before the first frame (iOS `willEnterForeground`). */
+    /**
+     * `onStart`: App Lock's grace decision, before the first frame (iOS `willEnterForeground`). Android-only (QA L4): the
+     * store then looks at the lock screen and the device keys again, since a screen lock removed or set in Settings
+     * meanwhile changes which wallets can still be unlocked.
+     */
     fun onEnterForeground() {
         access.willEnterForeground()
+        viewModelScope.launch { runCatchingCancellable { store.refreshDeviceKeys() } }
     }
 
     /**

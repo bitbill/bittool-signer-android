@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
@@ -50,7 +51,7 @@ import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.navigation.WalletRoute
-import com.bittool.signer.core.ui.text.asString
+import com.bittool.signer.core.l10n.resolve
 import com.bittool.signer.feature.setup.ui.LocalRecoverySessions
 import com.bittool.signer.feature.setup.ui.OverlayGuardHost
 import kotlin.coroutines.cancellation.CancellationException
@@ -92,7 +93,8 @@ internal fun SetupFlow(
             }
         }
     }
-    val defaultName = model.defaultName.asString()
+    val resources = LocalResources.current
+    val defaultName = remember(model, resources) { model.defaultName { it.resolve(resources) } }
     LaunchedEffect(model) { model.seedName(defaultName) }
     // Back from "Open Settings" (or anything else): a screen lock set meanwhile unlocks the first step (QA wallets-04).
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.refreshDeviceSecurity() }

@@ -226,6 +226,9 @@ class DefaultWalletVault @Inject constructor(
         }
     }
 
+    /** Outside the mutex on purpose: a lock-screen query must not wait for a 600,000-iteration unlock. */
+    override suspend fun isDeviceSecure(): Boolean = withContext(io) { deviceKeys.isDeviceSecure() }
+
     override suspend fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = mutex.withLock {
         withContext(io) {
             if (createIfMissing) {

@@ -210,12 +210,32 @@ class AesGcmJournalCipher : JournalCipher {
     /** How many times [seal] ran. */
     val seals = AtomicInteger()
 
+    /** Set by [loseKeyForGood] until the next [seal] creates a new key (what the real cipher's Keystore proof shows). */
+    @Volatile
+    private var keyProvablyGone = false
+
+    /** How many times [discardLostKey] was asked. */
+    val lossChecks = AtomicInteger()
+
+    /** A different key: the journal no longer opens, and nothing proves that the old key is gone (a damaged journal). */
     fun loseKey() {
         key = newKey()
     }
 
+    /** The key is gone for good (the screen lock was removed): the journal no longer opens and [discardLostKey] says so. */
+    fun loseKeyForGood() {
+        key = newKey()
+        keyProvablyGone = true
+    }
+
+    override fun discardLostKey(): Boolean {
+        lossChecks.incrementAndGet()
+        return keyProvablyGone
+    }
+
     override fun seal(plaintext: ByteArray): ByteArray {
         seals.incrementAndGet()
+        keyProvablyGone = false
         val iv = ByteArray(12).also(random::nextBytes)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply {
             init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, iv))

@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">عُرضت تحذيرات</string>
     <string name="activity_partial_signature_created">أُنشئ توقيع جزئي</string>
     <string name="activity_unreadable_title">النشاط غير متاح</string>
+    <string name="activity_restarted_title">بدأ سجل النشاط من جديد</string>
+    <string name="activity_restarted_message">حُذف المفتاح الذي كان يحمي سجل النشاط السابق عند إزالة قفل الشاشة من هذا الجهاز، لذا لم تعد قراءة ذلك السجل ممكنة. تظهر التوقيعات الجديدة هنا من جديد. لا تتأثر محافظك ولا التوقيعات التي أنشأتها من قبل.</string>
     <string name="activity_export_failed">تعذّر حفظ الملف.</string>
 </resources>

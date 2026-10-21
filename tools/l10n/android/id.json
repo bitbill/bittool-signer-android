@@ -266,8 +266,8 @@
    "value": "Kunci layar diperlukan"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Frasa pemulihan ini milik dompet di perangkat ini yang kunci perangkatnya sudah hilang, jadi kata sandinya tidak bisa disetel ulang. Buka dompet itu, pilih “Hapus dompet”, lalu “Keluarkan dompet ini”, dan impor lagi frasanya."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Frasa pemulihan ini milik dompet di perangkat ini yang kunci perangkatnya sudah hilang, jadi kata sandinya tidak bisa disetel ulang. Buka dompet itu, pilih “Keluarkan dompet ini”, lalu impor lagi frasanya."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Keluarkan"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Dompet ini perlu diperbaiki"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Frasa pemulihan ini milik dompet di perangkat ini yang data publiknya perlu diperbaiki. Buka dompet itu dan pilih “Perbaiki data dompet” dengan kata sandinya. Mengimpor lagi frasa ini hanya akan menambahkan dompet kedua dengan kunci yang sama."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Aktivitas dimulai lagi"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "value": "Kunci yang melindungi catatan aktivitas sebelumnya terhapus saat kunci layar perangkat ini dihapus, jadi catatan itu tidak bisa dibaca lagi. Tanda tangan baru kembali tercantum di sini. Dompet Anda dan tanda tangan yang sudah Anda buat tidak terpengaruh."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Tidak ada cara membuka kunci"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "value": "Kunci perangkat semua dompet di sini terhapus saat kunci layar perangkat ini dihapus, jadi tidak ada kata sandi dompet yang bisa membuka kunci BitTool Signer, dan buka kunci dengan sidik jari atau wajah belum diatur. Lanjutkan tanpa kunci aplikasi untuk membuka aplikasi, lalu keluarkan dompet-dompet ini dan impor lagi frasa pemulihannya. Dana tidak terpengaruh."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Lanjutkan tanpa kunci aplikasi"
   }
  }
 }

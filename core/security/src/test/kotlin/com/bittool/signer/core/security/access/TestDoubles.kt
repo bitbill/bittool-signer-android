@@ -74,17 +74,39 @@ internal class TestVault(private val clock: FakeWallClock = FakeWallClock()) : W
         var retryAfterMillis = 0L
     }
 
-    private val wallets = mutableMapOf<WalletId, Entry>()
+    private val wallets = linkedMapOf<WalletId, Entry>()
     var verifications = 0
+        private set
+
+    /** QA L2: wallets whose device key is provably gone (their password check fails uncounted, as in the real vault). */
+    val lostKeys = mutableSetOf<WalletId>()
+
+    /** When set, [list] throws it (an unreadable wallet file fails the whole list). */
+    var listFailure: Throwable? = null
+
+    /** How many times [isDeviceKeyLost] was asked. */
+    var lossChecks = 0
         private set
 
     fun add(id: WalletId, password: String) {
         wallets[id] = Entry(password)
     }
 
+    override suspend fun list(): List<VaultMetadata> {
+        listFailure?.let { throw it }
+        return wallets.keys.mapIndexed { index, id -> VaultMetadata(id, "Wallet ${index + 1}", index.toLong()) }
+    }
+
+    override suspend fun isDeviceKeyLost(id: WalletId): Boolean {
+        lossChecks += 1
+        if (id !in wallets) throw VaultError.WalletNotFound()
+        return id in lostKeys
+    }
+
     override suspend fun verifyPassword(id: WalletId, password: SecretText) {
         verifications += 1
         val entry = wallets[id] ?: throw VaultError.WalletNotFound()
+        if (id in lostKeys) throw VaultError.DeviceKeyUnavailable()
         val now = clock.currentTimeMillis()
         if (now < entry.retryAfterMillis) {
             throw VaultError.TemporarilyLocked(maxOf(1L, ceil((entry.retryAfterMillis - now) / 1000.0).toLong()))
@@ -98,7 +120,6 @@ internal class TestVault(private val clock: FakeWallClock = FakeWallClock()) : W
         entry.retryAfterMillis = 0L
     }
 
-    override suspend fun list(): List<VaultMetadata> = unused()
     override suspend fun create(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText, id: WalletId): VaultMetadata = unused()
     override suspend fun unlock(id: WalletId, password: SecretText): VaultSecret = unused()
     override suspend fun changePassword(id: WalletId, currentPassword: SecretText, newPassword: SecretText): Unit = unused()

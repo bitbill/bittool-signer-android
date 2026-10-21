@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">La phrase est de nouveau masquée, mais la capture d’écran la contient peut-être déjà. Supprimez-la de votre galerie et de toute copie synchronisée, et conservez une sauvegarde écrite hors ligne.</string>
     <string name="setup_screenshot_may_contain">La capture d’écran contient peut-être votre phrase de récupération ou certains de ses mots. Supprimez-la de votre galerie et de toute copie synchronisée, et conservez une sauvegarde écrite hors ligne.</string>
     <string name="setup_screen_lock_required">Verrouillage de l’écran requis</string>
-    <string name="setup_lost_key_message">Cette phrase de récupération appartient à un portefeuille de cet appareil dont la clé d’appareil a disparu : son mot de passe ne peut donc pas être réinitialisé. Ouvrez ce portefeuille, choisissez « Supprimer le portefeuille », puis « Retirer ce portefeuille », et importez à nouveau la phrase.</string>
+    <string name="setup_lost_key_message">Cette phrase de récupération appartient à un portefeuille de cet appareil dont la clé d’appareil a disparu : son mot de passe ne peut donc pas être réinitialisé. Ouvrez ce portefeuille, choisissez « Retirer ce portefeuille », puis importez à nouveau la phrase.</string>
     <string name="setup_lost_key_open_wallet">Ouvrir le portefeuille</string>
+    <string name="setup_repair_duplicate_title">Ce portefeuille doit être réparé</string>
+    <string name="setup_repair_duplicate_message">Cette phrase de récupération appartient à un portefeuille de cet appareil dont les données publiques doivent être réparées. Ouvrez ce portefeuille et choisissez « Réparer les données du portefeuille » avec son mot de passe. Importer à nouveau la phrase ne ferait qu’ajouter un second portefeuille avec les mêmes clés.</string>
 </resources>

@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">La frase volvió a ocultarse, pero la captura puede contenerla ya. Elimínala de tu galería y de cualquier copia sincronizada, y conserva un respaldo escrito sin conexión.</string>
     <string name="setup_screenshot_may_contain">La captura puede contener tu frase de recuperación o algunas de sus palabras. Elimínala de tu galería y de cualquier copia sincronizada, y conserva un respaldo escrito sin conexión.</string>
     <string name="setup_screen_lock_required">Bloqueo de pantalla necesario</string>
-    <string name="setup_lost_key_message">Esta frase de recuperación pertenece a una billetera de este dispositivo cuya clave de dispositivo ya no existe, así que no se puede restablecer su contraseña. Abre esa billetera, elige “Eliminar la billetera” y luego “Quitar esta billetera”, e importa de nuevo la frase.</string>
+    <string name="setup_lost_key_message">Esta frase de recuperación pertenece a una billetera de este dispositivo cuya clave de dispositivo ya no existe, así que no se puede restablecer su contraseña. Abre esa billetera, elige “Quitar esta billetera” e importa de nuevo la frase.</string>
     <string name="setup_lost_key_open_wallet">Abrir la billetera</string>
+    <string name="setup_repair_duplicate_title">Esta billetera necesita reparación</string>
+    <string name="setup_repair_duplicate_message">Esta frase de recuperación pertenece a una billetera de este dispositivo cuyos datos públicos necesitan reparación. Abre esa billetera y elige “Reparar los datos de la billetera” con su contraseña. Importar de nuevo la frase solo agregaría una segunda billetera con las mismas claves.</string>
 </resources>

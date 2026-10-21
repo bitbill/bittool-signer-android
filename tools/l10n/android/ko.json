@@ -266,8 +266,8 @@
    "value": "화면 잠금이 필요합니다"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "이 복구 구문은 이 기기에 있는 지갑의 것이지만, 그 지갑의 기기 키가 사라져 비밀번호를 재설정할 수 없습니다. 그 지갑을 열어 ‘지갑 삭제’를 선택한 다음 ‘이 지갑 제거’를 선택하고, 복구 구문을 다시 가져오세요."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "이 복구 구문은 이 기기에 있는 지갑의 것이지만, 그 지갑의 기기 키가 사라져 비밀번호를 재설정할 수 없습니다. 그 지갑을 열어 ‘이 지갑 제거’를 선택하고, 복구 구문을 다시 가져오세요."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "제거"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "이 지갑은 복구가 필요합니다"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "이 복구 구문은 이 기기에 있는, 공개 데이터 복구가 필요한 지갑의 것입니다. 그 지갑을 열어 지갑 암호로 ‘지갑 데이터 복구’를 선택하세요. 복구 구문을 다시 가져오면 같은 키를 가진 두 번째 지갑만 추가됩니다."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "활동 기록을 새로 시작했습니다"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "value": "이전 활동 기록을 보호하던 키가 이 기기의 화면 잠금을 제거할 때 삭제되어, 그 기록은 더 이상 읽을 수 없습니다. 새 서명은 다시 여기에 표시됩니다. 지갑과 이미 만든 서명에는 영향이 없습니다."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "잠금을 해제할 방법이 없습니다"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "value": "이 기기의 화면 잠금을 제거할 때 여기 있는 모든 지갑의 기기 키가 삭제되어, 어떤 지갑 암호로도 BitTool Signer의 잠금을 해제할 수 없고 지문 또는 얼굴 인식도 설정되어 있지 않습니다. 앱 잠금 없이 계속하여 앱을 연 다음, 이 지갑들을 제거하고 각 복구 구문을 다시 가져오세요. 자산에는 영향이 없습니다."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "앱 잠금 없이 계속"
   }
  }
 }

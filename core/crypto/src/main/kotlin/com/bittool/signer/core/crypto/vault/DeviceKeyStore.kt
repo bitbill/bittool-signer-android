@@ -51,9 +51,24 @@ interface DeviceKeyStore {
  * [SignerFiles.RECEIPTS_KEY_ALIAS] (created on first [seal]; `setUnlockedDeviceRequired(true)` on API 28+). Output layout
  * `magic "BTSR" ‖ version 0x01 ‖ iv(12) ‖ ciphertext ‖ tag(16)`, the header bytes as AAD. [open] throws
  * [VaultError.AuthenticationFailed] for a bad tag, unknown magic/version or a lost key; the caller then reports
- * "The local activity record could not be read." and never overwrites the file silently.
+ * "The local activity record could not be read." and never overwrites the file silently — unless [discardLostKey]
+ * proves that no key can ever open it again (QA L1). Members added after Wave 1 ([discardLostKey]) have conservative
+ * defaults so every existing implementation keeps compiling.
  */
 interface JournalCipher {
     fun seal(plaintext: ByteArray): ByteArray
     fun open(sealed: ByteArray): ByteArray
+
+    /**
+     * Android-only (QA L1): whether the journal key is **provably** gone, with the same proof as
+     * [DeviceKeyStore.isKeyLost] (no Keystore entry while Keystore demonstrably answers, or a permanently invalidated
+     * one) — removing the device's screen lock deletes it. Only when that is proven, what is left of the key (an
+     * invalidated entry) is removed, the next [seal] may create a new key, and true is returned: nothing can ever open
+     * what the lost key sealed, so the caller may start the journal again. A key that only fails to load, a locked
+     * device or a Keystore that does not answer is not a loss (false, nothing changes). Never throws.
+     *
+     * The default is false: an implementation that cannot prove a loss never lets an unreadable journal be replaced
+     * without the person's explicit "Clear Activity".
+     */
+    fun discardLostKey(): Boolean = false
 }

@@ -130,6 +130,20 @@ interface SignerStore {
     suspend fun existingWallet(mnemonic: SecretText, passphrase: SecretText): WalletId?
 
     /**
+     * [existingWallet] plus the Android-only case of QA L3: a wallet here whose public index **cannot be authenticated**
+     * (the public-data key was lost with the screen lock, or the sidecar is damaged) but whose sidecar claims the same
+     * `walletKeyId` (`PublicWalletRepository.unverifiedWalletKeyId`) is returned as [ExistingWalletMatch.verified] =
+     * false, so the import is refused ([createWallet] refuses it too) and the person is led to that wallet instead of
+     * getting a second wallet with the same keys. The unverified claim serves this duplicate detection only: it never
+     * resets a password, matches a request or signs. A ready wallet wins over an unverified one. One public derivation,
+     * as [existingWallet].
+     *
+     * The default reports [existingWallet]'s answer as verified.
+     */
+    suspend fun findExistingWallet(mnemonic: SecretText, passphrase: SecretText): ExistingWalletMatch? =
+        existingWallet(mnemonic, passphrase)?.let { ExistingWalletMatch(it, verified = true) }
+
+    /**
      * iOS `resetPassword` (§5.3): the wallet must have an index ("This wallet needs repair before its password can be
      * reset."); the phrase must derive the same `walletKeyId` ("This recovery phrase belongs to a different wallet.");
      * then the vault re-encrypts, the session is suspended and the list reloaded.
@@ -184,6 +198,15 @@ interface SignerStore {
     suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) {
         throw VaultError.DeviceKeyLossUnconfirmed()
     }
+
+    /**
+     * Android-only (QA L4): looks at the lock screen and at the device keys of the wallets without a ready index again —
+     * `:app` calls it whenever the app returns to the foreground, where the person may have just removed or set a screen
+     * lock in Settings. When the lock-screen state changed (removing it deletes every device key), the whole list is
+     * reloaded; otherwise only [SignerState.lostKeyWalletIds] is brought up to date. Nothing when the last load failed.
+     * No password, no counted attempt. The default does nothing.
+     */
+    suspend fun refreshDeviceKeys() {}
 
     /** Decrypts the wallet's secret for the Recovery Phrase page (guarded by both epochs). The caller closes it. */
     suspend fun reveal(walletId: WalletId, password: SecretText): VaultSecret
@@ -266,9 +289,23 @@ interface SignerStore {
     suspend fun clearHistory()
 
     /**
+     * Android-only (QA L1): the person read the Activity tab's notice that the journal was started again after its key
+     * was lost; [SignerState.activityRestarted] becomes false and stays so after a relaunch. The default does nothing.
+     */
+    suspend fun acknowledgeActivityRestart() {}
+
+    /**
      * Re-reviews a stored request offline (fresh runtime, no password, no matching, never touches the pending
      * request): ≤ 32,768 UTF-8 bytes and parseable ("The stored request could not be read."), same `requestHash`
      * case-insensitively and non-empty fields ("The stored request does not match this signature's fingerprint.").
      */
     suspend fun reviewStoredRequest(json: String, expectedRequestHash: String): TransactionReview
 }
+
+/**
+ * The wallet a phrase and passphrase already belong to ([SignerStore.findExistingWallet]). [verified]: its public index
+ * is authenticated (the iOS duplicate, whose password the phrase may reset); otherwise only its unauthenticated sidecar
+ * claims the same identity (QA L3): no reset, only the way to that wallet's page (Repair, or "Remove This Wallet" when
+ * its device key is gone).
+ */
+data class ExistingWalletMatch(val walletId: WalletId, val verified: Boolean)

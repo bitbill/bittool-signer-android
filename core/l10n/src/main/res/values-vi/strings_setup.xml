@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">Cụm từ đã được ẩn lại, nhưng ảnh chụp màn hình có thể đã chứa nó. Hãy xóa ảnh khỏi thư viện ảnh và khỏi mọi bản sao đã đồng bộ, rồi giữ một bản ghi tay ở chế độ ngoại tuyến.</string>
     <string name="setup_screenshot_may_contain">Ảnh chụp màn hình có thể chứa cụm từ khôi phục của bạn hoặc một số từ trong đó. Hãy xóa ảnh khỏi thư viện ảnh và khỏi mọi bản sao đã đồng bộ, rồi giữ một bản ghi tay ở chế độ ngoại tuyến.</string>
     <string name="setup_screen_lock_required">Cần đặt khóa màn hình</string>
-    <string name="setup_lost_key_message">Cụm từ khôi phục này thuộc về một ví trên thiết bị này mà khóa thiết bị của ví đã mất, nên không thể đặt lại mật khẩu của ví. Hãy mở ví đó, chọn “Xóa ví”, rồi “Gỡ ví này”, sau đó nhập lại cụm từ.</string>
+    <string name="setup_lost_key_message">Cụm từ khôi phục này thuộc về một ví trên thiết bị này mà khóa thiết bị của ví đã mất, nên không thể đặt lại mật khẩu của ví. Hãy mở ví đó, chọn “Gỡ ví này”, rồi nhập lại cụm từ.</string>
     <string name="setup_lost_key_open_wallet">Mở ví</string>
+    <string name="setup_repair_duplicate_title">Ví này cần được sửa</string>
+    <string name="setup_repair_duplicate_message">Cụm từ khôi phục này thuộc về một ví trên thiết bị này có dữ liệu công khai cần được sửa. Hãy mở ví đó và chọn “Sửa dữ liệu ví” bằng mật khẩu của ví. Nhập lại cụm từ chỉ tạo thêm một ví thứ hai với cùng các khóa.</string>
 </resources>

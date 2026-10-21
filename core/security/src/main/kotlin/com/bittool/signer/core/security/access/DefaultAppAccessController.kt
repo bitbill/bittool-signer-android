@@ -214,6 +214,67 @@ internal class DefaultAppAccessController @Inject constructor(
         publish()
     }
 
+    override suspend fun hasNoUnlockPath(): Boolean = onMain {
+        awaitResolution()
+        if (!isEnabled || !isLocked || isInBackground) return@onMain false
+        proveNoUnlockPath()
+    }
+
+    /**
+     * QA L2: App Lock gives way only when it is proven that it can never be opened — the same reasoning as iOS standing
+     * aside for zero wallets (:119-127), where no password could open it either. The decision rests on Keystore
+     * evidence alone (the vault's loss proof), never on the store's published state.
+     */
+    override suspend fun continueWithoutUnlockPath(): Boolean = onMain {
+        awaitResolution()
+        if (!isEnabled || !isLocked) return@onMain true
+        if (isInBackground || isAuthenticating) throw AppIssue("App authentication is unavailable right now.")
+        val epoch = ++authenticationEpoch
+        isAuthenticating = true
+        error = null
+        publish()
+        try {
+            val noPath = proveNoUnlockPath()
+            requireAuthentication(epoch)
+            if (!noPath) return@onMain false
+            withContext(NonCancellable) {
+                try {
+                    persist(false)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w(TAG, e) { "App Lock preference could not be saved" }
+                    throw SignerException(UiText.Resource(R.string.security_app_lock_save_failed), e)
+                }
+                isEnabled = false
+                isLocked = false
+                backgroundTime = null
+                publish()
+            }
+            true
+        } finally {
+            if (epoch == authenticationEpoch) isAuthenticating = false
+            publish()
+        }
+    }
+
+    /**
+     * QA L2: strong biometrics cannot run, and the vault lists at least one wallet, every one with a provably lost
+     * device key. Short-circuits on the first wallet that is not proven lost (normally the first one: one Keystore
+     * look). Never throws except `CancellationException`; false when unsure.
+     */
+    private suspend fun proveNoUnlockPath(): Boolean {
+        if (biometric.isAvailable()) return false
+        return try {
+            val wallets = vault.list()
+            wallets.isNotEmpty() && wallets.all { vault.isDeviceKeyLost(it.id) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     /**
      * iOS `didEnterBackground()` (:169-175): "A true background transition counts; Face ID's temporary inactive phase
      * does not call this method and cannot cause an authentication loop."

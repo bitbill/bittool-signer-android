@@ -235,15 +235,19 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
  * Password, and a quick tap reached the duplicate refusal); the back arrow stays in place while saving, disabled, so
  * the title does not jump (setup-09; iOS hides it in a centred bar); the password pair stays in view with its checklist
  * while typing (setup-02); and a phrase whose wallet here can no longer be unlocked (lost device key, QA backlog B21)
- * explains that instead of offering a reset that cannot work, with the way to that wallet's page, where Delete Wallet
- * offers "Remove This Wallet" (B9).
+ * explains that instead of offering a reset that cannot work, with the way to that wallet's page, which offers
+ * "Remove This Wallet" (B9, L4). A phrase whose wallet here only an unauthenticated sidecar names (QA L3: its public
+ * index cannot be authenticated, but its key is fine) leads to that wallet's Repair the same way: importing it would
+ * make a second wallet with the same keys, and the unauthenticated identity never authorises a reset.
  */
 @Composable
 internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
     val focusManager = LocalFocusManager.current
     val lostKey = state.duplicateKeyLost && state.duplicateOf != null
-    val resetting = state.duplicateOf != null && !lostKey
+    val needsRepair = !lostKey && state.duplicateUnverified && state.duplicateOf != null
+    val cannotReset = lostKey || needsRepair
+    val resetting = state.duplicateOf != null && !cannotReset
     val create = state.intent == SetupIntent.Create
     val valid by remember { derivedStateOf { fields.passwordValid() } }
     SetupScaffold(
@@ -251,7 +255,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
             SetupTopBar(
                 title = stringResource(
                     when {
-                        lostKey -> if (create) L10n.string.new_wallet else L10n.string.import_wallet
+                        cannotReset -> if (create) L10n.string.new_wallet else L10n.string.import_wallet
                         resetting -> L10n.string.reset_password
                         else -> L10n.string.password
                     },
@@ -268,6 +272,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         title = stringResource(
             when {
                 lostKey -> L10n.string.wallets_lost_key_title
+                needsRepair -> L10n.string.setup_repair_duplicate_title
                 resetting -> L10n.string.reset_password
                 else -> L10n.string.set_a_password
             },
@@ -275,13 +280,14 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         message = stringResource(
             when {
                 lostKey -> L10n.string.setup_lost_key_message
+                needsRepair -> L10n.string.setup_repair_duplicate_message
                 resetting -> L10n.string.this_recovery_phrase_already_belongs_to_a_wallet_on
                 else -> L10n.string.the_password_encrypts_this_wallet_on_this_device_and
             },
         ),
         footer = {
             ErrorCallout(state.error)
-            if (lostKey) {
+            if (cannotReset) {
                 PrimaryButton(
                     text = stringResource(L10n.string.setup_lost_key_open_wallet),
                     onClick = model::openLostKeyWallet,
@@ -308,7 +314,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
             }
         },
     ) {
-        if (lostKey) {
+        if (cannotReset) {
             state.identity?.let { identity ->
                 SignerCard {
                     WalletIdentityHeader(name = identity.name, fingerprint = identity.fingerprint, avatarIdentity = identity.avatarIdentity)

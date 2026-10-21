@@ -55,11 +55,16 @@ import kotlinx.coroutines.flow.StateFlow
  * (`:feature:settings`). Navigation clicks are dropped unless the page is resumed (no double pushes during a transition).
  */
 fun NavGraphBuilder.walletsDestinations(navController: NavController) {
-    composable<WalletsRoute> {
+    composable<WalletsRoute>(
+        // The card of a wallet whose device key is gone opens the modal removal page right over the list (QA L4).
+        exitTransition = { keepUnderModal() },
+        popEnterTransition = { stayUnderModal() },
+    ) {
         WalletsScreen(
             onOpenWallet = dropUnlessResumedWith { id: WalletId -> navController.navigate(WalletDetailRoute(id)) },
             onPair = dropUnlessResumedWith { id: WalletId -> navController.navigate(ConnectRoute.walletLevel(id)) },
             onAddresses = dropUnlessResumedWith { id: WalletId -> navController.navigate(AddressesRoute(id)) },
+            onRemove = dropUnlessResumedWith { id: WalletId -> navController.navigate(DeleteWalletRoute(id.toString())) },
         )
     }
 

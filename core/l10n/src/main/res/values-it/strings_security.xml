@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">La biometria è bloccata dopo troppi tentativi. Usa una password del wallet oppure sblocca prima il telefono con il blocco schermo.</string>
     <string name="security_delete_footer_biometric">Per eliminarlo verrà chiesta una conferma biometrica e poi la password di questo wallet.</string>
     <string name="security_overlay_blocked">Un’altra app si sta sovrapponendo a BitTool Signer. Chiudila e riprova.</string>
+    <string name="security_no_unlock_path_title">Nessun modo per sbloccare</string>
+    <string name="security_no_unlock_path_message">Le chiavi di dispositivo di tutti i wallet qui sono state eliminate quando è stato rimosso il blocco schermo di questo dispositivo, quindi nessuna password di wallet può sbloccare BitTool Signer e non è configurato lo sblocco con l’impronta digitale o con il volto. Continua senza il blocco dell’app per aprirla, poi rimuovi questi wallet e importa di nuovo le loro frasi di recupero. I fondi non ne risentono.</string>
+    <string name="security_no_unlock_path_continue">Continua senza blocco dell’app</string>
     <string name="security_app_lock_save_failed">Non è stato possibile modificare il blocco dell’app. Riprova.</string>
 </resources>

@@ -29,6 +29,13 @@
     <string name="security_delete_footer_biometric">Deleting asks for biometric confirmation, then for this wallet’s password.</string>
     <!-- A decisive control refused a touch because another app's window covers it (gaps.md G4.3). -->
     <string name="security_overlay_blocked">Another app is drawing over BitTool Signer. Close it, then try again.</string>
+    <!-- Lock screen (QA L2): no unlock path can succeed. Every wallet's device key was deleted when the device's screen
+         lock was removed (Android also deletes the enrolled fingerprints then). Title of the explanation card. -->
+    <string name="security_no_unlock_path_title">No Way to Unlock</string>
+    <!-- Text of that card. -->
+    <string name="security_no_unlock_path_message">The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.</string>
+    <!-- The card's button: turns App Lock off and opens the app. -->
+    <string name="security_no_unlock_path_continue">Continue Without App Lock</string>
     <!-- The App Lock preference could not be written (DataStore I/O failure); App Lock is left unchanged. -->
     <string name="security_app_lock_save_failed">App Lock could not be changed. Try again.</string>
 </resources>

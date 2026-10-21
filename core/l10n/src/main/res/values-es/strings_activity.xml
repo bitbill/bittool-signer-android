@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Con advertencias</string>
     <string name="activity_partial_signature_created">Firma parcial creada</string>
     <string name="activity_unreadable_title">Actividad no disponible</string>
+    <string name="activity_restarted_title">Actividad iniciada de nuevo</string>
+    <string name="activity_restarted_message">La clave que protegía el registro de actividad anterior se eliminó al quitar el bloqueo de pantalla de este dispositivo, así que ese registro ya no se puede leer. Las firmas nuevas vuelven a aparecer aquí. Tus carteras y las firmas que ya creaste no se ven afectadas.</string>
     <string name="activity_export_failed">No se ha podido guardar el archivo.</string>
 </resources>

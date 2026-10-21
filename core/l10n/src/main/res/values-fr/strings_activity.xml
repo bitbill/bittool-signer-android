@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Avertissements affichés</string>
     <string name="activity_partial_signature_created">Signature partielle créée</string>
     <string name="activity_unreadable_title">Historique indisponible</string>
+    <string name="activity_restarted_title">Historique recommencé</string>
+    <string name="activity_restarted_message">La clé qui protégeait l’historique précédent a été supprimée lorsque le verrouillage de l’écran de cet appareil a été retiré : cet historique ne peut donc plus être lu. Les nouvelles signatures s’affichent de nouveau ici. Vos portefeuilles et les signatures déjà créées ne sont pas affectés.</string>
     <string name="activity_export_failed">Le fichier n’a pas pu être enregistré.</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.wallets.detail
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +62,7 @@ import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.core.ui.logo.ChainGlyph
 import com.bittool.signer.core.ui.logo.ChainLogo
+import com.bittool.signer.core.ui.security.openScreenLockSettings
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.core.ui.text.currentLocale
 import com.bittool.signer.core.ui.text.localizedLongName
@@ -92,6 +94,11 @@ data class WalletDetailActions(
  * repair notices, the four chains and Wallet Level under "Pair", receive addresses, security, rename and delete. Closes
  * itself when the wallet leaves the list.
  *
+ * Android-only (QA L4, production-04): Repair is offered only where it can work. A wallet whose device key is gone (the
+ * screen lock was removed) says "This Wallet Can’t Be Unlocked" with "Remove This Wallet" and nothing else (no password
+ * can help any of its other actions); without a screen lock the page says that one is needed first, with "Open
+ * Settings".
+ *
  * [passwordChanged] is the Change Password page's result (read by the destination glue from this page's back-stack
  * entry): the "Password Changed" toast shows once, then [onPasswordChangedShown] clears it.
  */
@@ -106,6 +113,7 @@ fun WalletDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val toast = rememberStatusToastState()
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val copied = stringResource(R.string.copied)
     val passwordChangedText = stringResource(R.string.password_changed)
     LaunchedEffect(uiState.gone) { if (uiState.gone) onClose() }
@@ -124,6 +132,7 @@ fun WalletDetailScreen(
             if (fingerprint != null && SignerClipboard.copy(context, fingerprint)) toast.show(copied)
         },
         onRename = viewModel::startRename,
+        onOpenLockSettings = { openScreenLockSettings(activity ?: context) },
     )
     if (uiState.renaming) {
         RenameWalletDialog(
@@ -146,6 +155,7 @@ fun WalletDetailContent(
     onCopyFingerprint: () -> Unit,
     onRename: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenLockSettings: () -> Unit = {},
 ) {
     val colors = SignerTheme.colors
     val identity = uiState.identity
@@ -189,7 +199,11 @@ fun WalletDetailContent(
                         )
                     }
                 }
-                if (identity != null && !identity.ready) {
+                if (identity?.keyLost == true) {
+                    item(key = "lostKey") { LostKeySection(actions.onDelete, Modifier.readableWidth()) }
+                } else if (identity?.screenLockRequired == true) {
+                    item(key = "screenLock") { ScreenLockSection(onOpenLockSettings, Modifier.readableWidth()) }
+                } else if (identity != null && !identity.ready) {
                     item(key = "repair") { RepairSection(actions.onRepair, Modifier.readableWidth()) }
                 } else if (identity != null) {
                     item(key = "pair") { PairSection(actions, Modifier.readableWidth()) }
@@ -209,7 +223,8 @@ fun WalletDetailContent(
                         }
                     }
                 }
-                if (identity != null) {
+                // A wallet that can never be unlocked has nothing else to offer: its one action is above.
+                if (identity != null && !identity.keyLost) {
                     item(key = "security") { SecuritySection(actions, Modifier.readableWidth()) }
                     item(key = "rename") {
                         GroupedSection(Modifier.readableWidth()) {
@@ -271,8 +286,9 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
             // Laid out at the line's own height, so name, fingerprint and date stay 4 dp apart as on iOS (QA wallets-08).
             // Compose gives a clickable smaller than the minimum touch target the touches around it and reports 48 dp
             // bounds to accessibility services. The name and the date take their own touches, so that expansion only
-            // covers the gaps and the sides and never the line above or below (QA regression-09).
-            Text(
+            // covers the gaps and the sides and never the line above or below (QA regression-09). A wallet that no
+            // repair can fix (QA L4) shows no "Fingerprint Setup required": the notice under the header says why.
+            if (identity == null || identity.ready || identity.needsRepair) Text(
                 text = stringResource(R.string.fingerprint_x, fingerprintText(identity?.fingerprint)),
                 style = typography.footnote.monospaced(),
                 color = colors.secondaryLabel,
@@ -322,6 +338,56 @@ private fun RepairSection(onRepair: () -> Unit, modifier: Modifier = Modifier) {
                     icon = SignerIcons.Build,
                     onClick = onRepair,
                     modifier = Modifier.testTag("detail.repair"),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * QA L4: the device key is gone, so neither the password nor Repair can help; the only way on is removing the wallet
+ * (the Delete page's "Remove This Wallet", backlog B9) and importing its phrase again.
+ */
+@Composable
+private fun LostKeySection(onRemove: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Callout(
+            text = stringResource(R.string.wallets_lost_key_message),
+            title = stringResource(R.string.wallets_lost_key_title),
+            tone = Tone.Danger,
+            modifier = Modifier.testTag("detail.deviceKeyLost"),
+        )
+        GroupedSection {
+            item(dividerInset = IconRowDividerInset) {
+                NavRow(
+                    title = stringResource(R.string.wallets_lost_key_remove),
+                    icon = SignerIcons.Delete,
+                    onClick = onRemove,
+                    destructive = true,
+                    modifier = Modifier.testTag("detail.removeLostKey"),
+                )
+            }
+        }
+    }
+}
+
+/** QA L4: without a secure lock screen no wallet can be unlocked or repaired; the person sets one first. */
+@Composable
+private fun ScreenLockSection(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Callout(
+            text = stringResource(R.string.crypto_device_lock_required),
+            title = stringResource(R.string.setup_screen_lock_required),
+            tone = Tone.Warning,
+            modifier = Modifier.testTag("detail.screenLockRequired"),
+        )
+        GroupedSection {
+            item(dividerInset = IconRowDividerInset) {
+                ActionRow(
+                    title = stringResource(R.string.open_settings),
+                    icon = SignerIcons.DeviceLock,
+                    onClick = onOpenSettings,
+                    modifier = Modifier.testTag("detail.openLockSettings"),
                 )
             }
         }
