@@ -114,7 +114,10 @@ class EngineSmokeTest {
             assertNotNull(refusal, "$name compiled source in an engine runtime")
             assertTrue(refusal.contains("eval is not supported"), "$name: $refusal")
         }
-        for (name in listOf("fetch", "XMLHttpRequest", "WebSocket")) assertEquals("undefined", report.str(name), name)
+        // Also QuickJS's own std/os libraries (std.urlGet, os.exec, file access) and timers, which the host never adds.
+        for (name in listOf("fetch", "XMLHttpRequest", "WebSocket", "std", "os", "setTimeout")) {
+            assertEquals("undefined", report.str(name), name)
+        }
         assertEquals(true, report.bool("nativeRandomRemoved"), "the bootstrap removes the raw entropy function")
 
         // Control: the same probe in a runtime that keeps the parser (what JS_NewContext would give engine runtimes)
@@ -298,6 +301,9 @@ class EngineSmokeTest {
             fetch: typeof fetch,
             XMLHttpRequest: typeof XMLHttpRequest,
             WebSocket: typeof WebSocket,
+            std: typeof std,
+            os: typeof os,
+            setTimeout: typeof setTimeout,
             eval: refusal(function () { return (0, eval)('1'); }),
             Function: refusal(function () { return new Function('return 1')(); }),
             functionConstructor: refusal(function () { return (function () {}).constructor('return 1')(); }),
