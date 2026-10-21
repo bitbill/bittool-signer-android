@@ -71,6 +71,26 @@ class RecoveryPhraseViewModelTest {
         assertFalse(model.uiState.value.toString().contains("legal"))
     }
 
+    /**
+     * QA wallets-05: the field stays editable while unlocking (so it keeps focus and the keyboard for a retry). Text
+     * typed during the attempt is not kept once the phrase is shown, and a second submit meanwhile does nothing.
+     */
+    @Test
+    fun textTypedWhileUnlockingIsWipedWhenThePhraseIsShown() = runTest(dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        store.onReveal = { _, _ -> gate.await(); VaultSecret(SecretText.of(Phrases.VECTOR_12), SecretText.empty()) }
+        val model = model()
+        model.password.setTextAndPlaceCursorAtEnd("Public-Test-Password1!")
+        model.unlock()
+        assertTrue(model.uiState.value.busy)
+        model.password.setTextAndPlaceCursorAtEnd("typed-meanwhile")
+        model.unlock()
+        assertEquals(1, store.calls<Call.Reveal>().size, "a second submit while unlocking is ignored")
+        gate.complete(Unit)
+        assertNotNull(model.uiState.value.revealed)
+        assertTrue(model.password.text.isEmpty(), "the text typed while unlocking is wiped")
+    }
+
     @Test
     fun aWrongPasswordIsReportedAndThePageStays() = runTest(dispatcher) {
         store.onReveal = { _, _ -> throw VaultError.AuthenticationFailed() }

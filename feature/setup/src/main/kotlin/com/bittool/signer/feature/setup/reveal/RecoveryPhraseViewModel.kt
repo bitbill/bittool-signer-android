@@ -150,6 +150,8 @@ class RecoveryPhraseViewModel internal constructor(
                 }
                 secret?.close()
                 secret = revealed
+                // The field stays editable while unlocking (QA wallets-05): whatever was typed meanwhile goes too.
+                password.wipe()
                 val words = RecoveryWords(revealed.mnemonic.view().split(' ').filter { it.isNotEmpty() })
                 _state.update { it.copy(revealed = RevealedPhrase(words, revealed.passphrase.view().toString())) }
             } catch (_: CancellationException) {

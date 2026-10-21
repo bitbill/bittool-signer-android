@@ -109,7 +109,8 @@ internal fun RecoveryPhraseContent(
                         title = stringResource(L10n.string.recovery_phrase),
                         navigation = SetupNavigation.Cancel,
                         onNavigate = onClose,
-                        // iOS: "Cancel", which becomes "Done" once the phrase is shown.
+                        // The cross of every wallet security page, read as the iOS button (QA wallets-10): "Cancel",
+                        // which becomes "Done" once the phrase is shown. It keeps its place, so the title never moves.
                         navigationLabel = stringResource(if (revealed == null) L10n.string.cancel else L10n.string.done),
                         navigationTag = "recovery.close",
                         scrollBehavior = scrollBehavior,
@@ -167,12 +168,14 @@ private fun PasswordForm(state: RecoveryPhraseUiState, password: TextFieldState,
         runCatching { focus.requestFocus() }
     }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Stays enabled while unlocking, like iOS (QA wallets-05): disabling the focused field took its focus (to the
+        // close button) and closed the keyboard, so a wrong password needed another tap on the field. `unlock` ignores
+        // a second submit while busy, and the field was emptied when the attempt started.
         PasswordField(
             kind = PasswordKind.WalletPassword,
             state = password,
             imeAction = ImeAction.Go,
             onSubmit = onUnlock,
-            enabled = !state.busy,
             modifier = Modifier.focusRequester(focus),
         )
         Text(
