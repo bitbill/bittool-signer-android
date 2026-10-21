@@ -585,14 +585,20 @@ class WalletSetupViewModel @AssistedInject constructor(
     /**
      * iOS `suspend()` (background, App Lock, screen capture): a new token, not busy, the passwords, the error and the
      * check's placements cleared. The phrase, the editor, the name, the passphrase, `hasRevealedBackup` and the path stay.
+     *
+     * Android (QA setup-08): a duplicate check that was still running is asked again under the new token, so the
+     * password step keeps its action held until it has an answer. iOS drops the late answer and never asks again on
+     * the same step, which leaves "Import Wallet" leading to the duplicate refusal.
      */
     fun suspendDraft() {
+        val unanswered = _state.value.checkingExisting
         operation = ++operationCounter
         generationJob?.cancel()
         cancelExistingCheck()
         importJob?.cancel()
         fields.clearPasswords()
         _state.update { it.copy(busy = false, error = null, verification = it.verification?.resetPlacements()) }
+        if (unanswered && _state.value.step == SetupStep.Password) checkForExistingWallet()
     }
 
     /** iOS `clearSecrets()`: every secret goes; the path, the name, `created` and `didResetPassword` stay. */
@@ -620,7 +626,10 @@ class WalletSetupViewModel @AssistedInject constructor(
         }
     }
 
-    /** Stops the duplicate check; its question is asked again when the password step reappears. */
+    /**
+     * Stops the duplicate check; its question is asked again when the password step reappears ([suspendDraft] asks it
+     * again at once while the step stays).
+     */
     private fun cancelExistingCheck() {
         checkJob?.cancel()
         checkJob = null

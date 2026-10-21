@@ -555,15 +555,19 @@ class WalletSetupViewModelTest {
 
     @Test
     fun aLateDuplicateAnswerAfterASuspendIsDropped() = runTest(dispatcher) {
-        val gate = CompletableDeferred<WalletId?>()
-        store.onExistingWallet = { _, _ -> gate.await() }
+        // The question asked before the suspension gets a (stale) wallet; the one asked again after it gets none.
+        val stale = CompletableDeferred<WalletId?>()
+        val none = CompletableDeferred<WalletId?>().apply { complete(null) }
+        val answers = ArrayDeque(listOf(stale, none))
+        store.onExistingWallet = { _, _ -> answers.removeFirst().await() }
         val model = started(SetupIntent.Restore)
         model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
         model.startImport()
         store.suspendSession()
-        gate.complete(WalletId.random())
+        stale.complete(WalletId.random())
         advanceUntilIdle()
         assertNull(model.state.duplicateOf)
+        assertFalse(model.state.checkingExisting)
     }
 
     // ---------------------------------------------------------------------------------------------------------------
@@ -866,6 +870,41 @@ class WalletSetupViewModelTest {
         model.setPasswords()
         model.createWallet()
         assertEquals(1, store.calls<Call.CreateWallet>().size)
+    }
+
+    /**
+     * QA setup-08: a suspension (background, App Lock, screen capture) while the duplicate check runs drops its answer;
+     * the question is asked again at once, so the action stays held instead of leading to the duplicate refusal.
+     */
+    @Test
+    fun aSuspensionDuringTheDuplicateCheckAsksItAgain() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        val answers = ArrayDeque(listOf(CompletableDeferred<WalletId?>(), CompletableDeferred()))
+        val pending = answers.toList()
+        store.onExistingWallet = { _, _ -> answers.removeFirst().await() }
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertTrue(model.state.checkingExisting)
+
+        store.suspendSession()
+        assertTrue(model.state.checkingExisting, "the question is asked again, the action still held")
+        assertEquals(2, store.calls<Call.ExistingWallet>().size)
+        pending[0].complete(existing.id)
+        model.setPasswords()
+        model.createWallet()
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty(), "no commit before the new answer")
+
+        pending[1].complete(existing.id)
+        advanceUntilIdle()
+        assertFalse(model.state.checkingExisting)
+        assertEquals(existing.id, model.state.duplicateOf)
+
+        // Once answered, a later suspension asks nothing again.
+        store.suspendSession()
+        assertEquals(2, store.calls<Call.ExistingWallet>().size)
+        assertEquals(existing.id, model.state.duplicateOf)
     }
 
     /**
