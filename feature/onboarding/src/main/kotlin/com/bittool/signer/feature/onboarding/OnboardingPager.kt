@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -211,13 +212,15 @@ private fun OnboardingPageView(page: OnboardingPage, scrollState: ScrollState) {
                         // The symbol is the point's identity (iOS `Point.id`), not its translated text.
                         key(point.id) {
                             Row(verticalAlignment = Alignment.Top) {
-                                // Centred on the first line, like the iOS `Label` icon, also with large text.
+                                // Centred on the first line, like the iOS `Label` icon, also with large text. The
+                                // column is at least 24 dp wide (iOS `.frame(width: 24)`) and widens with the symbol,
+                                // which grows with the text (QA regression-07: a fixed width capped it at 24 dp).
                                 FirstLineIcon(
                                     icon = point.icon,
                                     tint = colors.accent,
                                     style = typography.subheadline,
                                     size = 20.dp,
-                                    modifier = Modifier.width(24.dp),
+                                    modifier = Modifier.widthIn(min = 24.dp).testTag(OnboardingTags.POINT_ICON),
                                 )
                                 Spacer(Modifier.width(12.dp))
                                 Text(
@@ -283,6 +286,9 @@ object OnboardingTags {
     const val CANCEL = "onboarding.cancel"
     const val BACK = "onboarding.back"
     const val INDICATOR = "onboarding.pages"
+
+    /** The symbol of each key point (decorative; layout tests). */
+    const val POINT_ICON = "onboarding.point.icon"
 }
 
 private val CompactHeight = 560.dp
