@@ -1,7 +1,10 @@
 package com.bittool.signer.core.scanner
 
 import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,6 +17,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.testing.urFrame
 import kotlin.test.assertEquals
@@ -25,7 +35,10 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowDialog
 
-/** iOS `QRCodeView` behaviour (`Design/QRCodeView.swift:29-111`; scan-sign.md §15.1) plus the Android window effects. */
+/**
+ * iOS `QRCodeView` behaviour (`Design/QRCodeView.swift:29-111`; scan-sign.md §15.1), the Android window effects
+ * (keep-screen-on only while an animated code plays: QA audit A02) and the per-screen frame cache (A13).
+ */
 @RunWith(RobolectricTestRunner::class)
 class QrCodeViewTest {
     @get:Rule
@@ -112,19 +125,52 @@ class QrCodeViewTest {
     }
 
     @Test
-    fun aShownCodeKeepsTheScreenOnButLeavesBrightnessAloneByDefault() {
-        // design-system.md §9.5: keep-screen-on is Android polish, "no brightness boost — iOS has none". A brighter
-        // screen would also make a recovery-phrase code easier to photograph over a shoulder.
+    fun aOneFrameCodeNeverKeepsTheScreenOnAndLeavesBrightnessAlone() {
+        // QA audit A02: iOS never disables its idle timer, so auto-lock conceals an unattended code (the activity
+        // pauses) and starts the App Lock clock. The recovery-phrase QR is one frame (RecoveryQrSection).
         var visible by mutableStateOf(true)
-        val single = listOf("UR:BYTES/SHOWN")
-        compose.setContent { if (visible) QrCodeView(frames = single, initial = prepared(single)) }
-        compose.waitForIdle()
+        val single = listOf("UR:BYTES/ONE-FRAME")
+        compose.setContent { if (visible) QrCodeView(frames = single) }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
         val window = compose.activity.window
-        assertTrue(window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON, "Auto-lock stays in charge")
         assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
         visible = false
         compose.waitForIdle()
-        assertEquals(0, window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun anAnimatedCodeKeepsTheScreenOnOnlyWhilePlaying() {
+        // ARCHITECTURE §1.12, design-system.md §9.5: keep-screen-on while an animated code plays, "no brightness boost".
+        compose.mainClock.autoAdvance = false
+        var visible by mutableStateOf(true)
+        val matrices = prepared(frames)
+        compose.setContent { if (visible) QrCodeView(frames = frames, initial = matrices) }
+        settle()
+        val window = compose.activity.window
+        assertTrue(window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0, "Playing")
+        assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
+        compose.onNodeWithTag(QrCodeViewTags.PLAY_PAUSE).performClick()
+        settle()
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON, "Paused: auto-lock applies again")
+        compose.onNodeWithTag(QrCodeViewTags.PLAY_PAUSE).performClick()
+        settle()
+        assertTrue(window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0, "Playing again")
+        visible = false
+        settle()
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun anAnimatedCodeKeepsTheScreenOnOnlyOnceItsPartsAreEncoded() {
+        var visible by mutableStateOf(true)
+        compose.setContent { if (visible) QrCodeView(frames = frames) }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+        assertTrue(compose.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON != 0)
+        visible = false
+        compose.waitForIdle()
+        assertEquals(0, compose.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON)
     }
 
     @Test
@@ -135,29 +181,150 @@ class QrCodeViewTest {
         compose.setContent { if (visible) QrCodeView(frames = single, initial = matrices, maxBrightness = true) }
         compose.waitForIdle()
         val window = compose.activity.window
-        assertTrue(window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
         assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL, window.attributes.screenBrightness)
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON, "Brightness does not keep a one-frame code on")
         visible = false
         compose.waitForIdle()
-        assertEquals(0, window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE, window.attributes.screenBrightness)
+    }
+
+    @Test
+    fun pausingABrightAnimatedCodeKeepsItsBrightness() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { QrCodeView(frames = frames, initial = prepared(frames), maxBrightness = true) }
+        settle()
+        val window = compose.activity.window
+        compose.onNodeWithTag(QrCodeViewTags.PLAY_PAUSE).performClick()
+        settle()
+        assertEquals(0, window.attributes.flags and FLAG_KEEP_SCREEN_ON)
+        assertEquals(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL, window.attributes.screenBrightness)
     }
 
     @Test
     fun insideADialogTheDialogsOwnWindowStaysOn() {
         // A sheet or a full-screen dialog is a separate window above the activity (wallets-pairing.md §13.9 item 8).
         var visible by mutableStateOf(true)
-        val single = listOf("UR:BYTES/IN-A-DIALOG")
         compose.setContent {
-            if (visible) Dialog(onDismissRequest = {}) { QrCodeView(frames = single, initial = prepared(single)) }
+            if (visible) Dialog(onDismissRequest = {}) { QrCodeView(frames = frames, initial = prepared(frames)) }
         }
         compose.waitForIdle()
         val dialogWindow = assertNotNull(ShadowDialog.getLatestDialog()?.window)
-        assertTrue(dialogWindow.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON != 0)
-        assertEquals(0, compose.activity.window.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        assertTrue(dialogWindow.attributes.flags and FLAG_KEEP_SCREEN_ON != 0)
+        assertEquals(0, compose.activity.window.attributes.flags and FLAG_KEEP_SCREEN_ON)
         visible = false
         compose.waitForIdle()
-        assertEquals(0, dialogWindow.attributes.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        assertEquals(0, dialogWindow.attributes.flags and FLAG_KEEP_SCREEN_ON)
+    }
+
+    @Test
+    fun anAnimatedCodeShownAgainAfterATabSwitchIsNotEncodedAgainAndContinues() {
+        // QA audit A13; iOS keeps QRCodeView's @State across TabView switches (`guard renderedFrames != frames`).
+        val entry = ScreenEntry()
+        var shown by mutableStateOf(true)
+        val encodesBefore = QrFrames.renderCalls.get()
+        compose.setContent { OnScreen(entry) { if (shown) QrCodeView(frames = frames) } }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 1_000) { counter() == "2/3" }
+
+        // Another tab: navigation moves the entry below RESUMED, then its composition goes.
+        compose.runOnIdle { entry.state = Lifecycle.State.CREATED }
+        shown = false
+        settle()
+        // Back to the tab.
+        shown = true
+        compose.runOnIdle { entry.state = Lifecycle.State.RESUMED }
+        settle()
+
+        plate.assert(hasDescription) // no spinner
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("2/3")
+        assertEquals(encodesBefore + 1, QrFrames.renderCalls.get(), "Encoded once")
+        compose.mainClock.advanceTimeBy(300)
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("3/3")
+    }
+
+    @Test
+    fun aPreparedAnimatedCodeContinuesAtItsPartAfterATabSwitch() {
+        // Connect's prefetched Wallet Level code (`initial`): nothing to encode, the part it reached is kept.
+        compose.mainClock.autoAdvance = false
+        val entry = ScreenEntry()
+        var shown by mutableStateOf(true)
+        val matrices = prepared(frames)
+        compose.setContent { OnScreen(entry) { if (shown) QrCodeView(frames = frames, initial = matrices) } }
+        compose.mainClock.advanceTimeByFrame()
+        compose.mainClock.advanceTimeBy(250)
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("2/3")
+
+        compose.runOnIdle { entry.state = Lifecycle.State.CREATED }
+        shown = false
+        settle()
+        shown = true
+        compose.runOnIdle { entry.state = Lifecycle.State.RESUMED }
+        settle()
+
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("2/3")
+    }
+
+    @Test
+    fun anAnimatedCodeThatLeavesAResumedScreenIsForgotten() {
+        // Done, a new request, a closed sheet: the code went away, its frames are not kept for later.
+        val entry = ScreenEntry()
+        var shown by mutableStateOf(true)
+        val encodesBefore = QrFrames.renderCalls.get()
+        compose.setContent { OnScreen(entry) { if (shown) QrCodeView(frames = frames) } }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeUntil(timeoutMillis = 1_000) { counter() == "2/3" }
+
+        shown = false
+        settle()
+        shown = true
+        settle()
+
+        compose.onNodeWithTag(QrCodeViewTags.COUNTER).assertTextEquals("1/3")
+        compose.mainClock.autoAdvance = true
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+        assertEquals(encodesBefore + 2, QrFrames.renderCalls.get(), "Encoded again")
+    }
+
+    @Test
+    fun aOneFrameCodeIsNeverKeptAfterItLeaves() {
+        // A one-frame code may be the recovery phrase: nothing of it outlives its composition.
+        val entry = ScreenEntry()
+        var shown by mutableStateOf(true)
+        val single = listOf("UR:BYTES/NOT-KEPT")
+        val encodesBefore = QrFrames.renderCalls.get()
+        compose.setContent { OnScreen(entry) { if (shown) QrCodeView(frames = single) } }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+
+        compose.runOnIdle { entry.state = Lifecycle.State.CREATED }
+        shown = false
+        compose.waitForIdle()
+        shown = true
+        compose.runOnIdle { entry.state = Lifecycle.State.RESUMED }
+        compose.waitUntil(5_000) { plate.fetchSemanticsNode().config.contains(SemanticsProperties.ContentDescription) }
+        assertEquals(encodesBefore + 2, QrFrames.renderCalls.get(), "Encoded again: not kept")
+    }
+
+    /** A navigation entry's owners: the lifecycle the NavHost drives and the store that outlives a tab switch. */
+    private class ScreenEntry : LifecycleOwner, ViewModelStoreOwner {
+        private val registry = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
+        override val lifecycle: Lifecycle get() = registry
+        override val viewModelStore = ViewModelStore()
+        var state: Lifecycle.State
+            get() = registry.currentState
+            set(value) {
+                registry.currentState = value
+            }
+    }
+
+    @Composable
+    private fun OnScreen(entry: ScreenEntry, content: @Composable () -> Unit) {
+        CompositionLocalProvider(
+            LocalLifecycleOwner provides entry,
+            LocalViewModelStoreOwner provides entry,
+            content = content,
+        )
     }
 
     @Test

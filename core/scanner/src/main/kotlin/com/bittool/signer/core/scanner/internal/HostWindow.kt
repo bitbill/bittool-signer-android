@@ -32,29 +32,40 @@ internal tailrec fun Context.findActivity(): Activity? = when (this) {
 }
 
 /**
- * Reference-counted window requests of the QR display: keep the screen on and full brightness while at least one
- * code is shown in that window, restoring the window's own brightness setting when the last one goes. Main thread
- * only (composition effects).
+ * Reference-counted window requests of the QR display: keep the screen on while at least one playing animated code is
+ * shown in that window, and full brightness while at least one code that asked for it is, restoring the window's own
+ * brightness setting when the last one goes. Main thread only (composition effects).
  */
 @MainThread
 internal object QrWindowEffects {
+    enum class Effect { KeepScreenOn, FullBrightness }
+
     private class Counts(var keepOn: Int = 0, var bright: Int = 0, var brightnessBefore: Float = BRIGHTNESS_NONE)
 
     private val windows = WeakHashMap<Window, Counts>()
 
-    fun acquire(window: Window, maxBrightness: Boolean) {
+    fun acquire(window: Window, effect: Effect) {
         val counts = windows.getOrPut(window) { Counts() }
-        if (counts.keepOn++ == 0) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (maxBrightness && counts.bright++ == 0) {
-            counts.brightnessBefore = window.attributes.screenBrightness
-            window.setBrightness(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL)
+        when (effect) {
+            Effect.KeepScreenOn ->
+                if (counts.keepOn++ == 0) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            Effect.FullBrightness -> if (counts.bright++ == 0) {
+                counts.brightnessBefore = window.attributes.screenBrightness
+                window.setBrightness(WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL)
+            }
         }
     }
 
-    fun release(window: Window, maxBrightness: Boolean) {
+    fun release(window: Window, effect: Effect) {
         val counts = windows[window] ?: return
-        if (maxBrightness && counts.bright > 0 && --counts.bright == 0) window.setBrightness(counts.brightnessBefore)
-        if (counts.keepOn > 0 && --counts.keepOn == 0) window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        when (effect) {
+            Effect.KeepScreenOn -> if (counts.keepOn > 0 && --counts.keepOn == 0) {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+            Effect.FullBrightness -> if (counts.bright > 0 && --counts.bright == 0) {
+                window.setBrightness(counts.brightnessBefore)
+            }
+        }
         if (counts.keepOn == 0 && counts.bright == 0) windows.remove(window)
     }
 

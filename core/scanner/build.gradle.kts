@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     api(libs.zxing.core)
     implementation(libs.camerax.core)
     implementation(libs.camerax.camera2)
