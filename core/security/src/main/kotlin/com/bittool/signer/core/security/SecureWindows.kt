@@ -56,20 +56,15 @@ object SecureWindows {
     }
 
     /**
-     * Whether another window covered the touch (gaps.md G4.2): `FLAG_WINDOW_IS_OBSCURED`, or on API 29+
-     * `FLAG_WINDOW_IS_PARTIALLY_OBSCURED`.
+     * Whether another app's window covered the touched point (gaps.md G4.2): `FLAG_WINDOW_IS_OBSCURED`. Partial
+     * obscuring is not refused: an input method window sets it whenever the keyboard is shown.
      */
-    fun isObscured(event: MotionEvent): Boolean {
-        val flags = event.flags
-        if (flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0) return true
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0
-    }
+    fun isObscured(event: MotionEvent): Boolean = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
 
     /**
      * The platform-view form of `filterTouchesWhenObscured` with feedback (gaps.md G4.2–G4.3): a gesture whose
      * `ACTION_DOWN` arrives obscured is consumed whole (the view never sees it, so it cannot click) and [onBlocked] runs
-     * once, e.g. to show `security_overlay_blocked`. Unlike `filterTouchesWhenObscured`, it also refuses partially
-     * obscured touches. Never install it on a root view: screen-dimmer apps would make the whole app unresponsive.
+     * once, e.g. to show `security_overlay_blocked`. Never install it on a root view: screen-dimmer apps would make the whole app unresponsive.
      */
     @SuppressLint("ClickableViewAccessibility")
     fun refuseObscuredTouches(view: View, onBlocked: () -> Unit) {

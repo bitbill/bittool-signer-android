@@ -253,7 +253,7 @@ class AndroidBiometricAuthenticatorTest {
         assertEquals("Unlock BitTool Signer", unlock.title)
         assertEquals("Signing still requires the wallet password.", unlock.description)
         assertEquals("Use a Wallet Password", unlock.negativeButtonText)
-        assertEquals(Authenticators.BIOMETRIC_STRONG, unlock.allowedAuthenticators)
+        assertEquals(Authenticators.BIOMETRIC_WEAK, unlock.allowedAuthenticators)
         assertFalse(unlock.isConfirmationRequired)
 
         val enable = AndroidBiometricAuthenticator.promptInfo(AppLockPrompts.enable, context.resources)

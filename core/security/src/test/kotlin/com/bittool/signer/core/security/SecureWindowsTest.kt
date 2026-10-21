@@ -31,7 +31,8 @@ class SecureWindowsTest {
     fun fullyAndPartiallyObscuredTouchesAreRecognised() {
         assertFalse(SecureWindows.isObscured(event(MotionEvent.ACTION_DOWN)))
         assertTrue(SecureWindows.isObscured(event(MotionEvent.ACTION_DOWN, MotionEvent.FLAG_WINDOW_IS_OBSCURED)))
-        assertTrue(SecureWindows.isObscured(event(MotionEvent.ACTION_DOWN, MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED)))
+        // An input method window always partially obscures the app: not refused.
+        assertFalse(SecureWindows.isObscured(event(MotionEvent.ACTION_DOWN, MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED)))
     }
 
     @Test

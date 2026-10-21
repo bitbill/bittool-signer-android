@@ -31,7 +31,7 @@ import java.util.WeakHashMap
 
 /**
  * Refuses a touch that reached the app through another app's window drawn over it: the `ACTION_DOWN` of a gesture
- * whose `MotionEvent` carries `FLAG_WINDOW_IS_OBSCURED` (or, API 29+, `FLAG_WINDOW_IS_PARTIALLY_OBSCURED`) is consumed
+ * whose `MotionEvent` carries `FLAG_WINDOW_IS_OBSCURED` (another app's window covers the touched point) is consumed
  * together with the rest of that gesture, and [onBlocked] is called once (show the `security_overlay_blocked` toast
  * with `SignerIcons.WarningFilled` and `HapticKind.Warning`: it reports a refusal, not a success).
  *
@@ -43,11 +43,15 @@ import java.util.WeakHashMap
  */
 fun Modifier.obscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(onBlocked)
 
-/** Whether `MotionEvent.flags` say another window covered the touched point (pure, unit-tested). */
-fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT): Boolean {
-    if (flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0) return true
-    return sdk >= Build.VERSION_CODES.Q && flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0
-}
+/**
+ * Whether `MotionEvent.flags` say another app's window covered the touched point (pure, unit-tested).
+ * `FLAG_WINDOW_IS_PARTIALLY_OBSCURED` is deliberately not refused: every input method (e.g. Huawei's secure keyboard)
+ * is another app's window and sets it whenever it is shown, which made decisive buttons untappable with the keyboard
+ * up. Foreign overlays are hidden on API 31+ anyway (`HideOverlayWindowsEffect`).
+ */
+@Suppress("UNUSED_PARAMETER")
+fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT): Boolean =
+    flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
 
 private data class ObscuredTouchGuardElement(val onBlocked: () -> Unit) : ModifierNodeElement<ObscuredTouchGuardNode>() {
     override fun create() = ObscuredTouchGuardNode(onBlocked)

@@ -63,11 +63,11 @@ class HardeningTest {
         assertEquals(0, clicks, "the control must not act on an obscured touch")
         assertEquals(1, blocked)
         tap(view, MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED)
-        assertEquals(0, clicks)
-        assertEquals(2, blocked)
+        assertEquals(1, clicks, "a keyboard on screen (partially obscured) must not block the control")
+        assertEquals(1, blocked)
         tap(view, 0)
-        assertEquals(1, clicks, "a clean touch still clicks")
-        assertEquals(2, blocked)
+        assertEquals(2, clicks, "a clean touch still clicks")
+        assertEquals(1, blocked)
     }
 
     @Test

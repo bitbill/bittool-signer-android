@@ -100,7 +100,7 @@ progress for create/import/repair/sign and never call the engine from the main t
 - No `INTERNET` permission (manifest removes it even if a library adds it). No network code anywhere.
 - `FLAG_SECURE` on the activity window from `onCreate`, never toggled (blank Recents thumbnail, no screenshots or
   recordings). A debug-only switch may disable it for the screenshot tour. API 33+: `setRecentsScreenshotEnabled(false)`.
-- App Lock: `BiometricPrompt` with `BIOMETRIC_STRONG` only and the negative button "Use a Wallet Password" (iOS
+- App Lock: `BiometricPrompt` with `BIOMETRIC_WEAK` (owner decision 2026-10-22: Class 2 face unlock such as Huawei's is accepted, because App Lock only gates public pages; signing, reveal and delete still need the wallet password) and the negative button "Use a Wallet Password" (iOS
   semantics); 120 s background grace measured with `SystemClock.elapsedRealtime()`; locked on cold launch; fail closed
   while preferences load. App Lock never authorizes a signature.
 - Vault: PBKDF2-HMAC-SHA256 600,000 iterations → AES-256-GCM, then an outer AES-GCM layer under a non-exportable Android

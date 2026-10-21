@@ -5,7 +5,7 @@ import android.content.res.Resources
 import android.os.Handler
 import android.os.Looper
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
@@ -31,7 +31,7 @@ import kotlinx.coroutines.withContext
  * `androidx.biometric.BiometricPrompt` behind [BiometricAuthenticator] (app-shell.md §15.6), the counterpart of iOS
  * `BiometricAuthentication` (AppAccessController.swift:53-79):
  *
- * - `BIOMETRIC_STRONG` only, never `DEVICE_CREDENTIAL`: "No device-passcode fallback: the only alternative is a wallet
+ * - `BIOMETRIC_WEAK` (Class 2 and 3; owner decision: App Lock only gates public pages, e.g. Huawei face unlock is Class 2), never `DEVICE_CREDENTIAL`: "No device-passcode fallback: the only alternative is a wallet
  *   password." (:60). A device credential would also forbid the negative button and, on API ≤ 29, launch a separate
  *   activity whose `onStop` would count as a background transition and cancel the very authentication it serves.
  * - No `CryptoObject`: App Lock gates the UI only and never releases a key.
@@ -71,7 +71,7 @@ internal class AndroidBiometricAuthenticator(
     private var launched: Session? = null
 
     override fun isAvailable(): Boolean =
-        BiometricManager.from(context).canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
+        BiometricManager.from(context).canAuthenticate(BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS
 
     override suspend fun authenticate(prompt: BiometricPromptSpec): Unit = withContext(Dispatchers.Main.immediate) {
         cancel()
@@ -236,7 +236,7 @@ internal class AndroidBiometricAuthenticator(
                 .setTitle(prompt.title.resolve(resources))
                 .apply { prompt.description?.let { setDescription(it.resolve(resources)) } }
                 .setNegativeButtonText(prompt.negativeButton.resolve(resources))
-                .setAllowedAuthenticators(BIOMETRIC_STRONG)
+                .setAllowedAuthenticators(BIOMETRIC_WEAK)
                 .setConfirmationRequired(false)
                 .build()
     }

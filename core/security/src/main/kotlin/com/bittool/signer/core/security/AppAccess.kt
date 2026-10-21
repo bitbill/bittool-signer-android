@@ -16,7 +16,7 @@ data class AppAccessState(
     /** Cold launch with App Lock on starts locked; no authenticated state is ever persisted. */
     val isLocked: Boolean = true,
     val isAuthenticating: Boolean = false,
-    /** `BiometricManager.canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS`, refreshed on every foreground. */
+    /** `BiometricManager.canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS`, refreshed on every foreground. */
     val biometricsAvailable: Boolean = false,
     /** The last non-cancellation authentication error, shown on the lock screen (warning callout). */
     val error: UiText? = null,
@@ -143,11 +143,11 @@ class BiometricException(val kind: Kind, text: UiText) : SignerException(text) {
 
 /**
  * `androidx.biometric.BiometricPrompt` behind an interface (so `AppAccessController` keeps the iOS epoch logic and the
- * tests a blocking fake). `BIOMETRIC_STRONG` only, no `DEVICE_CREDENTIAL`, `setConfirmationRequired(false)`, no
+ * tests a blocking fake). `BIOMETRIC_WEAK` (Class 2+), no `DEVICE_CREDENTIAL`, `setConfirmationRequired(false)`, no
  * `CryptoObject` (App Lock gates UI only). Shown only while the activity is resumed.
  */
 interface BiometricAuthenticator {
-    /** `canAuthenticate(BIOMETRIC_STRONG) == BIOMETRIC_SUCCESS`. */
+    /** `canAuthenticate(BIOMETRIC_WEAK) == BIOMETRIC_SUCCESS`. */
     fun isAvailable(): Boolean
 
     /**

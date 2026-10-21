@@ -37,8 +37,8 @@ class LogicTest {
     @Test
     fun obscuredTouchesAreRecognisedByTheirFlags() {
         assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_OBSCURED, Build.VERSION_CODES.O))
-        assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q))
-        // The partial flag only exists from API 29; below it the bit means nothing.
+        // An input method window always partially obscures the app: not refused.
+        assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q))
         assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.P))
         assertFalse(isObscuredTouch(0, Build.VERSION_CODES.BAKLAVA))
     }
