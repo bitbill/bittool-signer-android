@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.bittool.signer.core.crypto.bip39.Bip39Candidates
 import com.bittool.signer.core.crypto.bip39.Bip39Language
 import com.bittool.signer.core.data.SignerState
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.AppIssue
@@ -18,6 +19,7 @@ import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.ConnectRoute
 import com.bittool.signer.core.navigation.SetupIntent
+import com.bittool.signer.core.navigation.WalletDetailRoute
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
 import com.bittool.signer.feature.setup.Phrases
 import com.bittool.signer.feature.setup.SeededRandomSource
@@ -52,6 +54,7 @@ import org.junit.Test
 class WalletSetupViewModelTest {
     private val dispatcher = UnconfinedTestDispatcher()
     private lateinit var store: FakeSignerStore
+    private val deviceKeys = InMemoryDeviceKeyStore()
 
     @Before
     fun setUp() {
@@ -63,7 +66,7 @@ class WalletSetupViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun model(intent: SetupIntent = SetupIntent.Create): WalletSetupViewModel =
-        WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), FakeRecoverySessionFactory(), dispatcher)
+        WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), FakeRecoverySessionFactory(), dispatcher, deviceKeys)
 
     private fun TestScope.started(intent: SetupIntent = SetupIntent.Create, name: String = "My Wallet"): WalletSetupViewModel {
         val model = model(intent)
@@ -786,5 +789,128 @@ class WalletSetupViewModelTest {
         assertFalse(printed.contains("abandon"), printed)
         val state: SignerState = store.state.value
         assertNotNull(state)
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------
+    // Android additions (QA round 1)
+
+    /** QA wallets-04: without a screen lock nothing starts, before any secret is typed; a lock set meanwhile counts. */
+    @Test
+    fun withoutAScreenLockTheFirstStepDoesNotStart() = runTest(dispatcher) {
+        deviceKeys.deviceSecure = false
+        val create = started()
+        assertFalse(create.state.deviceSecure)
+        create.startCreate()
+        assertTrue(store.calls<Call.GenerateMnemonic>().isEmpty())
+        assertEquals(emptyList(), create.state.path)
+        assertNull(create.state.error, "the notice says it, not an error")
+
+        val restore = started(SetupIntent.Restore)
+        restore.type(restore.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        restore.startImport()
+        advanceUntilIdle()
+        assertEquals(emptyList(), restore.state.path)
+
+        // Back from Settings with a screen lock: the flow resumes and refreshes.
+        deviceKeys.deviceSecure = true
+        assertTrue(create.refreshDeviceSecurity())
+        assertTrue(create.state.deviceSecure)
+        create.startCreate()
+        assertEquals(listOf(SetupStep.Backup), create.state.path)
+        restore.startImport()
+        advanceUntilIdle()
+        assertEquals(listOf(SetupStep.Password), restore.state.path, "startImport reads the lock screen itself")
+    }
+
+    /** QA setup-08: the password step's action waits for the duplicate check, so a quick tap cannot reach createWallet. */
+    @Test
+    fun thePasswordStepWaitsForTheDuplicateCheck() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        val gate = CompletableDeferred<WalletId?>()
+        store.onExistingWallet = { _, _ -> gate.await() }
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertEquals(SetupStep.Password, model.state.step)
+        assertTrue(model.state.checkingExisting)
+        model.setPasswords()
+        model.createWallet()
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty(), "no commit before the answer")
+
+        gate.complete(existing.id)
+        advanceUntilIdle()
+        assertFalse(model.state.checkingExisting)
+        assertEquals(existing.id, model.state.duplicateOf)
+        model.createWallet()
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty(), "a duplicate is reset, never created")
+    }
+
+    @Test
+    fun aNewPhraseIsReadyOnceTheCheckFindsNoWallet() = runTest(dispatcher) {
+        val gate = CompletableDeferred<WalletId?>()
+        store.onExistingWallet = { _, _ -> gate.await() }
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertTrue(model.state.checkingExisting)
+        // Leaving the step stops the check; it is asked again when the step reappears.
+        model.pop()
+        assertFalse(model.state.checkingExisting)
+        model.startImport()
+        assertTrue(model.state.checkingExisting)
+        gate.complete(null)
+        advanceUntilIdle()
+        assertFalse(model.state.checkingExisting)
+        assertNull(model.state.duplicateOf)
+        model.setPasswords()
+        model.createWallet()
+        assertEquals(1, store.calls<Call.CreateWallet>().size)
+    }
+
+    /**
+     * QA backlog B21: the phrase of a wallet whose device key is provably gone is not offered a password reset (it could
+     * only fail with "device key unavailable"); "Open Wallet" erases the draft and opens that wallet's page, where
+     * Delete Wallet offers "Remove This Wallet" (B9).
+     */
+    @Test
+    fun aWalletWithALostDeviceKeyLeadsToItsRemovalInsteadOfAReset() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onExistingWallet = { _, _ -> existing.id }
+        store.lostDeviceKeys = setOf(existing.id)
+        val model = started(SetupIntent.Restore)
+        val events = events(model)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertEquals(existing.id, model.state.duplicateOf)
+        assertTrue(model.state.duplicateKeyLost)
+        assertEquals("Public fixture 1", model.state.identity?.name)
+        assertEquals(listOf(Call.IsDeviceKeyLost(existing.id)), store.calls<Call.IsDeviceKeyLost>())
+
+        model.setPasswords()
+        model.resetPassword()
+        model.createWallet()
+        assertTrue(store.calls<Call.ResetPassword>().isEmpty())
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty())
+
+        model.openLostKeyWallet()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(WalletDetailRoute(existing.id))), events.filterIsInstance<SetupEvent.Finish>())
+        assertFalse(model.hasDraftSecrets(), "the phrase and the passwords are erased")
+        assertTrue(model.hasEnded)
+    }
+
+    @Test
+    fun aWalletWhoseKeyIsNotProvablyLostIsResetAsBefore() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onExistingWallet = { _, _ -> existing.id }
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertEquals(existing.id, model.state.duplicateOf)
+        assertFalse(model.state.duplicateKeyLost)
+        model.openLostKeyWallet()
+        assertFalse(model.hasEnded, "only a lost key leads away")
     }
 }

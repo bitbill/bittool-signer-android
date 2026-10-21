@@ -30,7 +30,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,6 +77,8 @@ import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
+import com.bittool.signer.feature.setup.ui.headingLineBreaks
+import com.bittool.signer.feature.setup.ui.keepTogetherInView
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -148,9 +152,17 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
     val active = verification?.activePosition
     var lastActive by remember { mutableStateOf(active) }
     LaunchedEffect(active) {
-        // iOS `onChange(of: focusID)`: not on appearance, only when the active blank changes.
+        // iOS `onChange(of: focusID)`: centred whenever the active blank changes.
         if (active != null && active != lastActive) centering.center(active, scroll)
         lastActive = active
+    }
+    val latestActive by rememberUpdatedState(active)
+    LaunchedEffect(Unit) {
+        // Android addition (QA setup-14): on appearance too, but only when the first blank is off screen (large text:
+        // the footer takes half the height and the board starts below the fold, so the first chip would fill a blank
+        // nobody sees). Waits one frame, so the blanks have been laid out and registered.
+        withFrameNanos { }
+        latestActive?.let { centering.centerIfHidden(it, scroll) }
     }
     RecoveryScreenshotWarning(onScreenshot = model::onVerificationScreenshot)
     AccessibilitySensitive(active = true)
@@ -202,52 +214,104 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
 /**
  * The password step (iOS `SetPasswordStep`, `WalletSetupFlow.swift:346-400`; setup-backup §6.4): step 4 of 4 when
  * creating, 2 of 2 when importing. When the phrase and passphrase already belong to a wallet here it becomes "Reset
- * Password" for that wallet (named by its identity header). The back arrow is hidden while saving; "Create Wallet" /
- * "Import Wallet" / "Reset Password" refuse touches through overlays.
+ * Password" for that wallet (named by its identity header). "Create Wallet" / "Import Wallet" / "Reset Password" refuse
+ * touches through overlays.
+ *
+ * Android differences: the action waits until the duplicate check has answered, with a spinner once the passwords are
+ * valid (QA setup-08: the page would otherwise show "Import Wallet" for about a second and then turn into Reset
+ * Password, and a quick tap reached the duplicate refusal); the back arrow stays in place while saving, disabled, so
+ * the title does not jump (setup-09; iOS hides it in a centred bar); the password pair stays in view with its checklist
+ * while typing (setup-02); and a phrase whose wallet here can no longer be unlocked (lost device key, QA backlog B21)
+ * explains that instead of offering a reset that cannot work, with the way to that wallet's page, where Delete Wallet
+ * offers "Remove This Wallet" (B9).
  */
 @Composable
 internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
     val focusManager = LocalFocusManager.current
-    val resetting = state.duplicateOf != null
+    val lostKey = state.duplicateKeyLost && state.duplicateOf != null
+    val resetting = state.duplicateOf != null && !lostKey
     val create = state.intent == SetupIntent.Create
     val valid by remember { derivedStateOf { fields.passwordValid() } }
     SetupScaffold(
         topBar = { scroll ->
             SetupTopBar(
-                title = stringResource(if (resetting) L10n.string.reset_password else L10n.string.password),
-                navigation = if (state.busy) SetupNavigation.None else SetupNavigation.Back,
+                title = stringResource(
+                    when {
+                        lostKey -> if (create) L10n.string.new_wallet else L10n.string.import_wallet
+                        resetting -> L10n.string.reset_password
+                        else -> L10n.string.password
+                    },
+                ),
+                navigation = SetupNavigation.Back,
                 onNavigate = model::pop,
+                navigationEnabled = !state.busy,
                 scrollBehavior = scroll,
                 actions = { CancelAction(enabled = !state.busy, onClick = model::cancel) },
             )
         },
         step = if (create) 4 else 2,
         total = state.stepTotal,
-        title = stringResource(if (resetting) L10n.string.reset_password else L10n.string.set_a_password),
+        title = stringResource(
+            when {
+                lostKey -> L10n.string.wallets_lost_key_title
+                resetting -> L10n.string.reset_password
+                else -> L10n.string.set_a_password
+            },
+        ),
         message = stringResource(
-            if (resetting) L10n.string.this_recovery_phrase_already_belongs_to_a_wallet_on else L10n.string.the_password_encrypts_this_wallet_on_this_device_and,
+            when {
+                lostKey -> L10n.string.setup_lost_key_message
+                resetting -> L10n.string.this_recovery_phrase_already_belongs_to_a_wallet_on
+                else -> L10n.string.the_password_encrypts_this_wallet_on_this_device_and
+            },
         ),
         footer = {
             ErrorCallout(state.error)
-            PrimaryButton(
-                text = stringResource(
-                    when {
-                        resetting -> L10n.string.reset_password
-                        create -> L10n.string.create_wallet
-                        else -> L10n.string.import_wallet
+            if (lostKey) {
+                PrimaryButton(
+                    text = stringResource(L10n.string.setup_lost_key_open_wallet),
+                    onClick = model::openLostKeyWallet,
+                    modifier = Modifier.testTag(OPEN_LOST_KEY_WALLET_TAG),
+                )
+            } else {
+                PrimaryButton(
+                    text = stringResource(
+                        when {
+                            resetting -> L10n.string.reset_password
+                            create -> L10n.string.create_wallet
+                            else -> L10n.string.import_wallet
+                        },
+                    ),
+                    onClick = {
+                        focusManager.clearFocus()
+                        if (resetting) model.resetPassword() else model.createWallet()
                     },
-                ),
-                onClick = {
-                    focusManager.clearFocus()
-                    if (resetting) model.resetPassword() else model.createWallet()
-                },
-                busy = state.busy,
-                enabled = valid && !state.busy,
-                modifier = Modifier.obscuredTouchGuard(LocalOverlayBlocked.current).testTag("setup.finish"),
-            )
+                    // Passwords typed before the duplicate check answered: the action shows it is still being decided.
+                    busy = state.busy || (state.checkingExisting && valid),
+                    enabled = valid && !state.busy && !state.checkingExisting,
+                    modifier = Modifier.obscuredTouchGuard(LocalOverlayBlocked.current).testTag("setup.finish"),
+                )
+            }
         },
     ) {
+        if (lostKey) {
+            state.identity?.let { identity ->
+                SignerCard {
+                    WalletIdentityHeader(name = identity.name, fingerprint = identity.fingerprint, avatarIdentity = identity.avatarIdentity)
+                }
+            }
+        } else {
+            PasswordForm(state, fields, resetting)
+        }
+    }
+}
+
+/** The password pair, its checklist and the mode callout of [SetPasswordStep]. */
+@Composable
+private fun PasswordForm(state: WalletSetupUiState, fields: SetupFields, resetting: Boolean) {
+    // The pair and its checklist stay visible together while either field is typed in (QA setup-02).
+    Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         SecretPair(
             first = {
                 PasswordField(
@@ -265,22 +329,25 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
             shape = SignerShapes.callout,
         )
         PasswordRequirements(fields.password.text, fields.confirmation.text, Modifier.padding(horizontal = 4.dp))
-        AnimatedContent(
-            targetState = resetting,
-            transitionSpec = { (fadeIn(SignerMotion.quick()) togetherWith fadeOut(SignerMotion.quick())) using SizeTransform(clip = false) },
-            label = "passwordMode",
-        ) { reset ->
-            if (reset) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    state.identity?.let { WalletIdentityHeader(name = it.name, fingerprint = it.fingerprint, avatarIdentity = it.avatarIdentity) }
-                    Callout(stringResource(L10n.string.only_the_password_changes_the_wallet_keeps_its_name))
-                }
-            } else {
-                Callout(stringResource(L10n.string.if_you_forget_this_password_import_this_recovery_phrase))
+    }
+    AnimatedContent(
+        targetState = resetting,
+        transitionSpec = { (fadeIn(SignerMotion.quick()) togetherWith fadeOut(SignerMotion.quick())) using SizeTransform(clip = false) },
+        label = "passwordMode",
+    ) { reset ->
+        if (reset) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                state.identity?.let { WalletIdentityHeader(name = it.name, fingerprint = it.fingerprint, avatarIdentity = it.avatarIdentity) }
+                Callout(stringResource(L10n.string.only_the_password_changes_the_wallet_keeps_its_name))
             }
+        } else {
+            Callout(stringResource(L10n.string.if_you_forget_this_password_import_this_recovery_phrase))
         }
     }
 }
+
+/** "Open Wallet" of the lost-device-key page (QA backlog B21). */
+internal const val OPEN_LOST_KEY_WALLET_TAG = "setup.openWallet"
 
 /**
  * The last page (iOS `SetupCompleteStep`, `WalletSetupFlow.swift:402-452`; setup-backup §6.5): the success hero, the
@@ -343,7 +410,7 @@ internal fun SetupCompleteStep(state: WalletSetupUiState, model: WalletSetupView
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         stringResource(title),
-                        style = typography.largeTitle,
+                        style = typography.largeTitle.headingLineBreaks(),
                         color = colors.label,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.semantics { heading() }.testTag("setup.doneTitle"),

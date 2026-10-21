@@ -88,6 +88,7 @@ import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
+import com.bittool.signer.feature.setup.ui.keepTogetherInView
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -121,11 +122,12 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 text = stringResource(L10n.string.create_recovery_phrase),
                 onClick = model::startCreate,
                 busy = state.busy,
-                enabled = !state.busy && canCreate,
+                enabled = !state.busy && canCreate && state.deviceSecure,
                 modifier = Modifier.testTag("setup.create"),
             )
         },
     ) {
+        if (!state.deviceSecure) DeviceLockNotice()
         WalletNameField(fields.name, imeAction = ImeAction.Done)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             FieldLabel(lengthLabel)
@@ -185,7 +187,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 text = stringResource(L10n.string.continue_text),
                 onClick = model::startImport,
                 busy = state.busy,
-                enabled = !state.busy && canContinue,
+                enabled = !state.busy && canContinue && state.deviceSecure,
                 modifier = Modifier.testTag("setup.import"),
             )
             AnimatedVisibility(
@@ -201,7 +203,11 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
             }
         },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Before any word is typed: without a screen lock no wallet can be saved (QA wallets-04).
+        if (!state.deviceSecure) DeviceLockNotice()
+        // The status line and the whole editor stay above the bar (and its suggestions) while typing, the line being
+        // typed at least once the editor is taller than the space left (QA setup-02).
+        Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             RecoveryPhraseStatus(state.phrase)
             RecoveryPhraseEditor(fields.phrase, onFocusChanged = { phraseFocused = it })
         }
@@ -253,6 +259,8 @@ internal fun PassphraseOptions(usePassphrase: Boolean, model: WalletSetupViewMod
                     },
                     color = SignerTheme.colors.raised,
                     shape = SignerShapes.control,
+                    // Both passphrase fields stay above the bar while either is typed in (QA setup-02).
+                    modifier = Modifier.keepTogetherInView(),
                 )
                 Callout(stringResource(L10n.string.each_passphrase_opens_a_different_wallet_back_it_up), tone = Tone.Warning)
             }

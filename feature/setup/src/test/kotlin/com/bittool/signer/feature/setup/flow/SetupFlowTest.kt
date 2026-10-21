@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.SecretText
@@ -54,11 +55,12 @@ class SetupFlowTest {
         onGenerateMnemonic = { count -> SecretText.of(if (count == 12) Phrases.VECTOR_12 else Phrases.VECTOR_24) }
     }
     private val factory = FakeRecoverySessionFactory()
+    private val deviceKeys = InMemoryDeviceKeyStore()
     private var cancelled = 0
     private val finished = mutableListOf<WalletRoute?>()
 
     private fun flow(intent: SetupIntent = SetupIntent.Create): WalletSetupViewModel {
-        val model = WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), factory, Dispatchers.Unconfined)
+        val model = WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), factory, Dispatchers.Unconfined, deviceKeys)
         compose.setContent {
             SetupTestHost(factory) {
                 SetupFlow(model, onFinished = { finished += it }, onCancelled = { cancelled++ })

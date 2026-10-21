@@ -108,6 +108,21 @@ data class WalletSetupUiState(
     val phrase: PhraseAnalysis = PhraseAnalysis.Empty,
     /** The wallet named on the reset password step ([duplicateOf]) or the Done step ([created]). */
     val identity: WalletIdentity? = null,
+    /**
+     * The password step asked whether this phrase already belongs to a wallet here and has no answer yet: its action
+     * waits (QA setup-08), so a quick tap cannot reach the duplicate refusal before the page turns into Reset Password.
+     */
+    val checkingExisting: Boolean = false,
+    /**
+     * [duplicateOf]'s device key is provably gone (QA backlog B21): its password cannot be reset, so the password step
+     * explains that and leads to the wallet's page, where Delete Wallet offers "Remove This Wallet" (B9).
+     */
+    val duplicateKeyLost: Boolean = false,
+    /**
+     * The device has a secure lock screen (`DeviceKeyStore.isDeviceSecure()`, QA wallets-04). Without one no wallet can
+     * be saved: the first step says so before anything is typed and its action stays disabled.
+     */
+    val deviceSecure: Boolean = true,
 ) {
     /** The visible step; null is the root form. */
     val step: SetupStep? get() = path.lastOrNull()

@@ -11,6 +11,7 @@ import com.bittool.signer.core.crypto.bip39.Bip39
 import com.bittool.signer.core.crypto.bip39.Bip39Canonical
 import com.bittool.signer.core.crypto.bip39.Bip39Error
 import com.bittool.signer.core.crypto.bip39.Bip39Language
+import com.bittool.signer.core.crypto.vault.DeviceKeyStore
 import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.BackupVerification
@@ -21,6 +22,7 @@ import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.model.util.Graphemes
 import com.bittool.signer.core.navigation.ConnectRoute
 import com.bittool.signer.core.navigation.SetupIntent
+import com.bittool.signer.core.navigation.WalletDetailRoute
 import com.bittool.signer.core.navigation.WalletRoute
 import com.bittool.signer.core.security.RecoverySessionFactory
 import dagger.assisted.Assisted
@@ -84,6 +86,11 @@ sealed interface SetupEvent {
  *
  * Main thread only, like the store. BIP39 analysis (every keystroke of the import editor, the import itself and the
  * recovery QR check) runs on [analysisDispatcher].
+ *
+ * Android additions: [deviceKeys] tells whether the device has a secure lock screen, which every wallet's device key
+ * needs; without one the first step says so up front and does not start (QA wallets-04, [refreshDeviceSecurity]). The
+ * duplicate check of the password step holds its action until it answers (QA setup-08) and recognises a wallet whose
+ * device key is provably gone (QA backlog B21, [openLostKeyWallet]).
  */
 @HiltViewModel(assistedFactory = WalletSetupViewModel.Factory::class)
 class WalletSetupViewModel @AssistedInject constructor(
@@ -94,6 +101,8 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** Display permission for the concealed backup material (the screens create one session per display). */
     val recoverySessions: RecoverySessionFactory,
     @DefaultDispatcher private val analysisDispatcher: CoroutineDispatcher,
+    /** Only [DeviceKeyStore.isDeviceSecure] is used (a stateless lock-screen query, safe outside the vault's lock). */
+    private val deviceKeys: DeviceKeyStore,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -110,7 +119,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** iOS `name` default, resolved by the UI in the current language and handed back with [seedName]. */
     val defaultName: UiText = if (existingWallets == 0) UiText.Ios("My Wallet") else UiText.Ios("Wallet %lld", listOf(existingWallets + 1))
 
-    private val _state = MutableStateFlow(WalletSetupUiState(intent = intent))
+    private val _state = MutableStateFlow(WalletSetupUiState(intent = intent, deviceSecure = deviceKeys.isDeviceSecure()))
 
     private val events = Channel<SetupEvent>(Channel.BUFFERED)
 
@@ -137,6 +146,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     private var ended = false
     private var operationCounter = 0L
     private var operation = 0L
+    private var checkCounter = 0L
     private var generationJob: Job? = null
     private var checkJob: Job? = null
     private var importJob: Job? = null
@@ -216,9 +226,19 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** The passphrase fields hide but keep their text when switched off (it still counts as a draft secret). */
     fun setUsePassphrase(use: Boolean) = _state.update { it.copy(usePassphrase = use) }
 
+    /**
+     * Reads the lock screen again (QA wallets-04): when the flow resumes, e.g. back from the system page "Open
+     * Settings" opened. Returns whether the device is secure now.
+     */
+    fun refreshDeviceSecurity(): Boolean {
+        val secure = deviceKeys.isDeviceSecure()
+        if (secure != _state.value.deviceSecure) _state.update { it.copy(deviceSecure = secure) }
+        return secure
+    }
+
     /** iOS `startCreate` (setup-backup §2.2): the same phrase is kept unless the word count changed. */
     fun startCreate() {
-        if (_state.value.busy || !validateOptions()) return
+        if (_state.value.busy || !refreshDeviceSecurity() || !validateOptions()) return
         generationJob = perform { token ->
             val count = _state.value.wordCount
             val current = mnemonic
@@ -242,7 +262,7 @@ class WalletSetupViewModel @AssistedInject constructor(
      * Analysed off the main thread (the first call loads every wordlist); a second tap while it runs is ignored.
      */
     fun startImport() {
-        if (_state.value.busy || importJob?.isActive == true || !validateOptions()) return
+        if (_state.value.busy || importJob?.isActive == true || !refreshDeviceSecurity() || !validateOptions()) return
         val text = fields.phrase.text.toString()
         val scanned = scannedPhrase
         val token = operation
@@ -272,7 +292,7 @@ class WalletSetupViewModel @AssistedInject constructor(
         mnemonic?.wipe()
         mnemonic = SecretText.of(reading.phrase)
         importedLanguage = reading.language
-        _state.update { it.copy(languageChoices = emptyList(), error = null, duplicateOf = null) }
+        _state.update { it.copy(languageChoices = emptyList(), error = null, duplicateOf = null, duplicateKeyLost = false) }
         setPath(listOf(SetupStep.Password))
     }
 
@@ -379,7 +399,7 @@ class WalletSetupViewModel @AssistedInject constructor(
 
     /** iOS `reviewPhraseAgain`: back to the same, concealed phrase. */
     fun reviewPhraseAgain() {
-        _state.update { it.copy(verification = null, error = null, duplicateOf = null) }
+        _state.update { it.copy(verification = null, error = null, duplicateOf = null, duplicateKeyLost = false) }
         setPath(listOf(SetupStep.Backup))
     }
 
@@ -389,11 +409,14 @@ class WalletSetupViewModel @AssistedInject constructor(
     // -------------------------------------------------------------------------------------------------------------
     // Password
 
-    /** iOS `createWallet`: the commit is the success boundary (no token check after it). */
+    /**
+     * iOS `createWallet`: the commit is the success boundary (no token check after it). Waits for the duplicate check
+     * (QA setup-08) and is refused for a phrase that already has a wallet here.
+     */
     fun createWallet() {
         val phrase = mnemonic
         if (!fields.passwordValid() || phrase == null || phrase.isEmpty()) return
-        if (_state.value.busy) return
+        _state.value.let { if (it.busy || it.checkingExisting || it.duplicateOf != null) return }
         val name = fields.trimmedName()
         val mnemonicCopy = phrase.copy()
         val passphrase = currentPassphrase()
@@ -414,6 +437,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** iOS `resetPassword`: the entered phrase is the proof; the wallet keeps everything but its password. */
     fun resetPassword() {
         val walletId = _state.value.duplicateOf ?: return
+        if (_state.value.duplicateKeyLost) return
         val phrase = mnemonic
         if (!fields.passwordValid() || phrase == null || phrase.isEmpty()) return
         if (_state.value.busy) return
@@ -437,6 +461,10 @@ class WalletSetupViewModel @AssistedInject constructor(
     /**
      * iOS `checkForExistingWallet`, run when the password step appears: switches it into "Reset Password" mode when the
      * phrase and passphrase already belong to a wallet here. Failures are ignored (`createWallet` refuses duplicates).
+     *
+     * Android: [WalletSetupUiState.checkingExisting] holds the step's action until the answer (QA setup-08), and a
+     * duplicate whose device key is provably gone is reported as such in the same update (QA backlog B21): Reset
+     * Password could only fail with "device key unavailable", so the step leads to that wallet's removal instead.
      */
     private fun checkForExistingWallet() {
         val state = _state.value
@@ -447,18 +475,36 @@ class WalletSetupViewModel @AssistedInject constructor(
         val token = operation
         val epoch = store.state.value.securityEpoch
         checkJob?.cancel()
+        val check = ++checkCounter
+        _state.update { it.copy(checkingExisting = true) }
         checkJob = viewModelScope.launch {
             try {
                 val existing = store.existingWallet(mnemonicCopy, passphrase)
-                if (existing != null && operation == token && epoch == store.state.value.securityEpoch && _state.value.created == null) {
-                    _state.update { it.copy(duplicateOf = existing) }
+                val current = { operation == token && epoch == store.state.value.securityEpoch && _state.value.created == null }
+                if (existing != null && current()) {
+                    val lost = store.isDeviceKeyLost(existing)
+                    if (current()) _state.update { it.copy(duplicateOf = existing, duplicateKeyLost = lost) }
                 }
             } catch (_: Exception) {
                 // The question stays unanswered (also when cancelled); nothing follows.
             } finally {
                 wipeAll(mnemonicCopy, passphrase)
+                if (check == checkCounter) _state.update { it.copy(checkingExisting = false) }
             }
         }
+    }
+
+    /**
+     * "Open Wallet" of a phrase whose wallet here lost its device key (QA backlog B21): the draft is erased and setup
+     * closes onto that wallet's page, where Delete Wallet offers "Remove This Wallet" (B9). The phrase can be imported
+     * again afterwards.
+     */
+    fun openLostKeyWallet() {
+        val state = _state.value
+        val walletId = state.duplicateOf ?: return
+        if (!state.duplicateKeyLost || state.busy || ended) return
+        clearSecrets()
+        end(SetupEvent.Finish(WalletDetailRoute(walletId)))
     }
 
     // -------------------------------------------------------------------------------------------------------------
@@ -507,10 +553,14 @@ class WalletSetupViewModel @AssistedInject constructor(
         val leaving = state.step
         if (leaving == SetupStep.Password) {
             fields.clearPasswords()
-            checkJob?.cancel()
+            cancelExistingCheck()
         }
         _state.update {
-            it.copy(path = it.path.dropLast(1), error = null, duplicateOf = if (leaving == SetupStep.Password) null else it.duplicateOf)
+            if (leaving == SetupStep.Password) {
+                it.copy(path = it.path.dropLast(1), error = null, duplicateOf = null, duplicateKeyLost = false)
+            } else {
+                it.copy(path = it.path.dropLast(1), error = null)
+            }
         }
     }
 
@@ -539,7 +589,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     fun suspendDraft() {
         operation = ++operationCounter
         generationJob?.cancel()
-        checkJob?.cancel()
+        cancelExistingCheck()
         importJob?.cancel()
         fields.clearPasswords()
         _state.update { it.copy(busy = false, error = null, verification = it.verification?.resetPlacements()) }
@@ -549,7 +599,7 @@ class WalletSetupViewModel @AssistedInject constructor(
     fun clearSecrets() {
         operation = ++operationCounter
         generationJob?.cancel()
-        checkJob?.cancel()
+        cancelExistingCheck()
         importJob?.cancel()
         scanJob?.cancel()
         mnemonic?.wipe()
@@ -565,8 +615,17 @@ class WalletSetupViewModel @AssistedInject constructor(
                 verification = null,
                 hasRevealedBackup = false,
                 duplicateOf = null,
+                duplicateKeyLost = false,
             )
         }
+    }
+
+    /** Stops the duplicate check; its question is asked again when the password step reappears. */
+    private fun cancelExistingCheck() {
+        checkJob?.cancel()
+        checkJob = null
+        checkCounter++
+        if (_state.value.checkingExisting) _state.update { it.copy(checkingExisting = false) }
     }
 
     override fun onCleared() {

@@ -1,5 +1,12 @@
 package com.bittool.signer.feature.setup
 
+import android.view.ViewGroup
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.toSize
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.contextmenu.data.ProcessTextKey
 import androidx.compose.foundation.text.contextmenu.data.TextContextMenuComponent
@@ -66,6 +73,25 @@ fun offers(filters: List<(TextContextMenuComponent) -> Boolean>, key: Any): Bool
 /** The key Compose gives the n-th PROCESS_TEXT item ("Translate", "Search"…; its constructor is internal to Compose). */
 fun processTextKey(index: Int): ProcessTextKey =
     ProcessTextKey::class.java.getDeclaredConstructor(Int::class.javaPrimitiveType).apply { isAccessible = true }.newInstance(index)
+
+/**
+ * The node's bounds in the root, not clipped (`boundsInRoot` is clipped to the scrolling viewport, so a node scrolled
+ * out of view, or partly under a bar outside the viewport, reports only its visible part).
+ */
+fun SemanticsNodeInteraction.unclippedBounds(): Rect = fetchSemanticsNode().let { Rect(it.positionInRoot, it.size.toSize()) }
+
+/**
+ * Raises (or with 0 removes) a software keyboard [heightPx] tall, as the window reports it to Compose's
+ * `WindowInsets.ime`: the insets are applied to the activity's content views, the way the platform delivers them.
+ */
+fun ComponentActivity.setKeyboardHeight(heightPx: Int) {
+    val insets = WindowInsetsCompat.Builder()
+        .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, heightPx))
+        .setVisible(WindowInsetsCompat.Type.ime(), heightPx > 0)
+        .build()
+    val content = findViewById<ViewGroup>(android.R.id.content)
+    for (index in 0 until content.childCount) ViewCompat.dispatchApplyWindowInsets(content.getChildAt(index), insets)
+}
 
 /** Whether [filters] keep Paste and Select All only: no clipboard, no Autofill, no other app's text action. */
 fun isSecretTextMenu(filters: List<(TextContextMenuComponent) -> Boolean>): Boolean {
