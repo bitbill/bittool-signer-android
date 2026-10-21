@@ -276,7 +276,13 @@ class SettingsScreensTest {
             )
         }
         compose.onNodeWithText("6 dp", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag(ReferenceTags.TOKEN_ROW).performTouchInput { longClick() }
+        val row = compose.onNodeWithTag(ReferenceTags.TOKEN_ROW)
+        val rowOnScreen = row.fetchSemanticsNode().positionOnScreen
+        val pressX = 240f
+        row.performTouchInput { longClick(androidx.compose.ui.geometry.Offset(pressX, centerY)) }
+        // QA sign-15: the menu opens at the finger, as iOS lifts the row where it is held, not at the row's start edge.
+        val menuOnScreen = compose.onNodeWithText("Copy Contract Address").fetchSemanticsNode().positionOnScreen
+        assertTrue(kotlin.math.abs(menuOnScreen.x - (rowOnScreen.x + pressX)) < 8f, "menu at ${menuOnScreen.x}, press at ${rowOnScreen.x + pressX}")
         compose.onNodeWithText("Copy Contract Address").performClick()
         assertEquals(SettingsTestData.usdt.assetAddress, clipboard.primaryClip?.getItemAt(0)?.text?.toString())
         // No segmented control on a page with a single list.
