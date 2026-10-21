@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">วงเงินที่อนุญาต / รหัสโทเคน NFT</string>
     <string name="also_paid_out">จ่ายออกเพิ่มเติม</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">เทียบที่อยู่แรกในทั้งสองแอปทุกครั้งก่อนรับเงิน</string>
+    <string name="ambiguous_wallet_match">ตรงกับกระเป๋าหลายใบ</string>
     <string name="amount">จำนวน</string>
     <string name="amount_sol">จำนวน (SOL)</string>
     <string name="amount_trx">จำนวน (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">วลีกู้คืนไม่ถูกต้อง: มี 1 คำ วลีกู้คืนต้องมี 12, 15, 18, 21 หรือ 24 คำ</string>
     <string name="invalid_request_format">รูปแบบคำขอไม่ถูกต้อง</string>
     <string name="invalid_signing_plan">แผนการเซ็นไม่ถูกต้อง</string>
+    <string name="invalid_signing_request">คำขอลงนามไม่ถูกต้อง</string>
     <string name="invalid_signing_wallet_identity">อัตลักษณ์ของกระเป๋าที่เซ็นไม่ถูกต้อง</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">มีเฉพาะคำ %d คำเท่านั้น ไม่รวมรหัสผ่านวลี BIP39 ของคุณ การกู้คืนกระเป๋านี้ต้องใช้รหัสผ่านวลีด้วย</string>
     <string name="items">รายการ</string>
     <string name="ive_written_them_down_in_order">ฉันจดไว้ตามลำดับแล้ว</string>
     <string name="keep_editing">แก้ไขต่อ</string>
     <string name="keep_it_offline">เก็บไว้แบบออฟไลน์</string>
+    <string name="keep_the_animated_code_in_view_x_parts">ให้คิวอาร์โค้ดเคลื่อนไหวอยู่ในกรอบ · %d ส่วน</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">เก็บการ์ดทั้งสามใบไว้คนละที่ การ์ดใบเดียวไม่มีวลีครบทั้งหมด แต่แสดงคำสองในสาม หากเป็นวลี 12 หรือ 15 คำ ส่วนที่เหลืออาจถูกเดาได้หากมีกำลังประมวลผลมากพอ จึงควรซ่อนการ์ดทุกใบ</string>
     <string name="keep_these_three_cards_in_three_different_places_any">เก็บการ์ดสามใบนี้ไว้คนละที่ ใบใดสองใบก็กู้วลีกู้คืนได้ครบ ดังนั้นหากการ์ดใบหนึ่งหายหรือถูกขโมย อีกสองใบยังทำให้กระเป๋าของคุณปลอดภัยและกู้คืนได้</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">เก็บการ์ดสามใบนี้ไว้คนละที่ ใบใดสองใบก็กู้วลีกู้คืนได้ครบ ดังนั้นหากการ์ดใบหนึ่งหาย อีกสองใบยังกู้กระเป๋าของคุณได้</string>
@@ -354,6 +357,7 @@
     <string name="method">เมธอด</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">ข้อผูกพันของธุรกรรมขาดหายหรือไม่ถูกต้อง</string>
+    <string name="missing_signer_information">ไม่มีข้อมูลผู้ลงนาม</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">มีกระเป๋าที่บันทึกไว้ตรงกันมากกว่าหนึ่งใบ ลบกระเป๋าที่ซ้ำแล้วสแกนใหม่</string>
     <string name="multisig">หลายลายเซ็น</string>
     <string name="multisig_account">บัญชีหลายลายเซ็น</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">ไม่มีกล้องที่ใช้ได้ ให้นำเข้าคำขอเป็นไฟล์แทน</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">ไม่มีคำขอที่ค้างอยู่หรือยังไม่จับคู่ให้ลองใหม่</string>
     <string name="no_matching_signing_task_review_the_request_again">ไม่มีงานเซ็นที่ตรงกัน ตรวจสอบคำขออีกครั้ง</string>
+    <string name="no_matching_wallet">ไม่มีกระเป๋าที่ตรงกัน</string>
     <string name="no_matching_word">ไม่มีคำที่ตรงกัน</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">บัญชี nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">ปริมาณ</string>
     <string name="raw_amount">จำนวนดิบ</string>
     <string name="read_every_warning_above_before_signing">อ่านคำเตือนทั้งหมดด้านบนก่อนเซ็น</string>
+    <string name="reading_request">กำลังอ่านคำขอ…</string>
     <string name="reading">กำลังอ่าน…</string>
     <string name="rebuild_it_yourself">สร้างขึ้นใหม่ด้วยตัวคุณเอง</string>
     <string name="receive_addresses">ที่อยู่สำหรับรับ</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit แบบไม่จำกัด</string>
     <string name="unlock">ปลดล็อก</string>
     <string name="unlock_to_view_your_wallets_and_activity">ปลดล็อกเพื่อดูกระเป๋าและกิจกรรมของคุณ</string>
+    <string name="unlock_with_x">ปลดล็อกด้วย %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">การปลดล็อกแอปไม่เคยเป็นการอนุมัติลายเซ็น</string>
     <string name="update_account_permissions">อัปเดตสิทธิ์ของบัญชี</string>
     <string name="use_x_instead">ใช้ %s แทน</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">ข้อมูลกระเป๋าเปลี่ยนไป จับคู่คำขอนี้อีกครั้ง</string>
     <string name="wallet_name">ชื่อกระเป๋า</string>
     <string name="wallet_password_2">รหัสผ่านกระเป๋า</string>
+    <string name="wallet_setup_required_2">ต้องตั้งค่ากระเป๋าก่อน</string>
     <string name="wallet_setup_required">ต้องตั้งค่ากระเป๋าก่อน</string>
     <string name="wallets">กระเป๋า</string>
     <string name="wallets_unavailable">กระเป๋าใช้งานไม่ได้</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">ดูอย่างเดียว</string>
     <string name="which_language_is_your_backup_in">สำเนาของคุณเป็นภาษาอะไร</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">กระเป๋านั้นอ่านแบบใดได้บ้าง: ระดับกระเป๋า และระดับเหรียญสำหรับ Bitcoin, EVM, TRON หรือ Solana</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">วลี %1$d คำ การ์ดแต่ละใบจะแสดง %2$d คำจาก %3$d คำ ส่วนอีก %4$d คำที่เหลือสามารถคำนวณหาได้หากมีกำลังประมวลผลมากพอ เก็บรักษาการ์ดทุกใบอย่างระมัดระวังเท่ากับวลีฉบับเต็ม หรือใช้วลี 24 คำสำหรับการสำรองแบบแบ่งส่วน</string>
     <string name="word_x">คำที่ %d</string>
     <string name="word_x_x">คำที่ %1$d, %2$s</string>
     <string name="word_x_hidden">คำที่ %d, ซ่อนอยู่</string>

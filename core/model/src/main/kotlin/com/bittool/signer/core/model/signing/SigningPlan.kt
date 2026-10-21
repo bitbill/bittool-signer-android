@@ -116,8 +116,7 @@ data class PlanCandidate(val walletId: WalletId, val index: WalletPublicMetadata
 
 /**
  * Why a reviewed request has no plan (models-state.md §5.6). iOS keeps English identifiers and switches on them; the
- * Android UI maps each case to a resource. [english] is the iOS identifier (for parity tests and verbatim display of
- * engine messages).
+ * Android UI maps each case to a resource. [english] is the iOS identifier (for parity tests and the explanation).
  */
 sealed interface MatchingIssue {
     val english: String
@@ -144,7 +143,10 @@ sealed interface MatchingIssue {
         override val english = "Wallet information changed. Match this request again."
     }
 
-    /** `resolveSigningPlan` returned `status != "ready"`: its `message` (engine English, shown verbatim). */
+    /**
+     * `resolveSigningPlan` returned `status != "ready"`: its `message`, engine English that the UI draws through
+     * `ReviewText.phrase` (translated when the iOS catalogue has it, as the resolver's five messages are; else verbatim).
+     */
     data class Engine(val message: String) : MatchingIssue {
         override val english: String get() = message
         override val explanation: MatchingExplanation

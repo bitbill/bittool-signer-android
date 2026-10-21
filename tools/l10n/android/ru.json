@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Настройте разблокировку по отпечатку пальца или по лицу в Настройках Android, чтобы блокировать BitTool Signer. Для каждой подписи всегда нужен пароль кошелька."
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "Разблокировать биометрией"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "биометрии"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "В этом QR-коде нет фразы восстановления."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "Для фразы из %1$d слов каждая карточка показывает %2$d из %3$d слов, а остальные %4$d можно подобрать при достаточных вычислительных мощностях. Берегите каждую карточку так же тщательно, как полную фразу, или используйте для разделённых копий фразу из 24 слов."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Пусто"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Сопоставление прервано. Попробуйте снова."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Нет подходящего кошелька"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "Нет сведений о подписанте"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Неоднозначное сопоставление кошелька"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Кошелёк нужно донастроить"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Неподдерживаемый протокол подписи"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "Чтение запроса…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Держите анимированный код в кадре · частей: %1$d"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Pinapayagang halaga / NFT token ID</string>
     <string name="also_paid_out">Binabayaran din</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Palaging ihambing ang unang address sa dalawang app bago tumanggap ng pondo.</string>
+    <string name="ambiguous_wallet_match">Maraming wallet ang tumugma</string>
     <string name="amount">Halaga</string>
     <string name="amount_sol">Halaga (SOL)</string>
     <string name="amount_trx">Halaga (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Hindi wastong recovery phrase: may 1 salita lang ito. Ang recovery phrase ay may 12, 15, 18, 21 o 24 na salita.</string>
     <string name="invalid_request_format">Hindi wastong format ng kahilingan.</string>
     <string name="invalid_signing_plan">Hindi wastong plano ng paglagda.</string>
+    <string name="invalid_signing_request">Hindi wasto ang kahilingan sa paglagda</string>
     <string name="invalid_signing_wallet_identity">Hindi wastong identity ng wallet na lalagda.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Naglalaman lang ito ng %d salita. Hindi kasama ang BIP39 passphrase mo; kailangan din ang passphrase para maibalik ang wallet na ito.</string>
     <string name="items">Mga item</string>
     <string name="ive_written_them_down_in_order">Naisulat ko na ang mga ito ayon sa pagkakasunod</string>
     <string name="keep_editing">Magpatuloy sa pag-edit</string>
     <string name="keep_it_offline">Panatilihing offline</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Panatilihin ang animated na code sa frame · %d bahagi</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Itago ang tatlong card sa tatlong magkakaibang lugar. Hindi taglay ng isang card lang ang buong phrase, pero ipinapakita nito ang dalawang-katlo ng mga salita; sa phrase na 12 o 15 salita, mahuhulaan ang natitira kung sapat ang lakas ng pagkukuwenta, kaya itago ang bawat card.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Itago ang tatlong card na ito sa tatlong magkakaibang lugar. Kahit alinmang dalawa sa kanila ay nagbabalik ng buong recovery phrase, kaya kung mawala o manakaw ang isang card, pinananatiling ligtas at nababawi pa rin ng dalawa ang wallet mo.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Itago ang tatlong card na ito sa tatlong magkakaibang lugar. Kahit alinmang dalawa sa kanila ay nagbabalik ng buong recovery phrase, kaya kung mawala ang isang card, kaya pa ring ibalik ng dalawa ang wallet mo.</string>
@@ -354,6 +357,7 @@
     <string name="method">Paraan</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Nawawala o hindi wasto ang transaction commitment.</string>
+    <string name="missing_signer_information">Walang impormasyon ng lumagda</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Mahigit isang naka-save na wallet ang tumutugma. Burahin ang dobleng wallet, tapos mag-scan muli.</string>
     <string name="multisig">Multisig</string>
     <string name="multisig_account">Multisig account</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Walang available na camera. I-import na lang ang kahilingan bilang file.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Walang naputol o hindi natugmang kahilingang masusubukan muli.</string>
     <string name="no_matching_signing_task_review_the_request_again">Walang tugmang gawain ng paglagda. Suriing muli ang kahilingan.</string>
+    <string name="no_matching_wallet">Walang wallet na tumugma</string>
     <string name="no_matching_word">Walang tugmang salita</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Nonce account</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Dami</string>
     <string name="raw_amount">Raw na halaga</string>
     <string name="read_every_warning_above_before_signing">Basahin ang lahat ng babala sa itaas bago lumagda.</string>
+    <string name="reading_request">Binabasa ang kahilingan…</string>
     <string name="reading">Nagbabasa…</string>
     <string name="rebuild_it_yourself">Buuin itong muli nang ikaw mismo</string>
     <string name="receive_addresses">Mga receive address</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Walang limitasyong Permit</string>
     <string name="unlock">I-unlock</string>
     <string name="unlock_to_view_your_wallets_and_activity">I-unlock para makita ang mga wallet at aktibidad mo.</string>
+    <string name="unlock_with_x">I-unlock gamit ang %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Ang pag-unlock sa app ay hindi kailanman nagpapahintulot ng isang lagda.</string>
     <string name="update_account_permissions">I-update ang mga permission ng account</string>
     <string name="use_x_instead">Gamitin na lang ang %s</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Nagbago ang impormasyon ng wallet. Itugma muli ang kahilingang ito.</string>
     <string name="wallet_name">Pangalan ng wallet</string>
     <string name="wallet_password_2">Password ng wallet</string>
+    <string name="wallet_setup_required_2">Kailangan munang i-set up ang wallet</string>
     <string name="wallet_setup_required">Kailangang i-set up ang wallet.</string>
     <string name="wallets">Mga wallet</string>
     <string name="wallets_unavailable">Hindi available ang mga wallet</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Watch only</string>
     <string name="which_language_is_your_backup_in">Anong wika ang backup mo?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Alin dito ang nababasa ng wallet: wallet level, at coin level para sa Bitcoin, EVM, TRON o Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Sa phrase na %1$d salita, bawat card ay nagpapakita ng %2$d sa %3$d salita, at ang natitirang %4$d ay matutukoy kung sapat ang computing power. Ingatan ang bawat card gaya ng buong phrase, o gumamit ng 24-salitang phrase para sa hatiang backup.</string>
     <string name="word_x">Salita %d</string>
     <string name="word_x_x">Salita %1$d, %2$s</string>
     <string name="word_x_hidden">Salita %d, nakatago</string>

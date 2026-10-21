@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Importo autorizzato / ID token NFT</string>
     <string name="also_paid_out">Pagato anche</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Confronta sempre i primi indirizzi nelle due app prima di ricevere fondi.</string>
+    <string name="ambiguous_wallet_match">Corrispondono più wallet</string>
     <string name="amount">Importo</string>
     <string name="amount_sol">Importo (SOL)</string>
     <string name="amount_trx">Importo (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Frase di recupero non valida: contiene 1 parola. Le frasi di recupero hanno 12, 15, 18, 21 o 24 parole.</string>
     <string name="invalid_request_format">Formato della richiesta non valido.</string>
     <string name="invalid_signing_plan">Piano di firma non valido.</string>
+    <string name="invalid_signing_request">Richiesta di firma non valida</string>
     <string name="invalid_signing_wallet_identity">Identità del wallet firmatario non valida.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Contiene soltanto le %d parole. La passphrase BIP39 non è inclusa: per ripristinare questo wallet serve anche la passphrase.</string>
     <string name="items">Articoli</string>
     <string name="ive_written_them_down_in_order">Le ho trascritte nell’ordine</string>
     <string name="keep_editing">Continua a scrivere</string>
     <string name="keep_it_offline">Tienila offline</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Tieni il codice animato nell’inquadratura · %d parti</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Conserva le tre schede in tre luoghi diversi. Una scheda da sola non contiene l’intera frase, ma ne mostra due terzi; con una frase da 12 o 15 parole il resto si può indovinare con sufficiente potenza di calcolo, quindi nascondi ogni scheda.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Conserva queste tre schede in tre luoghi diversi. Due qualsiasi di esse ripristinano l’intera frase di recupero: se una scheda va persa o viene rubata, le altre due mantengono il wallet sicuro e recuperabile.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Conserva queste tre schede in tre luoghi diversi. Due qualsiasi di esse ripristinano l’intera frase di recupero: se una scheda va persa, le altre due bastano comunque a ripristinare il wallet.</string>
@@ -354,6 +357,7 @@
     <string name="method">Metodo</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Impegno della transazione mancante o non valido.</string>
+    <string name="missing_signer_information">Mancano i dati del firmatario</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Corrisponde più di un wallet salvato. Elimina il wallet duplicato, poi scansiona di nuovo.</string>
     <string name="multisig">Multifirma</string>
     <string name="multisig_account">Account multifirma</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Non è disponibile alcuna fotocamera. Importa la richiesta come file.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Non c’è nessuna richiesta interrotta o non abbinata da riprovare.</string>
     <string name="no_matching_signing_task_review_the_request_again">Nessuna attività di firma corrispondente. Esamina di nuovo la richiesta.</string>
+    <string name="no_matching_wallet">Nessun wallet corrispondente</string>
     <string name="no_matching_word">Nessuna parola corrispondente</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Account nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Quantità</string>
     <string name="raw_amount">Importo grezzo</string>
     <string name="read_every_warning_above_before_signing">Leggi tutti gli avvisi qui sopra prima di firmare.</string>
+    <string name="reading_request">Lettura della richiesta…</string>
     <string name="reading">Lettura…</string>
     <string name="rebuild_it_yourself">Ricompilalo tu stesso</string>
     <string name="receive_addresses">Indirizzi di ricezione</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit illimitato</string>
     <string name="unlock">Sblocca</string>
     <string name="unlock_to_view_your_wallets_and_activity">Sblocca per vedere i tuoi wallet e la tua attività.</string>
+    <string name="unlock_with_x">Sblocca con %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Sbloccare l’app non autorizza mai una firma.</string>
     <string name="update_account_permissions">Aggiorna i permessi dell’account</string>
     <string name="use_x_instead">Usa invece %s</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Le informazioni del wallet sono cambiate. Riabbina questa richiesta.</string>
     <string name="wallet_name">Nome del wallet</string>
     <string name="wallet_password_2">Password del wallet</string>
+    <string name="wallet_setup_required_2">Il wallet va prima configurato</string>
     <string name="wallet_setup_required">È necessario configurare il wallet.</string>
     <string name="wallets">Wallet</string>
     <string name="wallets_unavailable">Wallet non disponibili</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Sola lettura</string>
     <string name="which_language_is_your_backup_in">In quale lingua è la tua copia?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Quali di questi legge il wallet: livello wallet e livello moneta per Bitcoin, EVM, TRON o Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Con una frase di %1$d parole ogni scheda mostra %2$d delle %3$d parole, e le altre %4$d si possono ricavare con sufficiente potenza di calcolo. Custodisci ogni scheda con la stessa cura della frase completa, oppure usa una frase di 24 parole per i backup divisi.</string>
     <string name="word_x">Parola %d</string>
     <string name="word_x_x">Parola %1$d, %2$s</string>
     <string name="word_x_hidden">Parola %d, nascosta</string>

@@ -41,6 +41,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.window.exposesTestTags
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.model.signing.MatchingIssue
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.home.PasteRequestSheet
 import com.bittool.signer.feature.sign.home.PasteUiState
@@ -174,6 +175,41 @@ class SignScreensTest {
         compose.onNodeWithText("This request does not belong to any wallet on this device. Check that you scanned the request for this wallet.").assertExists()
         compose.onNodeWithTag(SignTags.RETRY_MATCH).assertDoesNotExist()
         compose.onNodeWithTag(SignTags.AUTHORIZE).assertIsNotEnabled().assert(hasText("Cannot Sign"))
+    }
+
+    /**
+     * iOS ff2756f: the match error is drawn through `ReviewText.phrase`, so the resolver's messages are translated like
+     * the explanation under them; engine English the catalogue lacks stays verbatim, and so does a thrown engine error.
+     */
+    @Test
+    @Config(qualifiers = "+de")
+    fun theResolverMessagesAreTranslatedAndUnknownEngineTextStaysVerbatim() {
+        var issue: MatchingIssue by mutableStateOf(MatchingIssue.Engine("No matching wallet"))
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                RequestReviewContent(ReviewStates.noMatch.copy(matchingIssue = issue), onReject = {}, onToggleRisk = {}, onRetry = {}, onAuthorize = {})
+            }
+        }
+        fun matchError(next: MatchingIssue): String {
+            issue = next
+            compose.waitForIdle()
+            return compose.onNodeWithTag(SignTags.MATCH_ERROR).fetchSemanticsNode().config
+                .getOrElse(SemanticsProperties.Text) { emptyList() }.joinToString("") { it.text }
+        }
+        val translated = mapOf(
+            "No matching wallet" to "Keine passende Wallet",
+            "Missing signer information" to "Angaben zum Unterzeichner fehlen",
+            "Ambiguous wallet match" to "Mehrere Wallets passen",
+            "Wallet setup required" to "Wallet-Einrichtung erforderlich",
+            "Invalid signing request" to "Ungültige Signaturanfrage",
+        )
+        for ((english, german) in translated) {
+            assertEquals(german, matchError(MatchingIssue.Engine(english)), english)
+        }
+        assertEquals("Invalid master fingerprint", matchError(MatchingIssue.Engine("Invalid master fingerprint")))
+        assertEquals("Ungültige Signaturanfrage", matchError(MatchingIssue.Failure(UiText.Verbatim("Invalid signing request"))))
+        assertEquals("Unsupported signing request", matchError(MatchingIssue.Failure(UiText.Verbatim("Unsupported signing request"))))
+        assertEquals("Ungültiger Signierplan.", matchError(MatchingIssue.Failure(UiText.Ios("Invalid signing plan."))))
     }
 
     @Test

@@ -4,7 +4,7 @@
     <string name="security_app_lock">Блокировка приложения</string>
     <string name="security_app_lock_footer_available">Требовать биометрическую разблокировку для открытия BitTool Signer при запуске и после 2 минут в фоне. Для каждой подписи по-прежнему нужен пароль кошелька.</string>
     <string name="security_app_lock_footer_unavailable">Настройте разблокировку по отпечатку пальца или по лицу в Настройках Android, чтобы блокировать BitTool Signer. Для каждой подписи всегда нужен пароль кошелька.</string>
-    <string name="security_unlock_with_biometrics">Разблокировать биометрией</string>
+    <string name="security_biometrics_name">биометрии</string>
     <string name="security_use_biometrics_instead">Использовать биометрию</string>
     <string name="security_prompt_unlock_title">Разблокировка BitTool Signer</string>
     <string name="security_prompt_lock_title">Блокировка BitTool Signer</string>

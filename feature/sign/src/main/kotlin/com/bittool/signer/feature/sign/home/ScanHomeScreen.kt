@@ -296,7 +296,7 @@ private fun OptionTile(
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val interaction = remember { MutableInteractionSource() }
-    val reading = stringResource(R.string.sign_reading_request)
+    val reading = stringResource(R.string.reading_request)
     Surface(
         onClick = onClick,
         modifier = modifier

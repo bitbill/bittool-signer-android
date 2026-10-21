@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Разрешённая сумма / ID токена NFT</string>
     <string name="also_paid_out">Также выплачивается</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Перед получением средств всегда сверяйте первые адреса в обоих приложениях.</string>
+    <string name="ambiguous_wallet_match">Совпало несколько кошельков</string>
     <string name="amount">Сумма</string>
     <string name="amount_sol">Сумма (SOL)</string>
     <string name="amount_trx">Сумма (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Некорректная фраза восстановления: в ней всего одно слово. Фраза восстановления состоит из 12, 15, 18, 21 или 24 слов.</string>
     <string name="invalid_request_format">Некорректный формат запроса.</string>
     <string name="invalid_signing_plan">Некорректный план подписи.</string>
+    <string name="invalid_signing_request">Неверный запрос на подпись</string>
     <string name="invalid_signing_wallet_identity">Некорректный идентификатор подписывающего кошелька.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Здесь только %d слов. Парольная фраза BIP39 не включена; для восстановления этого кошелька она тоже нужна.</string>
     <string name="items">Позиции</string>
     <string name="ive_written_them_down_in_order">Я записал их по порядку</string>
     <string name="keep_editing">Продолжить ввод</string>
     <string name="keep_it_offline">Держите офлайн</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Держите анимированный код в кадре · получено частей: %d</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Храните три карточки в трёх разных местах. Одна карточка не содержит всю фразу, но показывает две трети слов; для фразы из 12 или 15 слов остальное можно подобрать при достаточных вычислительных мощностях, поэтому прячьте каждую карточку.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Храните эти три карточки в трёх разных местах. Любые две восстанавливают полную фразу, поэтому если одна потеряется или будет украдена, оставшиеся две сохранят кошелёк доступным для восстановления.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Храните эти три карточки в трёх разных местах. Любые две восстанавливают полную фразу, поэтому если одна потеряется, оставшиеся две всё равно восстановят кошелёк.</string>
@@ -354,6 +357,7 @@
     <string name="method">Метод</string>
     <string name="mint">Минт</string>
     <string name="missing_or_invalid_transaction_commitment">Обязательство транзакции отсутствует или некорректно.</string>
+    <string name="missing_signer_information">Нет сведений о подписывающем</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Подходит несколько сохранённых кошельков. Удалите дубликат и отсканируйте снова.</string>
     <string name="multisig">Мультиподпись</string>
     <string name="multisig_account">Мультиподписной счёт</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Камера недоступна. Загрузите запрос файлом.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Нет прерванного или несопоставленного запроса для повтора.</string>
     <string name="no_matching_signing_task_review_the_request_again">Подходящей задачи подписи нет. Проверьте запрос ещё раз.</string>
+    <string name="no_matching_wallet">Нет подходящего кошелька</string>
     <string name="no_matching_word">Нет подходящего слова</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Счёт nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Количество</string>
     <string name="raw_amount">Сырая сумма</string>
     <string name="read_every_warning_above_before_signing">Прочитайте все предупреждения выше, прежде чем подписывать.</string>
+    <string name="reading_request">Чтение запроса…</string>
     <string name="reading">Чтение…</string>
     <string name="rebuild_it_yourself">Соберите сами</string>
     <string name="receive_addresses">Адреса для получения</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Неограниченный Permit</string>
     <string name="unlock">Разблокировать</string>
     <string name="unlock_to_view_your_wallets_and_activity">Разблокируйте, чтобы увидеть кошельки и историю.</string>
+    <string name="unlock_with_x">Разблокировать с помощью %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Разблокировка приложения никогда не подтверждает подпись.</string>
     <string name="update_account_permissions">Обновить разрешения счёта</string>
     <string name="use_x_instead">Использовать %s</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Данные кошелька изменились. Сопоставьте этот запрос снова.</string>
     <string name="wallet_name">Название кошелька</string>
     <string name="wallet_password_2">Пароль кошелька</string>
+    <string name="wallet_setup_required_2">Требуется настройка кошелька</string>
     <string name="wallet_setup_required">Этот кошелёк нужно донастроить.</string>
     <string name="wallets">Кошельки</string>
     <string name="wallets_unavailable">Кошельки недоступны</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Только наблюдение</string>
     <string name="which_language_is_your_backup_in">На каком языке записана ваша копия?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Что из этого читает кошелёк: уровень кошелька и уровень монеты для Bitcoin, EVM, TRON или Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">При фразе из %1$d слов каждая карточка показывает %2$d из %3$d слов, а остальные %4$d можно вычислить при достаточных вычислительных мощностях. Храните каждую карточку так же тщательно, как полную фразу, либо используйте фразу из 24 слов для раздельной резервной копии.</string>
     <string name="word_x">Слово %d</string>
     <string name="word_x_x">Слово %1$d, %2$s</string>
     <string name="word_x_hidden">Слово %d, скрыто</string>

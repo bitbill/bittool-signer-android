@@ -19,8 +19,10 @@ fun interface EngineTextLookup {
 /**
  * Draw-time translation of engine English (models-state.md §4, iOS `Models/ReviewText.swift`). The engine's labels,
  * actions and headlines are covered by the request fingerprint, so they are never translated inside the engine; the
- * UI translates when drawing and falls back to the English whenever a phrase has no entry. Warnings, summaries,
- * matching messages and engine errors are never passed through here.
+ * UI translates when drawing and falls back to the English whenever a phrase has no entry. The matching message of a
+ * request without a plan is drawn through [phrase] too (iOS `RequestReviewView`, iOS ff2756f), so the resolver's
+ * messages the catalogue has ("No matching wallet", …) are translated. Warnings and summaries are never passed
+ * through here.
  */
 class ReviewText(private val lookup: EngineTextLookup) {
     /** A whole phrase (a Details label, a display action, a counterparty label). `""` stays `""`. */

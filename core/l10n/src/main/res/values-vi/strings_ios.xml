@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Hạn mức cho phép / ID token NFT</string>
     <string name="also_paid_out">Còn chi thêm</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Luôn đối chiếu địa chỉ đầu tiên trên cả hai ứng dụng trước khi nhận tiền.</string>
+    <string name="ambiguous_wallet_match">Khớp với nhiều ví</string>
     <string name="amount">Số tiền</string>
     <string name="amount_sol">Số tiền (SOL)</string>
     <string name="amount_trx">Số tiền (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Cụm từ khôi phục không hợp lệ: nó chỉ có 1 từ. Cụm từ khôi phục phải có 12, 15, 18, 21 hoặc 24 từ.</string>
     <string name="invalid_request_format">Định dạng yêu cầu không hợp lệ.</string>
     <string name="invalid_signing_plan">Kế hoạch ký không hợp lệ.</string>
+    <string name="invalid_signing_request">Yêu cầu ký không hợp lệ</string>
     <string name="invalid_signing_wallet_identity">Danh tính ví ký không hợp lệ.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Nó chỉ chứa %d từ đó thôi. Mật khẩu bổ sung BIP39 của bạn không nằm trong đó; khôi phục ví này còn cần cả mật khẩu bổ sung.</string>
     <string name="items">Mục</string>
     <string name="ive_written_them_down_in_order">Tôi đã ghi lại theo thứ tự</string>
     <string name="keep_editing">Tiếp tục nhập</string>
     <string name="keep_it_offline">Giữ ở chế độ ngoại tuyến</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Giữ mã động trong khung hình · %d phần</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Cất ba thẻ ở ba nơi khác nhau. Một thẻ đơn lẻ không chứa trọn cụm từ, nhưng nó để lộ hai phần ba số từ; với cụm từ 12 hoặc 15 từ, phần còn lại có thể bị đoán ra nếu đủ sức tính toán, nên hãy giấu kín mọi thẻ.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Cất ba thẻ này ở ba nơi khác nhau. Bất kỳ hai thẻ nào cũng khôi phục được trọn cụm từ khôi phục, nên nếu một thẻ mất hoặc bị lấy cắp, hai thẻ còn lại vẫn giữ cho ví của bạn an toàn và khôi phục được.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Cất ba thẻ này ở ba nơi khác nhau. Bất kỳ hai thẻ nào cũng khôi phục được trọn cụm từ khôi phục, nên nếu một thẻ bị mất, hai thẻ còn lại vẫn khôi phục được ví của bạn.</string>
@@ -354,6 +357,7 @@
     <string name="method">Phương thức</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Cam kết giao dịch bị thiếu hoặc không hợp lệ.</string>
+    <string name="missing_signer_information">Thiếu thông tin người ký</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Có nhiều hơn một ví đã lưu khớp với yêu cầu. Hãy xóa ví trùng rồi quét lại.</string>
     <string name="multisig">Đa chữ ký</string>
     <string name="multisig_account">Tài khoản đa chữ ký</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Không có camera khả dụng. Hãy nhập yêu cầu dưới dạng tệp.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Không có yêu cầu nào bị gián đoạn hay chưa khớp để thử lại.</string>
     <string name="no_matching_signing_task_review_the_request_again">Không có tác vụ ký nào khớp. Hãy xem lại yêu cầu.</string>
+    <string name="no_matching_wallet">Không có ví nào khớp</string>
     <string name="no_matching_word">Không có từ nào khớp</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Tài khoản nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Số lượng</string>
     <string name="raw_amount">Số lượng thô</string>
     <string name="read_every_warning_above_before_signing">Hãy đọc mọi cảnh báo ở trên trước khi ký.</string>
+    <string name="reading_request">Đang đọc yêu cầu…</string>
     <string name="reading">Đang đọc…</string>
     <string name="rebuild_it_yourself">Tự dựng lại</string>
     <string name="receive_addresses">Địa chỉ nhận</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit không giới hạn</string>
     <string name="unlock">Mở khóa</string>
     <string name="unlock_to_view_your_wallets_and_activity">Mở khóa để xem ví và hoạt động của bạn.</string>
+    <string name="unlock_with_x">Mở khóa bằng %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Mở khóa ứng dụng không bao giờ đồng nghĩa với việc cho phép một chữ ký.</string>
     <string name="update_account_permissions">Cập nhật quyền của tài khoản</string>
     <string name="use_x_instead">Dùng %s thay thế</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Thông tin ví đã thay đổi. Hãy khớp lại yêu cầu này.</string>
     <string name="wallet_name">Tên ví</string>
     <string name="wallet_password_2">Mật khẩu ví</string>
+    <string name="wallet_setup_required_2">Cần thiết lập ví trước</string>
     <string name="wallet_setup_required">Cần thiết lập ví trước.</string>
     <string name="wallets">Ví</string>
     <string name="wallets_unavailable">Ví không khả dụng</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Chỉ theo dõi</string>
     <string name="which_language_is_your_backup_in">Bản ghi của bạn bằng ngôn ngữ nào?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Ví đó đọc được những gì trong số này: cấp ví, và cấp đồng tiền cho Bitcoin, EVM, TRON hoặc Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Với cụm từ %1$d từ, mỗi thẻ hiển thị %2$d trong %3$d từ, và %4$d từ còn lại có thể suy ra được nếu đủ năng lực tính toán. Hãy giữ từng tấm thẻ cẩn thận như giữ cụm từ đầy đủ, hoặc dùng cụm từ 24 từ cho bản sao lưu chia nhỏ.</string>
     <string name="word_x">Từ %d</string>
     <string name="word_x_x">Từ %1$d, %2$s</string>
     <string name="word_x_hidden">Từ %d, đang ẩn</string>

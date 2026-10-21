@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Налаштуйте розблокування відбитком пальця або обличчям у «Налаштуваннях» Android, щоб блокувати BitTool Signer. Кожен підпис завжди потребує пароля гаманця."
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "Розблокувати біометрією"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "біометрії"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "Цей QR-код не містить фрази відновлення."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "Для фрази з %1$d слів кожна картка показує %2$d з %3$d слів, а решту %4$d можна вгадати за достатньої обчислювальної потужності. Бережіть кожну картку так само ретельно, як повну фразу, або використовуйте для розділених копій фразу з 24 слів."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Порожньо"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Зіставлення перервано. Спробуйте ще раз."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Немає відповідного гаманця"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "Бракує даних про підписувача"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Неоднозначне зіставлення гаманця"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Потрібно налаштувати гаманець"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Непідтримуваний протокол підпису"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "Читання запиту…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Тримайте анімований код у кадрі · частин: %1$d"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

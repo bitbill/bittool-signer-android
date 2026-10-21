@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Przyznany limit / ID tokena NFT</string>
     <string name="also_paid_out">Wypłacane również</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Zawsze porównaj pierwsze adresy w obu aplikacjach, zanim odbierzesz środki.</string>
+    <string name="ambiguous_wallet_match">Pasuje kilka portfeli</string>
     <string name="amount">Kwota</string>
     <string name="amount_sol">Kwota (SOL)</string>
     <string name="amount_trx">Kwota (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Nieprawidłowa fraza odzyskiwania: ma 1 słowo. Frazy odzyskiwania mają 12, 15, 18, 21 lub 24 słowa.</string>
     <string name="invalid_request_format">Nieprawidłowy format żądania.</string>
     <string name="invalid_signing_plan">Nieprawidłowy plan podpisu.</string>
+    <string name="invalid_signing_request">Nieprawidłowe żądanie podpisu</string>
     <string name="invalid_signing_wallet_identity">Nieprawidłowa tożsamość portfela podpisującego.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Zawiera tylko %d słów. Twojego hasła BIP39 w nim nie ma; odtworzenie tego portfela wymaga również hasła BIP39.</string>
     <string name="items">Pozycje</string>
     <string name="ive_written_them_down_in_order">Zapisałem je po kolei</string>
     <string name="keep_editing">Edytuj dalej</string>
     <string name="keep_it_offline">Trzymaj ją offline</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Trzymaj animowany kod w kadrze · części: %d</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Trzymaj trzy karty w trzech różnych miejscach. Jedna karta nie zawiera całej frazy, ale pokazuje dwie trzecie słów; przy frazie 12- lub 15-słowowej resztę można odgadnąć przy wystarczającej mocy obliczeniowej, więc ukryj każdą kartę.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Trzymaj te trzy karty w trzech różnych miejscach. Dowolne dwie z nich odtwarzają pełną frazę odzyskiwania: jeśli jedna karta zginie lub zostanie skradziona, pozostałe dwie zachowują Twój portfel bezpiecznym i możliwym do odzyskania.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Trzymaj te trzy karty w trzech różnych miejscach. Dowolne dwie z nich odtwarzają pełną frazę odzyskiwania: jeśli jedna karta zginie, pozostałe dwie wciąż odtworzą Twój portfel.</string>
@@ -354,6 +357,7 @@
     <string name="method">Metoda</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Brak zobowiązania transakcji lub jest ono nieprawidłowe.</string>
+    <string name="missing_signer_information">Brak informacji o podpisującym</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Pasuje więcej niż jeden zapisany portfel. Usuń zduplikowany portfel i zeskanuj ponownie.</string>
     <string name="multisig">Multipodpis</string>
     <string name="multisig_account">Konto multipodpisu</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Brak dostępnego aparatu. Zaimportuj żądanie jako plik.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Nie ma przerwanego ani niedopasowanego żądania do ponowienia.</string>
     <string name="no_matching_signing_task_review_the_request_again">Brak pasującego zadania podpisu. Przejrzyj żądanie ponownie.</string>
+    <string name="no_matching_wallet">Brak pasującego portfela</string>
     <string name="no_matching_word">Brak pasującego słowa</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Konto nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Ilość</string>
     <string name="raw_amount">Kwota surowa</string>
     <string name="read_every_warning_above_before_signing">Przeczytaj wszystkie ostrzeżenia powyżej, zanim podpiszesz.</string>
+    <string name="reading_request">Odczytywanie żądania…</string>
     <string name="reading">Odczytywanie…</string>
     <string name="rebuild_it_yourself">Zbuduj go samodzielnie</string>
     <string name="receive_addresses">Adresy odbiorcze</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Nieograniczony Permit</string>
     <string name="unlock">Odblokuj</string>
     <string name="unlock_to_view_your_wallets_and_activity">Odblokuj, aby zobaczyć swoje portfele i aktywność.</string>
+    <string name="unlock_with_x">Odblokuj za pomocą %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Odblokowanie aplikacji nigdy nie autoryzuje podpisu.</string>
     <string name="update_account_permissions">Zaktualizuj uprawnienia konta</string>
     <string name="use_x_instead">Użyj zamiast tego %s</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Informacje o portfelu się zmieniły. Dopasuj to żądanie ponownie.</string>
     <string name="wallet_name">Nazwa portfela</string>
     <string name="wallet_password_2">Hasło portfela</string>
+    <string name="wallet_setup_required_2">Portfel wymaga konfiguracji</string>
     <string name="wallet_setup_required">Wymagana konfiguracja portfela.</string>
     <string name="wallets">Portfele</string>
     <string name="wallets_unavailable">Portfele niedostępne</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Tylko do podglądu</string>
     <string name="which_language_is_your_backup_in">W jakim języku jest Twoja kopia?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Które z nich odczytuje portfel: poziom portfela oraz poziom monety dla Bitcoina, EVM, TRON lub Solany.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Przy frazie z %1$d słów każda karta pokazuje %2$d z %3$d słów, a pozostałe %4$d da się wyliczyć przy wystarczającej mocy obliczeniowej. Chroń każdą kartę tak samo starannie jak pełną frazę albo użyj frazy z 24 słów do kopii dzielonych.</string>
     <string name="word_x">Słowo %d</string>
     <string name="word_x_x">Słowo %1$d, %2$s</string>
     <string name="word_x_hidden">Słowo %d, ukryte</string>

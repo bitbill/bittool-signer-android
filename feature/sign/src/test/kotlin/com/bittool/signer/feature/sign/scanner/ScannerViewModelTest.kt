@@ -328,11 +328,11 @@ class ScannerViewModelTest {
         assertNull(vm.uiState.value.status, "the hint shows before anything is read")
         vm.receive("1")
         runCurrent()
-        assertEquals(UiText.Resource(R.string.sign_reading_request), vm.uiState.value.status)
+        assertEquals(UiText.Resource(R.string.reading_request), vm.uiState.value.status)
         gate.complete(0.25)
         vm.receive("2")
         runCurrent()
-        assertEquals(UiText.Resource(R.string.sign_keep_animated_code_in_view, listOf(2)), vm.uiState.value.status)
+        assertEquals(UiText.Resource(R.string.keep_the_animated_code_in_view_x_parts, listOf(2)), vm.uiState.value.status)
     }
 
     @Test

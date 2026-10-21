@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">Ekran görüntüsü algılandı</string>
     <string name="setup_qr_not_recovery_phrase">Bu QR kodu bir kurtarma ifadesi içermiyor.</string>
-    <string name="setup_weak_cards_warning">%1$d kelimelik bir ifadede her kart %3$d kelimenin %2$d tanesini gösterir; kalan %4$d kelime yeterli işlem gücüyle bulunabilir. Her kartı tam ifade kadar özenle koruyun ya da bölünmüş yedekler için 24 kelimelik bir ifade kullanın.</string>
     <string name="setup_slot_empty">Boş</string>
     <string name="setup_slot_empty_next">Boş, sıradaki</string>
     <string name="setup_screenshot_phrase_hidden">İfade yeniden gizlendi ama ekran görüntüsü onu çoktan içeriyor olabilir. Galerinizden ve eşitlenmiş tüm kopyalardan silin; yazılı bir yedeği çevrimdışı saklayın.</string>

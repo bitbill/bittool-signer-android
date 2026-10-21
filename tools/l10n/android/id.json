@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "Atur buka kunci dengan sidik jari atau wajah di Pengaturan Android untuk mengunci BitTool Signer. Setiap tanda tangan tetap selalu memerlukan kata sandi dompet."
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "Buka kunci dengan biometrik"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "biometrik"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "Kode QR ini tidak memuat frasa pemulihan."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "Pada frasa %1$d kata, setiap kartu menampilkan %2$d dari %3$d kata, dan %4$d kata lainnya bisa ditebak dengan daya komputasi yang cukup. Jaga setiap kartu seketat frasa lengkapnya, atau gunakan frasa 24 kata untuk cadangan terbagi."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "Kosong"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "Pencocokan terputus. Coba lagi."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "Tidak ada dompet yang cocok"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "Tidak ada informasi penanda tangan"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "Cocok dengan lebih dari satu dompet"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "Dompet perlu disiapkan"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "Protokol penandatanganan tidak didukung"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "Membaca permintaan…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "Jaga kode beranimasi tetap terlihat · %1$d bagian"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

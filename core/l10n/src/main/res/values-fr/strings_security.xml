@@ -4,7 +4,7 @@
     <string name="security_app_lock">Verrouillage de l’app</string>
     <string name="security_app_lock_footer_available">Exiger le déverrouillage biométrique pour ouvrir BitTool Signer au lancement et après 2 minutes en arrière-plan. Chaque signature exige toujours le mot de passe du portefeuille.</string>
     <string name="security_app_lock_footer_unavailable">Configurez le déverrouillage par empreinte digitale ou par reconnaissance faciale dans les Paramètres Android pour verrouiller BitTool Signer. Chaque signature exige toujours le mot de passe du portefeuille.</string>
-    <string name="security_unlock_with_biometrics">Déverrouiller par biométrie</string>
+    <string name="security_biometrics_name">la biométrie</string>
     <string name="security_use_biometrics_instead">Utiliser la biométrie à la place</string>
     <string name="security_prompt_unlock_title">Déverrouiller BitTool Signer</string>
     <string name="security_prompt_lock_title">Verrouiller BitTool Signer</string>

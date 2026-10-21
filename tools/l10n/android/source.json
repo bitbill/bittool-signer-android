@@ -246,11 +246,11 @@
    "formatted": true,
    "context": "Settings › Security footer while no strong biometric is enrolled (replaces the iOS \"Set up Face ID or Touch ID in iOS Settings…\")."
   },
-  "security_unlock_with_biometrics": {
+  "security_biometrics_name": {
    "area": "security",
-   "english": "Unlock with Biometrics",
+   "english": "Biometrics",
    "formatted": true,
-   "context": "Lock screen primary button (replaces the iOS \"Unlock with %@\")."
+   "context": "The unlock method on the lock screen's primary button: the argument of the iOS catalogue's \"Unlock with %s\" (unlock_with_x), where iOS puts the system's untranslated name Face ID / Touch ID. Android has no such name. Used only there: translate it in the form that button's translation needs (e.g. genitive after Polish \"za pomocą\", Russian \"с помощью\", Ukrainian \"за допомогою\"; capitalised where it starts the Turkish button)."
   },
   "security_use_biometrics_instead": {
    "area": "security",
@@ -396,12 +396,6 @@
    "formatted": true,
    "context": "Recovery QR scanner error (Features/Setup/WalletSetupFlow.swift:226)."
   },
-  "setup_weak_cards_warning": {
-   "area": "setup",
-   "english": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "formatted": true,
-   "context": "Recovery cards warning for 12/15-word phrases (Features/Backup/RecoveryBackupViews.swift:212-215). Arguments: 1 word count, 2 words shown on each card (count minus a third), 3 word count again, 4 words left out."
-  },
   "setup_slot_empty": {
    "area": "setup",
    "english": "Empty",
@@ -468,47 +462,11 @@
    "formatted": true,
    "context": "MatchingIssue.Interrupted (AppStore.swift:92): the session was suspended while the request was being matched."
   },
-  "sign_no_matching_wallet": {
-   "area": "sign",
-   "english": "No matching wallet",
-   "formatted": true,
-   "context": "resolveSigningPlan status messages (engine/src/resolver.js; RequestReviewView.swift:140-148). No period on purpose."
-  },
-  "sign_missing_signer_information": {
-   "area": "sign",
-   "english": "Missing signer information",
-   "formatted": true,
-   "context": ""
-  },
-  "sign_ambiguous_wallet_match": {
-   "area": "sign",
-   "english": "Ambiguous wallet match",
-   "formatted": true,
-   "context": ""
-  },
-  "sign_wallet_setup_required": {
-   "area": "sign",
-   "english": "Wallet setup required",
-   "formatted": true,
-   "context": ""
-  },
   "sign_unsupported_signing_protocol": {
    "area": "sign",
    "english": "Unsupported signing protocol",
    "formatted": true,
    "context": "MatchingIssue.Unsupported (AppStore.swift:373): the engine review did not set canSign."
-  },
-  "sign_reading_request": {
-   "area": "sign",
-   "english": "Reading request…",
-   "formatted": true,
-   "context": "ScanSession.status (ScanTab.swift:20-24): the first frame is being read; an animated code with %1$d parts so far."
-  },
-  "sign_keep_animated_code_in_view": {
-   "area": "sign",
-   "english": "Keep the animated code in view · %1$d parts",
-   "formatted": true,
-   "context": ""
   },
   "sign_psbt_payload_note": {
    "area": "sign",

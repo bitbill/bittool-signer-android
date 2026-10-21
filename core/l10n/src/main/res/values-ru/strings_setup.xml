@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">Обнаружен скриншот</string>
     <string name="setup_qr_not_recovery_phrase">В этом QR-коде нет фразы восстановления.</string>
-    <string name="setup_weak_cards_warning">Для фразы из %1$d слов каждая карточка показывает %2$d из %3$d слов, а остальные %4$d можно подобрать при достаточных вычислительных мощностях. Берегите каждую карточку так же тщательно, как полную фразу, или используйте для разделённых копий фразу из 24 слов.</string>
     <string name="setup_slot_empty">Пусто</string>
     <string name="setup_slot_empty_next">Пусто, заполняется следующим</string>
     <string name="setup_screenshot_phrase_hidden">Фраза снова скрыта, но она могла попасть на скриншот. Удалите его из галереи и всех синхронизированных копий, а бумажную копию держите офлайн.</string>

@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">حد الإنفاق / معرّف رمز NFT</string>
     <string name="also_paid_out">يُدفع أيضًا</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">قارن دائمًا العنوان الأول في التطبيقين قبل استلام أي أموال.</string>
+    <string name="ambiguous_wallet_match">تطابقت عدة محافظ</string>
     <string name="amount">المبلغ</string>
     <string name="amount_sol">المبلغ (SOL)</string>
     <string name="amount_trx">المبلغ (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">عبارة الاسترداد غير صالحة: فيها كلمة واحدة. عبارات الاسترداد تتكون من 12 أو 15 أو 18 أو 21 أو 24 كلمة.</string>
     <string name="invalid_request_format">صيغة الطلب غير صالحة.</string>
     <string name="invalid_signing_plan">خطة التوقيع غير صالحة.</string>
+    <string name="invalid_signing_request">طلب التوقيع غير صالح</string>
     <string name="invalid_signing_wallet_identity">هوية محفظة التوقيع غير صالحة.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">يحتوي على %d كلمة فقط. لا تتضمّن عبارة مرور BIP39؛ واستعادة هذه المحفظة تحتاج إليها أيضًا.</string>
     <string name="items">العناصر</string>
     <string name="ive_written_them_down_in_order">كتبتها بالترتيب</string>
     <string name="keep_editing">متابعة التحرير</string>
     <string name="keep_it_offline">أبقها دون اتصال</string>
+    <string name="keep_the_animated_code_in_view_x_parts">أبقِ الرمز المتحرك داخل الإطار · %d أجزاء</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">احفظ البطاقات الثلاث في ثلاثة أماكن مختلفة. البطاقة الواحدة لا تحمل العبارة كاملة، لكنها تكشف ثلثي الكلمات؛ ومع عبارة من 12 أو 15 كلمة يمكن تخمين الباقي بقدرة حوسبة كافية، فأخفِ كل بطاقة.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">احفظ هذه البطاقات الثلاث في ثلاثة أماكن مختلفة. أي بطاقتين منها تستعيدان العبارة كاملة، فإذا ضاعت واحدة أو سُرقت تبقى الأخريان كافيتين لأمان محفظتك واستعادتها.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">احفظ هذه البطاقات الثلاث في ثلاثة أماكن مختلفة. أي بطاقتين منها تستعيدان العبارة كاملة، فإذا ضاعت واحدة تبقى الأخريان قادرتين على استعادة محفظتك.</string>
@@ -354,6 +357,7 @@
     <string name="method">الدالة</string>
     <string name="mint">عقد الإصدار</string>
     <string name="missing_or_invalid_transaction_commitment">التزام المعاملة مفقود أو غير صالح.</string>
+    <string name="missing_signer_information">معلومات الموقّع غير متوفرة</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">أكثر من محفظة محفوظة تطابق الطلب. احذف المحفظة المكررة ثم امسح مرة أخرى.</string>
     <string name="multisig">توقيع متعدد</string>
     <string name="multisig_account">حساب التوقيع المتعدد</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">لا تتوفر كاميرا. استورد الطلب كملف بدلًا من ذلك.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">لا يوجد طلب متوقف أو غير مطابق لإعادة المحاولة.</string>
     <string name="no_matching_signing_task_review_the_request_again">لا توجد مهمة توقيع مطابقة. راجع الطلب من جديد.</string>
+    <string name="no_matching_wallet">لا توجد محفظة مطابقة</string>
     <string name="no_matching_word">لا توجد كلمة مطابقة</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">حساب الـ nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">الكمية</string>
     <string name="raw_amount">المبلغ الخام</string>
     <string name="read_every_warning_above_before_signing">اقرأ كل تحذير أعلاه قبل التوقيع.</string>
+    <string name="reading_request">جارٍ قراءة الطلب…</string>
     <string name="reading">جارٍ القراءة…</string>
     <string name="rebuild_it_yourself">أعد بناءه بنفسك</string>
     <string name="receive_addresses">عناوين الاستلام</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit بلا حد</string>
     <string name="unlock">إلغاء القفل</string>
     <string name="unlock_to_view_your_wallets_and_activity">ألغِ القفل لعرض محافظك ونشاطك.</string>
+    <string name="unlock_with_x">إلغاء القفل بـ %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">إلغاء قفل التطبيق لا يعتمد أي توقيع إطلاقًا.</string>
     <string name="update_account_permissions">تحديث صلاحيات الحساب</string>
     <string name="use_x_instead">استخدم %s بدلًا من ذلك</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">تغيّرت معلومات المحفظة. طابِق هذا الطلب من جديد.</string>
     <string name="wallet_name">اسم المحفظة</string>
     <string name="wallet_password_2">كلمة مرور المحفظة</string>
+    <string name="wallet_setup_required_2">يلزم إعداد المحفظة أولاً</string>
     <string name="wallet_setup_required">هذه المحفظة تحتاج إكمال الإعداد.</string>
     <string name="wallets">المحافظ</string>
     <string name="wallets_unavailable">المحافظ غير متاحة</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">للمراقبة فقط</string>
     <string name="which_language_is_your_backup_in">بأي لغة نسختك الاحتياطية؟</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">أي من هذه تقرأها المحفظة: مستوى المحفظة، ومستوى العملة لـ Bitcoin أو EVM أو TRON أو Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">مع عبارة من %1$d كلمة تعرض كل بطاقة %2$d من %3$d كلمة، ويمكن استنتاج الكلمات الـ %4$d المتبقية بقدرة حوسبة كافية. احفظ كل بطاقة بالعناية نفسها التي تحفظ بها العبارة كاملة، أو استخدم عبارة من 24 كلمة للنسخ الاحتياطي المجزّأ.</string>
     <string name="word_x">الكلمة %d</string>
     <string name="word_x_x">الكلمة %1$d، %2$s</string>
     <string name="word_x_hidden">الكلمة %d، مخفية</string>

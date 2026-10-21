@@ -4,7 +4,7 @@
     <string name="security_app_lock">Uygulama kilidi</string>
     <string name="security_app_lock_footer_available">BitTool Signer’ı açarken ve arka planda 2 dakika kaldıktan sonra biyometrik kilit açma iste. Her imza yine de cüzdan parolasını gerektirir.</string>
     <string name="security_app_lock_footer_unavailable">BitTool Signer’ı kilitlemek için Android Ayarları’nda parmak izi veya yüzle kilit açmayı kurun. Her imza yine de her zaman cüzdan parolasını gerektirir.</string>
-    <string name="security_unlock_with_biometrics">Biyometriyle kilidi aç</string>
+    <string name="security_biometrics_name">Biyometri</string>
     <string name="security_use_biometrics_instead">Bunun yerine biyometri kullan</string>
     <string name="security_prompt_unlock_title">BitTool Signer’ın kilidini aç</string>
     <string name="security_prompt_lock_title">BitTool Signer’ı kilitle</string>

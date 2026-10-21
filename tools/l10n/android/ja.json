@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "BitTool Signer をロックするには、Android の「設定」で指紋認証または顔認証を設定してください。署名には常にウォレットのパスワードが必要です。"
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "生体認証でロック解除"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "生体認証"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "この QR コードにはリカバリーフレーズが含まれていません。"
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "%1$d 単語のフレーズでは、各カードに %3$d 単語のうち %2$d 単語が載り、残りの %4$d 単語は十分な計算能力があれば割り出せます。どのカードもフレーズ全体と同じように厳重に保管するか、分割バックアップには 24 単語のフレーズを使ってください。"
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "空欄"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "照合が中断されました。もう一度お試しください。"
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "一致するウォレットがありません"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "署名者の情報がありません"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "一致するウォレットが複数あります"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "ウォレットの設定が必要です"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "署名プロトコルに対応していません"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "リクエストを読み取り中…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "アニメーション QR コードをカメラに映したままにしてください · %1$d フレーム"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

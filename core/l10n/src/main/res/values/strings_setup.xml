@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android strings of :feature:setup (owner: W2-setup). English only until the translation pass (DECISIONS §9.2).
-     The first five are iOS strings that are not in the 773-key catalogue (gaps.md G6, setup-backup.md §14.3): the exact
-     iOS English. The two screenshot messages are the Android wording of DECISIONS §9.4. -->
+     The first four are iOS strings that are not in the iOS catalogue (gaps.md G6, setup-backup.md §14.3): the exact
+     iOS English. The weak recovery-cards warning joined the catalogue (iOS ff2756f) and is its resource
+     with_a_x_word_phrase_each_card_shows_x_of_the_x_words now. The two screenshot messages are the Android wording of
+     DECISIONS §9.4. -->
 <resources>
     <!-- RecoveryCopy.screenshotTitle (Features/Setup/RecoveryPhraseViews.swift:348), title of both screenshot alerts. -->
     <string name="setup_screenshot_detected">Screenshot Detected</string>
     <!-- Recovery QR scanner error (Features/Setup/WalletSetupFlow.swift:226). -->
     <string name="setup_qr_not_recovery_phrase">This QR code does not contain a recovery phrase.</string>
-    <!-- Recovery cards warning for 12/15-word phrases (Features/Backup/RecoveryBackupViews.swift:212-215). Arguments:
-         1 word count, 2 words shown on each card (count minus a third), 3 word count again, 4 words left out. -->
-    <string name="setup_weak_cards_warning">With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.</string>
     <!-- Accessibility values of an empty blank of the backup check (Features/Backup/RecoveryBackupViews.swift:483). -->
     <string name="setup_slot_empty">Empty</string>
     <string name="setup_slot_empty_next">Empty, next to fill</string>

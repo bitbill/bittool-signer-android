@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">偵測到截圖</string>
     <string name="setup_qr_not_recovery_phrase">這個 QR Code 不包含助記詞。</string>
-    <string name="setup_weak_cards_warning">使用 %1$d 字助記詞時，每張卡片會露出 %3$d 個字中的 %2$d 個，其餘 %4$d 個在足夠算力下可以被推算出來。請像保管完整助記詞一樣保管每一張卡片，或改用 24 字助記詞進行分拆備份。</string>
     <string name="setup_slot_empty">空白</string>
     <string name="setup_slot_empty_next">空白，下一個待填</string>
     <string name="setup_screenshot_phrase_hidden">助記詞已重新隱藏，但截圖中可能已經包含它。請從相簿以及任何同步副本中刪除，並保留離線手抄備份。</string>

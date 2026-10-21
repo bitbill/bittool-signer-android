@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "ตั้งค่าการปลดล็อกด้วยลายนิ้วมือหรือใบหน้าในการตั้งค่า Android เพื่อล็อก BitTool Signer ทุกลายเซ็นยังคงต้องใช้รหัสผ่านกระเป๋าเสมอ"
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "ปลดล็อกด้วยชีวมิติ"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "ชีวมิติ"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "คิวอาร์โค้ดนี้ไม่มีวลีกู้คืน"
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "หากเป็นวลี %1$d คำ การ์ดแต่ละใบจะแสดง %2$d จาก %3$d คำ และอีก %4$d คำที่เหลืออาจถูกคำนวณหาได้หากมีกำลังประมวลผลมากพอ เก็บรักษาการ์ดทุกใบอย่างระมัดระวังเท่ากับวลีทั้งชุด หรือใช้วลี 24 คำสำหรับการสำรองแบบแบ่งการ์ด"
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "ว่าง"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "การจับคู่ถูกขัดจังหวะ ลองอีกครั้ง"
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "ไม่มีกระเป๋าที่ตรงกัน"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "ไม่มีข้อมูลผู้เซ็น"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "ตรงกับกระเป๋ามากกว่าหนึ่งใบ"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "ต้องตั้งค่ากระเป๋าก่อน"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "โปรโตคอลการเซ็นที่ไม่รองรับ"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "กำลังอ่านคำขอ…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "ให้โค้ดเคลื่อนไหวอยู่ในกรอบกล้อง · %1$d ส่วน"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

@@ -157,9 +157,9 @@
    "source": "Set up fingerprint or face unlock in Android Settings to lock BitTool Signer. Every signature always needs the wallet’s password.",
    "value": "BitTool Signer를 잠그려면 Android 설정에서 지문 또는 얼굴 인식을 설정하세요. 서명에는 항상 지갑 암호가 필요합니다."
   },
-  "security_unlock_with_biometrics": {
-   "source": "Unlock with Biometrics",
-   "value": "생체 인증으로 잠금 해제"
+  "security_biometrics_name": {
+   "source": "Biometrics",
+   "value": "생체 인증"
   },
   "security_use_biometrics_instead": {
    "source": "Use Biometrics Instead",
@@ -245,10 +245,6 @@
    "source": "This QR code does not contain a recovery phrase.",
    "value": "이 QR 코드에는 복구 구문이 없습니다."
   },
-  "setup_weak_cards_warning": {
-   "source": "With a %1$d-word phrase each card shows %2$d of the %3$d words, and the other %4$d could be worked out with enough computing power. Guard every card as carefully as the full phrase, or use a 24-word phrase for split backups.",
-   "value": "%1$d단어 구문에서는 카드마다 %3$d단어 중 %2$d단어가 보이고, 나머지 %4$d단어는 충분한 연산 능력이 있으면 알아낼 수 있습니다. 모든 카드를 전체 구문만큼 철저히 보관하거나, 분할 백업에는 24단어 구문을 사용하세요."
-  },
   "setup_slot_empty": {
    "source": "Empty",
    "value": "빈칸"
@@ -285,33 +281,9 @@
    "source": "Matching interrupted. Try again.",
    "value": "대조가 중단되었습니다. 다시 시도하세요."
   },
-  "sign_no_matching_wallet": {
-   "source": "No matching wallet",
-   "value": "일치하는 지갑 없음"
-  },
-  "sign_missing_signer_information": {
-   "source": "Missing signer information",
-   "value": "서명자 정보 없음"
-  },
-  "sign_ambiguous_wallet_match": {
-   "source": "Ambiguous wallet match",
-   "value": "여러 지갑이 일치함"
-  },
-  "sign_wallet_setup_required": {
-   "source": "Wallet setup required",
-   "value": "지갑 설정 필요"
-  },
   "sign_unsupported_signing_protocol": {
    "source": "Unsupported signing protocol",
    "value": "지원하지 않는 서명 프로토콜"
-  },
-  "sign_reading_request": {
-   "source": "Reading request…",
-   "value": "요청을 읽는 중…"
-  },
-  "sign_keep_animated_code_in_view": {
-   "source": "Keep the animated code in view · %1$d parts",
-   "value": "애니메이션 QR 코드를 화면 안에 유지하세요 · 프레임 %1$d개"
   },
   "sign_psbt_payload_note": {
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",

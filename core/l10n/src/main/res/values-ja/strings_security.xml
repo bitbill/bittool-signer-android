@@ -4,7 +4,7 @@
     <string name="security_app_lock">App ロック</string>
     <string name="security_app_lock_footer_available">起動時と、バックグラウンドで 2 分経過した後に、BitTool Signer を開くには生体認証が必要になります。署名にはこれまでどおりウォレットのパスワードが必要です。</string>
     <string name="security_app_lock_footer_unavailable">BitTool Signer をロックするには、Android の「設定」で指紋認証または顔認証を設定してください。署名には常にウォレットのパスワードが必要です。</string>
-    <string name="security_unlock_with_biometrics">生体認証でロック解除</string>
+    <string name="security_biometrics_name">生体認証</string>
     <string name="security_use_biometrics_instead">代わりに生体認証を使う</string>
     <string name="security_prompt_unlock_title">BitTool Signer のロックを解除</string>
     <string name="security_prompt_lock_title">BitTool Signer をロック</string>

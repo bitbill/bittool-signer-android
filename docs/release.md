@@ -192,7 +192,7 @@ There is one engine (DECISIONS §11). `core/engine/src/main/assets/engine/signer
 When iOS ships a new engine:
 
 1. In the iOS repository, the engine is rebuilt reproducibly and `engine/bundle-manifest.json` is updated (iOS `docs/Reproducible-Build.md`).
-2. Run `tools/engine/sync-from-ios.sh [path/to/BitSigner]`. It refuses to copy a `signer.js` that does not match the iOS `bundle-manifest.json`. It copies the file, updates the pin in `EngineBundle.kt` and prints the digest. **Never edit `signer.js` by hand.**
+2. Run `tools/engine/sync-from-ios.sh [path/to/BitSigner]`. It refuses to copy a `signer.js` that does not match the iOS `bundle-manifest.json`. It copies the file, updates the pin in `EngineBundle.kt` and prints the digest. **Never edit `signer.js` by hand.** It then runs `tools/l10n/sync-from-ios.sh`, which also runs on its own whenever iOS changes interface text: it copies `translations/*.json` and `interface-strings.json` byte for byte, lists the keys iOS added or removed, and regenerates `strings_ios.xml` and `IosStrings.kt`. Recorded resource names never change. An override in `tools/l10n/overrides/` whose iOS translation changed stops the import until it is reviewed. For each added key, retire the Android-only string with the same meaning (`strings_<area>.xml` and `tools/l10n/android/<lang>.json`, then `android_strings.py export`, `generate`, `check`).
 3. Run `tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest`. The instrumented vectors are BIP84, EVM, TRON and Solana.
 4. Commit `signer.js` and `EngineBundle.kt` together, then run `verify-release.sh`: the engine line compares the APK with the pin and with iOS.
 

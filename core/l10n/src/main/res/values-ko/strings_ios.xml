@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">허용 한도／NFT 토큰 ID</string>
     <string name="also_paid_out">기타 지급</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">입금하기 전에 두 앱에서 첫 번째 주소를 꼭 비교하세요.</string>
+    <string name="ambiguous_wallet_match">일치하는 지갑이 여러 개입니다</string>
     <string name="amount">금액</string>
     <string name="amount_sol">금액(SOL)</string>
     <string name="amount_trx">금액(TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">복구 구문이 올바르지 않습니다: 1단어뿐입니다. 복구 구문은 12, 15, 18, 21 또는 24단어입니다.</string>
     <string name="invalid_request_format">요청 형식이 올바르지 않습니다.</string>
     <string name="invalid_signing_plan">서명 계획이 올바르지 않습니다.</string>
+    <string name="invalid_signing_request">서명 요청이 올바르지 않습니다</string>
     <string name="invalid_signing_wallet_identity">서명 지갑의 식별자가 올바르지 않습니다.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">%d단어만 들어 있습니다. BIP39 패스프레이즈는 포함되지 않으며, 이 지갑을 되살리려면 패스프레이즈도 필요합니다.</string>
     <string name="items">항목</string>
     <string name="ive_written_them_down_in_order">순서대로 적었습니다</string>
     <string name="keep_editing">계속 편집</string>
     <string name="keep_it_offline">오프라인으로 보관</string>
+    <string name="keep_the_animated_code_in_view_x_parts">애니메이션 QR 코드를 화면 안에 유지하세요 · %d개 읽음</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">카드 세 장을 각각 다른 곳에 보관하세요. 한 장만으로는 전체 구문이 되지 않지만 단어의 3분의 2가 드러납니다. 12단어나 15단어 구문이라면 충분한 연산 능력으로 나머지를 추측할 수 있으므로, 모든 카드를 잘 숨겨야 합니다.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">카드 세 장을 각각 다른 곳에 보관하세요. 아무 두 장이면 전체 복구 구문을 되살릴 수 있으므로, 한 장을 잃어버리거나 도난당해도 나머지 두 장으로 지갑을 안전하게 되살릴 수 있습니다.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">카드 세 장을 각각 다른 곳에 보관하세요. 아무 두 장이면 전체 복구 구문을 되살릴 수 있으므로, 한 장을 잃어버려도 나머지 두 장으로 지갑을 되살릴 수 있습니다.</string>
@@ -354,6 +357,7 @@
     <string name="method">메서드</string>
     <string name="mint">민트</string>
     <string name="missing_or_invalid_transaction_commitment">트랜잭션 커밋먼트가 없거나 올바르지 않습니다.</string>
+    <string name="missing_signer_information">서명자 정보가 없습니다</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">저장된 지갑 여러 개가 일치합니다. 중복된 지갑을 삭제한 뒤 다시 스캔하세요.</string>
     <string name="multisig">멀티시그</string>
     <string name="multisig_account">다중서명 계정</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">쓸 수 있는 카메라가 없습니다. 요청을 파일로 가져오세요.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">다시 시도할 중단된 요청이나 대조되지 않은 요청이 없습니다.</string>
     <string name="no_matching_signing_task_review_the_request_again">일치하는 서명 작업이 없습니다. 요청을 다시 검토하세요.</string>
+    <string name="no_matching_wallet">일치하는 지갑이 없습니다</string>
     <string name="no_matching_word">일치하는 단어 없음</string>
     <string name="nonce">논스</string>
     <string name="nonce_account">논스 계정</string>
@@ -464,6 +469,7 @@
     <string name="quantity">수량</string>
     <string name="raw_amount">원시 금액</string>
     <string name="read_every_warning_above_before_signing">서명하기 전에 위의 경고를 모두 읽으세요.</string>
+    <string name="reading_request">요청을 읽는 중…</string>
     <string name="reading">읽는 중…</string>
     <string name="rebuild_it_yourself">직접 다시 빌드하기</string>
     <string name="receive_addresses">수신 주소</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">무제한 Permit</string>
     <string name="unlock">잠금 해제</string>
     <string name="unlock_to_view_your_wallets_and_activity">잠금을 해제하면 지갑과 활동 기록을 볼 수 있습니다.</string>
+    <string name="unlock_with_x">%s(으)로 잠금 해제</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">앱 잠금 해제가 서명을 승인하는 것은 아닙니다.</string>
     <string name="update_account_permissions">계정 권한 업데이트</string>
     <string name="use_x_instead">대신 %s 사용</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">지갑 정보가 바뀌었습니다. 이 요청을 다시 대조하세요.</string>
     <string name="wallet_name">지갑 이름</string>
     <string name="wallet_password_2">지갑 암호</string>
+    <string name="wallet_setup_required_2">지갑 설정이 필요합니다</string>
     <string name="wallet_setup_required">이 지갑은 설정을 마쳐야 합니다.</string>
     <string name="wallets">지갑</string>
     <string name="wallets_unavailable">지갑을 사용할 수 없습니다</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">조회 전용</string>
     <string name="which_language_is_your_backup_in">백업은 어떤 언어로 적었나요?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">지갑이 읽을 수 있는 것: 지갑 레벨, 그리고 Bitcoin·EVM·TRON·Solana의 코인 레벨.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">%1$d단어 복구 구문에서는 각 카드가 %3$d개 중 %2$d개를 보여주고, 나머지 %4$d개는 충분한 연산 능력이 있으면 알아낼 수 있습니다. 카드 하나하나를 전체 구문과 똑같이 안전하게 보관하거나, 분할 백업에는 24단어 구문을 사용하세요.</string>
     <string name="word_x">%d번째 단어</string>
     <string name="word_x_x">%1$d번째 단어, %2$s</string>
     <string name="word_x_hidden">%d번째 단어, 숨김</string>

@@ -104,8 +104,13 @@ internal fun RecoveryCardsPage(words: RecoveryWords, hasPassphrase: Boolean, ses
             color = colors.secondaryLabel,
         )
         if (weak) {
+            // RecoveryBackupViews.swift weakPhraseWarning, localized since iOS ff2756f. The four values in the English
+            // order; the translations are positional (Chinese and Turkish read them 1, 3, 2, 4).
             val missing = count / RecoveryCards.COUNT
-            Callout(stringResource(L10n.string.setup_weak_cards_warning, count, count - missing, count, missing), tone = Tone.Warning)
+            Callout(
+                stringResource(L10n.string.with_a_x_word_phrase_each_card_shows_x_of_the_x_words, count, count - missing, count, missing),
+                tone = Tone.Warning,
+            )
         }
         if (hasPassphrase) {
             Callout(stringResource(L10n.string.the_cards_contain_the_words_only_back_up_your_bip39), tone = Tone.Warning)

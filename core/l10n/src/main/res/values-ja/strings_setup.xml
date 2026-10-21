@@ -3,7 +3,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation,UnusedResources,TypographyEllipsis,TypographyQuotes,TypographyDashes,Typos">
     <string name="setup_screenshot_detected">スクリーンショットを検出しました</string>
     <string name="setup_qr_not_recovery_phrase">この QR コードにはリカバリーフレーズが含まれていません。</string>
-    <string name="setup_weak_cards_warning">%1$d 単語のフレーズでは、各カードに %3$d 単語のうち %2$d 単語が載り、残りの %4$d 単語は十分な計算能力があれば割り出せます。どのカードもフレーズ全体と同じように厳重に保管するか、分割バックアップには 24 単語のフレーズを使ってください。</string>
     <string name="setup_slot_empty">空欄</string>
     <string name="setup_slot_empty_next">空欄、次に入力</string>
     <string name="setup_screenshot_phrase_hidden">フレーズは再び隠しましたが、スクリーンショットにはすでに写っている可能性があります。ギャラリーや同期されたコピーからも削除し、手書きのバックアップをオフラインで保管してください。</string>

@@ -62,6 +62,7 @@
     <string name="allowance_nft_token_id">Autorisation de dépense / ID de jeton NFT</string>
     <string name="also_paid_out">Également versé</string>
     <string name="always_compare_the_first_addresses_in_both_apps_before">Comparez toujours les premières adresses dans les deux apps avant de recevoir des fonds.</string>
+    <string name="ambiguous_wallet_match">Plusieurs portefeuilles correspondent</string>
     <string name="amount">Montant</string>
     <string name="amount_sol">Montant (SOL)</string>
     <string name="amount_trx">Montant (TRX)</string>
@@ -307,12 +308,14 @@
     <string name="invalid_recovery_phrase_it_has_1_word_recovery_phrases">Phrase de récupération invalide : elle ne compte qu’un mot. Une phrase de récupération compte 12, 15, 18, 21 ou 24 mots.</string>
     <string name="invalid_request_format">Format de demande invalide.</string>
     <string name="invalid_signing_plan">Plan de signature invalide.</string>
+    <string name="invalid_signing_request">Demande de signature invalide</string>
     <string name="invalid_signing_wallet_identity">Identité du portefeuille signataire invalide.</string>
     <string name="it_contains_the_x_words_only_your_bip39_passphrase_is">Il ne contient que les %d mots. Votre phrase secrète BIP39 n’y figure pas ; restaurer ce portefeuille exige aussi la phrase secrète.</string>
     <string name="items">Articles</string>
     <string name="ive_written_them_down_in_order">Je les ai notés dans l’ordre</string>
     <string name="keep_editing">Continuer la saisie</string>
     <string name="keep_it_offline">Gardez-la hors ligne</string>
+    <string name="keep_the_animated_code_in_view_x_parts">Gardez le code animé dans le cadre · %d parties</string>
     <string name="keep_the_three_cards_in_three_different_places_one_card">Conservez les trois cartes en trois endroits différents. Une carte seule ne contient pas la phrase entière, mais elle en révèle les deux tiers ; avec une phrase de 12 ou 15 mots, le reste peut être deviné avec assez de puissance de calcul : cachez donc chaque carte.</string>
     <string name="keep_these_three_cards_in_three_different_places_any">Conservez ces trois cartes en trois endroits différents. Deux d’entre elles, quelles qu’elles soient, restaurent la phrase de récupération complète : si une carte est perdue ou volée, les deux autres gardent votre portefeuille sûr et récupérable.</string>
     <string name="keep_these_three_cards_in_three_different_places_any_2">Conservez ces trois cartes en trois endroits différents. Deux d’entre elles, quelles qu’elles soient, restaurent la phrase de récupération complète : si une carte est perdue, les deux autres suffisent encore à restaurer votre portefeuille.</string>
@@ -354,6 +357,7 @@
     <string name="method">Méthode</string>
     <string name="mint">Mint</string>
     <string name="missing_or_invalid_transaction_commitment">Engagement de transaction manquant ou invalide.</string>
+    <string name="missing_signer_information">Informations sur le signataire manquantes</string>
     <string name="more_than_one_saved_wallet_matches_delete_the_duplicate">Plusieurs portefeuilles enregistrés correspondent. Supprimez le portefeuille en double, puis scannez à nouveau.</string>
     <string name="multisig">Multisignature</string>
     <string name="multisig_account">Compte multisignature</string>
@@ -390,6 +394,7 @@
     <string name="no_camera_is_available_import_the_request_as_a_file">Aucun appareil photo disponible. Importez plutôt la demande sous forme de fichier.</string>
     <string name="no_interrupted_or_unmatched_request_to_retry">Aucune demande interrompue ou non associée à réessayer.</string>
     <string name="no_matching_signing_task_review_the_request_again">Aucune tâche de signature correspondante. Réexaminez la demande.</string>
+    <string name="no_matching_wallet">Aucun portefeuille correspondant</string>
     <string name="no_matching_word">Aucun mot correspondant</string>
     <string name="nonce">Nonce</string>
     <string name="nonce_account">Compte nonce</string>
@@ -464,6 +469,7 @@
     <string name="quantity">Quantité</string>
     <string name="raw_amount">Montant brut</string>
     <string name="read_every_warning_above_before_signing">Lisez tous les avertissements ci-dessus avant de signer.</string>
+    <string name="reading_request">Lecture de la demande…</string>
     <string name="reading">Lecture…</string>
     <string name="rebuild_it_yourself">Reconstruisez-le vous-même</string>
     <string name="receive_addresses">Adresses de réception</string>
@@ -726,6 +732,7 @@
     <string name="unlimited_permit">Permit illimité</string>
     <string name="unlock">Déverrouiller</string>
     <string name="unlock_to_view_your_wallets_and_activity">Déverrouillez pour voir vos portefeuilles et votre historique.</string>
+    <string name="unlock_with_x">Déverrouiller avec %s</string>
     <string name="unlocking_the_app_never_authorizes_a_signature">Déverrouiller l’app n’autorise jamais une signature.</string>
     <string name="update_account_permissions">Mettre à jour les permissions du compte</string>
     <string name="use_x_instead">Utiliser %s à la place</string>
@@ -749,6 +756,7 @@
     <string name="wallet_information_changed_match_this_request_again">Les informations du portefeuille ont changé. Réassociez cette demande.</string>
     <string name="wallet_name">Nom du portefeuille</string>
     <string name="wallet_password_2">Mot de passe du portefeuille</string>
+    <string name="wallet_setup_required_2">Configuration du portefeuille requise</string>
     <string name="wallet_setup_required">Configuration du portefeuille requise.</string>
     <string name="wallets">Portefeuilles</string>
     <string name="wallets_unavailable">Portefeuilles indisponibles</string>
@@ -756,6 +764,7 @@
     <string name="watch_only">Lecture seule</string>
     <string name="which_language_is_your_backup_in">Dans quelle langue est votre sauvegarde ?</string>
     <string name="which_of_these_the_wallet_reads_wallet_level_and_coin">Lesquels de ces formats le portefeuille lit : niveau portefeuille, et niveau pièce pour Bitcoin, EVM, TRON ou Solana.</string>
+    <string name="with_a_x_word_phrase_each_card_shows_x_of_the_x_words">Avec une phrase de %1$d mots, chaque carte affiche %2$d des %3$d mots, et les %4$d autres peuvent être retrouvés avec assez de puissance de calcul. Gardez chaque carte aussi précieusement que la phrase complète, ou utilisez une phrase de 24 mots pour les sauvegardes réparties.</string>
     <string name="word_x">Mot %d</string>
     <string name="word_x_x">Mot %1$d, %2$s</string>
     <string name="word_x_hidden">Mot %d, masqué</string>
