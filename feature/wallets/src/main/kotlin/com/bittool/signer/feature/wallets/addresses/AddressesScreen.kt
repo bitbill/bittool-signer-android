@@ -69,6 +69,7 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.PublicAccount
+import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.address.AddressText
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.core.ui.pairing.ChainPicker
@@ -292,8 +293,10 @@ private fun AddressRow(account: PublicAccount, chain: Chain, labelWidth: Dp?, on
             AddressText(account.address, Modifier.weight(1f), style = typography.footnote)
             Icon(SignerIcons.QrCode, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
         }
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
+        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10). Chosen with the
+        // keyboard, it leaves no focus ring on the back arrow (QA wallets-12).
         if (menu && rememberWindowGateReleased()) {
+            WindowFocusReturnEffect()
             DropdownMenu(expanded = true, onDismissRequest = { menu = false }, containerColor = colors.elevatedCard) {
                 DropdownMenuItem(
                     text = { Text(copyLabel) },

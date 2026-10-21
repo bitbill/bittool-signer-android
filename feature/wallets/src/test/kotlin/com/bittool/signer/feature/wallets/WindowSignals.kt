@@ -47,4 +47,14 @@ internal object WindowSignals {
         Shadow.extract<ShadowViewRootImpl>(viewRoot(view)).callWindowFocusChanged(hasFocus)
         idle()
     }
+
+    /**
+     * The root view of the window added last (the topmost): a popup such as a `DropdownMenu`, which has no `Dialog` for
+     * `ShadowDialog` to return.
+     */
+    fun topWindowRoot(): View {
+        val global = Class.forName("android.view.WindowManagerGlobal").getMethod("getInstance").invoke(null)
+        val views = global.javaClass.getDeclaredField("mViews").apply { isAccessible = true }.get(global) as List<*>
+        return checkNotNull(views.lastOrNull() as? View) { "no window is attached" }
+    }
 }

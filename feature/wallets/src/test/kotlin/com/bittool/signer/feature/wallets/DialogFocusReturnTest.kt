@@ -10,20 +10,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTouchInput
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.model.Chain
+import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.feature.wallets.addresses.AddressDetailSheet
+import com.bittool.signer.feature.wallets.addresses.AddressesActions
+import com.bittool.signer.feature.wallets.addresses.AddressesContent
+import com.bittool.signer.feature.wallets.addresses.AddressesUiState
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import com.bittool.signer.feature.wallets.detail.RenameWalletDialog
 import com.bittool.signer.feature.wallets.detail.UnableToRenameDialog
 import com.bittool.signer.feature.wallets.detail.WalletDetailActions
 import com.bittool.signer.feature.wallets.detail.WalletDetailContent
 import com.bittool.signer.feature.wallets.detail.WalletDetailUiState
+import com.bittool.signer.feature.wallets.list.WalletsActions
+import com.bittool.signer.feature.wallets.list.WalletsContent
+import com.bittool.signer.feature.wallets.list.WalletsUiState
 import com.bittool.signer.feature.wallets.security.DeletePasswordDialog
 import com.bittool.signer.feature.wallets.security.RemoveLostWalletDialog
 import kotlin.test.assertEquals
@@ -80,6 +91,58 @@ class DialogFocusReturnTest {
         WindowSignals.windowFocus(view, hasFocus = false)
         WindowSignals.leaveTouchModeIn(ShadowDialog.getLatestDialog().window!!.decorView, view)
         compose.onNodeWithTag("rename.name").performImeAction()
+        compose.waitForIdle()
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("nav.back").assertIsNotFocused()
+        assertNull(decor.findFocus(), "nothing on the page is focused")
+        assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, decor.descendantFocusability, "the page takes the focus again")
+    }
+
+    /**
+     * The "Add Wallet" menu is a popup window too: opened with a tap and chosen with the arrow keys and Enter, it left the
+     * focus ring on "Scan" (the page's first control) under the setup flow it opened.
+     */
+    @Test
+    fun choosingFromTheAddWalletMenuWithTheKeyboardLeavesNoFocusRingOnScan() {
+        val state = WalletFixtures.state()
+        var added: SetupIntent? = null
+        content {
+            WalletsContent(
+                WalletsUiState(state.wallets.mapNotNull { WalletIdentity.of(state, it.id) }, loaded = true),
+                WalletsActions(onAddWallet = { added = it }),
+            )
+        }
+        compose.onNodeWithTag("wallets.add").performClick()
+        compose.waitForIdle()
+        WindowSignals.windowFocus(view, hasFocus = false)
+        WindowSignals.leaveTouchModeIn(WindowSignals.topWindowRoot(), view)
+        compose.onNodeWithTag("wallets.add.import").performClick()
+        compose.waitForIdle()
+        WindowSignals.windowFocus(view, hasFocus = true)
+        compose.waitForIdle()
+
+        assertEquals(SetupIntent.Restore, added)
+        compose.onNodeWithContentDescription("Scan").assertIsNotFocused()
+        assertNull(decor.findFocus(), "nothing on the page is focused")
+        assertEquals(ViewGroup.FOCUS_AFTER_DESCENDANTS, decor.descendantFocusability, "the page takes the focus again")
+    }
+
+    /** The same for an address row's long-press menu ("Copy Address", "Show QR Code"). */
+    @Test
+    fun choosingFromAnAddressMenuWithTheKeyboardLeavesNoFocusRingOnTheBackArrow() {
+        content {
+            AddressesContent(
+                AddressesUiState(chain = Chain.Bitcoin, accounts = WalletFixtures.accounts(Chain.Bitcoin, 0, 3), loaded = true),
+                AddressesActions(),
+            )
+        }
+        compose.onNodeWithTag("address.row.0").performTouchInput { longClick() }
+        compose.waitForIdle()
+        WindowSignals.windowFocus(view, hasFocus = false)
+        WindowSignals.leaveTouchModeIn(WindowSignals.topWindowRoot(), view)
+        compose.onNodeWithText("Copy Address").performClick()
         compose.waitForIdle()
         WindowSignals.windowFocus(view, hasFocus = true)
         compose.waitForIdle()

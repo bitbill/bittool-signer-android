@@ -12,8 +12,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalView
 
 /**
- * Keyboard focus around the windows that open above the activity window: the App Lock window, dialogs and bottom
- * sheets (QA wallets-12).
+ * Keyboard focus around the windows that open above the activity window: the App Lock window, dialogs, bottom sheets
+ * and focusable popups such as a `DropdownMenu` (QA wallets-12).
  *
  * In keyboard (non-touch) mode Android gives a window that has no focused view the first focusable one when it gets
  * the window focus back, or (API 33+) when the display leaves touch mode while another window has the focus
@@ -133,10 +133,12 @@ object WindowFocusReturn {
 }
 
 /**
- * For a dialog or bottom sheet composed in the activity's composition (call it next to the dialog, outside the
- * dialog's content): while it is up, and until the activity window has the focus back after it, nothing in the
- * activity window takes the keyboard focus, unless something there already had it ([WindowFocusReturn.holdIfUnfocused]).
- * So confirming the dialog with the Enter key does not leave a focus ring on the page's first control (QA wallets-12).
+ * For a dialog, bottom sheet or focusable popup (a `DropdownMenu`) composed in the activity's composition: call it
+ * next to the window, outside its content, and only while the window is wanted (it holds from its first composition).
+ * While the window is up, and until the activity window has the focus back after it, nothing in the activity window
+ * takes the keyboard focus, unless something there already had it ([WindowFocusReturn.holdIfUnfocused]). So confirming
+ * the dialog or choosing a menu item with the Enter key does not leave a focus ring on the page's first control (QA
+ * wallets-12).
  */
 @Composable
 fun WindowFocusReturnEffect() {
