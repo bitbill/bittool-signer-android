@@ -174,6 +174,41 @@ class PasswordFieldTest {
     }
 
     /**
+     * QA setup-01 / wallets-01 (backlog B1 re-verified): the round 1 device was API 31, where there is no
+     * accessibility-data-sensitive filter (API 34+), so every service, `uiautomator dump` included, gets the node. Its
+     * text must still be the bullets, for the wallet password and for a hidden passphrase alike.
+     */
+    @Test
+    @Config(sdk = [32])
+    fun beforeApi34EveryServiceGetsBulletsOnly() {
+        val password = TextFieldState()
+        val passphrase = TextFieldState()
+        lateinit var view: View
+        compose.setContent {
+            view = LocalView.current
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                Column {
+                    PasswordField(PasswordKind.WalletPassword, password)
+                    PasswordField(PasswordKind.Passphrase, passphrase, revealable = true)
+                }
+            }
+        }
+        for ((kind, state) in listOf(PasswordKind.WalletPassword to password, PasswordKind.Passphrase to passphrase)) {
+            val field = compose.onNodeWithTag(kind.english)
+            field.performTextInput(SECRET)
+            compose.runOnIdle { assertEquals(SECRET, state.text.toString(), "typing still reaches the state") }
+            val id = field.fetchSemanticsNode().id
+            compose.runOnIdle {
+                val info = assertNotNull(view.accessibilityNodeProvider.createAccessibilityNodeInfo(id), "${kind.english}: the node exists")
+                assertTrue(info.isPassword, "${kind.english}: a password node")
+                // Checked without printing the node's text (ARCHITECTURE §4.9).
+                assertTrue(info.text?.toString() == "•".repeat(SECRET.length), "${kind.english}: one bullet per character")
+                assertFalse(info.text.toString().contains(SECRET), "${kind.english}: the typed secret is not in the node")
+            }
+        }
+    }
+
+    /**
      * The debug UI-test switch of gaps G5.3 (`LocalSensitiveDataMarking`) covers the field's own node marking too, so a
      * harness that has to turn the marking off is not left with password fields its UiAutomator cannot see. The bullets
      * do not depend on it: what was typed never reaches accessibility.
