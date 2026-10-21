@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.NavIcon
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
@@ -64,7 +64,6 @@ import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospacedDigit
 import com.bittool.signer.core.designsystem.theme.semibold
-import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
@@ -293,31 +292,37 @@ private fun AddressRow(account: PublicAccount, chain: Chain, labelWidth: Dp?, on
             AddressText(account.address, Modifier.weight(1f), style = typography.footnote)
             Icon(SignerIcons.QrCode, contentDescription = null, tint = colors.accent, modifier = Modifier.size(20.dp))
         }
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10). Chosen with the
-        // keyboard, it leaves no focus ring on the back arrow (QA wallets-12).
-        if (menu && rememberWindowGateReleased()) {
-            WindowFocusReturnEffect()
-            DropdownMenu(expanded = true, onDismissRequest = { menu = false }, containerColor = colors.elevatedCard) {
-                DropdownMenuItem(
-                    text = { Text(copyLabel) },
-                    leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
-                    onClick = {
-                        menu = false
-                        SignerClipboard.copy(context, account.address)
-                    },
-                )
-                DropdownMenuItem(
-                    text = { Text(showLabel) },
-                    leadingIcon = { Icon(SignerIcons.QrCode, contentDescription = null) },
-                    onClick = {
-                        menu = false
-                        onOpen()
-                    },
-                )
-            }
+        // A popup window, the design system's menu: it waits for the window gate (ARCHITECTURE §1.10), uses the elevated
+        // card colour and publishes its items' tags as resource ids in debuggable builds (backlog B26, B29; iOS gives the
+        // context menu's buttons no identifiers, these two are Android e2e hooks). Chosen with the keyboard, it leaves no
+        // focus ring on the back arrow (QA wallets-12).
+        if (menu) WindowFocusReturnEffect()
+        SignerDropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            DropdownMenuItem(
+                text = { Text(copyLabel) },
+                leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
+                onClick = {
+                    menu = false
+                    SignerClipboard.copy(context, account.address)
+                },
+                modifier = Modifier.testTag(ADDRESS_COPY_TAG),
+            )
+            DropdownMenuItem(
+                text = { Text(showLabel) },
+                leadingIcon = { Icon(SignerIcons.QrCode, contentDescription = null) },
+                onClick = {
+                    menu = false
+                    onOpen()
+                },
+                modifier = Modifier.testTag(ADDRESS_SHOW_QR_TAG),
+            )
         }
     }
 }
+
+/** Test tags of the address row menu's "Copy Address" and "Show QR Code" (one menu is open at a time). */
+internal const val ADDRESS_COPY_TAG = "address.copy"
+internal const val ADDRESS_SHOW_QR_TAG = "address.showQR"
 
 /** The row label's style (iOS `.caption.weight(.semibold).monospacedDigit()`). */
 private fun TextStyle.addressLabel(): TextStyle = semibold().monospacedDigit()

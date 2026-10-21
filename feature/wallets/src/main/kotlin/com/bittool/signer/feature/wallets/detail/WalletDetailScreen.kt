@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -26,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -64,6 +66,8 @@ import com.bittool.signer.core.ui.text.currentLocale
 import com.bittool.signer.core.ui.text.localizedLongName
 import com.bittool.signer.core.ui.wallet.WalletAvatar
 import com.bittool.signer.feature.wallets.common.WalletIdentity
+import com.bittool.signer.feature.wallets.common.ownsItsTouches
+import com.bittool.signer.feature.wallets.common.undoesScrollBackOnShrink
 import com.bittool.signer.feature.wallets.list.fingerprintText
 import java.time.Instant
 import java.time.ZoneId
@@ -160,8 +164,12 @@ fun WalletDetailContent(
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
             val direction = LocalLayoutDirection.current
+            val listState = rememberLazyListState()
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                // The Rename dialog's keyboard hides the tab bar, so the page grows and shrinks behind the dialog: near its
+                // end, the rows come back to where they were (QA regression-04).
+                modifier = Modifier.undoesScrollBackOnShrink(listState).fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = padding.calculateStartPadding(direction) + SignerMetrics.pagePadding,
                     end = padding.calculateEndPadding(direction) + SignerMetrics.pagePadding,
@@ -206,11 +214,10 @@ fun WalletDetailContent(
                     item(key = "rename") {
                         GroupedSection(Modifier.readableWidth()) {
                             item {
-                                NavRow(
+                                ActionRow(
                                     title = stringResource(R.string.rename_wallet),
                                     icon = SignerIcons.Edit,
                                     onClick = onRename,
-                                    showChevron = false,
                                     modifier = Modifier.testTag("detail.rename"),
                                 )
                             }
@@ -258,11 +265,13 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
                 style = typography.title2.bold(),
                 color = colors.label,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.ownsItsTouches(),
             )
             val canCopy = identity?.fingerprint != null
             // Laid out at the line's own height, so name, fingerprint and date stay 4 dp apart as on iOS (QA wallets-08).
-            // The 48 dp target comes from Compose itself: a clickable smaller than the minimum touch target size takes
-            // touches around it and reports the enlarged bounds to accessibility services.
+            // Compose gives a clickable smaller than the minimum touch target the touches around it and reports 48 dp
+            // bounds to accessibility services. The name and the date take their own touches, so that expansion only
+            // covers the gaps and the sides and never the line above or below (QA regression-09).
             Text(
                 text = stringResource(R.string.fingerprint_x, fingerprintText(identity?.fingerprint)),
                 style = typography.footnote.monospaced(),
@@ -286,6 +295,7 @@ private fun DetailHeader(identity: WalletIdentity?, onCopyFingerprint: () -> Uni
                     style = typography.footnote,
                     color = colors.tertiaryLabel,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.ownsItsTouches(),
                 )
             }
         }
@@ -307,7 +317,7 @@ private fun RepairSection(onRepair: () -> Unit, modifier: Modifier = Modifier) {
         )
         GroupedSection {
             item(dividerInset = IconRowDividerInset) {
-                NavRow(
+                ActionRow(
                     title = stringResource(R.string.repair_wallet_data),
                     icon = SignerIcons.Build,
                     onClick = onRepair,
@@ -350,7 +360,7 @@ private fun PairSection(actions: WalletDetailActions, modifier: Modifier = Modif
 private fun SecuritySection(actions: WalletDetailActions, modifier: Modifier = Modifier) {
     GroupedSection(modifier = modifier, header = stringResource(R.string.security)) {
         item(dividerInset = IconRowDividerInset) {
-            NavRow(
+            ActionRow(
                 title = stringResource(R.string.show_recovery_phrase),
                 icon = SignerIcons.Key,
                 onClick = actions.onRecoveryPhrase,
@@ -358,13 +368,36 @@ private fun SecuritySection(actions: WalletDetailActions, modifier: Modifier = M
             )
         }
         item(dividerInset = IconRowDividerInset) {
-            NavRow(
+            ActionRow(
                 title = stringResource(R.string.change_password),
                 icon = SignerIcons.LockReset,
                 onClick = actions.onChangePassword,
                 modifier = Modifier.testTag("detail.changePassword"),
             )
         }
+    }
+}
+
+/**
+ * A list button (iOS `Button { sheet = … } label: { Label(title, systemImage:) }` in the wallet page's `List`,
+ * `WalletDetailView.swift:43-45, 75-93`; QA regression-14): icon and title in the accent tint and no chevron, because it
+ * opens a security page or a dialog over the wallet and pushes nothing. The `NavRow` layout otherwise (56 dp, 24 dp icon,
+ * ripple, `Role.Button`). "Delete Wallet" stays the destructive `NavRow`, which already has the iOS look.
+ */
+@Composable
+private fun ActionRow(title: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = SignerTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(24.dp))
+        Text(title, style = SignerTheme.typography.body, color = colors.accent, modifier = Modifier.weight(1f))
     }
 }
 

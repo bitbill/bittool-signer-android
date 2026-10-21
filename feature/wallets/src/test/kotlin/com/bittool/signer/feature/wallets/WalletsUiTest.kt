@@ -183,8 +183,9 @@ class WalletsUiTest {
 
     /**
      * QA wallets-08 (`WalletDetailView.swift:137` `VStack(spacing: 4)`): name, fingerprint and "Added" stay 4 dp apart;
-     * the fingerprint is laid out at its line's height while a touch beside it still copies (Compose's minimum touch
-     * target), so the header is not loosened by a 48 dp row.
+     * the fingerprint is laid out at its line's height, so the header is not loosened by a 48 dp row. Accessibility
+     * services still get a 48 dp target, and a touch in the gaps around the line still copies (Compose's minimum touch
+     * target).
      */
     @Test
     fun theHeaderStacksTightlyAndTheFingerprintStillTakesTouchesAroundIt() {
@@ -207,8 +208,39 @@ class WalletsUiTest {
             compose.onNodeWithTag("detail.fingerprint").fetchSemanticsNode().touchBoundsInRoot.height.toDp()
         }
         assertTrue(touchHeight >= 48.dp, "a 48 dp accessibility target: $touchHeight")
-        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, -10.dp.toPx())) }
-        assertEquals(1, copies, "a touch 10 dp above the line copies the fingerprint")
+        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, -1.dp.toPx())) }
+        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, height + 1.dp.toPx())) }
+        // Beside the date, which is narrower than the fingerprint line: nothing else is there.
+        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(2.dp.toPx(), height + 10.dp.toPx())) }
+        assertEquals(3, copies, "touches in the gaps around the line and beside the date copy the fingerprint")
+    }
+
+    /**
+     * QA regression-09 (`WalletDetailView.swift:141-153`: only the fingerprint button copies): the fingerprint's
+     * expanded touch target covered most of the "Added …" line and the lower half of the name, so a tap on the date
+     * copied the fingerprint and showed "Copied".
+     */
+    @Test
+    fun tappingTheDateOrTheNameCopiesNothing() {
+        var copies = 0
+        content {
+            WalletDetailContent(
+                uiState = WalletDetailUiState(walletId = WalletFixtures.readyId, identity = identities.first()),
+                actions = WalletDetailActions(),
+                toast = rememberStatusToastState(),
+                onCopyFingerprint = { copies++ },
+                onRename = {},
+            )
+        }
+        val added = compose.onNodeWithText("Added Oct 1, 2026", substring = true)
+        added.performTouchInput { click() }
+        added.performTouchInput { click(Offset(centerX, 2.dp.toPx())) }
+        assertEquals(0, copies, "the date is not the fingerprint")
+        // 8 dp above the fingerprint line: 4 dp inside the name's line, well inside the old 48 dp expansion.
+        compose.onNodeWithTag("detail.fingerprint").performTouchInput { click(Offset(centerX, -8.dp.toPx())) }
+        assertEquals(0, copies, "the name is not the fingerprint")
+        compose.onNodeWithTag("detail.fingerprint").performClick()
+        assertEquals(1, copies)
     }
 
     /**
