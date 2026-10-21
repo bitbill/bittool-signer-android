@@ -196,6 +196,15 @@ private fun PasswordForm(
     val focus = remember { FocusRequester() }
     val view = LocalView.current
     val focusManager = LocalFocusManager.current
+    var continueFocused by remember { mutableStateOf(false) }
+    val submit = {
+        // In keyboard mode Continue can hold the focus (Tab from the field, then Enter). The attempt empties the field,
+        // which disables Continue, and a disabled control's focus went to the first control, the cross. So the focus
+        // goes back to the field first: a wrong password keeps it there (QA wallets-05), success then clears it
+        // (regression-02). In touch mode Continue never has the focus.
+        if (continueFocused) runCatching { focus.requestFocus() }
+        onUnlock()
+    }
     LaunchedEffect(Unit) {
         // iOS focuses the field after 350 ms, once the sheet has settled.
         delay(FOCUS_DELAY_MILLIS)
@@ -233,10 +242,14 @@ private fun PasswordForm(
         ErrorCallout(state.error)
         PrimaryButton(
             text = stringResource(L10n.string.continue_text),
-            onClick = onUnlock,
+            onClick = submit,
             busy = state.busy,
             enabled = password.text.isNotEmpty() && !state.busy,
-            modifier = Modifier.padding(top = 6.dp).obscuredTouchGuard(LocalOverlayBlocked.current).testTag("vaultManagement.submit"),
+            modifier = Modifier
+                .padding(top = 6.dp)
+                .onFocusChanged { continueFocused = it.hasFocus }
+                .obscuredTouchGuard(LocalOverlayBlocked.current)
+                .testTag("vaultManagement.submit"),
         )
     }
 }

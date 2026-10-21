@@ -4,10 +4,12 @@ import android.os.Build
 import android.os.Looper
 import android.view.View
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
@@ -19,7 +21,10 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.requestFocus
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
@@ -167,6 +172,71 @@ class RecoveryPhraseContentTest {
         compose.onNodeWithTag("recovery.reveal").assertExists()
         compose.onNodeWithTag(PasswordKind.WalletPassword.english).assertDoesNotExist()
         compose.onNodeWithTag("recovery.close").assertIsNotFocused()
+        compose.onAllNodes(isFocused()).assertCountEquals(0)
+        compose.runOnIdle {
+            assertFalse(view.isInTouchMode, "precondition: keyboard mode")
+            assertNull(view.rootView.findFocus(), "no view of the window has the focus")
+        }
+    }
+
+    /**
+     * QA regression-02, from Continue: in keyboard mode the person can Tab from the field to Continue and press Enter.
+     * The attempt empties the field, which disables Continue, and its focus went to the first control, the Cancel /
+     * Done cross: the ring stayed there while unlocking, after a wrong password (instead of the field, QA wallets-05)
+     * and once the phrase was shown. The focus now goes back to the field, which keeps it after a wrong password and
+     * gives it up on success.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2, Build.VERSION_CODES.BAKLAVA])
+    fun continueConfirmedWithEnterLeavesNoRingOnTheCross() {
+        var state by mutableStateOf(RecoveryPhraseUiState(identity = identity))
+        val password = TextFieldState()
+        lateinit var view: View
+        compose.setContent {
+            view = LocalView.current
+            SetupTestHost(factory) {
+                RecoveryPhraseContent(
+                    state,
+                    password,
+                    factory,
+                    // What RecoveryPhraseViewModel.unlock does first: empty the field, then work.
+                    onUnlock = {
+                        password.clearText()
+                        state = state.copy(busy = true, error = null)
+                    },
+                    onClose = {},
+                )
+            }
+        }
+        compose.runOnIdle { leaveTouchMode(view) }
+        val field = compose.onNodeWithTag(PasswordKind.WalletPassword.english)
+        val submit = compose.onNodeWithTag("vaultManagement.submit")
+        val cross = compose.onNodeWithTag("recovery.close")
+        compose.mainClock.advanceTimeBy(1_000)
+        field.assertIsFocused()
+
+        // A wrong password, confirmed on Continue.
+        field.performTextInput("Wrong-Password1!")
+        submit.requestFocus().assertIsFocused()
+        submit.performKeyInput { pressKey(Key.Enter) }
+        compose.waitForIdle()
+        cross.assertIsNotFocused()
+        field.assertIsFocused()
+        state = state.copy(busy = false, error = UiText.Ios("The password is incorrect."))
+        compose.waitForIdle()
+        field.assertIsFocused()
+        cross.assertIsNotFocused()
+
+        // The right one, confirmed on Continue again.
+        field.performTextInput("Correct-Password1!")
+        submit.requestFocus().assertIsFocused()
+        submit.performKeyInput { pressKey(Key.Enter) }
+        compose.waitForIdle()
+        cross.assertIsNotFocused()
+        state = state.copy(busy = false, revealed = RevealedPhrase(RecoveryWords(Phrases.VECTOR_12.split(' ')), ""))
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("recovery.reveal").assertExists()
         compose.onAllNodes(isFocused()).assertCountEquals(0)
         compose.runOnIdle {
             assertFalse(view.isInTouchMode, "precondition: keyboard mode")
