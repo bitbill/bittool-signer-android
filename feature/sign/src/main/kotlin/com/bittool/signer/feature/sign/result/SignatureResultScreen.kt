@@ -82,32 +82,59 @@ import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * The signature result with its file export (inventory rows 54–55): [SignatureResultContent] driven by
- * [SignatureResultViewModel], "Export as File" through the system document picker.
+ * [SignatureResultViewModel], "Export as File" through the system document picker ([onExport]; the Scan tab passes
+ * the one it registers itself, see [rememberSignatureExport]).
  */
 @Composable
 fun SignatureResultScreen(
     modifier: Modifier = Modifier,
     scrollToTop: Flow<Unit> = emptyFlow(),
     viewModel: SignatureResultViewModel = hiltViewModel(),
+    onExport: () -> Unit = rememberSignatureExport(viewModel),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val exporter = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(SignatureResultViewModel.EXPORT_MIME_TYPE),
-    ) { uri -> viewModel.export(uri) }
     SignatureResultContent(
         state = state,
-        onExport = {
-            // A device without a document picker has nothing to launch (as on the Activity Signature page).
-            try {
-                exporter.launch(SignatureResultViewModel.EXPORT_FILE_NAME)
-            } catch (_: ActivityNotFoundException) {
-                viewModel.onExportUnavailable()
-            }
-        },
+        onExport = onExport,
         onDone = viewModel::done,
         modifier = modifier,
         scrollToTop = scrollToTop,
     )
+}
+
+/**
+ * "Export as File": opens the system document picker for `bittool-signer-signature.txt` and hands its answer to
+ * [viewModel] ([SignatureResultViewModel.export]).
+ *
+ * Call it where it stays composed while the picker is open, whatever page is shown: the Scan tab root does. The picker
+ * is another app; when Android ends this process meanwhile, the new process shows Scan Home (the signature lived in
+ * memory only), and the answer reaches only a launcher registered again at the same place. Registered on the result
+ * page, it never came back, and the document the person had just created stayed empty without a word (audit A14).
+ * Which signature the open picker exports (its digest, [SignatureResultViewModel.prepareExport]) is saved beside the
+ * launcher's own key, so both come back together and the new process can write it from Activity.
+ */
+@Composable
+fun rememberSignatureExport(viewModel: SignatureResultViewModel): () -> Unit {
+    var exporting by rememberSaveable { mutableStateOf<String?>(null) }
+    val exporter = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(SignatureResultViewModel.EXPORT_MIME_TYPE),
+    ) { uri ->
+        val exported = exporting
+        exporting = null
+        viewModel.export(uri, exported)
+    }
+    return remember(viewModel, exporter) {
+        {
+            exporting = viewModel.prepareExport()
+            // A device without a document picker has nothing to launch (as on the Activity Signature page).
+            try {
+                exporter.launch(SignatureResultViewModel.EXPORT_FILE_NAME)
+            } catch (_: ActivityNotFoundException) {
+                exporting = null
+                viewModel.onExportUnavailable()
+            }
+        }
+    }
 }
 
 /**

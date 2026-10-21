@@ -77,6 +77,35 @@ object SignFixtures {
         """.trimIndent(),
     )
 
+    /** The long witness script of [batchPayout]: over 280 characters, so its row shows "Show All". */
+    val witnessScript = "ab".repeat(200)
+
+    /**
+     * A batch payout PSBT as the engine reviews it (audit A10): a recipient and an amount row per output, as
+     * `bitcoin.js` emits them, so [outputs] outputs make about twice as many Details rows; a long witness script near
+     * the top. Public data only.
+     */
+    fun batchPayout(outputs: Int): TransactionReview {
+        val fields = buildList {
+            add("""{"label":"Network","value":"Bitcoin"}""")
+            add("""{"label":"Input 1 witness script","value":"$witnessScript"}""")
+            for (n in 1..outputs) {
+                add("""{"label":"Output $n · Recipient","value":"$BTC_RECIPIENT"}""")
+                add("""{"label":"Output $n · Amount","value":"0.0001 BTC"}""")
+            }
+            add("""{"label":"Network fee","value":"0.0021 BTC"}""")
+        }
+        return review(
+            """
+            {"chain":"bitcoin","title":"Sign Bitcoin transaction","summary":"Send ${outputs / 10_000.0} BTC to $outputs recipients",
+             "fields":[${fields.joinToString(",")}],
+             "warnings":[],"requestHash":"$REQUEST_HASH","canSign":true,"decodeStatus":"fullyDecoded","riskLevel":"normal",
+             "network":{"name":"Bitcoin","symbol":"BTC"},
+             "display":{"action":"Send","amount":"${outputs / 10_000.0}","symbol":"BTC","fee":"0.0021 BTC"}}
+            """.trimIndent(),
+        )
+    }
+
     private fun taskJson(id: String, wallet: WalletId, key: String, chain: String = "bitcoin", inputs: List<Int> = listOf(0, 1)) = buildJsonObject {
         put("id", id)
         put("localWalletId", wallet.toString())

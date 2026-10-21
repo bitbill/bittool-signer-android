@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bittool.signer.core.common.coroutines.ApplicationScope
+import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.toUiText
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,7 +55,10 @@ data class ScannerUiState(
 
 /** One-off scanner events. */
 sealed interface ScannerEvent {
-    /** The request is complete and prepared: the review is already published, close the camera. */
+    /**
+     * The store has a review (or a signature), from this camera or from anywhere else: it is already published under
+     * the camera, close the camera.
+     */
     data object Completed : ScannerEvent
 }
 
@@ -70,6 +76,10 @@ sealed interface ScannerEvent {
  *   to the front of the queue and is retried with the next new frame. On success the progress only grows; once the
  *   store has a review the session completes ([ScannerEvent.Completed]); otherwise the next frame is processed. A
  *   failure (never a cancellation) shows the error and drops the queue.
+ * - A review or a signature that reaches the store from anywhere else (a file import that finishes while the camera
+ *   is up) completes the session too. On iOS the camera is a cover of Scan Home (`ScanTab.swift:147`), and `ScanTab`
+ *   replaces Home as soon as the store has either (`:96-104`), which dismisses the cover: the camera never stays open
+ *   over a review, ignoring every code it is pointed at.
  * - [stop] (Close, Back, completion, or the ViewModel going away) resets the session and ends the engine scan session.
  *
  * Main thread only (`viewModelScope` is `Dispatchers.Main.immediate`).
@@ -96,6 +106,9 @@ class ScannerViewModel @Inject constructor(
 
     init {
         start()
+        viewModelScope.launch {
+            store.state.map(::closesTheCamera).distinctUntilChanged().collect { closes -> if (closes) complete() }
+        }
     }
 
     /** iOS `start(store:)`: a new session, then a fresh engine scan session. Also "Scan Again". */
@@ -170,7 +183,7 @@ class ScannerViewModel @Inject constructor(
             outcome.fold(
                 onSuccess = { value ->
                     _uiState.update { it.copy(progress = maxOf(it.progress, value)) }
-                    if (store.state.value.review != null) complete() else drain()
+                    if (closesTheCamera(store.state.value)) complete() else drain()
                 },
                 onFailure = { e ->
                     if (e is CancellationException) return@fold
@@ -181,7 +194,9 @@ class ScannerViewModel @Inject constructor(
         }
     }
 
+    /** Closes the camera once per session: the store's review and this scanner's own last frame can both report it. */
     private fun complete() {
+        if (stopped) return
         stop()
         _events.trySend(ScannerEvent.Completed)
     }
@@ -198,5 +213,10 @@ class ScannerViewModel @Inject constructor(
 
     override fun onCleared() {
         stop()
+    }
+
+    private companion object {
+        /** iOS `ScanTab`: Home, and with it the camera, gives way to a signature or a request under review. */
+        fun closesTheCamera(state: SignerState): Boolean = state.review != null || state.hasSignedResponse
     }
 }

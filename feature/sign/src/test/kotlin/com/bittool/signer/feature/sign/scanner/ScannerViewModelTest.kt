@@ -16,6 +16,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -42,6 +43,9 @@ class ScannerViewModelTest {
     private fun TestScope.scanner(): ScannerViewModel = ScannerViewModel(store, backgroundScope)
 
     private fun received(): List<String> = store.calls<FakeSignerStore.Call.ReceiveFrame>().map { it.frame }
+
+    private fun TestScope.eventsOf(vm: ScannerViewModel): List<ScannerEvent> =
+        mutableListOf<ScannerEvent>().also { events -> backgroundScope.launch { vm.events.collect { events += it } } }
 
     @Test
     fun framesSeenWhileTheSessionStartsAreProcessedInOrderOnceItIsReady() = runTest {
@@ -111,6 +115,57 @@ class ScannerViewModelTest {
         vm.receive("UR:CRYPTO-PSBT/LATE")
         runCurrent()
         assertEquals(listOf("UR:CRYPTO-PSBT/OK"), received(), "nothing is read once a review exists")
+    }
+
+    /**
+     * Audit A09: a file import still running when the camera opened publishes its review under the camera. On iOS the
+     * camera is Scan Home's cover and Home gives way to the review, which dismisses it (`ScanTab.swift:96-104,147`);
+     * here the camera stayed up, silently ignoring every code it was pointed at.
+     */
+    @Test
+    fun aReviewPublishedFromElsewhereClosesTheCameraOntoIt() = runTest {
+        val vm = scanner()
+        val events = eventsOf(vm)
+        runCurrent()
+        store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+        runCurrent()
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "the camera closes onto the imported review")
+        assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size, "and its engine scan session ends")
+        vm.receive("UR:CRYPTO-PSBT/OTHER")
+        runCurrent()
+        assertEquals(emptyList(), received(), "no frame can clear the review")
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "closed once")
+    }
+
+    /** Audit A09: a frame still queued behind one with the engine is never read once a review came from elsewhere. */
+    @Test
+    fun framesQueuedWhenAReviewArrivesFromElsewhereAreDroppedAndTheCameraClosesOnce() = runTest {
+        val first = CompletableDeferred<Double>()
+        store.onReceiveFrame = { frame -> if (frame == "A") first.await() else 0.5 }
+        val vm = scanner()
+        val events = eventsOf(vm)
+        runCurrent()
+        vm.receive("A"); vm.receive("B")
+        runCurrent()
+        store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+        runCurrent()
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events)
+        first.complete(0.3)
+        runCurrent()
+        assertEquals(listOf("A"), received(), "B would have cleared the imported review")
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "the late result does not close it again")
+        assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size)
+    }
+
+    /** A camera that opens as an import publishes its review (the card is not disabled while busy) closes at once. */
+    @Test
+    fun aCameraOpenedOverAnExistingReviewClosesAtOnce() = runTest {
+        store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+        val vm = scanner()
+        val events = eventsOf(vm)
+        runCurrent()
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events)
+        assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size)
     }
 
     @Test

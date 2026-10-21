@@ -101,6 +101,8 @@ object ReviewStates {
     val noMatch = state(SignFixtures.bitcoinSend, issue = MatchingIssue.Engine("No matching wallet"))
     val interrupted = state(SignFixtures.knownSpenderApproval, issue = MatchingIssue.Interrupted)
     val signing = state(SignFixtures.bitcoinSend, SignFixtures.plan("task-1" to walletA), busy = true)
+    /** A batch payout of 2,000 outputs: about 4,000 Details rows (audit A10). */
+    val batchPayout by lazy { state(SignFixtures.batchPayout(outputs = 2_000), SignFixtures.plan("task-1" to walletA)) }
 
     val authorize = AuthorizeUiState("task-1", SigningWallet.of(wallets, walletA), riskAcknowledged = true)
     val authorizeFailed = authorize.copy(error = UiText.Ios("The password is incorrect."), attempt = 1)
@@ -126,6 +128,7 @@ val SignPages: Map<String, @Composable () -> Unit> = linkedMapOf(
     "16-review-no-match" to { ReviewPreview(ReviewStates.noMatch) },
     "17-review-interrupted" to { ReviewPreview(ReviewStates.interrupted) },
     "18-review-signing" to { ReviewPreview(ReviewStates.signing) },
+    "19-review-batch-payout" to { ReviewPreview(ReviewStates.batchPayout) },
     "20-authorize" to { SheetPreview { AuthorizePreview(ReviewStates.authorize) } },
     "21-authorize-error" to { SheetPreview { AuthorizePreview(ReviewStates.authorizeFailed) } },
     "30-signature" to {
