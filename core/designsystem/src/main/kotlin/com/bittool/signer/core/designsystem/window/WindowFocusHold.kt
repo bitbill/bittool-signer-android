@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalView
  * ([holdIfUnfocused] does not hold it): Android returns the focus there, to the control that opened the dialog. Holds
  * of one window add up; the window takes focus again when the last one ends. Main thread only.
  *
- * The same contract as `:core:security`'s `WindowFocusReturn` (the App Lock window and the Wallets dialogs), which this
+ * The same contract as `:core:security`'s `WindowFocusReturn` (the App Lock window holds with it), which this
  * module cannot call (`:core:security` depends on it). The two never touch the same view: that one blocks the window's
  * root (its `DecorView`), this one the root's child that holds the content, so holds of both on one window combine
  * (either keeps the window unfocusable) and each restores only what it changed, in whatever order they end.

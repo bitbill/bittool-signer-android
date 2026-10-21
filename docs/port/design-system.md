@@ -734,7 +734,8 @@ buttons) · `labelMedium` = caption 12/16 SemiBold (navigation labels) · `label
   lower case of the English line (what QA regression-10 read as a proportional face).
 - Japanese and Korean titles and running text break between phrases on every API level through `PhraseText`
   (`headingLineBreaks` / `phraseLineBreaks` styles; word joiners in the drawn copy below API 33, Korean below 35; read
-  as written by TalkBack).
+  as written by TalkBack): large titles, setup's running text, onboarding titles, `SwitchRow` subtitles and every
+  `Callout` (setup's warnings and notes). Not for selectable text (a copy would carry the joiners).
 
 ### 9.4 Shapes, spacing, elevation
 ```kotlin

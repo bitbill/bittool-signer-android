@@ -55,7 +55,7 @@ fun phraseBreakable(text: String): String = PhraseBreaks.forSdk(text, Build.VERS
  */
 object PhraseBreaks {
     /** U+2060 WORD JOINER. */
-    const val WORD_JOINER: Char = '⁠'
+    const val WORD_JOINER: Char = '\u2060'
 
     /**
      * From this version on the platform's phrase style keeps Korean words whole; below it the joiners do. Android 13

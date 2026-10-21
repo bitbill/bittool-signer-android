@@ -22,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.PhraseText
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.SwitchRow
@@ -197,6 +198,26 @@ class LineBreakingTest {
         assertEquals(PhraseBreaks.keepPhrasesTogether(title), drawn, "the drawn copy carries the joiners")
         assertTrue(WORD_JOINER in drawn)
         compose.onNodeWithText(drawn, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /**
+     * A callout is running text of its page (setup's warnings and notes): below API 33 its title and text break between
+     * phrases too (QA regression-13), and the callout still reads as one element, as written.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S])
+    fun belowApi33ACalloutBreaksBetweenPhrasesAndReadsAsWritten() {
+        val title = "画面ロックが必要です"
+        val text = "ウォレットを作成または使用するには、画面ロックを設定してください。"
+        content { Callout(text = text, title = title, modifier = Modifier.testTag("callout")) }
+        val callout = compose.onNodeWithTag("callout").fetchSemanticsNode()
+        assertEquals(listOf(title, text), callout.config[SemanticsProperties.Text].map { it.text })
+        for (written in listOf(title, text)) {
+            val layout = compose.onNodeWithText(written, useUnmergedTree = true).textLayout()
+            assertEquals(PhraseBreaks.keepPhrasesTogether(written), layout.layoutInput.text.text, "the drawn copy of $written")
+            assertTrue(WORD_JOINER in layout.layoutInput.text.text)
+            assertEquals(LineBreak.WordBreak.Phrase, layout.layoutInput.style.lineBreak.wordBreak)
+        }
     }
 
     /** From API 33 a Japanese text is drawn as written (the platform breaks by phrase), and English everywhere. */

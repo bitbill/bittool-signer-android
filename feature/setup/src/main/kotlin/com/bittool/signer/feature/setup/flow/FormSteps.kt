@@ -83,6 +83,7 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
+import com.bittool.signer.core.designsystem.window.WindowFocusHoldEffect
 import com.bittool.signer.core.designsystem.window.appExposesTestTags
 import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
@@ -472,11 +473,13 @@ private fun FieldLabel(text: String, modifier: Modifier = Modifier) {
 /**
  * The recovery QR scanner (iOS `fullScreenCover` with `QRScannerView`, `WalletSetupFlow.swift:217-229`): the shared
  * full-screen scanner in a secure, edge-to-edge dialog of this activity (a separate activity would suspend the
- * session). It waits for the window gate like every window.
+ * session). It waits for the window gate like every window and, like the design system's windows, holds the page's
+ * keyboard focus while it is up, so closing it leaves no focus ring on the page's first control (backlog B30).
  */
 @Composable
 private fun RecoveryScannerDialog(error: UiText?, model: WalletSetupViewModel) {
     if (!rememberWindowGateReleased()) return
+    WindowFocusHoldEffect()
     Dialog(
         onDismissRequest = model::closeScanner,
         properties = DialogProperties(

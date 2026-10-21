@@ -24,6 +24,8 @@ import com.bittool.signer.core.designsystem.theme.phraseLineBreaks
  * copy carries word joiners ([phraseBreakable], [PhraseBreaks]). TalkBack, the accessibility tree and the e2e suite
  * always read [text] exactly as written: the drawn copy only replaces the node's text, so its other semantics (a
  * heading, a test tag, the text layout) stay. English, Chinese, Arabic and every other language are drawn as written.
+ * Not for selectable text: inside a `SelectionContainer` a copy would carry the joiners. [onTextLayout] and the node's
+ * text layout are the drawn copy's (their offsets count the joiners).
  *
  * The parameters are [Text]'s; [color] unspecified takes the content colour, as [Text] does.
  */

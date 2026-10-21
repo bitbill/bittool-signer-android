@@ -143,7 +143,7 @@ class WindowFocusHoldTest {
     }
 
     /**
-     * `:core:security`'s `WindowFocusReturn` (the lock window, the Wallets dialogs) blocks the decor and later puts
+     * `:core:security`'s `WindowFocusReturn` (the lock window) blocks the decor and later puts
      * back what it found there; a hold of this module blocks the decor's content child. Ending in either order leaves the
      * window focusable, and neither end lets the window take the focus while the other still holds.
      */

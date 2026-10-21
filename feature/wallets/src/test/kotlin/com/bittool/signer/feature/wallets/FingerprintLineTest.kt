@@ -60,7 +60,7 @@ class FingerprintLineTest {
         assertEquals(listOf("73C5DA0A"), monospacedRuns("Fingerprint 73C5DA0A"))
         direction = LayoutDirection.Rtl
         compose.waitForIdle()
-        assertEquals(listOf("73C5DA0A"), monospacedRuns("Fingerprint ⁨73C5DA0A⁩"))
+        assertEquals(listOf("73C5DA0A"), monospacedRuns("Fingerprint \u206873C5DA0A\u2069"))
     }
 
     @Test
