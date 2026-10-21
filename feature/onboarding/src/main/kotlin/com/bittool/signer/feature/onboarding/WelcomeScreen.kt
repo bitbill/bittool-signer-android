@@ -1,5 +1,12 @@
 package com.bittool.signer.feature.onboarding
 
+import android.app.Activity
+import android.app.admin.DevicePolicyManager
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.provider.Settings
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +39,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +49,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -48,13 +62,16 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.brand.BrandTile
 import com.bittool.signer.core.designsystem.component.BottomActionBar
+import com.bittool.signer.core.designsystem.component.DialogAction
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
+import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
 import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.icon.SignerIcons
@@ -68,6 +85,7 @@ import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.ui.legal.LegalDocumentView
 import com.bittool.signer.core.ui.logo.NetworkLogoStack
+import kotlin.math.roundToInt
 
 /**
  * The first screen when no wallet exists (iOS `WelcomeView`, Features/Onboarding/WelcomeView.swift:5-114; app-shell.md
@@ -76,19 +94,74 @@ import com.bittool.signer.core.ui.logo.NetworkLogoStack
  * the intent is kept through it). "Terms of Use" and "Privacy Policy" open the bundled texts in a sheet.
  *
  * It is a root stage: no back button, no tab bar. System Back leaves the app.
+ *
+ * Android only (QA wallets-04): on a device without a secure lock screen, Create and Import open "Screen Lock Required"
+ * instead (every wallet's device key needs one; the vault would refuse only after the phrase, the password and the key
+ * derivation), with "Open Settings" as the way out.
  */
 @Composable
-fun WelcomeScreen(onStart: (SetupIntent) -> Unit, modifier: Modifier = Modifier) {
-    val viewModel: WelcomeViewModel = hiltViewModel()
+fun WelcomeScreen(onStart: (SetupIntent) -> Unit, modifier: Modifier = Modifier, viewModel: WelcomeViewModel = hiltViewModel()) {
     val legalSheet by viewModel.legalSheet.collectAsStateWithLifecycle()
-    WelcomeContent(onStart = onStart, onShowLegal = viewModel::showLegal, modifier = modifier)
+    val lockRequired by viewModel.lockRequired.collectAsStateWithLifecycle()
+    val latestStart by rememberUpdatedState(onStart)
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    WelcomeContent(
+        onStart = { intent -> if (viewModel.mayStartSetup()) latestStart(intent) },
+        onShowLegal = viewModel::showLegal,
+        modifier = modifier,
+    )
     legalSheet?.let { sheet -> LegalDocumentSheet(sheet = sheet, onDismiss = viewModel::dismissLegal) }
+    if (lockRequired) {
+        ScreenLockRequiredDialog(
+            onOpenSettings = {
+                viewModel.dismissLockRequired()
+                openScreenLockSettings(activity ?: context)
+            },
+            onDismiss = viewModel::dismissLockRequired,
+        )
+    }
+}
+
+/** "Screen Lock Required": the Android screen-lock requirement (`crypto_device_lock_required`), "Open Settings", "Cancel". */
+@Composable
+internal fun ScreenLockRequiredDialog(onOpenSettings: () -> Unit, onDismiss: () -> Unit) {
+    SignerAlertDialog(
+        title = stringResource(R.string.setup_screen_lock_required),
+        text = stringResource(R.string.crypto_device_lock_required),
+        confirm = DialogAction(stringResource(R.string.open_settings), testTag = WelcomeTags.LOCK_OPEN_SETTINGS, onClick = onOpenSettings),
+        dismiss = DialogAction(stringResource(R.string.cancel), testTag = WelcomeTags.LOCK_CANCEL, onClick = onDismiss),
+        onDismissRequest = onDismiss,
+    )
+}
+
+/**
+ * Opens the system page that sets a screen lock, or the security settings, or Settings, the first one this device has
+ * (the same as the setup flow's; features share no code).
+ */
+private fun openScreenLockSettings(context: Context) {
+    val actions = listOf(DevicePolicyManager.ACTION_SET_NEW_PASSWORD, Settings.ACTION_SECURITY_SETTINGS, Settings.ACTION_SETTINGS)
+    for (action in actions) {
+        val intent = Intent(action).apply { if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+        try {
+            context.startActivity(intent)
+            return
+        } catch (_: ActivityNotFoundException) {
+            // The next, more general page.
+        } catch (_: SecurityException) {
+            // A restricted profile can refuse the direct page; the next one is plain Settings navigation.
+        }
+    }
 }
 
 /**
  * Stateless Welcome (previews, screenshots): a scrolling column that fills at least the window, so on tall screens the
- * four gaps share the free height (iOS spacers with minimum lengths 32, 28, 28, 24) and on short ones it scrolls,
- * under an accent glow from the top; the pinned bar ends in the legal links.
+ * four gaps share the free height (iOS spacers with minimum lengths 32, 28, 28, 24), under an accent glow from the top;
+ * the pinned bar ends in the legal links.
+ *
+ * Compact heights (QA setup-13: on a 393 × 807 dp phone the network row was cut by the bar on the very first screen):
+ * when the page does not fit, the gaps shrink first (down to 12, 18, 18, 12 and 10 above the name) and then the brand
+ * tile (down to 64 dp), so the whole page fits above the bar wherever it can; only beyond that does it scroll.
  */
 @Composable
 fun WelcomeContent(
@@ -103,21 +176,24 @@ fun WelcomeContent(
         Column(Modifier.fillMaxSize()) {
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                 val viewport = maxHeight
-                Column(
+                Layout(
+                    content = {
+                        HeroTile()
+                        HeroTitle()
+                        Features()
+                        Networks()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .verticalScroll(scroll)
+                        // The layout's minimum height is the viewport below the status bar: what fits above the bar.
                         .heightIn(min = viewport)
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
                         .padding(horizontal = 28.dp)
-                        .readableWidth(SignerMetrics.narrowWidth),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                ) {
-                    Hero(Modifier.padding(top = 32.dp))
-                    Features(Modifier.padding(top = 28.dp))
-                    Networks(Modifier.padding(top = 28.dp, bottom = 24.dp))
-                }
+                        .readableWidth(SignerMetrics.narrowWidth)
+                        .testTag(WelcomeTags.CONTENT),
+                    measurePolicy = WelcomeLayout,
+                )
             }
             BottomActionBar(
                 maxWidth = SignerMetrics.narrowWidth,
@@ -164,26 +240,87 @@ private fun AccentGlow(accent: Color) {
     )
 }
 
-/** The brand tile (appearing with a soft spring unless animations are off), the name and the slogan. */
+/**
+ * Places Welcome's four parts top to bottom, centred: the brand tile, the name and slogan, the promises and the
+ * networks. Regular gaps (32 above the tile, 14 below it, 28, 28 and 24 at the end) grow evenly into a taller viewport
+ * (iOS spacers with minimum lengths); in a shorter one the gaps shrink towards the compact ones, then the tile from 96
+ * towards 64 dp. The viewport is the layout's minimum height.
+ */
+private object WelcomeLayout : MeasurePolicy {
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+        val (tile, title, features, networks) = measurables
+        val width = constraints.maxWidth
+        val loose = Constraints(maxWidth = width)
+        val titlePlaceable = title.measure(loose)
+        val featuresPlaceable = features.measure(loose)
+        val networksPlaceable = networks.measure(loose)
+        val regular = RegularGaps.map { it.roundToPx() }
+        val compact = CompactGaps.map { it.roundToPx() }
+        val tileMax = TileMax.roundToPx()
+        val tileMin = TileMin.roundToPx()
+        val fixed = titlePlaceable.height + featuresPlaceable.height + networksPlaceable.height
+        val available = constraints.minHeight
+        val shortfall = fixed + regular.sum() + tileMax - available
+        val gapRoom = regular.sum() - compact.sum()
+        val gaps: List<Int>
+        val tileSize: Int
+        if (shortfall <= 0) {
+            // Room to spare: the four outer gaps share it, like SpaceEvenly beside the minimum lengths.
+            val extra = -shortfall
+            gaps = regular.mapIndexed { index, gap -> if (index == TILE_GAP) gap else gap + extra / 4 }
+            tileSize = tileMax
+        } else {
+            val fraction = (shortfall.toFloat() / gapRoom).coerceAtMost(1f)
+            gaps = regular.zip(compact) { r, c -> (r - (r - c) * fraction).roundToInt() }
+            tileSize = (tileMax - (shortfall - gapRoom).coerceAtLeast(0)).coerceAtLeast(tileMin)
+        }
+        val tilePlaceable = tile.measure(Constraints.fixed(tileSize, tileSize))
+        val height = maxOf(available, fixed + tileSize + gaps.sum())
+        return layout(width, height) {
+            var y = gaps[0]
+            tilePlaceable.place((width - tilePlaceable.width) / 2, y)
+            y += tilePlaceable.height + gaps[TILE_GAP]
+            titlePlaceable.place((width - titlePlaceable.width) / 2, y)
+            y += titlePlaceable.height + gaps[2]
+            featuresPlaceable.place((width - featuresPlaceable.width) / 2, y)
+            y += featuresPlaceable.height + gaps[3]
+            networksPlaceable.place((width - networksPlaceable.width) / 2, y)
+        }
+    }
+}
+
+/** Above the tile, tile to name, name to promises, promises to networks, below the networks. */
+private val RegularGaps = listOf(32.dp, 14.dp, 28.dp, 28.dp, 24.dp)
+private val CompactGaps = listOf(12.dp, 10.dp, 18.dp, 18.dp, 12.dp)
+private const val TILE_GAP = 1
+private val TileMax = 96.dp
+private val TileMin = 64.dp
+
+/** The brand tile, appearing with a soft spring unless animations are off. Sized by [WelcomeLayout]. */
 @Composable
-private fun Hero(modifier: Modifier = Modifier) {
-    val colors = SignerTheme.colors
-    val typography = SignerTheme.typography
+private fun HeroTile() {
     val reduceMotion = SignerTheme.reduceMotion
     val appear = remember { Animatable(if (reduceMotion) 1f else 0f) }
     LaunchedEffect(Unit) {
         if (!reduceMotion) appear.animateTo(1f, SignerMotion.hero())
     }
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        BrandTile(
-            size = 96.dp,
-            modifier = Modifier.graphicsLayer {
-                val progress = appear.value
-                alpha = progress
-                scaleX = 0.9f + 0.1f * progress
-                scaleY = 0.9f + 0.1f * progress
-            },
-        )
+    BrandTile(
+        size = TileMax,
+        modifier = Modifier.graphicsLayer {
+            val progress = appear.value
+            alpha = progress
+            scaleX = 0.9f + 0.1f * progress
+            scaleY = 0.9f + 0.1f * progress
+        },
+    )
+}
+
+/** The name and the slogan. */
+@Composable
+private fun HeroTitle() {
+    val colors = SignerTheme.colors
+    val typography = SignerTheme.typography
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(
             text = stringResource(R.string.bittool_signer),
             style = typography.largeTitle.bold(),
@@ -322,6 +459,13 @@ object WelcomeTags {
     const val TERMS = "welcome.terms"
     const val PRIVACY = "welcome.privacy"
     const val LEGAL_DONE = "legal.done"
+
+    /** The scrolling page above the bar. */
+    const val CONTENT = "welcome.content"
+
+    /** "Screen Lock Required" (Android only): "Open Settings" and "Cancel". */
+    const val LOCK_OPEN_SETTINGS = "welcome.lock.openSettings"
+    const val LOCK_CANCEL = "welcome.lock.cancel"
 }
 
 private val GlowRadius = 420.dp

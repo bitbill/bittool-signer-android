@@ -15,18 +15,22 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.requestFocus
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
+import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.feature.setup.Look
 import com.bittool.signer.feature.setup.Phrases
 import com.bittool.signer.feature.setup.SeededRandomSource
 import com.bittool.signer.feature.setup.SetupTestHost
 import com.bittool.signer.feature.setup.applySnapshots
+import com.bittool.signer.feature.setup.setKeyboardHeight
 import com.bittool.signer.feature.setup.backup.RecoveryCardsPage
 import com.bittool.signer.feature.setup.backup.SecurityTipsList
 import com.bittool.signer.feature.setup.flow.RecoveryWords
@@ -61,6 +65,7 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
     val compose = createAndroidComposeRule<ComponentActivity>()
 
     private val factory = FakeRecoverySessionFactory()
+    private val deviceKeys = InMemoryDeviceKeyStore()
     private val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
     private val store = FakeSignerStore().apply {
         onGenerateMnemonic = { count -> SecretText.of(if (count == 12) Phrases.VECTOR_12 else Phrases.VECTOR_24) }
@@ -83,10 +88,22 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
 
         /** A back gesture that closes setup, held at 80 %: the shrinking surface (setup-backup §15.4). */
         ClosePreview("14-close-preview"),
+
+        /** Typing with the keyboard up: the editor above the bar, the suggestion chips with their fade (QA setup-02/03/10). */
+        ImportTyping("15-import-typing", everyLook = true),
+
+        /** The first step on a device without a screen lock (QA wallets-04). */
+        DeviceLock("16-device-lock"),
+
+        /** The password step for a wallet whose device key is gone (QA backlog B21). */
+        LostDeviceKey("17-lost-device-key"),
+
+        /** The wallet password typed with the keyboard up: the pair and its checklist above the bar (QA setup-02). */
+        PasswordTyping("18-password-typing", everyLook = true),
     }
 
     private fun model(intent: SetupIntent): WalletSetupViewModel =
-        WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), factory, Dispatchers.Unconfined)
+        WalletSetupViewModel(intent, store, testBip39, SeededRandomSource(), factory, Dispatchers.Unconfined, deviceKeys)
 
     private fun showFlow(model: WalletSetupViewModel) {
         compose.setContent { SetupTestHost(factory, look) { SetupFlow(model, onFinished = {}, onCancelled = {}) } }
@@ -129,6 +146,36 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
                 val model = model(SetupIntent.Restore)
                 showFlow(model)
                 act { model.fields.phrase.setTextAndPlaceCursorAtEnd(Phrases.SPANISH) }
+            }
+            Screen.ImportTyping -> {
+                val model = model(SetupIntent.Restore)
+                showFlow(model)
+                compose.onNodeWithTag("recovery.input.visible").requestFocus()
+                act { model.fields.phrase.setTextAndPlaceCursorAtEnd("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ab") }
+                // A 300 dp keyboard, as the window reports it.
+                compose.runOnUiThread { compose.activity.setKeyboardHeight((300 * compose.density.density).toInt()) }
+            }
+            Screen.PasswordTyping -> {
+                val model = model(SetupIntent.Restore)
+                showFlow(model)
+                act { model.fields.phrase.setTextAndPlaceCursorAtEnd(FakeSignerStore.PUBLIC_FIXTURE_12) }
+                act { model.startImport() }
+                compose.onNodeWithTag(PasswordKind.WalletPassword.english).requestFocus()
+                act { model.fields.password.setTextAndPlaceCursorAtEnd("Abcdefgh") }
+                compose.runOnUiThread { compose.activity.setKeyboardHeight((300 * compose.density.density).toInt()) }
+            }
+            Screen.DeviceLock -> {
+                deviceKeys.deviceSecure = false
+                showFlow(model(SetupIntent.Create))
+            }
+            Screen.LostDeviceKey -> {
+                store.setState { it.copy(wallets = listOf(existing)) }
+                store.onExistingWallet = { _, _ -> existing.id }
+                store.lostDeviceKeys = setOf(existing.id)
+                val model = model(SetupIntent.Restore)
+                showFlow(model)
+                act { model.fields.phrase.setTextAndPlaceCursorAtEnd(FakeSignerStore.PUBLIC_FIXTURE_12) }
+                act { model.startImport() }
             }
             Screen.BackupConcealed, Screen.BackupRevealed, Screen.BackupQr -> {
                 val model = model(SetupIntent.Create)

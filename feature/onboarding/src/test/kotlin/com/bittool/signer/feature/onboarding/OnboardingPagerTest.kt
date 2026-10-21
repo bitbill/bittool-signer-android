@@ -1,12 +1,15 @@
 package com.bittool.signer.feature.onboarding
 
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.LineBreak
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.navigation.SetupIntent
 import kotlin.test.assertEquals
@@ -112,5 +115,14 @@ class OnboardingPagerTest {
     private fun systemBack() {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitForIdle()
+    }
+
+    /** QA setup-15: the large page titles break into balanced lines, at phrase boundaries in Japanese on API 33+. */
+    @Test
+    fun pageTitlesUseHeadingLineBreaks() {
+        show()
+        val results = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText("Offline by Design").fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(results)
+        assertEquals(LineBreak.Heading, results.single().layoutInput.style.lineBreak)
     }
 }

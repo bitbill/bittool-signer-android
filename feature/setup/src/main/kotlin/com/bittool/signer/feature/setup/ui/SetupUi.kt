@@ -44,18 +44,25 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.requireLayoutCoordinates
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.relocation.BringIntoViewModifierNode
+import androidx.compose.ui.relocation.bringIntoView as bringThisNodeIntoView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,6 +76,7 @@ import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.modifier.keepInViewAboveBar
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
@@ -78,6 +86,9 @@ import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.security.RecoverySessionFactory
 import com.bittool.signer.core.ui.text.Callout
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import com.bittool.signer.core.l10n.R as L10n
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -193,6 +204,56 @@ internal class ScrollCentering {
         val offset = (middle - viewportHeight / 2f).roundToInt().coerceIn(0, scroll.maxValue)
         scroll.animateScrollTo(offset, SignerMotion.snappy(0.35))
     }
+
+    /** [center]s [key] only when it is not entirely inside the viewport (nothing moves when it is already visible). */
+    suspend fun centerIfHidden(key: Any, scroll: ScrollState) {
+        val content = content?.takeIf { it.isAttached } ?: return
+        val target = targets[key]?.takeIf { it.isAttached } ?: return
+        val top = content.localPositionOf(target, Offset.Zero).y
+        val bottom = top + target.size.height
+        if (top >= scroll.value && bottom <= scroll.value + viewportHeight) return
+        center(key, scroll)
+    }
+}
+
+/**
+ * Keeps this block in view as a whole when something inside it asks to be brought into view — the field that gains
+ * focus, the line with the caret of the field being typed in — and the block fits the visible part of the page;
+ * otherwise only what was asked (QA setup-02; iOS scrolls the focused field above the keyboard toolbar). Put it on what
+ * belongs together while one of its fields is typed in: the phrase editor with its status line, both passphrase
+ * fields, the wallet password pair with its requirements checklist.
+ *
+ * Each request from inside is passed on as two at once, the whole block and what was asked. The scroll container
+ * shows the larger one that fits (Compose's bring-into-view queue), and [SetupScaffold]'s `keepInViewAboveBar` keeps
+ * both clear of the bottom bar and makes them again whenever the bar grows with the keyboard, so the block (or, when it
+ * no longer fits the shrunken viewport, the caret line) moves back above the bar.
+ */
+internal fun Modifier.keepTogetherInView(): Modifier = this then KeepTogetherInViewElement
+
+private data object KeepTogetherInViewElement : ModifierNodeElement<KeepTogetherInViewNode>() {
+    override fun create(): KeepTogetherInViewNode = KeepTogetherInViewNode()
+    override fun update(node: KeepTogetherInViewNode) = Unit
+    override fun InspectorInfo.inspectableProperties() {
+        name = "keepTogetherInView"
+    }
+}
+
+private class KeepTogetherInViewNode : Modifier.Node(), BringIntoViewModifierNode {
+    override val shouldAutoInvalidate: Boolean get() = false
+
+    override suspend fun bringIntoView(childCoordinates: LayoutCoordinates, boundsProvider: () -> Rect?) {
+        if (!isAttached) return
+        coroutineScope {
+            // The whole block first, then what was asked: `keepInViewAboveBar` remembers the block as the latest request
+            // for a whole element and the asked part as the latest request, and makes both again when the bar grows.
+            launch(start = CoroutineStart.UNDISPATCHED) { bringThisNodeIntoView() }
+            bringThisNodeIntoView {
+                if (!isAttached || !childCoordinates.isAttached) return@bringThisNodeIntoView null
+                val asked = boundsProvider() ?: return@bringThisNodeIntoView null
+                Rect(requireLayoutCoordinates().localPositionOf(childCoordinates, asked.topLeft), asked.size)
+            }
+        }
+    }
 }
 
 /**
@@ -200,6 +261,10 @@ internal class ScrollCentering {
  * 640 dp wide, starting with the step header (segmented progress, "Step n of total", large title, message — one
  * accessibility element), then [content] 20 dp apart; [footer] sits in the bottom action bar above the navigation bar
  * and the keyboard. [footerBottomPadding] 0 lets an IME-attached row sit flush on the keyboard.
+ *
+ * The bar rises with the keyboard and the scrolling viewport above it shrinks: `keepInViewAboveBar` keeps the focused
+ * field, and the line being typed, above the bar and its edge fade, also while the bar grows (QA setup-02). Blocks that
+ * should stay visible together while one of their fields is typed in carry [keepTogetherInView].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,7 +303,9 @@ internal fun SetupScaffold(
                 .padding(padding)
                 .onSizeChanged { centering?.viewportHeight = it.height }
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(scrollState),
+                .verticalScroll(scrollState)
+                // The padding sits outside the scroll: the viewport ends at the bar's top edge and shrinks as it grows.
+                .keepInViewAboveBar(padding.calculateBottomPadding(), scrollsUnderBar = false),
         ) {
             Column(
                 modifier = Modifier
@@ -263,7 +330,7 @@ private fun StepHeader(step: Int, total: Int, title: String, message: String) {
     Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         StepProgress(step, total, Modifier.padding(bottom = 6.dp))
         Text(stringResource(L10n.string.step_x_of_x, step, total), style = typography.footnote.semibold(), color = colors.accent)
-        Text(title, style = typography.largeTitle, color = colors.label, modifier = Modifier.semantics { heading() })
+        Text(title, style = typography.largeTitle.headingLineBreaks(), color = colors.label, modifier = Modifier.semantics { heading() })
         Text(message, style = typography.body, color = colors.secondaryLabel)
     }
 }
@@ -282,6 +349,13 @@ private fun StepProgress(step: Int, total: Int, modifier: Modifier = Modifier) {
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Small building blocks
+
+/**
+ * Line breaking for titles (QA setup-15): balanced lines, and on API 33+ breaks at phrase boundaries in Japanese and
+ * Korean ("ウォレットを作成しました" no longer leaves "した" alone on the second line). Below API 33 only the balancing
+ * applies.
+ */
+internal fun TextStyle.headingLineBreaks(): TextStyle = copy(lineBreak = LineBreak.Heading)
 
 /**
  * A footer error (iOS `Callout(verbatim: error, tone: .danger)`): the shared `UiText` callout, so engine text keeps its

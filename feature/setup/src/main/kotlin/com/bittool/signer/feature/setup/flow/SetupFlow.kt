@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -93,6 +94,8 @@ internal fun SetupFlow(
     }
     val defaultName = model.defaultName.asString()
     LaunchedEffect(model) { model.seedName(defaultName) }
+    // Back from "Open Settings" (or anything else): a screen lock set meanwhile unlocks the first step (QA wallets-04).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.refreshDeviceSecurity() }
 
     // How far a back gesture that closes setup has gone (0 = none): the whole surface shrinks with the finger.
     val closePreview = remember { Animatable(0f) }
