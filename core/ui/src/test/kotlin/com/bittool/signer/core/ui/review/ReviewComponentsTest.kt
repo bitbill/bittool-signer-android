@@ -1,5 +1,6 @@
 package com.bittool.signer.core.ui.review
 
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -9,6 +10,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.Callout
@@ -29,6 +31,8 @@ import com.bittool.signer.core.model.review.ReviewField
 import com.bittool.signer.core.model.review.ReviewPresentation
 import com.bittool.signer.core.ui.catalog.CatalogSamples
 import com.bittool.signer.core.ui.text.rememberReviewText
+import androidx.test.core.app.ApplicationProvider
+import com.bittool.signer.core.l10n.R
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -36,6 +40,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** The shared review building blocks (scan-sign.md §11.3–§11.9) and KnownContractTests' glyph case. */
 @RunWith(RobolectricTestRunner::class)
@@ -140,6 +146,51 @@ class ReviewComponentsTest {
         assertEquals(ResolvedTextDirection.Ltr, direction("transfer (ERC-20)."))
         assertEquals(ResolvedTextDirection.Ltr, direction("You alone hold your keys."))
         assertEquals(ResolvedTextDirection.Rtl, direction("تم إنشاء التوقيع."))
+    }
+
+    /**
+     * QA sign-02 (Review in Arabic): what is signed is engine text, and the summary forced it right to left, so the
+     * signed message read ".public interoperability test" and the amount "BTC 0.0008". Untranslated engine text keeps
+     * its own direction; a phrase the catalogue translates ("Sign Message") stays right to left.
+     */
+    @Test
+    @Config(qualifiers = "ar")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun theSummaryKeepsEngineTextInItsOwnDirectionRightToLeft() {
+        val message = "BitTool Wallet + BitTool Signer: public interoperability test."
+        val personal = CatalogSamples.review(display = """{"action": "Sign Message", "headline": "$message"}""")
+        val transfer = CatalogSamples.review(
+            display = """{"action": "Send Bitcoin", "amount": "0.0008", "symbol": "BTC", "headline": "To 2 addresses (change returns to you)."}""",
+        )
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column {
+                        ReviewSummaryCard(personal, rememberReviewText())
+                        ReviewSummaryCard(transfer, rememberReviewText())
+                    }
+                }
+            }
+        }
+        fun layout(text: String): TextLayoutResult {
+            val node = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            return layouts.single()
+        }
+        // The message and the amount are selectable: their reported layout is the drawn one.
+        assertEquals(ResolvedTextDirection.Ltr, layout(message).getParagraphDirection(0), "the signed message")
+        val amount = layout("0.0008 BTC")
+        assertEquals(ResolvedTextDirection.Ltr, amount.getParagraphDirection(0), "the amount")
+        // "0.0008" is drawn before "BTC", not after it.
+        assertTrue(amount.getBoundingBox(0).left < amount.getBoundingBox(amount.layoutInput.text.length - 1).left)
+        // The other lines are plain text, whose reported layout is rebuilt from the unresolved style: checked on the
+        // direction they are given (an unspecified one is the interface's, right to left).
+        assertEquals(TextDirection.Content, layout("To 2 addresses (change returns to you).").layoutInput.style.textDirection, "the secondary headline")
+        assertEquals(TextDirection.Content, layout("Send Bitcoin").layoutInput.style.textDirection, "an untranslated action")
+        val translated = ApplicationProvider.getApplicationContext<Context>().getString(R.string.sign_message)
+        assertTrue(translated != "Sign Message", "the Arabic catalogue translates the action")
+        assertEquals(TextDirection.Unspecified, layout(translated).layoutInput.style.textDirection, "a translated action")
     }
 
     @Test
