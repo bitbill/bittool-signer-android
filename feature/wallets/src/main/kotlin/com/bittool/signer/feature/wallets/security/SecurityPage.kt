@@ -33,12 +33,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.StatusToastState
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
+import com.bittool.signer.core.designsystem.modifier.keepInViewAboveBar
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -55,6 +57,14 @@ import com.bittool.signer.core.ui.text.Callout
  *
  * The close button is the cross of every modal page, read as the iOS "Cancel" (`WalletSecuritySheets.swift:169, 248,
  * 327`) like the Recovery Phrase page's (QA wallets-10): it discards the form. Its e2e tag stays `nav.close`.
+ *
+ * A page whose form is typed in passes its action (and the failure shown with it) as [bottomActions]: they sit in a
+ * [BottomActionBar] that rises with the keyboard, like setup's Reset Password, so the action stays in view and within
+ * reach while the person types (QA round 3 production-final-01: "Change Password" sat behind the keyboard, and a tap
+ * there typed into the confirmation instead). The form scrolls under the bar, and `keepInViewAboveBar` keeps the
+ * focused field and the line being typed above it, also while the bar grows with the keyboard. iOS draws the button
+ * inline in the `Form`, where its keyboard toolbar never covers it. Without [bottomActions] (Delete Wallet, which has
+ * no field on the page) the actions stay in the form, which keeps clear of the keyboard itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,9 +74,11 @@ internal fun SecurityPage(
     onCancel: () -> Unit,
     toast: StatusToastState,
     modifier: Modifier = Modifier,
+    bottomActions: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scroll = rememberScrollState()
     // Back while busy is consumed (the operation commits or fails first). Otherwise system Back is Navigation's own
     // (predictive) pop: the fields are wiped when the page leaves and the ViewModel cancels its operation when cleared.
     BackHandler(enabled = busy) {}
@@ -82,27 +94,49 @@ internal fun SecurityPage(
                 navigationLabel = stringResource(R.string.cancel),
             )
         },
+        bottomBar = {
+            if (bottomActions != null) BottomActionBar(canScrollUnder = scroll.canScrollForward, content = bottomActions)
+        },
     ) { padding ->
         Box(Modifier.fillMaxSize()) {
-            Column(
+            val frame = if (bottomActions != null) {
+                // The bar pads itself by the navigation bar and the keyboard, and [padding] ends at its top edge: the
+                // form scrolls under it, and what is brought into view is kept above it (also while it grows).
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scroll)
+                    .keepInViewAboveBar(padding.calculateBottomPadding(), scrollsUnderBar = true)
+                    .padding(padding)
+                    .padding(horizontal = SignerMetrics.pagePadding)
+                    .padding(top = 8.dp, bottom = BAR_FORM_BOTTOM_MARGIN)
+            } else {
                 // The bar insets already in [padding] are consumed first, so the keyboard adds only what it covers
                 // beyond them (the navigation bar is not counted twice while the keyboard is up).
-                modifier = Modifier
+                Modifier
                     .fillMaxSize()
                     .consumeWindowInsets(padding)
                     .imePadding()
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scroll)
                     .padding(padding)
                     .padding(horizontal = SignerMetrics.pagePadding, vertical = 8.dp)
-                    .padding(bottom = SignerMetrics.listBottomInset),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+                    .padding(bottom = SignerMetrics.listBottomInset)
+            }
+            Column(modifier = frame, horizontalAlignment = Alignment.CenterHorizontally) {
                 Column(Modifier.readableWidth(), verticalArrangement = Arrangement.spacedBy(20.dp), content = content)
             }
-            StatusToastHost(toast)
+            // With a bar, the toast (an overlay-blocked notice for its button) appears above the bar, not over it.
+            val toastFrame = if (bottomActions != null) {
+                Modifier.consumeWindowInsets(padding).padding(bottom = padding.calculateBottomPadding())
+            } else {
+                Modifier
+            }
+            StatusToastHost(toast, toastFrame)
         }
     }
 }
+
+/** Room under the form's last block above a [BottomActionBar]: the page gutter, clear of the bar's edge fade. */
+internal val BAR_FORM_BOTTOM_MARGIN = SignerMetrics.pagePadding
 
 /**
  * The page's failure (iOS `Callout(verbatim: error, tone: .danger)` of the security sheets: "The password is

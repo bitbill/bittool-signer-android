@@ -28,6 +28,9 @@ import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
  * Repair Wallet (inventory row 36, iOS `RepairWalletSheet`, wallets-pairing.md §8.5): the wallet password once, to
  * rebuild the public keys and addresses of a wallet whose public data is missing or damaged. The typed password is
  * taken and cleared on submit, and dropped the moment the app is suspended.
+ *
+ * "Repair Wallet" and the failure above it sit in the page's bottom bar, above the keyboard, as on Change Password
+ * (QA round 3 production-final-01): the action stays in view while the password is typed.
  */
 @Composable
 fun RepairWalletScreen(
@@ -78,19 +81,26 @@ internal fun RepairWalletContent(
         }
     }
     val blocked = rememberOverlayBlockedNotice(toast)
-    SecurityPage(title = stringResource(R.string.repair_wallet), busy = uiState.busy, onCancel = onCancel, toast = toast) {
+    SecurityPage(
+        title = stringResource(R.string.repair_wallet),
+        busy = uiState.busy,
+        onCancel = onCancel,
+        toast = toast,
+        bottomActions = {
+            SecurityError(uiState.error)
+            PrimaryButton(
+                text = stringResource(R.string.repair_wallet),
+                onClick = submit,
+                busy = uiState.busy,
+                enabled = password.text.isNotEmpty(),
+                modifier = Modifier.testTag("vaultManagement.submit").obscuredTouchGuard(blocked),
+            )
+        },
+    ) {
         WalletIdentityCard(uiState.identity)
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             PasswordField(PasswordKind.WalletPassword, password, imeAction = ImeAction.Done, onSubmit = submit, enabled = !uiState.busy)
             FormFooter(stringResource(R.string.bittool_signer_decrypts_the_wallet_once_to_rebuild_its))
         }
-        SecurityError(uiState.error)
-        PrimaryButton(
-            text = stringResource(R.string.repair_wallet),
-            onClick = submit,
-            busy = uiState.busy,
-            enabled = password.text.isNotEmpty(),
-            modifier = Modifier.testTag("vaultManagement.submit").obscuredTouchGuard(blocked),
-        )
     }
 }
