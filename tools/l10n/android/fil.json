@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Nabura ang naka-encrypt na wallet, pero hindi naalis ang public cache nito."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "System keyboard"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Space"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "BitTool keyboard"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "Lumipat sa system keyboard?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "Pinananatili ng sariling keyboard ng BitTool ang iyong recovery phrase sa loob ng app na ito. Nakikita ng system keyboard, o ng anumang third-party na keyboard na in-install mo, ang mga salitang tina-type mo at maaari nitong matutunan o i-record ang mga ito. Lumipat lamang kung kailangan mong mag-type ng recovery phrase na nasa wikang Tsino, Hapon o Koreano."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "Gamitin pa rin ang BitTool keyboard"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Lumipat pa rin"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Para sa pinakamahigpit na paghihiwalay, gumamit ng nakalaang telepono at panatilihing naka-off ang mga koneksyon nito."

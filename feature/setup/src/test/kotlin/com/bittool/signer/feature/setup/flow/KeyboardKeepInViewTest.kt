@@ -16,6 +16,8 @@ import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
+import com.bittool.signer.core.ui.keyboard.Bip39KeyboardTags
+import com.bittool.signer.core.ui.keyboard.PhraseKeyboard
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.feature.setup.SeededRandomSource
 import com.bittool.signer.feature.setup.SetupTestHost
@@ -130,9 +132,11 @@ class KeyboardKeepInViewTest {
         assertBelowTopBar("BIP39 passphrase", bounds(first).top)
     }
 
+    /** With the system keyboard (the person chose it for a Chinese, Japanese or Korean phrase). */
     @Test
     fun theWholeEditorStaysAboveTheBarAndItsSuggestions() {
-        flow(SetupIntent.Restore)
+        flow(SetupIntent.Restore).usePhraseKeyboard(PhraseKeyboard.System)
+        compose.waitForIdle()
         val editor = "recovery.input.visible"
         compose.onNodeWithTag(editor).requestFocus()
         compose.onNodeWithTag(editor).performTextInput("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ab")
@@ -151,7 +155,8 @@ class KeyboardKeepInViewTest {
      */
     @Test
     fun aTallEditorKeepsTheLineBeingTypedAboveTheBar() {
-        flow(SetupIntent.Restore)
+        flow(SetupIntent.Restore).usePhraseKeyboard(PhraseKeyboard.System)
+        compose.waitForIdle()
         val editor = "recovery.input.visible"
         compose.onNodeWithTag(editor).requestFocus()
         compose.onNodeWithTag(editor).performTextInput((1..20).joinToString("\n") { "abandon" })
@@ -164,6 +169,40 @@ class KeyboardKeepInViewTest {
         node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
         val layout = layouts.single()
         // The text starts 16 dp below the editor's top (its decorator padding); the caret is on the last line.
+        val caretBottom = node.positionInRoot.y + 16 * compose.density.density + layout.getLineBottom(layout.lineCount - 1)
+        assertAbove("the line being typed", caretBottom, barTop("setup.import"))
+        assertBelowTopBar("the line being typed", caretBottom - (layout.getLineBottom(0) - layout.getLineTop(0)))
+    }
+
+    /** BitTool's own keyboard rises in the bottom bar: the status line and the whole editor stay above it and Continue. */
+    @Test
+    fun theWholeEditorStaysAboveTheInAppKeyboard() {
+        flow(SetupIntent.Restore)
+        val editor = "recovery.input.visible"
+        compose.onNodeWithTag(editor).performTextInput("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ab")
+        compose.waitForIdle()
+        compose.onNodeWithTag(Bip39KeyboardTags.KEYBOARD).assertExists()
+        val barTop = barTop("setup.import")
+        assertTrue(barTop < bounds(Bip39KeyboardTags.KEYBOARD).top, "Continue sits above the keyboard")
+        assertAbove("the editor", bounds(editor).bottom, barTop)
+        assertBelowTopBar("the status line", bounds("recovery.status").top)
+    }
+
+    /** With the in-app keyboard too, an editor taller than the space left keeps the line being typed above the bar. */
+    @Test
+    fun aTallEditorKeepsTheLineBeingTypedAboveTheInAppKeyboard() {
+        flow(SetupIntent.Restore)
+        val editor = "recovery.input.visible"
+        compose.onNodeWithTag(editor).performTextInput((1..20).joinToString("\n") { "abandon" })
+        compose.waitForIdle()
+        compose.onNodeWithTag(Bip39KeyboardTags.letter('a')).performClick()
+        compose.waitForIdle()
+        assertTrue(bounds(editor).height > barTop("setup.import") - topBarBottom(), "precondition: the editor does not fit")
+
+        val node = compose.onNodeWithTag(editor).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        val layout = layouts.single()
         val caretBottom = node.positionInRoot.y + 16 * compose.density.density + layout.getLineBottom(layout.lineCount - 1)
         assertAbove("the line being typed", caretBottom, barTop("setup.import"))
         assertBelowTopBar("the line being typed", caretBottom - (layout.getLineBottom(0) - layout.getLineTop(0)))

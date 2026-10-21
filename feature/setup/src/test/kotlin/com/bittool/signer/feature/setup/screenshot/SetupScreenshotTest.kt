@@ -24,6 +24,7 @@ import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
+import com.bittool.signer.core.ui.keyboard.PhraseKeyboard
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.feature.setup.Look
 import com.bittool.signer.feature.setup.Phrases
@@ -149,6 +150,9 @@ class SetupScreenshotTest(private val screen: Screen, private val look: Look) {
             }
             Screen.ImportTyping -> {
                 val model = model(SetupIntent.Restore)
+                // The system keyboard (chosen for a Chinese, Japanese or Korean phrase); BitTool's own keyboard is
+                // recorded by PhraseKeyboardScreenshotTest.
+                model.usePhraseKeyboard(PhraseKeyboard.System)
                 showFlow(model)
                 compose.onNodeWithTag("recovery.input.visible").requestFocus()
                 act { model.fields.phrase.setTextAndPlaceCursorAtEnd("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon ab") }

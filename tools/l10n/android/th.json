@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "กระเป๋าที่เข้ารหัสถูกลบแล้ว แต่ไม่สามารถนำแคชสาธารณะของกระเป๋าออกได้"
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "แป้นพิมพ์ระบบ"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "เว้นวรรค"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "แป้นพิมพ์ BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "สลับไปใช้แป้นพิมพ์ระบบไหม"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "แป้นพิมพ์ของ BitTool เองจะเก็บวลีกู้คืนของคุณไว้ภายในแอปนี้ แป้นพิมพ์ระบบหรือแป้นพิมพ์ของบุคคลที่สามที่คุณติดตั้งไว้สามารถเห็นคำที่คุณพิมพ์ และอาจเรียนรู้หรือบันทึกคำเหล่านั้น สลับเฉพาะเมื่อคุณต้องพิมพ์วลีกู้คืนภาษาจีน ญี่ปุ่น หรือเกาหลีเท่านั้น"
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "ใช้แป้นพิมพ์ BitTool ต่อ"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "สลับต่อไป"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "เพื่อการแยกขาดที่สุด ให้ใช้โทรศัพท์เฉพาะเครื่องหนึ่งและปิดการเชื่อมต่อทั้งหมดไว้"

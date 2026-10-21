@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "암호화된 지갑은 삭제했지만, 공개 캐시를 지우지 못했습니다."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "시스템 키보드"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "스페이스"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "BitTool 키보드"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "시스템 키보드로 전환할까요?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "BitTool 자체 키보드를 사용하면 복구 구문이 이 앱 밖으로 나가지 않습니다. 시스템 키보드나 설치한 타사 키보드는 입력한 단어를 볼 수 있으며 이를 학습하거나 기록할 수 있습니다. 중국어, 일본어 또는 한국어 복구 구문을 입력해야 하는 경우에만 전환하세요."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "BitTool 키보드 계속 사용"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "그래도 전환"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "가장 확실하게 분리하려면 전용 휴대전화를 쓰고 통신을 모두 꺼 두세요."

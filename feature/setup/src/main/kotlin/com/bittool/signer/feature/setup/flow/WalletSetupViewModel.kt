@@ -2,6 +2,9 @@ package com.bittool.signer.feature.setup.flow
 
 import androidx.compose.foundation.text.input.placeCursorAtEnd
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +28,7 @@ import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.navigation.WalletDetailRoute
 import com.bittool.signer.core.navigation.WalletRoute
 import com.bittool.signer.core.security.RecoverySessionFactory
+import com.bittool.signer.core.ui.keyboard.PhraseKeyboard
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -112,6 +116,19 @@ class WalletSetupViewModel @AssistedInject constructor(
 
     /** The typed text of this presentation (name, import editor, passphrase, wallet password). */
     val fields = SetupFields()
+
+    /**
+     * Which keyboard types into the import editor (Android-only, setup-backup §15.8): BitTool's own keyboard, which no
+     * input method can see, unless the person chose the system keyboard after the warning (a Chinese, Japanese or
+     * Korean phrase). Every presentation starts with the in-app keyboard; the choice then holds for its steps. Not a
+     * secret. Snapshot state rather than [uiState], so the editor and the keyboard switch in the same frame.
+     */
+    var phraseKeyboard: PhraseKeyboard by mutableStateOf(PhraseKeyboard.InApp)
+        private set
+
+    fun usePhraseKeyboard(keyboard: PhraseKeyboard) {
+        phraseKeyboard = keyboard
+    }
 
     /** iOS `existingWallets`, captured when the presentation starts. */
     val existingWallets: Int = store.state.value.wallets.size

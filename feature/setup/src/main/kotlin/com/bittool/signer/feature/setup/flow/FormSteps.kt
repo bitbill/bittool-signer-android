@@ -2,7 +2,9 @@
 
 package com.bittool.signer.feature.setup.flow
 
+import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,15 +33,26 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -78,17 +91,25 @@ import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.model.util.Graphemes
 import com.bittool.signer.core.scanner.QrScannerScreen
+import com.bittool.signer.core.ui.keyboard.Bip39Keyboard
+import com.bittool.signer.core.ui.keyboard.PhraseKeyboard
+import com.bittool.signer.core.ui.keyboard.SwitchToSystemKeyboardDialog
+import com.bittool.signer.core.ui.keyboard.hideSystemKeyboard
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.feature.setup.phrase.RecoveryPhraseEditor
 import com.bittool.signer.feature.setup.phrase.RecoveryPhraseStatus
 import com.bittool.signer.feature.setup.phrase.RecoverySuggestionBar
+import com.bittool.signer.feature.setup.phrase.toKeyboardSuggestions
 import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.keepTogetherInView
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import com.bittool.signer.core.l10n.R as L10n
 
 /**
@@ -152,15 +173,76 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
  * Step 1 of importing (iOS `ImportWalletStep`, `WalletSetupFlow.swift:167-243`; setup-backup §7.1): the live status and
  * the phrase editor first, then the name and the passphrase option. "Scan Recovery QR" opens the camera; while the
  * editor has the keyboard, word suggestions sit on top of it under "Continue".
+ *
+ * This is the only place a recovery phrase is typed: importing, resetting a forgotten password (the phrase is the
+ * proof; the password step turns into Reset Password), a phrase that is already here, and importing again after a
+ * lost device key all start here.
+ *
+ * Android keyboard trust (setup-backup §15.8): the editor is typed on BitTool's own keyboard (`Bip39Keyboard`, in the
+ * bottom bar under "Continue", with the suggestions and hints in its top row) and has no input-method connection, so
+ * no keyboard app sees the words. Its globe key switches, after [SwitchToSystemKeyboardDialog], to the system keyboard
+ * (Chinese, Japanese, Korean), which keeps the incognito traits and gets the suggestion bar with a "BitTool keyboard"
+ * chip that switches back. The choice holds for the presentation ([WalletSetupViewModel.phraseKeyboard]). Back, and the
+ * predictive back gesture, first put the in-app keyboard away (it follows the gesture down a little). On a window too
+ * short for "Continue", the keyboard and the editor together (landscape phones), "Continue" steps aside while the
+ * keyboard is up; Done brings it back.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val view = LocalView.current
+    val windowInfo = LocalWindowInfo.current
+    val scope = rememberCoroutineScope()
+    val keyboard = model.phraseKeyboard
+    val inAppKeyboard = keyboard == PhraseKeyboard.InApp
     var phraseFocused by remember { mutableStateOf(false) }
-    val suggestions = phraseFocused && WindowInsets.isImeVisible
+    var confirmSwitch by remember { mutableStateOf(false) }
+    // A switch recreates the editor (a new input session under the new rules): focus the new one.
+    var refocus by remember { mutableStateOf(false) }
+    val phraseFocus = remember { FocusRequester() }
+    val inAppKeyboardShown = inAppKeyboard && phraseFocused
+    val suggestions = !inAppKeyboard && phraseFocused && WindowInsets.isImeVisible
+    val shortWindow = windowInfo.containerDpSize.height < SHORT_WINDOW_HEIGHT
     val canContinue by remember { derivedStateOf { !fields.phraseIsBlank() } }
+
+    LaunchedEffect(keyboard) {
+        if (!refocus) return@LaunchedEffect
+        refocus = false
+        // Once the window, not the warning dialog, has the focus: an input method shows only for a focused window.
+        snapshotFlow { windowInfo.isWindowFocused }.first { it }
+        phraseFocus.requestFocusWhenAttached()
+        if (keyboard == PhraseKeyboard.System) keyboardController?.show()
+    }
+    val backProgress = remember { Animatable(0f) }
+    LaunchedEffect(inAppKeyboardShown) {
+        if (!inAppKeyboardShown) return@LaunchedEffect
+        backProgress.snapTo(0f)
+        // Focus came from a field typed with the system keyboard (the name, a passphrase): it must not stay up.
+        hideSystemKeyboard(view)
+    }
+    val reduceMotion by rememberUpdatedState(SignerTheme.reduceMotion)
+    PredictiveBackHandler(enabled = inAppKeyboardShown) { progress ->
+        try {
+            progress.collect { event -> if (!reduceMotion) backProgress.snapTo(event.progress) }
+            focusManager.clearFocus()
+        } catch (e: CancellationException) {
+            scope.launch { backProgress.animateTo(0f, SignerMotion.quick()) }
+            throw e
+        }
+    }
+    val switchToSystemKeyboard = {
+        confirmSwitch = false
+        refocus = true
+        model.usePhraseKeyboard(PhraseKeyboard.System)
+    }
+    val switchToInAppKeyboard = {
+        hideSystemKeyboard(view)
+        refocus = true
+        model.usePhraseKeyboard(PhraseKeyboard.InApp)
+    }
     SetupScaffold(
         topBar = { scroll ->
             SetupTopBar(
@@ -181,6 +263,19 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
         title = stringResource(L10n.string.import_a_wallet),
         message = stringResource(L10n.string.enter_the_12_15_18_21_or_24_words_of_an_existing_bip39),
         footerBottomPadding = if (suggestions) 0.dp else 8.dp,
+        footerVisible = !(inAppKeyboardShown && shortWindow),
+        keyboardVisible = inAppKeyboardShown,
+        keyboard = {
+            Bip39Keyboard(
+                state = fields.phrase,
+                suggestions = state.phrase.candidates.toKeyboardSuggestions(),
+                onSuggestion = model::insertCandidate,
+                onSwitchToSystemKeyboard = { confirmSwitch = true },
+                onDone = { focusManager.clearFocus() },
+                // The predictive back gesture lets the keyboard sink a little before it goes.
+                modifier = Modifier.graphicsLayer { translationY = size.height * BACK_GESTURE_SINK * backProgress.value },
+            )
+        },
         footer = {
             ErrorCallout(state.error)
             PrimaryButton(
@@ -199,24 +294,51 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                     candidates = state.phrase.candidates,
                     onInsert = model::insertCandidate,
                     onDone = { focusManager.clearFocus() },
+                    onInAppKeyboard = switchToInAppKeyboard,
                 )
             }
         },
     ) {
         // Before any word is typed: without a screen lock no wallet can be saved (QA wallets-04).
         if (!state.deviceSecure) DeviceLockNotice()
-        // The status line and the whole editor stay above the bar (and its suggestions) while typing, the line being
-        // typed at least once the editor is taller than the space left (QA setup-02).
+        // The status line and the whole editor stay above the bar (and its suggestions, or the in-app keyboard) while
+        // typing, the line being typed at least once the editor is taller than the space left (QA setup-02).
         Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             RecoveryPhraseStatus(state.phrase)
-            RecoveryPhraseEditor(fields.phrase, onFocusChanged = { phraseFocused = it })
+            RecoveryPhraseEditor(
+                fields.phrase,
+                onFocusChanged = { phraseFocused = it },
+                inAppKeyboard = inAppKeyboard,
+                focusRequester = phraseFocus,
+            )
         }
         WalletNameField(fields.name, imeAction = ImeAction.Default)
         PassphraseOptions(state.usePassphrase, model)
     }
+    if (confirmSwitch) SwitchToSystemKeyboardDialog(onKeep = { confirmSwitch = false }, onSwitch = switchToSystemKeyboard)
     if (state.scanning) RecoveryScannerDialog(state.scanError, model)
     if (state.languageChoices.isNotEmpty()) {
         BackupLanguageDialog(state.languageChoices, onChoose = model::acceptImport, onDismiss = model::dismissLanguageChoices)
+    }
+}
+
+/** Below this window height (phones in landscape) "Continue" steps aside while the in-app keyboard is up. */
+private val SHORT_WINDOW_HEIGHT = 420.dp
+
+/** How far, as a fraction of its height, the in-app keyboard sinks during a full back gesture before it goes. */
+private const val BACK_GESTURE_SINK = 0.12f
+
+private const val FOCUS_ATTEMPTS = 10
+
+/**
+ * Focuses the field of this requester, retrying for a few frames: right after a keyboard switch the new editor may not
+ * be attached yet (the page body is subcomposed by its scaffold). Asks the requester itself whether focus was granted:
+ * the old editor's focus state says nothing about the new one.
+ */
+private suspend fun FocusRequester.requestFocusWhenAttached() {
+    repeat(FOCUS_ATTEMPTS) {
+        if (runCatching { requestFocus(FocusDirection.Enter) }.getOrDefault(false)) return
+        withFrameNanos { }
     }
 }
 

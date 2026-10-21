@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "加密钱包已删除，但无法移除其公开缓存。"
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "系统键盘"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "空格"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "BitTool 键盘"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "切换到系统键盘？"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "使用 BitTool 自带键盘，助记词不会离开本 App。系统键盘或你安装的第三方输入法能看到你输入的单词，并可能学习或记录。仅在需要输入中文、日文或韩文助记词时才切换。"
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "继续用 BitTool 键盘"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "仍要切换"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "要做到最彻底的隔离，请使用一台专用手机，并保持其所有连接关闭。"

@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Dompet terenkripsi sudah dihapus, tetapi cache publiknya tidak bisa dibersihkan."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "Keyboard sistem"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Spasi"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "Keyboard BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "Beralih ke keyboard sistem?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "Keyboard bawaan BitTool menjaga frasa pemulihan Anda tetap di dalam aplikasi ini. Keyboard sistem, atau keyboard pihak ketiga yang Anda pasang, dapat melihat kata yang Anda ketik dan dapat mempelajari atau merekamnya. Beralihlah hanya jika Anda perlu mengetik frasa pemulihan dalam bahasa Tionghoa, Jepang, atau Korea."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "Tetap gunakan keyboard BitTool"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Tetap beralih"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Untuk isolasi paling ketat, gunakan ponsel khusus dan biarkan semua koneksinya mati."

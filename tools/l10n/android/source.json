@@ -120,6 +120,48 @@
    "formatted": true,
    "context": ""
   },
+  "keyboard_system": {
+   "area": "keyboard",
+   "english": "System keyboard",
+   "formatted": true,
+   "context": "Label and TalkBack name of the globe key of the in-app keyboard: switches to the device's own keyboard, after a warning. Short: it shares the bottom row with the space bar and Done."
+  },
+  "keyboard_space": {
+   "area": "keyboard",
+   "english": "Space",
+   "formatted": true,
+   "context": "TalkBack name of the space bar of the in-app keyboard (the key shows a space-bar symbol)."
+  },
+  "keyboard_bittool": {
+   "area": "keyboard",
+   "english": "BitTool keyboard",
+   "formatted": true,
+   "context": "Chip shown above the system keyboard while the recovery phrase is typed with it: switches back to the app's own keyboard. \"BitTool\" is the product name."
+  },
+  "keyboard_switch_title": {
+   "area": "keyboard",
+   "english": "Switch to the system keyboard?",
+   "formatted": true,
+   "context": "Title of the warning shown before the recovery phrase is typed with the system keyboard instead of the app's own."
+  },
+  "keyboard_switch_message": {
+   "area": "keyboard",
+   "english": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "formatted": true,
+   "context": "Message of that warning. The app's keyboard types a–z only, enough for the Latin BIP39 word lists; Chinese, Japanese and Korean phrases need the system keyboard. Use the app's term for \"recovery phrase\"."
+  },
+  "keyboard_switch_keep": {
+   "area": "keyboard",
+   "english": "Keep BitTool keyboard",
+   "formatted": true,
+   "context": "The warning's default action: stay on the app's own keyboard."
+  },
+  "keyboard_switch_confirm": {
+   "area": "keyboard",
+   "english": "Switch anyway",
+   "formatted": true,
+   "context": "The warning's other action: switch to the system keyboard."
+  },
   "onboarding_prepare_body": {
    "area": "onboarding",
    "english": "For the strongest isolation, use a dedicated phone and keep its connections off.",

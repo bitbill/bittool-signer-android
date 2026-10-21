@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Зашифрований гаманець видалено, але не вдалося видалити його відкритий кеш."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "Системна клавіатура"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Пробіл"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "Клавіатура BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "Перейти на системну клавіатуру?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "Власна клавіатура BitTool не випускає фразу відновлення за межі цього застосунку. Системна клавіатура або будь-яка встановлена стороння клавіатура бачить слова, які ви вводите, і може запам’ятовувати або записувати їх. Перемикайтеся, лише якщо потрібно ввести фразу відновлення китайською, японською або корейською мовою."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "Залишити клавіатуру BitTool"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Усе одно перейти"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Для найсуворішої ізоляції використовуйте окремий телефон і тримайте його з’єднання вимкненими."

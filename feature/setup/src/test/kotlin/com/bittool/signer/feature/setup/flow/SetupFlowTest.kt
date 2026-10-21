@@ -230,6 +230,10 @@ class SetupFlowTest {
         compose.onNodeWithTag("recovery.status").assert(hasText("3 words", substring = true))
         compose.onNodeWithTag("setup.import").performClick()
         compose.onNodeWithTag("setup.error").assert(hasText("Invalid recovery phrase", substring = true))
+        // The editor still has BitTool's keyboard: the first Back puts it away (as a system keyboard takes the first
+        // Back too), the next one asks.
+        back()
+        compose.onNodeWithText("Discard this wallet?").assertDoesNotExist()
         back()
         compose.onNodeWithText("Discard this wallet?").assertExists()
         compose.onNodeWithText("The words you entered will be erased from this screen.").assertExists()

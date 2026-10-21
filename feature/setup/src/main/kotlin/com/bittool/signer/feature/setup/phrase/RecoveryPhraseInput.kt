@@ -27,10 +27,13 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -40,6 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
@@ -67,13 +76,15 @@ import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
-import com.bittool.signer.core.designsystem.security.NoPersonalizedLearning
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
+import com.bittool.signer.core.ui.keyboard.InAppKeyboardChip
+import com.bittool.signer.core.ui.keyboard.InAppKeyboardInput
+import com.bittool.signer.core.ui.keyboard.KeyboardSuggestions
 import com.bittool.signer.core.ui.password.secretTextMenu
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
@@ -100,9 +111,22 @@ import com.bittool.signer.core.l10n.R as L10n
  * so the words and the caret now start at the left edge (iOS: `UITextView` aligns an LTR paragraph naturally, to the
  * left). The placeholder is a translated sentence: it keeps the interface direction and sits at its start, as the iOS
  * overlay does (`ZStack(alignment: .topLeading)`, the right edge in Arabic).
+ *
+ * Android keyboard trust (setup-backup §15.8; iOS refuses third-party keyboards, Android cannot): with [inAppKeyboard]
+ * the editor is typed on BitTool's own `Bip39Keyboard` and has **no input-method connection at all**
+ * ([InAppKeyboardInput]): no keyboard app, the system's or a third party's, ever sees the words. Caret, selection,
+ * Paste / Select All and physical keyboards keep working. Without it (the person chose the system keyboard for a
+ * Chinese, Japanese or Korean phrase) the traits above apply. Switching recreates the field: [focusRequester] focuses
+ * the new one.
  */
 @Composable
-internal fun RecoveryPhraseEditor(state: TextFieldState, onFocusChanged: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+internal fun RecoveryPhraseEditor(
+    state: TextFieldState,
+    onFocusChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    inAppKeyboard: Boolean = false,
+    focusRequester: FocusRequester? = null,
+) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val label = stringResource(L10n.string.recovery_phrase_2)
@@ -111,13 +135,18 @@ internal fun RecoveryPhraseEditor(state: TextFieldState, onFocusChanged: (Boolea
     AccessibilitySensitive(active = state.text.isNotEmpty())
     ExcludeFromAutofill()
     val interfaceDirection = LocalLayoutDirection.current
-    NoPersonalizedLearning {
+    InAppKeyboardInput(inAppKeyboard) {
         CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
             BasicTextField(
                 state = state,
                 modifier = modifier
                     .fillMaxWidth()
+                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                     .onFocusChanged { onFocusChanged(it.isFocused) }
+                    // The menu offers no Copy / Cut, and neither do the keys: a physical keyboard (which types into the
+                    // editor directly with the in-app keyboard), or a keyboard app's own Copy button, never puts
+                    // recovery words on the clipboard.
+                    .onPreviewKeyEvent(::isCopyOrCutShortcut)
                     .secretTextMenu()
                     .testTag(EDITOR_TAG),
                 textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
@@ -157,6 +186,19 @@ internal fun RecoveryPhraseEditor(state: TextFieldState, onFocusChanged: (Boolea
             )
         }
     }
+}
+
+/**
+ * Whether [event] asks the focused editor to copy or cut its selection: Ctrl (or Meta) + C, X or Insert, and the Copy
+ * and Cut keys, which a keyboard app also sends for its own Copy / Cut buttons (Compose turns
+ * `performContextMenuAction(copy)` into `KEYCODE_COPY`). The phrase editor refuses them all, like its menu (the
+ * clipboard never holds recovery words, DECISIONS §6); Paste, Select All and every other key pass. Pure.
+ */
+internal fun isCopyOrCutShortcut(event: KeyEvent): Boolean {
+    val key = event.key
+    if (key == Key.Copy || key == Key.Cut) return true
+    return (event.isCtrlPressed || event.isMetaPressed) &&
+        (key == Key.C || key == Key.X || key == Key.Insert || key == Key.NumPadInsert)
 }
 
 /**
@@ -259,16 +301,25 @@ internal fun statusText(analysis: PhraseAnalysis): String {
 }
 
 /**
- * Word completions for the word being typed, sitting on the keyboard (iOS `RecoveryPhraseAssistant` in the keyboard
- * toolbar, `RecoveryPhraseViews.swift:273-312`; setup-backup §7.4, §15.5): up to five chips in the detected language's
- * spelling (accents included, "Insert %@", `suggestion.<word>`), or a hint, then "Done", which closes the keyboard.
+ * Word completions for the word being typed, sitting on the system keyboard (iOS `RecoveryPhraseAssistant` in the
+ * keyboard toolbar, `RecoveryPhraseViews.swift:273-312`; setup-backup §7.4, §15.5): up to five chips in the detected
+ * language's spelling (accents included, "Insert %@", `suggestion.<word>`), or a hint, then "Done", which closes the
+ * keyboard. With BitTool's own keyboard the same completions and hints sit in that keyboard's top row instead
+ * ([toKeyboardSuggestions]); this bar is for the system keyboard only, and there [onInAppKeyboard] adds the "BitTool
+ * keyboard" chip first, which switches back.
  *
  * The chips scroll under a fading edge on the side where more follow, and end [SUGGESTION_DONE_GAP] before "Done"
  * (iOS: the scroll view, a spacer, then "Done"), so a chip that does not fit is never cut mid-word against "Done"
  * (QA setup-10).
  */
 @Composable
-internal fun RecoverySuggestionBar(candidates: Bip39Candidates, onInsert: (String) -> Unit, onDone: () -> Unit, modifier: Modifier = Modifier) {
+internal fun RecoverySuggestionBar(
+    candidates: Bip39Candidates,
+    onInsert: (String) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    onInAppKeyboard: (() -> Unit)? = null,
+) {
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             when (candidates) {
@@ -278,16 +329,24 @@ internal fun RecoverySuggestionBar(candidates: Bip39Candidates, onInsert: (Strin
                         state = list,
                         modifier = Modifier.fadingEdges(list).testTag(SUGGESTIONS_TAG),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // The switch back scrolls away with the chips, so they keep the room.
+                        if (onInAppKeyboard != null) item(key = SWITCH_BACK_KEY) { InAppKeyboardChip(onClick = onInAppKeyboard) }
                         items(candidates.words, key = { it }) { word ->
                             SuggestionChip(word, onClick = { onInsert(word) })
                         }
                     }
                 }
-                Bip39Candidates.ChineseHint -> Hint(stringResource(L10n.string.each_chinese_word_is_one_character))
-                Bip39Candidates.TypeAWord -> Hint(stringResource(L10n.string.type_a_word_to_see_suggestions))
-                Bip39Candidates.NoMatch -> Hint(stringResource(L10n.string.no_matching_word))
-                Bip39Candidates.Hidden -> Unit
+                else -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onInAppKeyboard != null) InAppKeyboardChip(onClick = onInAppKeyboard)
+                    when (candidates) {
+                        Bip39Candidates.ChineseHint -> Hint(stringResource(L10n.string.each_chinese_word_is_one_character), Modifier.weight(1f, fill = false))
+                        Bip39Candidates.TypeAWord -> Hint(stringResource(L10n.string.type_a_word_to_see_suggestions), Modifier.weight(1f, fill = false))
+                        Bip39Candidates.NoMatch -> Hint(stringResource(L10n.string.no_matching_word), Modifier.weight(1f, fill = false))
+                        else -> Unit
+                    }
+                }
             }
         }
         Spacer(Modifier.width(SUGGESTION_DONE_GAP))
@@ -330,9 +389,21 @@ private val SUGGESTION_FADE = 24.dp
 internal const val SUGGESTIONS_TAG = "recovery.suggestions"
 
 @Composable
-private fun Hint(text: String) {
-    Text(text, style = SignerTheme.typography.footnote, color = SignerTheme.colors.secondaryLabel, maxLines = 2, modifier = Modifier.padding(horizontal = 4.dp))
+private fun Hint(text: String, modifier: Modifier = Modifier) {
+    Text(text, style = SignerTheme.typography.footnote, color = SignerTheme.colors.secondaryLabel, maxLines = 2, modifier = modifier.padding(horizontal = 4.dp))
 }
+
+/** The [RecoverySuggestionBar] content as the in-app keyboard's top row shows it (same completions, same hints). */
+@Composable
+internal fun Bip39Candidates.toKeyboardSuggestions(): KeyboardSuggestions = when (this) {
+    is Bip39Candidates.Words -> remember(words) { KeyboardSuggestions.Words(words) }
+    Bip39Candidates.ChineseHint -> KeyboardSuggestions.Hint(stringResource(L10n.string.each_chinese_word_is_one_character))
+    Bip39Candidates.TypeAWord -> KeyboardSuggestions.Hint(stringResource(L10n.string.type_a_word_to_see_suggestions))
+    Bip39Candidates.NoMatch -> KeyboardSuggestions.Hint(stringResource(L10n.string.no_matching_word))
+    Bip39Candidates.Hidden -> KeyboardSuggestions.None
+}
+
+private const val SWITCH_BACK_KEY = "switch-back"
 
 /**
  * One completion, a capsule (iOS `Palette.raised` on the keyboard toolbar). The bar it sits on is the page colour,
