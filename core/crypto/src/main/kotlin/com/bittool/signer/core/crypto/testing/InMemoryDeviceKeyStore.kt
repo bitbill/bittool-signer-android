@@ -1,5 +1,6 @@
 package com.bittool.signer.core.crypto.testing
 
+import androidx.annotation.VisibleForTesting
 import com.bittool.signer.core.crypto.vault.DeviceKeyStore
 import com.bittool.signer.core.crypto.vault.PublicDataKey
 import com.bittool.signer.core.crypto.vault.VaultError
@@ -19,13 +20,16 @@ import javax.crypto.spec.SecretKeySpec
  * Keystore implementation: AES-256-GCM `iv(12) ‖ ciphertext ‖ tag(16)`, a key is never replaced, a missing key is
  * [VaultError.DeviceKeyUnavailable], a bad tag [VaultError.AuthenticationFailed], creation needs [deviceSecure].
  * Keys live as long as the instance (share one instance between vault instances to model a process restart).
- * Thread-safe. Never bound in production.
+ * Thread-safe. Never bound in production: test support only (backlog B23). `@VisibleForTesting` on the class and its
+ * constructor makes lint `VisibleForTests` (an error in this module and in `:app`'s whole-app lint) flag a construction
+ * from production code, and `check<Variant>HasNoHarness` fails a release build whose R8 output still contains it.
  *
  * Fault hooks: [deviceSecure], [replaceKey] (a different device key: "wrong device"), [forgetKey] (a lost key: absent),
  * [invalidateKey] (a permanently invalidated entry), [unreachable] (Keystore does not answer: every key reads as missing,
  * none is provably lost), [forgetPublicDataKey], [failNextSeal].
  */
-class InMemoryDeviceKeyStore(
+@VisibleForTesting
+class InMemoryDeviceKeyStore @VisibleForTesting constructor(
     @Volatile var deviceSecure: Boolean = true,
     private val random: SecureRandom = SecureRandom(),
 ) : DeviceKeyStore {

@@ -1,0 +1,10 @@
+{
+  "language": "uk",
+  "overrides": {
+    "Return": {
+      "ios": "Enter",
+      "value": "Повернути",
+      "reason": "“Enter” is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

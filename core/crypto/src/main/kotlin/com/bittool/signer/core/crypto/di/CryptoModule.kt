@@ -27,9 +27,11 @@ import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
- * `:core:crypto` bindings (ARCHITECTURE.md §4.10). [DeviceKeyStore] is the debug UI-test harness's file-backed fake
- * when `app/src/debug` provides `@UiTestOverride DeviceKeyStore` (gaps.md G3), else the Android Keystore; release
- * builds bind no override, so the optional is always empty there.
+ * `:core:crypto` bindings (ARCHITECTURE.md §4.10). [DeviceKeyStore] and [JournalCipher] are the debug UI-test harness's
+ * file-backed fakes when `app/src/debug` provides `@UiTestOverride DeviceKeyStore` / `@UiTestOverride JournalCipher`
+ * (gaps.md G3; QA round 1 sign-01: the harness emulator has no screen lock, so the production journal key, which is
+ * `setUnlockedDeviceRequired`, cannot be generated there), else the Android Keystore implementations; release builds
+ * bind no override, so both optionals are always empty there.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -40,7 +42,9 @@ abstract class CryptoModule {
 
     @Binds abstract fun walletVault(vault: DefaultWalletVault): WalletVault
 
-    @Binds abstract fun journalCipher(cipher: KeystoreJournalCipher): JournalCipher
+    @BindsOptionalOf
+    @UiTestOverride
+    abstract fun uiTestJournalCipher(): JournalCipher
 
     @Binds abstract fun bip39Seed(seed: Pbkdf2Bip39Seed): Bip39Seed
 
@@ -53,6 +57,13 @@ abstract class CryptoModule {
             @UiTestOverride override: Optional<DeviceKeyStore>,
             keystore: Provider<AndroidKeystoreDeviceKeyStore>,
         ): DeviceKeyStore = if (override.isPresent) override.get() else keystore.get()
+
+        @Provides
+        @Singleton
+        fun journalCipher(
+            @UiTestOverride override: Optional<JournalCipher>,
+            keystore: Provider<KeystoreJournalCipher>,
+        ): JournalCipher = if (override.isPresent) override.get() else keystore.get()
 
         /** Wordlists load lazily from the APK assets on first use (no I/O at injection time). */
         @Provides

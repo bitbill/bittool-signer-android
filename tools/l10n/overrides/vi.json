@@ -1,0 +1,10 @@
+{
+  "language": "vi",
+  "overrides": {
+    "Return": {
+      "ios": "Return",
+      "value": "Trả lại",
+      "reason": "Left in English, the keyboard key’s name; the other step titles are translated."
+    }
+  }
+}

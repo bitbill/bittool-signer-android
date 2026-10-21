@@ -79,9 +79,27 @@ class ShellNavigator(val navController: NavHostController) {
      * The tab the shown page belongs to: [shownTab], or for a root-level page ("Submit a Wallet", pushed from Connect or
      * Compatibility) the tab it was opened from, i.e. the nearest page below it that lies in a tab graph. That tab stays
      * selected in the bar, so a tap on it is a reselection (iOS pops the stack the page was pushed onto).
+     *
+     * Only public NavController API (backlog B28: the whole back stack, `currentBackStack`, is library-group
+     * restricted): the Wallets graph is the start graph, always at the bottom, and [showTab] pops back to its root before
+     * it pushes another tab's graph, so at most one other tab graph lies above it. That graph, when present, is therefore
+     * the nearest tab below a root-level page; otherwise it is Wallets.
      */
     val selectedTab: Tab?
-        get() = navController.currentBackStack.value.asReversed().firstNotNullOfOrNull { it.destination.tab() }
+        get() {
+            val current = navController.currentBackStackEntry ?: return null
+            current.destination.tab()?.let { return it }
+            return Tab.entries.filter { it != Tab.Wallets }.firstOrNull(::isOnBackStack)
+                ?: Tab.Wallets.takeIf(::isOnBackStack)
+        }
+
+    /** Whether [tab]'s graph has an entry on the back stack (`getBackStackEntry` throws when it has none). */
+    private fun isOnBackStack(tab: Tab): Boolean = try {
+        navController.getBackStackEntry(tab.graph::class)
+        true
+    } catch (_: IllegalArgumentException) {
+        false
+    }
 
     /** The page on screen is the root of Scan, Activity or Settings: system Back selects Wallets (ARCHITECTURE §2.3). */
     val isAtOtherTabRoot: Boolean

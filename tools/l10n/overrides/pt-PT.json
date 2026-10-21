@@ -1,0 +1,10 @@
+{
+  "language": "pt-PT",
+  "overrides": {
+    "Return": {
+      "ios": "Enter",
+      "value": "Devolver",
+      "reason": "“Enter” is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

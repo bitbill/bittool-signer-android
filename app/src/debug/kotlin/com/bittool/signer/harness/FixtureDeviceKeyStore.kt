@@ -1,6 +1,7 @@
 package com.bittool.signer.harness
 
 import com.bittool.signer.core.common.storage.AtomicFiles
+import com.bittool.signer.core.common.storage.InvalidFileException
 import com.bittool.signer.core.crypto.vault.DeviceKeyStore
 import com.bittool.signer.core.crypto.vault.PublicDataKey
 import com.bittool.signer.core.crypto.vault.VaultError
@@ -24,6 +25,11 @@ import javax.crypto.spec.SecretKeySpec
  * [VaultError.DeviceKeyUnavailable], a bad tag [VaultError.AuthenticationFailed]). The emulator of the e2e suite need
  * not have a screen lock, so [isDeviceSecure] is true. Debug builds only, and only while a run is active: production
  * keys stay in Android Keystore (`:core:crypto` instrumented tests cover that).
+ *
+ * Lost keys (backlog B24): a file cannot "fail to answer" the way a Keystore binder call can, so a wallet key whose
+ * file is gone (or is not a key) is provably lost ([isKeyLost]), which lets e2e reach the lost-key removal (B9). The
+ * harness switch `bts.uitest.loseDeviceKeys=true` deletes the run's wallet keys ([loseWalletKeys]) before anything is
+ * injected; launched again with the same run id, every wallet of the run then has a lost device key.
  */
 internal class FixtureDeviceKeyStore(
     private val directory: File,
@@ -80,6 +86,18 @@ internal class FixtureDeviceKeyStore(
         if (!AtomicFiles.delete(keyFile(id))) throw VaultError.DeviceKeyUnavailable()
     }
 
+    /** Lost = no key file, or one that is not a key; a read error proves nothing (false). Never throws. */
+    override fun isKeyLost(id: WalletId): Boolean = synchronized(lock) {
+        try {
+            val bytes = AtomicFiles.readBounded(keyFile(id), KEY_BYTES)
+            (bytes == null || bytes.size != KEY_BYTES).also { bytes?.wipe() }
+        } catch (_: InvalidFileException) {
+            true
+        } catch (_: IOException) {
+            false
+        }
+    }
+
     override fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = synchronized(lock) {
         val file = File(directory, PUBLIC_DATA_KEY_FILE)
         read(file)?.let { return FileHmacKey(it) }
@@ -94,7 +112,7 @@ internal class FixtureDeviceKeyStore(
         FileHmacKey(key)
     }
 
-    private fun keyFile(id: WalletId) = File(directory, "$id.key")
+    private fun keyFile(id: WalletId) = File(directory, "$id$KEY_SUFFIX")
 
     private fun read(file: File): ByteArray? = synchronized(lock) {
         try {
@@ -118,12 +136,28 @@ internal class FixtureDeviceKeyStore(
         override fun toString(): String = "PublicDataKey(<ui-test run>)"
     }
 
-    private companion object {
-        const val KEY_BYTES = 32
-        const val IV_BYTES = 12
-        const val TAG_BITS = 128
-        const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val HMAC = "HmacSHA256"
-        const val PUBLIC_DATA_KEY_FILE = "public-data.key"
+    companion object {
+        /** The run's key directory under its root (`<run root>/FixtureKeys/`). */
+        const val DIRECTORY = "FixtureKeys"
+
+        private const val KEY_BYTES = 32
+        private const val IV_BYTES = 12
+        private const val TAG_BITS = 128
+        private const val TRANSFORMATION = "AES/GCM/NoPadding"
+        private const val HMAC = "HmacSHA256"
+        private const val PUBLIC_DATA_KEY_FILE = "public-data.key"
+        private const val KEY_SUFFIX = ".key"
+
+        /**
+         * `bts.uitest.loseDeviceKeys` (B24): deletes every wallet key (`<wallet id>.key`) in [directory], keeping the
+         * public-data key and the journal key, as if Keystore had lost the wallets' device keys. Returns how many it
+         * deleted. Call before anything opens the run's storage.
+         */
+        fun loseWalletKeys(directory: File): Int {
+            val walletKeys = directory.listFiles { file ->
+                file.isFile && file.name.endsWith(KEY_SUFFIX) && WalletId.parse(file.name.removeSuffix(KEY_SUFFIX)) != null
+            }
+            return walletKeys.orEmpty().count { it.delete() }
+        }
     }
 }

@@ -4,6 +4,8 @@ import com.bittool.signer.core.common.harness.UiTestEnvironment
 import com.bittool.signer.core.common.harness.UiTestOverride
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.DeviceKeyStore
+import com.bittool.signer.core.crypto.vault.JournalCipher
+import com.bittool.signer.core.crypto.vault.KeystoreJournalCipher
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,5 +34,19 @@ object DebugUiTestModule {
     @Singleton
     @UiTestOverride
     fun deviceKeyStore(keystore: Provider<AndroidKeystoreDeviceKeyStore>): DeviceKeyStore =
-        DebugUiTestHarness.run?.let { FixtureDeviceKeyStore(File(it.root, "FixtureKeys")) } ?: keystore.get()
+        DebugUiTestHarness.run?.let { FixtureDeviceKeyStore(fixtureKeys(it.root)) } ?: keystore.get()
+
+    /**
+     * The run's file-backed Activity journal key (QA round 1 sign-01: the Keystore journal key needs a screen lock the
+     * harness emulator does not have), or the Keystore cipher without a run.
+     */
+    @Provides
+    @Singleton
+    @UiTestOverride
+    fun journalCipher(keystore: Provider<KeystoreJournalCipher>): JournalCipher =
+        DebugUiTestHarness.run?.let { FixtureJournalCipher(File(fixtureKeys(it.root), FixtureJournalCipher.KEY_FILE)) }
+            ?: keystore.get()
 }
+
+/** The run's `FixtureKeys/` directory: the wallet keys, the public-data key and the journal key. */
+private fun fixtureKeys(root: File) = File(root, FixtureDeviceKeyStore.DIRECTORY)

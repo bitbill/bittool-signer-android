@@ -3,9 +3,13 @@ package com.bittool.signer.harness
 import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import com.bittool.signer.core.crypto.SystemSecureRandomSource
+import com.bittool.signer.core.crypto.vault.DefaultWalletVault
+import com.bittool.signer.core.crypto.vault.KeystoreJournalCipher
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.preferences.DataStoreSignerPreferences
 import com.bittool.signer.core.model.AppIssue
+import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.security.BiometricPromptSpec
 import com.bittool.signer.core.model.UiText
@@ -16,7 +20,9 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -165,6 +171,96 @@ class DebugUiTestHarnessTest {
         assertFailsWith<VaultError.DeviceKeyUnavailable> { reopened.open(id, sealed, "aad".toByteArray()) }
     }
 
+    /**
+     * QA round 1 sign-01: in a run the Activity journal is sealed with the run's file key, not the Keystore key that an
+     * emulator without a screen lock cannot generate; without a run the production Keystore cipher stays bound.
+     */
+    @Test
+    fun aRunSealsTheActivityJournalWithItsOwnKey() {
+        val keystore = javax.inject.Provider<KeystoreJournalCipher> { error("the Keystore cipher must not be created in a run") }
+        val run = assertNotNull(DebugUiTestHarness.configure(context, intent(DebugUiTestHarness.EXTRA_RUN to runId)))
+        val cipher = DebugUiTestModule.journalCipher(keystore)
+        assertTrue(cipher is FixtureJournalCipher, "bound $cipher")
+        val sealed = cipher.seal("[]".toByteArray())
+        assertTrue(File(run.root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}").isFile)
+        // A cold launch with the same run (a new binding) reads the same journal.
+        assertContentEquals("[]".toByteArray(), DebugUiTestModule.journalCipher(keystore).open(sealed))
+
+        DebugUiTestHarness.resetForTest()
+        val production = KeystoreJournalCipher()
+        assertSame(production, DebugUiTestModule.journalCipher { production })
+    }
+
+    @Test
+    fun theFixtureJournalCipherKeepsTheKeystoreContract() {
+        val keyFile = File(context.cacheDir, "fixture-journal-test/journal.key").apply { parentFile?.deleteRecursively() }
+        val journal = """[{"id":"public test receipt"}]""".toByteArray()
+        val sealed = FixtureJournalCipher(keyFile).seal(journal)
+        // "BTSR" ‖ 0x01 ‖ iv(12) ‖ ciphertext ‖ tag(16).
+        assertContentEquals(byteArrayOf(0x42, 0x54, 0x53, 0x52, 0x01), sealed.copyOfRange(0, 5))
+        assertEquals(5 + 12 + journal.size + 16, sealed.size)
+        assertContentEquals(journal, FixtureJournalCipher(keyFile).open(sealed))
+
+        val tampered = sealed.copyOf().also { it[it.size - 1] = (it[it.size - 1].toInt() xor 1).toByte() }
+        assertFailsWith<VaultError.AuthenticationFailed> { FixtureJournalCipher(keyFile).open(tampered) }
+        assertFailsWith<VaultError.AuthenticationFailed> { FixtureJournalCipher(keyFile).open(sealed.copyOfRange(0, 20)) }
+        val otherVersion = sealed.copyOf().also { it[4] = 0x02 }
+        assertFailsWith<VaultError.AuthenticationFailed> { FixtureJournalCipher(keyFile).open(otherVersion) }
+
+        // The key is never replaced: once it worked, a missing key fails the seal instead of orphaning the journal.
+        val cipher = FixtureJournalCipher(keyFile)
+        cipher.open(sealed)
+        keyFile.delete()
+        assertFailsWith<VaultError.DeviceKeyUnavailable> { cipher.seal(journal) }
+        assertFailsWith<VaultError.AuthenticationFailed> { cipher.open(sealed) }
+        // A new process without a key (and so without a readable journal) creates a new one.
+        assertContentEquals(journal, FixtureJournalCipher(keyFile).let { it.open(it.seal(journal)) })
+    }
+
+    /**
+     * Backlog B24: a deleted fixture key is provably lost, so the lost-key removal (B9) is reachable in a run; the
+     * `bts.uitest.loseDeviceKeys` switch deletes the run's wallet keys, and only those, before anything is injected.
+     */
+    @Test
+    fun theLoseDeviceKeysSwitchMakesTheRunsWalletsRemovableWithoutTheirPassword() = runTest {
+        val root = File(context.cacheDir, "ui-tests/${runId.lowercase()}").apply { deleteRecursively() }
+        val keys = FixtureDeviceKeyStore(File(root, FixtureDeviceKeyStore.DIRECTORY))
+        val vault = DefaultWalletVault(root, keys, SystemSecureRandomSource(), { 1_760_000_000_000 }, Dispatchers.Default, Dispatchers.IO)
+        val id = WalletId.random()
+        vault.create("Public fixture 1", SecretText.of(PUBLIC_PHRASE), SecretText.of(""), SecretText.of("Public-Test-Password1!"), id)
+        keys.publicDataKey(createIfMissing = true)
+        FixtureJournalCipher(File(root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}")).seal("[]".toByteArray())
+        assertFalse(keys.isKeyLost(id))
+        assertFalse(vault.isDeviceKeyLost(id))
+
+        DebugUiTestHarness.configure(
+            context,
+            intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_LOSE_DEVICE_KEYS to true),
+        )
+        assertFalse(File(root, "FixtureKeys/$id.key").exists())
+        assertTrue(File(root, "FixtureKeys/public-data.key").isFile, "the public-data key is kept")
+        assertTrue(File(root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}").isFile, "the journal key is kept")
+
+        assertTrue(keys.isKeyLost(id))
+        assertTrue(vault.isDeviceKeyLost(id))
+        vault.removeWithLostDeviceKey(id)
+        assertTrue(vault.list().isEmpty())
+    }
+
+    @Test
+    fun aFixtureKeyThatIsNotAKeyIsLostAndAPresentOneIsNot() {
+        val directory = File(context.cacheDir, "fixture-lost-test").apply { deleteRecursively() }
+        val keys = FixtureDeviceKeyStore(directory)
+        val present = WalletId.random()
+        keys.create(present)
+        assertFalse(keys.isKeyLost(present))
+        assertTrue(keys.isKeyLost(WalletId.random()))
+        File(directory, "$present.key").writeBytes(ByteArray(3))
+        assertTrue(keys.isKeyLost(present))
+        assertEquals(1, FixtureDeviceKeyStore.loseWalletKeys(directory))
+        assertEquals(0, FixtureDeviceKeyStore.loseWalletKeys(File(directory, "missing")))
+    }
+
     @Test
     fun theFixtureBiometricAlwaysFailsWithItsMessage() = runTest {
         val biometric = FixtureBiometricAuthenticator()
@@ -173,5 +269,10 @@ class DebugUiTestHarnessTest {
             biometric.authenticate(BiometricPromptSpec(UiText.Verbatim("t"), null, UiText.Verbatim("n")))
         }
         assertEquals(UiText.Ios(FixtureBiometricAuthenticator.MESSAGE), error.text)
+    }
+
+    private companion object {
+        /** The published BIP39 test vector the harness's fixtures use (never a real wallet). */
+        const val PUBLIC_PHRASE = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
     }
 }

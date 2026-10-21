@@ -1,0 +1,10 @@
+{
+  "language": "es-419",
+  "overrides": {
+    "Return": {
+      "ios": "Intro",
+      "value": "Devolver",
+      "reason": "“Intro” is the name of the keyboard key (Return / Enter), not the step of returning the signature."
+    }
+  }
+}

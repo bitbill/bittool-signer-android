@@ -14,6 +14,11 @@ android {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
     }
+    lint {
+        // Backlog B23: `testing.TestKeystore` is @VisibleForTesting test support (weaker keys); calling it from this
+        // module's production code (e.g. binding it in CryptoModule) fails lint.
+        error += "VisibleForTests"
+    }
     externalNativeBuild {
         cmake {
             // libbittoolsigner_crypto.so: the vault's PBKDF2-HMAC-SHA256 (vault-crypto.md §17.6 option 1).
