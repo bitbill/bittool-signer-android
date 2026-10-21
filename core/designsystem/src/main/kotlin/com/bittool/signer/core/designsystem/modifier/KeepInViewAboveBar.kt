@@ -13,52 +13,70 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.relocation.BringIntoViewModifierNode
 import androidx.compose.ui.relocation.bringIntoView as bringThisNodeIntoView
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import com.bittool.signer.core.designsystem.component.BottomBarFadeHeight
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
  * Keeps what the content brings into view — the field that gains focus, the caret line of the field being typed in, a
- * message that asks to be seen — clear of a bottom bar the content scrolls beneath, also while that bar grows with the
- * keyboard (QA setup-02).
+ * message that asks to be seen — visible above a bottom bar, also while that bar grows with the keyboard (QA setup-02).
  *
- * The layout the app uses for pages with pinned actions is a `Scaffold` whose `bottomBar` is a [BottomActionBar]
- * (`com.bittool.signer.core.designsystem.component.BottomActionBar`), which rises above the keyboard, and a
- * `verticalScroll` column that applies the scaffold padding inside the scroll, so the content scrolls under the bar.
- * The scroll container then counts the area under the bar as visible: a focused field half under the bar, or the line
- * being typed, is never scrolled up, and nothing re-runs bring-into-view when the bar grows as the keyboard opens.
+ * The pages with pinned actions are a `Scaffold` whose `bottomBar` is a [BottomActionBar]
+ * (`com.bittool.signer.core.designsystem.component.BottomActionBar`), which rises above the keyboard, over a
+ * `verticalScroll` column. Nothing in that layout re-runs bring-into-view when the bar grows as the keyboard opens: the
+ * field being typed in, or the line with its caret, ends up behind the bar (or cut off at the bottom of the viewport),
+ * and Compose's own "keep the focused child visible when the viewport shrinks" only follows the focused field's whole
+ * box (not the caret of a tall editor) and gives up while a scroll is already running, which the frame-by-frame
+ * keyboard animation always causes.
  *
- * This modifier sits between the scroll container and its content. Every bring-into-view request from the content
- * passes through it and is extended by [barHeight] below, so the scroll stops with the requested area above the bar.
- * When [barHeight] grows (the keyboard opening, a message appearing in the bar) while a descendant has focus, the latest
- * requests are made again, so the focused field (or at least the line with its caret) moves back above the bar. Apply it after `verticalScroll`
- * and before the scaffold padding, passing the scaffold's bottom padding (the bar's current height):
+ * This modifier sits between the scroll container and its content (apply it right after `verticalScroll`) and passes
+ * every bring-into-view request of the content on to the scroll container, with the part of the viewport the bar
+ * covers added below the requested area, plus the bar's 12 dp edge fade. When [barHeight] grows (the keyboard opening,
+ * a message appearing in the bar) while a descendant has focus, the latest requests are made again, so the focused field
+ * (or at least the line with its caret) moves back above the bar. Pass the scaffold's bottom padding as [barHeight] (the
+ * bar's current height) and say where the scaffold padding is applied:
  *
- * ```
- * Column(
- *     Modifier.fillMaxSize()
- *         .verticalScroll(scroll)
- *         .keepInViewAboveBar(padding.calculateBottomPadding())
- *         .padding(padding),
- * )
- * ```
+ * - [scrollsUnderBar] `true`: the padding is applied inside the scroll, after this modifier, so the viewport reaches the
+ *   bottom of the screen and the content scrolls beneath the bar. Requests are extended by the bar's height.
+ *   ```
+ *   Modifier.fillMaxSize()
+ *       .verticalScroll(scroll)
+ *       .keepInViewAboveBar(padding.calculateBottomPadding(), scrollsUnderBar = true)
+ *       .padding(padding)
+ *   ```
+ * - [scrollsUnderBar] `false`: the padding is applied before the scroll, so the viewport already ends at the bar's top
+ *   edge and shrinks as the bar grows (the setup pages, `SetupScaffold`). Requests are not extended by the bar (that
+ *   would count it twice), only by its fade, and made again when it grows.
+ *   ```
+ *   Modifier.fillMaxSize()
+ *       .padding(padding)
+ *       .verticalScroll(scroll)
+ *       .keepInViewAboveBar(padding.calculateBottomPadding(), scrollsUnderBar = false)
+ *   ```
  *
- * For a `verticalScroll` container only: a lazy list's own scrolling sits inside its layout, below this modifier.
+ * There is no default for [scrollsUnderBar]: the wrong one either leaves the field under the bar or scrolls it a bar's
+ * height too far. For a `verticalScroll` container only: a lazy list's own scrolling sits inside its layout, below this
+ * modifier.
  */
-fun Modifier.keepInViewAboveBar(barHeight: Dp): Modifier = this then KeepInViewAboveBarElement(barHeight)
+fun Modifier.keepInViewAboveBar(barHeight: Dp, scrollsUnderBar: Boolean): Modifier =
+    this then KeepInViewAboveBarElement(barHeight, scrollsUnderBar)
 
-private data class KeepInViewAboveBarElement(val barHeight: Dp) : ModifierNodeElement<KeepInViewAboveBarNode>() {
-    override fun create(): KeepInViewAboveBarNode = KeepInViewAboveBarNode(barHeight)
+private data class KeepInViewAboveBarElement(val barHeight: Dp, val scrollsUnderBar: Boolean) :
+    ModifierNodeElement<KeepInViewAboveBarNode>() {
+    override fun create(): KeepInViewAboveBarNode = KeepInViewAboveBarNode(barHeight, scrollsUnderBar)
 
-    override fun update(node: KeepInViewAboveBarNode) = node.updateBarHeight(barHeight)
+    override fun update(node: KeepInViewAboveBarNode) = node.update(barHeight, scrollsUnderBar)
 
     override fun InspectorInfo.inspectableProperties() {
         name = "keepInViewAboveBar"
         properties["barHeight"] = barHeight
+        properties["scrollsUnderBar"] = scrollsUnderBar
     }
 }
 
-private class KeepInViewAboveBarNode(private var barHeight: Dp) :
+private class KeepInViewAboveBarNode(private var barHeight: Dp, private var scrollsUnderBar: Boolean) :
     Modifier.Node(), BringIntoViewModifierNode, FocusEventModifierNode {
 
     private class Request(val coordinates: LayoutCoordinates, val bounds: () -> Rect?)
@@ -93,13 +111,16 @@ private class KeepInViewAboveBarNode(private var barHeight: Dp) :
         }
     }
 
-    fun updateBarHeight(height: Dp) {
+    fun update(height: Dp, underBar: Boolean) {
+        scrollsUnderBar = underBar
         val grew = height > barHeight
         barHeight = height
         if (!grew || !isAttached || !focusInside) return
         val again = listOfNotNull(wholeElement, latest).distinct().filter { it.coordinates.isAttached }
         if (again.isEmpty()) return
-        // The newest height wins: the requests made for the previous one are withdrawn.
+        // The newest height wins: the requests made for the previous one are withdrawn. Dispatched, not run here: the
+        // scroll container sees the viewport of this frame's layout (it shrinks with the bar when the padding sits
+        // outside the scroll) before the requests are measured against it.
         repeat?.cancel()
         repeat = coroutineScope.launch {
             for (request in again) launch { forward(request) }
@@ -112,7 +133,7 @@ private class KeepInViewAboveBarNode(private var barHeight: Dp) :
         repeat = null
     }
 
-    /** Passes the request on to the scroll container with the area under the bar added below it. */
+    /** Passes the request on to the scroll container with the part of the viewport the bar covers added below it. */
     private suspend fun forward(request: Request) {
         if (!isAttached) return
         val childCoordinates = request.coordinates
@@ -122,7 +143,8 @@ private class KeepInViewAboveBarNode(private var barHeight: Dp) :
             val requested = boundsProvider() ?: return@bringThisNodeIntoView null
             val own = requireLayoutCoordinates()
             val topLeft = own.localPositionOf(childCoordinates, requested.topLeft)
-            val below = with(requireDensity()) { barHeight.toPx() }
+            val covered = (if (scrollsUnderBar) barHeight else 0.dp) + BottomBarFadeHeight
+            val below = with(requireDensity()) { covered.toPx() }
             Rect(topLeft.x, topLeft.y, topLeft.x + requested.width, topLeft.y + requested.height + below)
         }
     }

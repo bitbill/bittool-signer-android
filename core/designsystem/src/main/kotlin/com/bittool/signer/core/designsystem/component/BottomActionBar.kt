@@ -36,8 +36,8 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
  * fade above the bar and a hairline at its top edge: the Android rendition of the iOS 26 scroll-edge effect, so
  * content visibly continues under the buttons and the bar reads as a surface only when it covers something.
  *
- * The bar grows with the keyboard, over content that scrolls beneath it: give that scrolling content
- * [keepInViewAboveBar] with the scaffold's bottom padding, so a focused field and the line being typed stay visible
+ * The bar grows with the keyboard: give the scrolling content [keepInViewAboveBar] with the scaffold's bottom padding
+ * (and whether that padding is applied inside the scroll), so a focused field and the line being typed stay visible
  * above the bar when the keyboard opens (QA setup-02).
  */
 @Composable
@@ -54,7 +54,7 @@ fun BottomActionBar(
         modifier = modifier
             .fillMaxWidth()
             .drawBehind {
-                val fade = FADE_HEIGHT.toPx()
+                val fade = BottomBarFadeHeight.toPx()
                 if (edge > 0f) {
                     drawRect(
                         brush = Brush.verticalGradient(
@@ -81,4 +81,5 @@ fun BottomActionBar(
     )
 }
 
-private val FADE_HEIGHT = 12.dp
+/** The scroll-edge fade the bar draws above its top edge over the content (also kept clear by [keepInViewAboveBar]). */
+internal val BottomBarFadeHeight = 12.dp
