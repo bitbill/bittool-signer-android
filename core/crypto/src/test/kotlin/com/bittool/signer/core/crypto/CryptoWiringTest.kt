@@ -4,6 +4,9 @@ import com.bittool.signer.core.crypto.di.CryptoModule
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
 import com.bittool.signer.core.crypto.vault.DeviceKeyStore
+import com.bittool.signer.core.crypto.vault.JournalCipher
+import com.bittool.signer.core.crypto.vault.KeystoreJournalCipher
+import com.bittool.signer.core.crypto.vault.KeystoreKeyPolicy
 import com.bittool.signer.core.crypto.vault.PasswordLayer
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.model.WalletId
@@ -28,6 +31,24 @@ class CryptoWiringTest {
         val override = InMemoryDeviceKeyStore()
         val keystore = Provider<AndroidKeystoreDeviceKeyStore> { error("the Keystore store must not be created") }
         assertSame(override, CryptoModule.deviceKeyStore(Optional.of<DeviceKeyStore>(override), keystore))
+    }
+
+    /**
+     * QA round 1 sign-01: the debug UI-test harness's journal cipher replaces the Keystore one (whose
+     * `setUnlockedDeviceRequired` key cannot be generated on the harness emulator without a screen lock), and without an
+     * override (every release build) the Keystore cipher is bound.
+     */
+    @Test
+    fun theDebugJournalOverrideReplacesTheKeystoreCipherWithoutConstructingIt() {
+        val override = object : JournalCipher {
+            override fun seal(plaintext: ByteArray) = plaintext
+            override fun open(sealed: ByteArray) = sealed
+        }
+        val unused = Provider<KeystoreJournalCipher> { error("the Keystore cipher must not be created") }
+        assertSame(override, CryptoModule.journalCipher(Optional.of<JournalCipher>(override), unused))
+
+        val keystore = KeystoreJournalCipher(KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = true))
+        assertSame(keystore, CryptoModule.journalCipher(Optional.empty(), Provider { keystore }))
     }
 
     @Test

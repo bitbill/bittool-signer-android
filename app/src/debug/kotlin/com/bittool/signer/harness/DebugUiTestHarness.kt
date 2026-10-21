@@ -45,9 +45,11 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.appearance=dark\|light` | the Theme preference |
  * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
+ * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
  *
  * While a run is active, `DebugUiTestModule` binds the file-backed [FixtureDeviceKeyStore] (so a cold launch with the
- * same run id opens the same wallets) and the always-failing [FixtureBiometricAuthenticator]. The first configuration
+ * same run id opens the same wallets), the file-backed [FixtureJournalCipher] (Activity works on an emulator without a
+ * screen lock, QA round 1 sign-01) and the always-failing [FixtureBiometricAuthenticator]. The first configuration
  * of a process wins: extras of a later launch (a `singleTask` relaunch, `onNewIntent`) are ignored, because every
  * singleton is already bound to the first run — the e2e suite force-stops the app before each launch.
  *
@@ -62,6 +64,7 @@ object DebugUiTestHarness : UiTestEnvironment {
     const val EXTRA_APPEARANCE = "bts.uitest.appearance"
     const val EXTRA_LOCALE = "bts.uitest.locale"
     const val EXTRA_ALLOW_CAPTURE = "bts.uitest.allowCapture"
+    const val EXTRA_LOSE_DEVICE_KEYS = "bts.uitest.loseDeviceKeys"
 
     private const val TAG = "UiTestHarness"
     private const val DEFAULT_LOCALE = "en-US"
@@ -101,6 +104,10 @@ object DebugUiTestHarness : UiTestEnvironment {
         }
         if (extras.flag(EXTRA_RESET) == true) reset(context, parsed)
         parsed.root.mkdirs()
+        if (extras.flag(EXTRA_LOSE_DEVICE_KEYS) == true) {
+            val lost = FixtureDeviceKeyStore.loseWalletKeys(File(parsed.root, FixtureDeviceKeyStore.DIRECTORY))
+            Log.i(TAG) { "UI-test run: $lost wallet device keys deleted (lost)" }
+        }
         run = parsed
         applyLocale(parsed.localeTag)
         if (createsFixtures && parsed.fixtures > 0) startFixtures(context, parsed)
