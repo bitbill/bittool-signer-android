@@ -35,3 +35,5 @@ include(":feature:wallets")
 include(":feature:sign")
 include(":feature:activity")
 include(":feature:settings")
+// Black-box end-to-end suite against :app apkDebug (gaps.md G1–G3; docs/qa/e2e.md).
+include(":e2e")
