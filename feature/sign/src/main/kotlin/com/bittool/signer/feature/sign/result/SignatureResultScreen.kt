@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.sign.result
 
+import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
@@ -95,7 +96,14 @@ fun SignatureResultScreen(
     ) { uri -> viewModel.export(uri) }
     SignatureResultContent(
         state = state,
-        onExport = { exporter.launch(SignatureResultViewModel.EXPORT_FILE_NAME) },
+        onExport = {
+            // A device without a document picker has nothing to launch (as on the Activity Signature page).
+            try {
+                exporter.launch(SignatureResultViewModel.EXPORT_FILE_NAME)
+            } catch (_: ActivityNotFoundException) {
+                viewModel.onExportUnavailable()
+            }
+        },
         onDone = viewModel::done,
         modifier = modifier,
         scrollToTop = scrollToTop,

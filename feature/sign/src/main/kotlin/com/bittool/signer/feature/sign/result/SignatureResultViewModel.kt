@@ -81,6 +81,14 @@ class SignatureResultViewModel @Inject constructor(
         store.clearRequest()
     }
 
+    /**
+     * "Export as File" found no document picker to open (no app handles `CREATE_DOCUMENT`: some work profiles, stripped
+     * builds): said in place, as a failed save is, instead of the app stopping.
+     */
+    fun onExportUnavailable() {
+        exportError.value = UiText.Resource(R.string.sign_file_not_saved)
+    }
+
     /** The document picker returned [uri] (null: cancelled, nothing happens). */
     fun export(uri: Uri?) {
         if (uri == null) return

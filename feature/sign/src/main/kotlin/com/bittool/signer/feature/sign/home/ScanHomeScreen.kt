@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.sign.home
 
+import android.content.ActivityNotFoundException
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -98,7 +99,14 @@ fun ScanHomeScreen(
         state = state,
         onScan = onOpenScanner,
         onPaste = viewModel::openPaste,
-        onImportFile = { picker.launch(arrayOf("*/*")) },
+        onImportFile = {
+            // A device without a document picker (some work profiles, stripped builds) has nothing to launch.
+            try {
+                picker.launch(arrayOf("*/*"))
+            } catch (_: ActivityNotFoundException) {
+                viewModel.onPickerUnavailable()
+            }
+        },
         modifier = modifier,
         scrollToTop = scrollToTop,
     )
