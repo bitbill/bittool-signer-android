@@ -1192,7 +1192,9 @@ above it:
   to right in every language (RTL interfaces keep QWERTY; hints keep the interface direction). a–z covers English,
   Spanish, French, Italian, Czech and Portuguese, which the editor matches without accents.
 - Paste inserts the clipboard text exactly as the editor's Paste menu does (`Bip39KeyboardEdits.paste`); backspace
-  deletes a grapheme on touch-down and repeats, faster, while held; Done hides the keyboard (clears the focus).
+  deletes a grapheme on touch-down and repeats, faster, while held; Done hides the keyboard (clears the focus). Open
+  (`:core:ui`): a held backspace keeps repeating, with its haptic, once nothing is left to delete; the repeat should
+  stop at the first activation that changes nothing (`Key(repeating = true)` needs to know whether the edit applied).
 - Edits go straight into the editor's `TextFieldState` (`KeyboardEdit`, redacted `toString`), nowhere else.
 - Keys never take the focus; the whole cell is the touch target; pressed colour and a letter preview drawn in this
   window (no popup, so it stays under `FLAG_SECURE`); keyboard-tap haptic through the view (the system setting
@@ -1213,11 +1215,11 @@ default, Back keeps it). "Switch anyway" sets `WalletSetupViewModel.phraseKeyboa
 state, not a secret, for the presentation; in-app again for the next one), recreates the editor and focuses it once
 the window has the focus, raising the system keyboard. The editor then asks the input method for:
 `IME_FLAG_NO_PERSONALIZED_LEARNING` (`NoPersonalizedLearning`, incognito), no autocorrection, no capitalisation, and
-`TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain text class (`NoSuggestions`, QA regression-01: no suggestion strip, no
-composing underline, no clipboard chip on Latin keyboards; CJK input methods keep their conversion candidates). No
-password or visible-password variation, which would give Latin-only layouts. Above the system keyboard the suggestion
-bar (`RecoverySuggestionBar`) starts with a "BitTool keyboard" chip (`keyboard.inApp`) that switches back and puts the
-system keyboard away.
+`TYPE_TEXT_FLAG_NO_SUGGESTIONS` on the plain text class (`NoSuggestions`, QA regression-01: Gboard showed its
+suggestion strip, composing underline and clipboard chip without it; CJK input methods keep their conversion
+candidates, which the flag does not cover; not yet checked on a device). No password or visible-password variation,
+which would give Latin-only layouts. Above the system keyboard the suggestion bar (`RecoverySuggestionBar`) starts
+with a "BitTool keyboard" chip (`keyboard.inApp`) that switches back and puts the system keyboard away.
 
 **Tests.** `:core:ui` `Bip39KeyboardEditsTest` (Ownbit's edit cases), `Bip39KeyboardTest` and Roborazzi component
 shots; `:feature:setup` `PhraseKeyboardTest` (no input connection, keys, suggestions, hardware keys, Copy / Cut refused,

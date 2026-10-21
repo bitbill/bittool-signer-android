@@ -5,16 +5,18 @@ import java.text.BreakIterator
 import java.util.Locale
 
 /**
- * Phrase-boundary line breaks for the setup large titles on Android 8–12L (QA setup-15, regression-13).
+ * Phrase-boundary line breaks for the setup large titles where the platform has none (QA setup-15, regression-13):
+ * Japanese on Android 8–12L, Korean up to Android 14.
  *
  * The titles ask for `LineBreak.Heading`, whose phrase word break (`LINE_BREAK_WORD_STYLE_PHRASE`) only exists from
  * API 33. Below it a Japanese title breaks between any two characters ("ウォレットを作成しま / した") and a Korean one
  * between any two syllables, where iOS keeps phrases (bunsetsu) and Korean words whole. [keepTogether] gives those
  * versions the same result: it puts a WORD JOINER (U+2060, invisible, "no break here" for the line breaker, UAX #14
  * class WJ) between the characters of each phrase, so lines can only break between phrases (and at spaces). A phrase
- * longer than a whole line still breaks inside, as the line breaker always does. From API 33 the text is returned
- * unchanged: the platform's own phrase breaking applies. Text the reader sees keeps its exact characters; only the
- * drawn copy carries the joiners ([LargeTitle] gives accessibility the original).
+ * longer than a whole line still breaks inside, as the line breaker always does. From API 33 a Japanese title, and
+ * from API 35 a Korean one, is returned unchanged: the platform's own phrase breaking applies
+ * ([KOREAN_PHRASES_SDK]). Text the reader sees keeps its exact characters; only the drawn copy carries the joiners
+ * ([LargeTitle] gives accessibility the original).
  *
  * Phrases, read from the characters themselves (no dictionary is needed for titles):
  * - **Japanese** (any kana): a phrase is optional opening brackets, a run of kanji, katakana, Latin letters or digits,
@@ -28,13 +30,21 @@ internal object HeadingPhrases {
     const val WORD_JOINER: Char = '⁠'
 
     fun keepTogether(text: String, sdk: Int = Build.VERSION.SDK_INT): String {
-        if (sdk >= Build.VERSION_CODES.TIRAMISU || text.isEmpty()) return text
+        if (text.isEmpty()) return text
         return when {
-            text.codePoints().anyMatch(::isKana) -> join(text, ::japaneseBreak)
-            text.codePoints().anyMatch(::isHangul) -> join(text) { _, _ -> false }
+            sdk < Build.VERSION_CODES.TIRAMISU && text.codePoints().anyMatch(::isKana) -> join(text, ::japaneseBreak)
+            sdk < KOREAN_PHRASES_SDK && text.codePoints().anyMatch(::isHangul) -> join(text) { _, _ -> false }
             else -> text
         }
     }
+
+    /**
+     * From this version on the platform's phrase style keeps Korean words whole; below it the joiners do. Android 13
+     * brought phrase breaking for Japanese (bunsetsu), but Korean "keep-all" is not guaranteed there, and the joiners
+     * give exactly that result (breaks at spaces only) where the platform already does it, so they are safe to use up
+     * to API 34.
+     */
+    private const val KOREAN_PHRASES_SDK = Build.VERSION_CODES.VANILLA_ICE_CREAM
 
     /** [text] with [WORD_JOINER] between neighbouring characters (grapheme clusters) where [breakAllowed] says no. */
     private fun join(text: String, breakAllowed: (Kind, Kind) -> Boolean): String {

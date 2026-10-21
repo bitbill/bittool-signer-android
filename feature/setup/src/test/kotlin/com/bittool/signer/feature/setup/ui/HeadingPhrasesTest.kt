@@ -86,6 +86,24 @@ class HeadingPhrasesTest {
         assertEquals(listOf("이 ", "지갑은 ", "잠금 ", "해제할 ", "수 ", "없습니다"), phrases(below33("이 지갑은 잠금 해제할 수 없습니다")))
     }
 
+    /**
+     * Android 13 and 14 have the phrase style for Japanese, but do not promise Korean "keep-all" with it: a Korean
+     * title keeps its words through the joiners up to API 34 (the same breaks where the platform already keeps them),
+     * a Japanese one is left to the platform from API 33.
+     */
+    @Test
+    fun koreanTitlesKeepTheirWordsUpToApi34() {
+        for (sdk in listOf(Build.VERSION_CODES.TIRAMISU, Build.VERSION_CODES.UPSIDE_DOWN_CAKE)) {
+            assertEquals(
+                listOf("이 ", "지갑은 ", "잠금 ", "해제할 ", "수 ", "없습니다"),
+                phrases(HeadingPhrases.keepTogether("이 지갑은 잠금 해제할 수 없습니다", sdk = sdk)),
+                "API $sdk",
+            )
+            assertEquals("ウォレットを作成しました", HeadingPhrases.keepTogether("ウォレットを作成しました", sdk = sdk), "API $sdk")
+        }
+        assertEquals("이 지갑은 잠금 해제할 수 없습니다", HeadingPhrases.keepTogether("이 지갑은 잠금 해제할 수 없습니다", sdk = Build.VERSION_CODES.VANILLA_ICE_CREAM))
+    }
+
     @Test
     fun otherLanguagesAndNewerVersionsAreDrawnAsWritten() {
         for (text in listOf("Wallet Created", "钱包已创建", "Кошелёк создан", "تم إنشاء المحفظة", "")) {
