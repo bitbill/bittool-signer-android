@@ -30,6 +30,11 @@ import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
  * Change Password (inventory row 32, iOS `ChangePasswordSheet`, wallets-pairing.md §8.3): the wallet, the current
  * password, the new password twice with the live requirements, and "Change Password". [onChanged] runs after a success
  * (the wallet page then shows "Password Changed"); [onCancel] closes without changing anything.
+ *
+ * "Change Password" and the failure above it sit in the page's bottom bar, above the keyboard, so the action is in view
+ * while the confirmation is typed (QA round 3 production-final-01; setup's Reset Password does the same), and the
+ * requirements stay in view with the pair they check (QA setup-02). The iOS footer under the button ("Your recovery
+ * phrase, fingerprint and addresses stay the same.") ends the form.
  */
 @Composable
 fun ChangePasswordScreen(
@@ -85,16 +90,13 @@ internal fun ChangePasswordContent(
         }
     }
     val blocked = rememberOverlayBlockedNotice(toast)
-    SecurityPage(title = stringResource(R.string.change_password), busy = uiState.busy, onCancel = onCancel, toast = toast) {
-        WalletIdentityCard(uiState.identity)
-        PasswordField(PasswordKind.CurrentWalletPassword, current, imeAction = ImeAction.Next, enabled = !uiState.busy)
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            PasswordField(PasswordKind.NewPassword, new, isNew = true, imeAction = ImeAction.Next, enabled = !uiState.busy)
-            PasswordField(PasswordKind.ConfirmNewPassword, confirmation, isNew = true, imeAction = ImeAction.Done, enabled = !uiState.busy)
-            PasswordRequirements(new.text, confirmation.text, Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp))
-        }
-        SecurityError(uiState.error)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    SecurityPage(
+        title = stringResource(R.string.change_password),
+        busy = uiState.busy,
+        onCancel = onCancel,
+        toast = toast,
+        bottomActions = {
+            SecurityError(uiState.error)
             PrimaryButton(
                 text = stringResource(R.string.change_password),
                 onClick = submit,
@@ -102,7 +104,16 @@ internal fun ChangePasswordContent(
                 enabled = valid,
                 modifier = Modifier.testTag("vaultManagement.submit").obscuredTouchGuard(blocked),
             )
-            FormFooter(stringResource(R.string.your_recovery_phrase_fingerprint_and_addresses_stay_the))
+        },
+    ) {
+        WalletIdentityCard(uiState.identity)
+        PasswordField(PasswordKind.CurrentWalletPassword, current, imeAction = ImeAction.Next, enabled = !uiState.busy)
+        // The new password, its confirmation and the live requirements stay in view together while either is typed.
+        Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            PasswordField(PasswordKind.NewPassword, new, isNew = true, imeAction = ImeAction.Next, enabled = !uiState.busy)
+            PasswordField(PasswordKind.ConfirmNewPassword, confirmation, isNew = true, imeAction = ImeAction.Done, enabled = !uiState.busy)
+            PasswordRequirements(new.text, confirmation.text, Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp))
         }
+        FormFooter(stringResource(R.string.your_recovery_phrase_fingerprint_and_addresses_stay_the))
     }
 }

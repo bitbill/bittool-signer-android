@@ -1,6 +1,7 @@
 package com.bittool.signer.feature.activity
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.text.TextLayoutResult
@@ -106,6 +107,38 @@ class ActivityScreensTest {
         list.performScrollToNode(hasTestTag(ActivityDetailTags.SHOW_QR))
         compose.onNodeWithTag(ActivityDetailTags.SHOW_QR).performClick()
         assertEquals(1, shown)
+    }
+
+    /**
+     * QA round 3 activity-keyboard-04: "Show QR Code" and "Export as File" are list buttons in the accent tint
+     * (`ActivityTab.swift:246-256`, `build/ios-reference/light-31b-activity-input-output.png`), like the wallet page's
+     * (regression-14), not label-coloured rows that read as navigation.
+     */
+    @Test
+    fun theOutputActionsAreAccentButtonsLikeIos() {
+        var accent = Color.Unspecified
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                accent = SignerTheme.colors.accent
+                ActivityDetailContent(
+                    state = ActivityDetailUiState(receipt = receipt(id), decode = DecodeState.Decoding),
+                    onBack = {},
+                    onOpenDecodedFields = {},
+                    onShowQr = {},
+                    onDismissQr = {},
+                    onExport = {},
+                )
+            }
+        }
+        val list = compose.onNodeWithTag(ActivityDetailTags.LIST)
+        mapOf(ActivityDetailTags.SHOW_QR to "Show QR Code", ActivityDetailTags.EXPORT to "Export as File").forEach { (tag, title) ->
+            list.performScrollToNode(hasTestTag(tag))
+            compose.onNodeWithTag(tag).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            val layouts = mutableListOf<TextLayoutResult>()
+            compose.onNodeWithText(title, useUnmergedTree = true)
+                .fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            assertEquals(accent, layouts.single().layoutInput.style.color, "“$title” is drawn in the accent")
+        }
     }
 
     @Test

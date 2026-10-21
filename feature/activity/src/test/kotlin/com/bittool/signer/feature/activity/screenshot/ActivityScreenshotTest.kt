@@ -134,6 +134,28 @@ class ActivityScreenshotTest(private val look: Look) {
         )
     }
 
+    /**
+     * The whole page down to Output (`light-31b-activity-input-output.png`), on a tall window so nothing has to scroll:
+     * the accent list buttons of QA activity-keyboard-04.
+     */
+    @Test
+    @Config(qualifiers = "w411dp-h2000dp-xxhdpi")
+    fun detailOutput() = capture("07-activity-detail-output") {
+        ActivityDetailContent(
+            state = ActivityDetailUiState(
+                receipt = receipt("a"),
+                wallet = WalletLabel.Named("Public fixture 1"),
+                fingerprint = "73C5DA0A",
+                decode = DecodeState.Decoded(ActivityTestData.approvalReview),
+            ),
+            onBack = {},
+            onOpenDecodedFields = {},
+            onShowQr = {},
+            onDismissQr = {},
+            onExport = {},
+        )
+    }
+
     @Test
     fun detailDecoding() = capture("05-activity-detail-decoding") {
         ActivityDetailContent(

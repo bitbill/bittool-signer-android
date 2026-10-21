@@ -3,6 +3,7 @@ package com.bittool.signer.feature.activity
 import android.content.ActivityNotFoundException
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,16 +16,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -327,22 +332,20 @@ private fun OutputSection(state: ActivityDetailUiState, onShowQr: () -> Unit, on
     ) {
         if (state.frames.isNotEmpty()) {
             item(key = "qr", dividerInset = IconRowDividerInset) {
-                NavRow(
+                OutputActionRow(
                     title = showQr,
                     icon = SignerIcons.QrCode,
                     onClick = onShowQr,
-                    showChevron = false,
                     modifier = Modifier.testTag(ActivityDetailTags.SHOW_QR),
                 )
             }
         }
         if (state.responseText.isNotEmpty()) {
-            item(key = "export") {
-                NavRow(
+            item(key = "export", dividerInset = IconRowDividerInset) {
+                OutputActionRow(
                     title = export,
-                    icon = SignerIcons.SaveFile,
+                    icon = SignerIcons.Export,
                     onClick = onExport,
-                    showChevron = false,
                     modifier = Modifier.testTag(ActivityDetailTags.EXPORT),
                 )
             }
@@ -368,6 +371,30 @@ private fun OutputSection(state: ActivityDetailUiState, onShowQr: () -> Unit, on
                 )
             }
         }
+    }
+}
+
+/**
+ * A list button of the Output section (iOS `Button { … } label: { Label("Show QR Code", systemImage: "qrcode") }` and
+ * `Label("Export as File", systemImage: "square.and.arrow.up")` in the detail `List`, `ActivityTab.swift:246-256`;
+ * `light-31b-activity-input-output.png`; QA activity-keyboard-04): icon and title in the accent tint and no chevron,
+ * because it opens a sheet or the system picker over the record and pushes nothing. The `NavRow` layout otherwise
+ * (56 dp, 24 dp icon, ripple, `Role.Button`), as the wallet page's list buttons (QA regression-14).
+ */
+@Composable
+private fun OutputActionRow(title: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = SignerTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(24.dp))
+        Text(title, style = SignerTheme.typography.body, color = colors.accent, modifier = Modifier.weight(1f))
     }
 }
 
