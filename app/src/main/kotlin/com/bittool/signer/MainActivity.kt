@@ -48,8 +48,9 @@ import kotlinx.coroutines.launch
  * `onCreate`, in this order: the debug UI-test harness reads its launch extras (before Hilt injects anything, gaps.md
  * G3) → the system splash is installed → `FLAG_SECURE`, no Recents screenshot, hidden foreign overlays, autofill and
  * content capture excluded (`SecureWindowPolicy`, never toggled) → the lifecycle monitor attaches (it sees every edge)
- * → Arabic keeps Latin digits → the Theme preference is followed → `super.onCreate` → edge to edge → the splash is kept
- * until App Lock and the first wallet load are known ([LaunchGate]) → the lock window follows App Lock → content.
+ * → the Theme preference is followed → `super.onCreate` → Arabic keeps Latin digits (it needs the AppCompat delegate
+ * that `super.onCreate` registers) → edge to edge → the splash is kept until App Lock and the first wallet load are
+ * known ([LaunchGate]) → the lock window follows App Lock → content.
  *
  * Lifecycle (iOS scene phases, app-shell.md §10, §15.4): `onStart` runs App Lock's grace decision and shows the lock
  * window in the same callback, so a relock is in the very first frame; `onStop` that is not a configuration change
@@ -84,9 +85,12 @@ class MainActivity : AppCompatActivity() {
         val shell = EntryPointAccessors.fromApplication(applicationContext, ShellEntryPoint::class.java)
         shell.secureWindowPolicy().apply(this, allowCapture = launch.allowCapture)
         shell.lifecycleMonitor().attach(this)
-        AppLocales.ensureLatinDigits()
         shell.appearance().start()
         super.onCreate(savedInstanceState)
+        // Plain `ar` from Android's own App languages setting → `ar-u-nu-latn` (a re-apply recreates the activity once).
+        // After super.onCreate: on API 33+ AppCompat reads and writes the framework list only through a live activity
+        // delegate, which super.onCreate registers; before it the list read as empty and nothing happened (audit A11).
+        AppLocales.ensureLatinDigits()
         // After AppCompat installed its decor (reading the decor any earlier would install it first).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
