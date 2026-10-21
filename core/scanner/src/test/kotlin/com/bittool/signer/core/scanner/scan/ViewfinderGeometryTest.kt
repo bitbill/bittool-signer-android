@@ -54,6 +54,26 @@ class ViewfinderGeometryTest {
         assertRect(Rect(324.5f, 77.5f, 519.5f, 272.5f), geometry(844f, 390f).window) // landscape: 390 × 0.5
     }
 
+    /**
+     * QA sign-09: the status panel (camera access needed at font scale 2) used to cover the lower brackets. With the
+     * free band between the top bar and the panel, the window keeps 12 dp from both: it moves up first, then shrinks
+     * to the band, never below 120 dp. A window that fits is the iOS one.
+     */
+    @Test
+    fun theWindowKeepsClearOfTheTopBarAndTheStatusPanel() {
+        val size = Size(393f * 3, 807f * 3)
+        fun clear(top: Float, bottom: Float) = ViewfinderGeometry.of(size, density, (top * 3)..(bottom * 3)).window
+        // iOS: side min(393 − 64, 403.5, 340) = 329 at 219…548.
+        assertRect(Rect(32f, 219f, 361f, 548f), geometry(393f, 807f).window)
+        assertRect(Rect(32f, 219f, 361f, 548f), clear(84f, 700f))
+        // A panel from 523: moved up to end 12 above it, same size.
+        assertRect(Rect(32f, 182f, 361f, 511f), clear(84f, 523f))
+        // A panel from 400: the band 96…388 is smaller than the window, which shrinks to it.
+        assertRect(Rect(50.5f, 96f, 342.5f, 388f), clear(84f, 400f))
+        // Hardly any room: never below 120, at the band's top.
+        assertRect(Rect(136.5f, 96f, 256.5f, 216f), clear(84f, 200f))
+    }
+
     @Test
     fun theProgressRingStartsAtTheTopLeftCornerAndRunsClockwise() {
         val ring = Rect(0f, 0f, 300f, 300f)
