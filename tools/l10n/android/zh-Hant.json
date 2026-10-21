@@ -313,6 +313,10 @@
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
    "value": "psbt_base64 是這個 QR Code 承載的原始 PSBT；decoded 是從中解析出的內容，僅供參考。"
   },
+  "sign_acknowledgement_hint": {
+   "source": "Check the box at the end of the review to sign.",
+   "value": "勾選審核內容末尾的核取方塊後即可簽名。"
+  },
   "sign_file_unreadable": {
    "source": "The file could not be read.",
    "value": "無法讀取檔案。"

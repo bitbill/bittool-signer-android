@@ -10,6 +10,7 @@
     <string name="sign_reading_request">İstek okunuyor…</string>
     <string name="sign_keep_animated_code_in_view">Hareketli kodu kadrajda tutun · %1$d parça</string>
     <string name="sign_psbt_payload_note">psbt_base64, bu QR kodunun taşıdığı PSBT’nin ta kendisidir; decoded ise bilgi amaçlı olarak ondan okunur.</string>
+    <string name="sign_acknowledgement_hint">İmzalamak için incelemenin sonundaki kutuyu işaretleyin.</string>
     <string name="sign_file_unreadable">Dosya okunamadı.</string>
     <string name="sign_file_not_saved">Dosya kaydedilemedi.</string>
 </resources>

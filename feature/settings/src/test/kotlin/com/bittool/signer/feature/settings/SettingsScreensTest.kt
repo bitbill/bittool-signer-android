@@ -333,6 +333,33 @@ class SettingsScreensTest {
         assertTrue(item.top >= press.y && item.top - press.y < 24.dpPx, "menu item top ${item.top}, press at ${press.y}")
     }
 
+    /**
+     * Backlog B29 (rest of B26): the copy menu is a popup window of its own, so the activity root's
+     * `testTagsAsResourceId` does not reach it. As a `SignerDropdownMenu` it publishes its item's tag in debuggable
+     * builds, for UiAutomator (`By.res`).
+     */
+    @Test
+    fun theCopyMenuPublishesItsTestTagInDebuggableBuilds() {
+        val info = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>().applicationInfo
+        val flags = info.flags
+        info.flags = flags or android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE
+        try {
+            show { TokenPage() }
+            longPressTokenRow(x = 240f, fromBottom = 60f)
+            compose.onNode(hasTestTag(COPY_ITEM) and publishedAsResourceId, useUnmergedTree = true).assertExists()
+            compose.onNodeWithTag(COPY_ITEM).assert(hasText("Copy Contract Address"))
+        } finally {
+            info.flags = flags
+        }
+    }
+
+    /** The node publishes its test tag as a resource id: the nearest flag on it or an ancestor is true. */
+    private val publishedAsResourceId = androidx.compose.ui.test.SemanticsMatcher("publishes its test tag as a resource id") { node ->
+        generateSequence(node) { it.parent }
+            .firstOrNull { androidx.compose.ui.semantics.SemanticsPropertiesAndroid.TestTagsAsResourceId in it.config }
+            ?.config?.get(androidx.compose.ui.semantics.SemanticsPropertiesAndroid.TestTagsAsResourceId) == true
+    }
+
     private val Int.dpPx: Float get() = this * compose.density.density
 
     @Test
@@ -411,5 +438,10 @@ class SettingsScreensTest {
                 assertTrue(text.getUrlAnnotations(0, text.length).isEmpty(), "a URL span in \"$text\"")
             }
         }
+    }
+
+    private companion object {
+        /** `ReferenceTags.COPY`, spelled out (the e2e suite addresses it by this resource id). */
+        const val COPY_ITEM = "reference.copy"
     }
 }

@@ -10,6 +10,7 @@
     <string name="sign_reading_request">Читання запиту…</string>
     <string name="sign_keep_animated_code_in_view">Тримайте анімований код у кадрі · частин: %1$d</string>
     <string name="sign_psbt_payload_note">psbt_base64 — це точний PSBT, який передає цей QR-код; decoded прочитано з нього для довідки.</string>
+    <string name="sign_acknowledgement_hint">Щоб підписати, позначте прапорець наприкінці перегляду.</string>
     <string name="sign_file_unreadable">Не вдалося прочитати файл.</string>
     <string name="sign_file_not_saved">Не вдалося зберегти файл.</string>
 </resources>

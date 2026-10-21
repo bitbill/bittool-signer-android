@@ -212,6 +212,27 @@ class SignScreensTest {
         assertEquals(ResolvedTextDirection.Ltr, layouts.single().getParagraphDirection(0))
     }
 
+    /**
+     * QA regression-06 (the rest of wallets-15): the signing wallet reads "Fingerprint 73C5DA0A", the same text as the
+     * Wallets list and the security pages (iOS `TaskCard`, `RequestReviewView.swift:783`); only a right-to-left
+     * interface isolates the value (FSI … PDI) so it keeps its own order inside the sentence.
+     */
+    @Test
+    fun theSigningWalletsFingerprintIsIsolatedOnlyRightToLeft() {
+        var direction by mutableStateOf(LayoutDirection.Ltr)
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides direction) {
+                    RequestReviewContent(ReviewStates.bitcoinReady, onReject = {}, onToggleRisk = {}, onRetry = {}, onAuthorize = {})
+                }
+            }
+        }
+        compose.onNodeWithText("Fingerprint 73C5DA0A", useUnmergedTree = true).assertExists()
+        direction = LayoutDirection.Rtl
+        compose.waitForIdle()
+        compose.onNodeWithText("Fingerprint ⁨73C5DA0A⁩", useUnmergedTree = true).assertExists()
+    }
+
     @Test
     fun aMultiWalletRequestCountsTheSignatures() {
         review(ReviewStates.multiWallet)

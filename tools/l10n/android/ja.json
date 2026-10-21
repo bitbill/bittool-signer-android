@@ -313,6 +313,10 @@
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
    "value": "psbt_base64 はこの QR コードに含まれる PSBT そのものです。decoded はそこから読み取った参考情報です。"
   },
+  "sign_acknowledgement_hint": {
+   "source": "Check the box at the end of the review to sign.",
+   "value": "署名するには、確認画面の最後にあるチェックボックスをオンにしてください。"
+  },
   "sign_file_unreadable": {
    "source": "The file could not be read.",
    "value": "ファイルを読み込めませんでした。"

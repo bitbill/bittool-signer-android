@@ -1,6 +1,9 @@
 package com.bittool.signer.feature.activity
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -151,6 +154,33 @@ class ActivityScreensTest {
         compose.onNodeWithTag(ActivityTags.CLEAR).performClick()
         assertEquals(1, cleared)
         compose.onNodeWithText("A local record of signatures created on this device. Check broadcast and confirmation in your other wallet.").assertExists()
+    }
+
+    /**
+     * QA round 2 (activity pre-check): the day header is grey like the iOS section header (`light-30-activity.png`),
+     * not accent-coloured, and stays a heading.
+     */
+    @Test
+    fun theDayHeaderIsASecondaryLabelHeadingLikeIos() {
+        val entry = ActivityEntry(id, "Send bitcoin", "0.015 BTC", WalletLabel.Named("Public fixture 1"), ActivityTestData.utc(20, 9), com.bittool.signer.core.model.Chain.Bitcoin, null)
+        var secondaryLabel = Color.Unspecified
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                secondaryLabel = SignerTheme.colors.secondaryLabel
+                ActivityContent(
+                    state = ActivityUiState(loading = false, days = listOf(ActivityDay(LocalDate.of(2026, 10, 20), listOf(entry)))),
+                    onOpenReceipt = {},
+                    onClear = {},
+                    onConfirmClear = {},
+                    onDismissClear = {},
+                )
+            }
+        }
+        val header = compose.onNodeWithText("Tuesday, Oct 20, 2026", useUnmergedTree = true)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        val layouts = mutableListOf<TextLayoutResult>()
+        header.fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+        assertEquals(secondaryLabel, layouts.single().layoutInput.style.color)
     }
 
     @Test

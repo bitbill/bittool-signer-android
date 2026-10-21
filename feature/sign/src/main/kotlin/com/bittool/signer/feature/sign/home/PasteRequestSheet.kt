@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -20,9 +22,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -43,11 +48,14 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.feature.sign.common.RevealedErrorCallout
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * "Paste Request" (inventory row 49; iOS `PasteRequestSheet`, `Features/Sign/ScanTab.swift:263-325`): a full sheet with
  * "Cancel", the instruction, a monospaced editor (`signing.payload`, no autocorrect or capitalisation), "Paste from
- * Clipboard" (replaces the text), the import error (scrolled into view above the keyboard), and "Review Request"
+ * Clipboard" (replaces the text), the import error (the keyboard goes down and the error comes into view under the
+ * request), and "Review Request"
  * (`signing.decode`) pinned above the keyboard, enabled once the text is not blank. Every dismissal (Cancel, swipe,
  * Back) discards the text. Once the request is reviewed ([PasteUiState.closing]) the sheet slides away by itself, as
  * iOS `dismiss()` does, instead of vanishing.
@@ -137,7 +145,24 @@ internal fun ColumnScope.PasteRequestBody(
             Icon(SignerIcons.Paste, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.paste_from_clipboard), style = typography.subheadline.semibold(), color = colors.accent)
         }
-        // Under the editor like iOS; brought into view, since the keyboard usually covers this end of the sheet.
-        state.error?.let { RevealedErrorCallout(it) }
+        // Under the editor like iOS; brought into view, since the keyboard usually covers this end of the sheet. Above
+        // the keyboard the sheet shows little more than the editor, so revealing the error there scrolled the typed
+        // text and the caret out of view (QA regression-05): the keyboard goes down first, then the error comes into
+        // view under the request. A tap on the editor brings the keyboard back.
+        state.error?.let { error ->
+            val keyboard = LocalSoftwareKeyboardController.current
+            val ime = WindowInsets.ime
+            val density = LocalDensity.current
+            RevealedErrorCallout(
+                text = error,
+                beforeReveal = {
+                    keyboard?.hide()
+                    withTimeoutOrNull(KEYBOARD_HIDE_TIMEOUT_MILLIS) { snapshotFlow { ime.getBottom(density) }.first { it == 0 } }
+                },
+            )
+        }
     }
 }
+
+/** How long the error waits for the keyboard to slide away before it is brought into view anyway. */
+private const val KEYBOARD_HIDE_TIMEOUT_MILLIS = 600L

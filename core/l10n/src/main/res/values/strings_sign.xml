@@ -20,6 +20,10 @@
     <!-- Signature result payload note for a PSBT response (SignatureResultView.swift:81). psbt_base64 and decoded are JSON keys. -->
     <string name="sign_psbt_payload_note">psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.</string>
 
+    <!-- Android-only. Review at large text sizes: the risk acknowledgement (a checkbox row, "I understand the risks of
+         this request") then scrolls as the last item of the review instead of sitting above Sign; this line in the
+         bar above the disabled Sign button says where it is, and tapping it scrolls there. -->
+    <string name="sign_acknowledgement_hint">Check the box at the end of the review to sign.</string>
     <!-- Android-only. Import File: the system could not open or read the chosen document (iOS shows the OS error text;
          ARCHITECTURE §4.2 keeps platform exception messages out of the UI). -->
     <string name="sign_file_unreadable">The file could not be read.</string>

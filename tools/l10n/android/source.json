@@ -468,6 +468,12 @@
    "formatted": true,
    "context": "Signature result payload note for a PSBT response (SignatureResultView.swift:81). psbt_base64 and decoded are JSON keys."
   },
+  "sign_acknowledgement_hint": {
+   "area": "sign",
+   "english": "Check the box at the end of the review to sign.",
+   "formatted": true,
+   "context": "Android-only. Review at large text sizes: the risk acknowledgement (a checkbox row, \"I understand the risks of this request\") then scrolls as the last item of the review instead of sitting above Sign; this line in the bar above the disabled Sign button says where it is, and tapping it scrolls there."
+  },
   "sign_file_unreadable": {
    "area": "sign",
    "english": "The file could not be read.",

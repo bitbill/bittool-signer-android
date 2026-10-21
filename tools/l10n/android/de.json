@@ -313,6 +313,10 @@
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
    "value": "psbt_base64 ist genau das PSBT, das dieser QR-Code enthält; decoded wird zur Orientierung daraus gelesen."
   },
+  "sign_acknowledgement_hint": {
+   "source": "Check the box at the end of the review to sign.",
+   "value": "Setzen Sie am Ende der Prüfung das Häkchen, um zu signieren."
+  },
   "sign_file_unreadable": {
    "source": "The file could not be read.",
    "value": "Die Datei konnte nicht gelesen werden."
