@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "حُذفت المحفظة المشفّرة، لكن تعذّرت إزالة ذاكرتها المؤقتة العامة."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "لوحة مفاتيح النظام"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "مسافة"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "لوحة مفاتيح BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "التبديل إلى لوحة مفاتيح النظام؟"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "تُبقي لوحة مفاتيح BitTool المدمجة عبارتك الاحتياطية داخل هذا التطبيق. يمكن للوحة مفاتيح النظام، أو لأي لوحة مفاتيح تابعة لجهة خارجية قمت بتثبيتها، أن ترى الكلمات التي تكتبها وقد تتعلّمها أو تسجّلها. لا تقم بالتبديل إلا إذا كنت بحاجة إلى كتابة عبارة احتياطية باللغة الصينية أو اليابانية أو الكورية."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "متابعة باستخدام لوحة مفاتيح BitTool"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "التبديل على أي حال"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "لأقصى عزل، استخدم هاتفًا مخصصًا وأبقِ كل اتصالاته مغلقة."

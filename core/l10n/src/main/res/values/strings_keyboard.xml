@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android-only strings of BitTool Signer's own recovery-phrase keyboard (:core:ui keyboard, used by the import step of
+  :feature:setup). iOS refuses third-party keyboards app-wide; Android cannot, so the phrase is typed on an in-app
+  keyboard that no input method can see (port of Ownbit 5.0's BIP39 keyboard). The keys' other names reuse iOS
+  catalogue keys: "Done", "Delete" (backspace), "Paste from Clipboard", "Insert %@" (a suggestion).
+  "BitTool" is the product name: never translated.
+-->
+<resources>
+    <!-- Label and TalkBack name of the globe key of the in-app keyboard: switches to the device's own keyboard, after a warning. Short: it shares the bottom row with the space bar and Done. -->
+    <string name="keyboard_system">System keyboard</string>
+    <!-- TalkBack name of the space bar of the in-app keyboard (the key shows a space-bar symbol). -->
+    <string name="keyboard_space">Space</string>
+    <!-- Chip shown above the system keyboard while the recovery phrase is typed with it: switches back to the app's own keyboard. "BitTool" is the product name. -->
+    <string name="keyboard_bittool">BitTool keyboard</string>
+    <!-- Title of the warning shown before the recovery phrase is typed with the system keyboard instead of the app's own. -->
+    <string name="keyboard_switch_title">Switch to the system keyboard?</string>
+    <!-- Message of that warning. The app's keyboard types a–z only, enough for the Latin BIP39 word lists; Chinese, Japanese and Korean phrases need the system keyboard. Use the app's term for "recovery phrase". -->
+    <string name="keyboard_switch_message">BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.</string>
+    <!-- The warning's default action: stay on the app's own keyboard. -->
+    <string name="keyboard_switch_keep">Keep BitTool keyboard</string>
+    <!-- The warning's other action: switch to the system keyboard. -->
+    <string name="keyboard_switch_confirm">Switch anyway</string>
+</resources>

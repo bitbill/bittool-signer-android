@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Şifreli cüzdan silindi ama genel önbelleği kaldırılamadı."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "Sistem klavyesi"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Boşluk"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "BitTool klavyesi"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "Sistem klavyesine geçilsin mi?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "BitTool’un kendi klavyesi kurtarma ifadenizi bu uygulamanın içinde tutar. Sistem klavyesi veya yüklediğiniz herhangi bir üçüncü taraf klavye, yazdığınız kelimeleri görebilir ve bunları öğrenebilir ya da kaydedebilir. Yalnızca Çince, Japonca veya Korece bir kurtarma ifadesi yazmanız gerekiyorsa geçiş yapın."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "BitTool klavyesinde kal"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Yine de geç"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "En güçlü yalıtım için ayrı bir telefon kullanın ve bağlantılarını kapalı tutun."

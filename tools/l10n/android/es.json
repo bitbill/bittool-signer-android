@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Se ha eliminado la cartera cifrada, pero no se ha podido borrar su caché pública."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "Teclado del sistema"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Espacio"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "Teclado de BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "¿Cambiar al teclado del sistema?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "El teclado propio de BitTool mantiene tu frase de recuperación dentro de esta app. El teclado del sistema, o cualquier teclado de terceros que hayas instalado, puede ver las palabras que escribes y aprenderlas o registrarlas. Cambia solo si necesitas escribir una frase de recuperación en chino, japonés o coreano."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "Seguir con el teclado de BitTool"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Cambiar de todos modos"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Para el aislamiento más estricto, usa un teléfono dedicado y mantén sus conexiones desactivadas."

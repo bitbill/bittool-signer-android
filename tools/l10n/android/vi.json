@@ -81,6 +81,34 @@
    "source": "The encrypted wallet was deleted, but its public cache could not be removed.",
    "value": "Ví đã mã hóa đã được xóa, nhưng không gỡ được bộ nhớ đệm công khai của ví."
   },
+  "keyboard_system": {
+   "source": "System keyboard",
+   "value": "Bàn phím hệ thống"
+  },
+  "keyboard_space": {
+   "source": "Space",
+   "value": "Dấu cách"
+  },
+  "keyboard_bittool": {
+   "source": "BitTool keyboard",
+   "value": "Bàn phím BitTool"
+  },
+  "keyboard_switch_title": {
+   "source": "Switch to the system keyboard?",
+   "value": "Chuyển sang bàn phím hệ thống?"
+  },
+  "keyboard_switch_message": {
+   "source": "BitTool’s own keyboard keeps your recovery phrase inside this app. The system keyboard, or any third-party keyboard you installed, can see the words you type and may learn or record them. Switch only if you need to type a Chinese, Japanese or Korean recovery phrase.",
+   "value": "Bàn phím riêng của BitTool giữ cụm từ khôi phục của bạn bên trong ứng dụng này. Bàn phím hệ thống, hoặc bất kỳ bàn phím bên thứ ba nào bạn đã cài đặt, có thể thấy các từ bạn nhập và có thể học hoặc ghi lại chúng. Chỉ chuyển nếu bạn cần nhập cụm từ khôi phục bằng tiếng Trung, tiếng Nhật hoặc tiếng Hàn."
+  },
+  "keyboard_switch_keep": {
+   "source": "Keep BitTool keyboard",
+   "value": "Tiếp tục dùng bàn phím BitTool"
+  },
+  "keyboard_switch_confirm": {
+   "source": "Switch anyway",
+   "value": "Vẫn chuyển"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Để cách ly triệt để nhất, hãy dùng một chiếc điện thoại riêng và luôn tắt các kết nối của máy."
