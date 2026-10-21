@@ -97,6 +97,18 @@ internal class FixtureJournalCipher(
         /** The key's file name in the run's `FixtureKeys/` directory (next to [FixtureDeviceKeyStore]'s keys). */
         const val KEY_FILE = "journal.key"
 
+        /**
+         * `bts.uitest.unreadableJournal` (QA round 2, activity tour): replaces the run's sealed journal [journal]
+         * (`<run root>/receipts.bin`, created if absent) with a well-formed envelope that no key opens (`"BTSR"` ‖ 0x01,
+         * a zero IV and a zero tag around no ciphertext), the state of a journal whose key is gone. The store then reads
+         * it as unreadable ("Activity Unavailable" without "Clear Activity", DECISIONS §10), and since an unreadable
+         * journal is never overwritten, later launches of the run keep it. The journal key is left as it is. Call
+         * before anything opens the run's storage.
+         */
+        fun makeUnreadable(journal: File) {
+            AtomicFiles.write(journal, HEADER + ByteArray(IV_BYTES) + ByteArray(TAG_BYTES))
+        }
+
         /** `"BTSR"` + format version 1, as `KeystoreJournalCipher`. */
         private val HEADER = byteArrayOf('B'.code.toByte(), 'T'.code.toByte(), 'S'.code.toByte(), 'R'.code.toByte(), 0x01)
         private const val KEY_BYTES = 32

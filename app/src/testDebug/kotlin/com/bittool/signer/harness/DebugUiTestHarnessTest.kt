@@ -7,9 +7,11 @@ import com.bittool.signer.core.crypto.SystemSecureRandomSource
 import com.bittool.signer.core.crypto.vault.DefaultWalletVault
 import com.bittool.signer.core.crypto.vault.KeystoreJournalCipher
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.data.activity.EncryptedReceiptRepository
 import com.bittool.signer.core.data.preferences.DataStoreSignerPreferences
 import com.bittool.signer.core.model.AppIssue
 import com.bittool.signer.core.model.SecretText
+import com.bittool.signer.core.model.SignerException
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.security.BiometricPromptSpec
 import com.bittool.signer.core.model.UiText
@@ -245,6 +247,66 @@ class DebugUiTestHarnessTest {
         assertTrue(vault.isDeviceKeyLost(id))
         vault.removeWithLostDeviceKey(id)
         assertTrue(vault.list().isEmpty())
+    }
+
+    /**
+     * QA round 2 (activity tour): no switch reached Activity's unreadable state, because `--lose-keys` keeps the journal
+     * key. `bts.uitest.unreadableJournal` replaces the run's journal with one no key opens, before anything is injected:
+     * the store's repository then fails the read with "Invalid activity record." (the store shows "Activity
+     * Unavailable"), and the journal key is kept.
+     */
+    @Test
+    fun theUnreadableJournalSwitchMakesTheRunsActivityUnreadable() = runTest {
+        val root = File(context.cacheDir, "ui-tests/${runId.lowercase()}").apply { deleteRecursively() }
+        val keyFile = File(root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}")
+        EncryptedReceiptRepository(root, FixtureJournalCipher(keyFile), Dispatchers.IO).run {
+            write(emptyList())
+            assertEquals(emptyList(), read(), "the run's journal reads before the switch")
+        }
+
+        DebugUiTestHarness.configure(
+            context,
+            intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_UNREADABLE_JOURNAL to true),
+        )
+        assertTrue(keyFile.isFile, "the journal key is kept")
+        // A new repository and cipher, as in the process the switch configured.
+        val error = assertFailsWith<SignerException> {
+            EncryptedReceiptRepository(root, FixtureJournalCipher(keyFile), Dispatchers.IO).read()
+        }
+        assertEquals(UiText.Ios("Invalid activity record."), error.text)
+    }
+
+    /** The switch on a reset run (no journal and no journal key yet): Activity is unreadable from the first load. */
+    @Test
+    fun aResetRunCanStartWithAnUnreadableJournal() = runTest {
+        val run = assertNotNull(
+            DebugUiTestHarness.configure(
+                context,
+                intent(
+                    DebugUiTestHarness.EXTRA_RUN to runId,
+                    DebugUiTestHarness.EXTRA_RESET to true,
+                    DebugUiTestHarness.EXTRA_UNREADABLE_JOURNAL to "true",
+                ),
+            ),
+        )
+        assertTrue(File(run.root, "receipts.bin").isFile)
+        val keyFile = File(run.root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}")
+        assertFailsWith<SignerException> { EncryptedReceiptRepository(run.root, FixtureJournalCipher(keyFile), Dispatchers.IO).read() }
+        // A key the first signature would create still does not open it.
+        FixtureJournalCipher(keyFile).seal("[]".toByteArray())
+        assertFailsWith<SignerException> { EncryptedReceiptRepository(run.root, FixtureJournalCipher(keyFile), Dispatchers.IO).read() }
+    }
+
+    @Test
+    fun withoutTheSwitchTheRunsJournalIsLeftAlone() = runTest {
+        val root = File(context.cacheDir, "ui-tests/${runId.lowercase()}").apply { deleteRecursively() }
+        val keyFile = File(root, "FixtureKeys/${FixtureJournalCipher.KEY_FILE}")
+        EncryptedReceiptRepository(root, FixtureJournalCipher(keyFile), Dispatchers.IO).write(emptyList())
+        DebugUiTestHarness.configure(
+            context,
+            intent(DebugUiTestHarness.EXTRA_RUN to runId, DebugUiTestHarness.EXTRA_UNREADABLE_JOURNAL to false),
+        )
+        assertEquals(emptyList(), EncryptedReceiptRepository(root, FixtureJournalCipher(keyFile), Dispatchers.IO).read())
     }
 
     @Test
