@@ -30,7 +30,8 @@ import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
  * taken and cleared on submit, and dropped the moment the app is suspended.
  *
  * "Repair Wallet" and the failure above it sit in the page's bottom bar, above the keyboard, as on Change Password
- * (QA round 3 production-final-01): the action stays in view while the password is typed.
+ * (QA round 3 production-final-01): the action stays in view while the password is typed, and so does the footer
+ * under the password.
  */
 @Composable
 fun RepairWalletScreen(
@@ -98,7 +99,8 @@ internal fun RepairWalletContent(
         },
     ) {
         WalletIdentityCard(uiState.identity)
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // The password and its footer (what the repair rebuilds and keeps) stay in view together while it is typed.
+        Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             PasswordField(PasswordKind.WalletPassword, password, imeAction = ImeAction.Done, onSubmit = submit, enabled = !uiState.busy)
             FormFooter(stringResource(R.string.bittool_signer_decrypts_the_wallet_once_to_rebuild_its))
         }

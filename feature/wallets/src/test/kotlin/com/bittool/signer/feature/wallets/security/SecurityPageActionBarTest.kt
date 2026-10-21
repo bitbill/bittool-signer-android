@@ -44,7 +44,9 @@ import org.robolectric.annotation.Config
  * QA round 3 production-final-01: on the security pages with a password field, the action stays above the keyboard
  * while the person types, like setup's Reset Password (bottom action bar), and the field being typed in stays above
  * the action. Before, "Change Password" was laid out in the form under the requirements, entirely behind the keyboard
- * once the confirmation had the focus, and a tap where it was reported typed a character into the confirmation.
+ * once the confirmation had the focus, and a tap where it was reported typed a character into the confirmation. What
+ * belongs with the field (Change Password's requirements, Repair's footer) stays in view with it, as on setup's
+ * Password step (QA setup-02), whenever it fits between the bars.
  *
  * mdpi, so 1 px = 1 dp: a 48 dp navigation bar and a 300 dp keyboard (which reaches the bottom of the screen). Positions
  * are the nodes' unclipped ones: a clipped bound would end at the scroll viewport and hide a button below it.
@@ -97,17 +99,41 @@ class SecurityPageActionBarTest {
         assertTrue(typed.top >= barBottom, "the field being typed in is not under the top bar (${typed.top} < $barBottom)")
     }
 
+    /**
+     * [shown] is in the visible band of the page: under the top bar, and ending above the bottom bar's top edge (8 dp
+     * above its action; no failure is shown in these tests).
+     */
+    private fun assertBetweenTheBars(shown: SemanticsNodeInteraction, what: String) {
+        val node = shown.node
+        val bottomBarTop = compose.onNodeWithTag("vaultManagement.submit").node.top - 8f
+        assertTrue(node.bottom <= bottomBarTop, "$what ends above the bottom bar (${node.bottom} > $bottomBarTop)")
+        val topBarBottom = compose.onNodeWithTag("nav.close").getBoundsInRoot().bottom.value
+        assertTrue(node.top >= topBarBottom, "$what is not under the top bar (${node.top} < $topBarBottom)")
+    }
+
+    private fun changePasswordPage() = page {
+        ChangePasswordContent(
+            uiState = SecurityPageUiState(identity = identity),
+            fields = remember { PasswordFields(3) },
+            toast = rememberStatusToastState(),
+            onSubmit = {},
+            onCancel = {},
+        )
+    }
+
+    private fun repairPage() = page {
+        RepairWalletContent(
+            uiState = SecurityPageUiState(identity = identity),
+            fields = remember { PasswordFields(1) },
+            toast = rememberStatusToastState(),
+            onSubmit = {},
+            onCancel = {},
+        )
+    }
+
     @Test
     fun changePasswordStaysAboveTheKeyboardWhileTheConfirmationIsTyped() {
-        page {
-            ChangePasswordContent(
-                uiState = SecurityPageUiState(identity = identity),
-                fields = remember { PasswordFields(3) },
-                toast = rememberStatusToastState(),
-                onSubmit = {},
-                onCancel = {},
-            )
-        }
+        changePasswordPage()
         compose.onNodeWithTag(PasswordKind.CurrentWalletPassword.english).performTextInput("old password 1")
         compose.onNodeWithTag(PasswordKind.NewPassword.english).performTextInput("Public-Test-Password1!")
         val confirmation = compose.onNodeWithTag(PasswordKind.ConfirmNewPassword.english)
@@ -117,22 +143,70 @@ class SecurityPageActionBarTest {
         assertTypingWithTheActionInView(confirmation)
     }
 
+    /**
+     * The new password, its confirmation and the live requirements stay in view together while the confirmation is
+     * typed, as on setup's Password step (QA setup-02: "the requirements checklist is hidden while typing"). With the
+     * action moved into the bar and only the focused field brought into view, "Passwords match" stayed under the bar
+     * once the keyboard was up (it ended at 562 dp, the bar's edge is at 425 dp); on the QA device the inline layout
+     * still showed it just above the keyboard (`f41a`: 1295-1345 px against the keyboard at 1403 px).
+     */
+    @Test
+    @Config(qualifiers = "w400dp-h800dp-mdpi")
+    fun changePasswordKeepsTheRequirementsInViewWhileTheConfirmationIsTyped() {
+        changePasswordPage()
+        compose.onNodeWithTag(PasswordKind.CurrentWalletPassword.english).performTextInput("old password 1")
+        compose.onNodeWithTag(PasswordKind.NewPassword.english).performTextInput("Public-Test-Password1!")
+        val confirmation = compose.onNodeWithTag(PasswordKind.ConfirmNewPassword.english)
+        confirmation.performTextInput("Public-Test-Password1!")
+        showKeyboard()
+
+        assertTypingWithTheActionInView(confirmation)
+        assertBetweenTheBars(compose.onNodeWithTag(PasswordKind.NewPassword.english), "the new password")
+        assertBetweenTheBars(compose.onNodeWithText("Passwords match"), "the last requirement")
+    }
+
+    /**
+     * On a window too short for the pair and its checklist above the bar, the field being typed in wins: the new
+     * password stays below the top bar and above the action. The scroll viewport starts under the top bar, so the
+     * block never counts as fitting by scrolling the focused field under that bar (with the viewport reaching the top
+     * of the screen the new password ended at y 0, behind the top bar).
+     */
+    @Test
+    fun changePasswordKeepsTheNewPasswordInViewOnAShortWindow() {
+        changePasswordPage()
+        compose.onNodeWithTag(PasswordKind.CurrentWalletPassword.english).performTextInput("old password 1")
+        val new = compose.onNodeWithTag(PasswordKind.NewPassword.english)
+        new.performTextInput("Public-Test-Password1!")
+        showKeyboard()
+
+        assertTypingWithTheActionInView(new)
+    }
+
     @Test
     fun repairStaysAboveTheKeyboardWhileThePasswordIsTyped() {
-        page {
-            RepairWalletContent(
-                uiState = SecurityPageUiState(identity = identity),
-                fields = remember { PasswordFields(1) },
-                toast = rememberStatusToastState(),
-                onSubmit = {},
-                onCancel = {},
-            )
-        }
+        repairPage()
         val password = compose.onNodeWithTag(PasswordKind.WalletPassword.english)
         password.performTextInput("correct horse")
         showKeyboard()
 
         assertTypingWithTheActionInView(password)
+    }
+
+    /**
+     * Repair's footer (what the repair rebuilds and what it leaves alone, the iOS section footer of the password)
+     * stays in view with the password while it is typed. With the action in the bar and only the field brought into
+     * view, the footer ended at 296 dp under the bar's edge at 265 dp.
+     */
+    @Test
+    fun repairKeepsItsFooterInViewWhileThePasswordIsTyped() {
+        repairPage()
+        val password = compose.onNodeWithTag(PasswordKind.WalletPassword.english)
+        password.performTextInput("correct horse")
+        showKeyboard()
+
+        assertTypingWithTheActionInView(password)
+        val footer = compose.onNodeWithText("BitTool Signer decrypts the wallet once", substring = true)
+        assertBetweenTheBars(footer, "the footer")
     }
 
     /**

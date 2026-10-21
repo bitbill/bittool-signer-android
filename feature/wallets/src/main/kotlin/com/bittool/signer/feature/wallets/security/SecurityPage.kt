@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
@@ -25,7 +27,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.requireLayoutCoordinates
+import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.relocation.BringIntoViewModifierNode
+import androidx.compose.ui.relocation.bringIntoView as bringThisNodeIntoView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -48,6 +58,9 @@ import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.ui.password.wipe
 import com.bittool.signer.core.ui.text.Callout
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * The frame of the wallet security pages (iOS sheets with their own bar and a leading "Cancel"; modal routes on
@@ -62,9 +75,11 @@ import com.bittool.signer.core.ui.text.Callout
  * [BottomActionBar] that rises with the keyboard, like setup's Reset Password, so the action stays in view and within
  * reach while the person types (QA round 3 production-final-01: "Change Password" sat behind the keyboard, and a tap
  * there typed into the confirmation instead). The form scrolls under the bar, and `keepInViewAboveBar` keeps the
- * focused field and the line being typed above it, also while the bar grows with the keyboard. iOS draws the button
- * inline in the `Form`, where its keyboard toolbar never covers it. Without [bottomActions] (Delete Wallet, which has
- * no field on the page) the actions stay in the form, which keeps clear of the keyboard itself.
+ * focused field and the line being typed above it, also while the bar grows with the keyboard; a block marked
+ * [keepTogetherInView] (a password with its requirements or footer) stays in view with it whenever it fits between the
+ * bars. iOS draws the button inline in the `Form`, where its keyboard toolbar never covers it. Without
+ * [bottomActions] (Delete Wallet, which has no field on the page) the actions stay in the form, which keeps clear of
+ * the keyboard itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,12 +116,21 @@ internal fun SecurityPage(
         Box(Modifier.fillMaxSize()) {
             val frame = if (bottomActions != null) {
                 // The bar pads itself by the navigation bar and the keyboard, and [padding] ends at its top edge: the
-                // form scrolls under it, and what is brought into view is kept above it (also while it grows).
+                // form scrolls under it, and what is brought into view is kept above it (also while it grows). The
+                // viewport starts under the top bar (its padding sits outside the scroll), so a block brought into
+                // view counts as fitting only when it fits between the two bars, and is never scrolled under the top
+                // bar to make room above the bottom one.
+                val layoutDirection = LocalLayoutDirection.current
                 Modifier
                     .fillMaxSize()
+                    .padding(top = padding.calculateTopPadding())
                     .verticalScroll(scroll)
                     .keepInViewAboveBar(padding.calculateBottomPadding(), scrollsUnderBar = true)
-                    .padding(padding)
+                    .padding(
+                        start = padding.calculateStartPadding(layoutDirection),
+                        end = padding.calculateEndPadding(layoutDirection),
+                        bottom = padding.calculateBottomPadding(),
+                    )
                     .padding(horizontal = SignerMetrics.pagePadding)
                     .padding(top = 8.dp, bottom = BAR_FORM_BOTTOM_MARGIN)
             } else {
@@ -137,6 +161,48 @@ internal fun SecurityPage(
 
 /** Room under the form's last block above a [BottomActionBar]: the page gutter, clear of the bar's edge fade. */
 internal val BAR_FORM_BOTTOM_MARGIN = SignerMetrics.pagePadding
+
+/**
+ * Keeps this block of a [SecurityPage] form in view as a whole when something inside it asks to be brought into view
+ * (the field that gains focus, the caret line of the field being typed in) and the block fits between the bars;
+ * otherwise only what was asked. For what belongs together while one of its fields is typed in with the action in the
+ * bar: the new password, its confirmation and the live requirements on Change Password, the password and its footer on
+ * Repair. Setup's Password step keeps its pair and checklist together the same way (QA setup-02: "the requirements
+ * checklist is hidden while typing"); this is a copy of feature:setup's `keepTogetherInView` (`ui/SetupUi.kt`), which
+ * that module keeps internal.
+ *
+ * Each request from inside is passed on as two at once, the whole block and what was asked. The scroll container shows
+ * the larger one that fits (Compose's bring-into-view queue), and the page's `keepInViewAboveBar` keeps both clear of
+ * the bar and makes them again whenever the bar grows with the keyboard.
+ */
+internal fun Modifier.keepTogetherInView(): Modifier = this then KeepTogetherInViewElement
+
+private data object KeepTogetherInViewElement : ModifierNodeElement<KeepTogetherInViewNode>() {
+    override fun create(): KeepTogetherInViewNode = KeepTogetherInViewNode()
+    override fun update(node: KeepTogetherInViewNode) = Unit
+    override fun InspectorInfo.inspectableProperties() {
+        name = "keepTogetherInView"
+    }
+}
+
+private class KeepTogetherInViewNode : Modifier.Node(), BringIntoViewModifierNode {
+    override val shouldAutoInvalidate: Boolean get() = false
+
+    override suspend fun bringIntoView(childCoordinates: LayoutCoordinates, boundsProvider: () -> Rect?) {
+        if (!isAttached) return
+        coroutineScope {
+            // The whole block first, then what was asked: `keepInViewAboveBar` remembers the block as the latest
+            // request for a whole element and the asked part as the latest request, and makes both again when the bar
+            // grows.
+            launch(start = CoroutineStart.UNDISPATCHED) { bringThisNodeIntoView() }
+            bringThisNodeIntoView {
+                if (!isAttached || !childCoordinates.isAttached) return@bringThisNodeIntoView null
+                val asked = boundsProvider() ?: return@bringThisNodeIntoView null
+                Rect(requireLayoutCoordinates().localPositionOf(childCoordinates, asked.topLeft), asked.size)
+            }
+        }
+    }
+}
 
 /**
  * The page's failure (iOS `Callout(verbatim: error, tone: .danger)` of the security sheets: "The password is

@@ -32,8 +32,9 @@ import com.bittool.signer.feature.wallets.common.rememberOverlayBlockedNotice
  * (the wallet page then shows "Password Changed"); [onCancel] closes without changing anything.
  *
  * "Change Password" and the failure above it sit in the page's bottom bar, above the keyboard, so the action is in view
- * while the confirmation is typed (QA round 3 production-final-01; setup's Reset Password does the same). The iOS
- * footer under the button ("Your recovery phrase, fingerprint and addresses stay the same.") ends the form.
+ * while the confirmation is typed (QA round 3 production-final-01; setup's Reset Password does the same), and the
+ * requirements stay in view with the pair they check (QA setup-02). The iOS footer under the button ("Your recovery
+ * phrase, fingerprint and addresses stay the same.") ends the form.
  */
 @Composable
 fun ChangePasswordScreen(
@@ -107,7 +108,8 @@ internal fun ChangePasswordContent(
     ) {
         WalletIdentityCard(uiState.identity)
         PasswordField(PasswordKind.CurrentWalletPassword, current, imeAction = ImeAction.Next, enabled = !uiState.busy)
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // The new password, its confirmation and the live requirements stay in view together while either is typed.
+        Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             PasswordField(PasswordKind.NewPassword, new, isNew = true, imeAction = ImeAction.Next, enabled = !uiState.busy)
             PasswordField(PasswordKind.ConfirmNewPassword, confirmation, isNew = true, imeAction = ImeAction.Done, enabled = !uiState.busy)
             PasswordRequirements(new.text, confirmation.text, Modifier.padding(start = 4.dp, end = 4.dp, top = 6.dp))
