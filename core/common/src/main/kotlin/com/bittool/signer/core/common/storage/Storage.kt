@@ -1,6 +1,10 @@
 package com.bittool.signer.core.common.storage
 
 import android.content.Context
+import android.system.ErrnoException
+import android.system.Os
+import android.system.OsConstants
+import androidx.annotation.VisibleForTesting
 import com.bittool.signer.core.common.harness.UiTestEnvironment
 import dagger.Module
 import dagger.Provides
@@ -49,8 +53,11 @@ object AtomicFiles {
 
     /**
      * Writes [bytes] to [target] atomically: creates the directory, stages `.pending-<UUID>` in the same directory,
-     * writes and `fsync`s it, then renames it over [target] (atomic replace on the same file system). The staged file is
-     * removed on failure, so the previous content survives any error. Throws [IOException].
+     * writes and `fsync`s it, renames it over [target] (atomic replace on the same file system), then `fsync`s the
+     * directory ([syncDirectory], best effort) so the rename itself is on disk: without that a power loss or hard reset
+     * shortly after can bring the previous file back (vault-crypto.md §17.8), and the vault's retry counter relies on
+     * every counted attempt surviving more than process death. The staged file is removed on failure, so the previous
+     * content survives any error. Throws [IOException].
      */
     fun write(target: File, bytes: ByteArray) {
         val dir = target.absoluteFile.parentFile ?: throw IOException("No parent directory")
@@ -63,10 +70,32 @@ object AtomicFiles {
                 out.fd.sync()
             }
             Files.move(staged.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+            directorySync(dir)
         } finally {
             if (staged.exists()) staged.delete()
         }
     }
+
+    /**
+     * Best-effort `fsync` of [dir] itself (`Os.open(dir, O_RDONLY)` + `Os.fsync`, vault-crypto.md §17.8), which makes
+     * the entries renamed into it durable. True when the directory was flushed; false when the platform refused (the
+     * write has already happened and stays valid, it is only less certain to survive a power loss).
+     */
+    fun syncDirectory(dir: File): Boolean = try {
+        val fd = Os.open(dir.path, OsConstants.O_RDONLY, 0)
+        try {
+            Os.fsync(fd)
+        } finally {
+            Os.close(fd)
+        }
+        true
+    } catch (_: ErrnoException) {
+        false
+    }
+
+    /** The step after every rename in [write]: [syncDirectory]. Replaced only by tests that observe it. */
+    @VisibleForTesting
+    internal var directorySync: (File) -> Unit = { syncDirectory(it) }
 
     /**
      * The bytes of [target], or null when it does not exist. Throws [InvalidFileException] when it is not a regular file

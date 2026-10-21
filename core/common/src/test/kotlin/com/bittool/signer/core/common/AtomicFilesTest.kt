@@ -26,6 +26,24 @@ class AtomicFilesTest {
     }
 
     @Test
+    fun theDirectoryIsSyncedAfterEveryRename() {
+        // vault-crypto.md §17.8: a rename only survives a power loss once the directory itself is fsynced (QA audit A06).
+        val target = File(folder.root, "BitToolSigner/Vaults/.a.attempts")
+        val synced = mutableListOf<Pair<File, String?>>()
+        val previous = AtomicFiles.directorySync
+        AtomicFiles.directorySync = { dir -> synced += dir to File(dir, target.name).takeIf { it.exists() }?.readText() }
+        try {
+            AtomicFiles.write(target, "one".encodeToByteArray())
+            AtomicFiles.write(target, "two".encodeToByteArray())
+        } finally {
+            AtomicFiles.directorySync = previous
+        }
+        // Once per write, on the target's own directory, with the new content already in place (after the rename).
+        val dir = target.absoluteFile.parentFile!!
+        assertEquals(listOf<Pair<File, String?>>(dir to "one", dir to "two"), synced.toList())
+    }
+
+    @Test
     fun readsAreBoundedAndRefuseNonRegularFiles() {
         assertNull(AtomicFiles.readBounded(File(folder.root, "missing"), 10))
         val big = folder.newFile("big").apply { writeBytes(ByteArray(11)) }
