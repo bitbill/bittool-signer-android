@@ -49,6 +49,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -191,7 +192,8 @@ private fun OnboardingPageView(page: OnboardingPage, scrollState: ScrollState) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = stringResource(page.title),
-                    style = typography.largeTitle.bold(),
+                    // Balanced lines, broken at phrase boundaries in Japanese and Korean on API 33+ (QA setup-15).
+                    style = typography.largeTitle.bold().copy(lineBreak = LineBreak.Heading),
                     color = colors.label,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.semantics { heading() },

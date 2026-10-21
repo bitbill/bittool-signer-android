@@ -1,11 +1,14 @@
 package com.bittool.signer.feature.onboarding
 
+import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeLegalDocumentRepository
 import com.bittool.signer.core.model.LegalBlock
 import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.model.LegalDocumentParser
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -33,7 +36,7 @@ class WelcomeViewModelTest {
 
     @Test
     fun theSheetShowsTheChosenDocumentOnceItIsRead() = runTest(dispatcher) {
-        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)))
+        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)), InMemoryDeviceKeyStore())
         assertNull(viewModel.legalSheet.value)
 
         viewModel.showLegal(LegalDocument.Terms)
@@ -45,7 +48,7 @@ class WelcomeViewModelTest {
 
     @Test
     fun aMissingDocumentShowsTheMissingParagraph() = runTest(dispatcher) {
-        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository())
+        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(), InMemoryDeviceKeyStore())
         viewModel.showLegal(LegalDocument.Privacy)
         advanceUntilIdle()
         assertEquals(listOf(LegalDocumentParser.MISSING), viewModel.legalSheet.value?.blocks?.map { it.text })
@@ -53,7 +56,7 @@ class WelcomeViewModelTest {
 
     @Test
     fun doneClosesTheSheetAndALateReadDoesNotReopenIt() = runTest(dispatcher) {
-        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)))
+        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)), InMemoryDeviceKeyStore())
         viewModel.showLegal(LegalDocument.Terms)
         viewModel.dismissLegal()
         advanceUntilIdle()
@@ -62,11 +65,29 @@ class WelcomeViewModelTest {
 
     @Test
     fun switchingDocumentsShowsOnlyTheLatest() = runTest(dispatcher) {
-        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)))
+        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(documents = mapOf(LegalDocument.Terms to terms)), InMemoryDeviceKeyStore())
         viewModel.showLegal(LegalDocument.Terms)
         viewModel.showLegal(LegalDocument.Privacy)
         advanceUntilIdle()
         assertEquals(LegalDocument.Privacy, viewModel.legalSheet.value?.document)
         assertEquals(listOf(LegalDocumentParser.MISSING), viewModel.legalSheet.value?.blocks?.map { it.text })
+    }
+
+    /** QA wallets-04: without a screen lock, Create / Import ask for one before the introduction and before any typing. */
+    @Test
+    fun setupStartsOnlyOnADeviceWithAScreenLock() = runTest(dispatcher) {
+        val keys = InMemoryDeviceKeyStore(deviceSecure = false)
+        val viewModel = WelcomeViewModel(FakeLegalDocumentRepository(), keys)
+        assertFalse(viewModel.lockRequired.value)
+
+        assertFalse(viewModel.mayStartSetup())
+        assertTrue(viewModel.lockRequired.value)
+        viewModel.dismissLockRequired()
+        assertFalse(viewModel.lockRequired.value)
+
+        // A lock set in Settings meanwhile counts at the next tap.
+        keys.deviceSecure = true
+        assertTrue(viewModel.mayStartSetup())
+        assertFalse(viewModel.lockRequired.value)
     }
 }

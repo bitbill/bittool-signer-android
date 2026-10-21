@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
@@ -14,6 +15,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.feature.onboarding.OnboardingPager
 import com.bittool.signer.feature.onboarding.OnboardingTags
+import com.bittool.signer.feature.onboarding.ScreenLockRequiredDialog
 import com.bittool.signer.feature.onboarding.WelcomeContent
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -47,6 +49,27 @@ class OnboardingScreenshotTest(private val look: Look) {
     fun welcome() {
         render { WelcomeContent(onStart = {}, onShowLegal = {}) }
         capture("welcome")
+    }
+
+    /**
+     * The QA phone's viewport (393 × 807 dp less the 24 dp status bar and 48 dp navigation bar Robolectric does not
+     * draw; QA setup-13): the gaps and then the tile shrink so the whole page fits above the bar.
+     */
+    @Test
+    @Config(qualifiers = "w393dp-h735dp-xxhdpi")
+    fun welcomeCompact() {
+        render { WelcomeContent(onStart = {}, onShowLegal = {}) }
+        capture("welcome-compact")
+    }
+
+    /** "Screen Lock Required" (QA wallets-04), over Welcome. */
+    @Test
+    fun screenLockRequired() {
+        render {
+            WelcomeContent(onStart = {}, onShowLegal = {})
+            ScreenLockRequiredDialog(onOpenSettings = {}, onDismiss = {})
+        }
+        compose.onNode(isDialog()).captureRoboImage("build/outputs/roborazzi/onboarding/screen-lock-required-${look.name.lowercase()}.png")
     }
 
     @Test
