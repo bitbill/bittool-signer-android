@@ -34,7 +34,7 @@ object AppModule {
     /**
      * Settings › About and Open Source › This build. The version is "1.0.0 (1)" like iOS: the build number defaults to
      * 1 (`-Psigner.buildNumber`, DECISIONS §10), so [BuildInfo.displayVersion] matches the iOS `CURRENT_PROJECT_VERSION`.
-     * The signing certificate is read once from `PackageManager` (first signer, uppercase colon-separated SHA-256).
+     * The signing certificate is read once from `PackageManager` (first signer, SHA-256 as lowercase hex, the apksigner form).
      */
     @Provides
     @Singleton

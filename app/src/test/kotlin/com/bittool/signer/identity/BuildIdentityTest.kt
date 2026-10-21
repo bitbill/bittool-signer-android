@@ -30,9 +30,9 @@ class BuildIdentityTest {
     }
 
     @Test
-    fun theCertificateDigestIsUppercaseColonSeparatedHex() {
-        assertEquals("00:0A:FF:7F", SigningCertificate.format(byteArrayOf(0x00, 0x0A, 0xFF.toByte(), 0x7F)))
+    fun theCertificateDigestIsLowercaseHexLikeApksigner() {
+        assertEquals("000aff7f", SigningCertificate.format(byteArrayOf(0x00, 0x0A, 0xFF.toByte(), 0x7F)))
         val digest = SigningCertificate.format(ByteArray(32) { it.toByte() })
-        assertTrue(Regex("^([0-9A-F]{2}:){31}[0-9A-F]{2}$").matches(digest))
+        assertTrue(Regex("^[0-9a-f]{64}$").matches(digest))
     }
 }

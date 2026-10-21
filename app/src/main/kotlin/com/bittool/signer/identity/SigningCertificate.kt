@@ -16,7 +16,7 @@ import java.security.MessageDigest
 object SigningCertificate {
     private const val TAG = "SigningCertificate"
 
-    /** The first current signer's digest as uppercase colon-separated hex (`AB:CD:…`, `BuildInfo` KDoc), or null. */
+    /** The first current signer's digest as lowercase hex without separators (`abcd…`, `BuildInfo` KDoc), or null. */
     fun sha256(context: Context): String? = try {
         signatures(context).firstOrNull()?.let { format(MessageDigest.getInstance("SHA-256").digest(it.toByteArray())) }
     } catch (e: PackageManager.NameNotFoundException) {
@@ -28,15 +28,17 @@ object SigningCertificate {
     }
 
     /**
-     * `AB:CD:…` (uppercase, colon-separated), the format `keytool` and the Play Console print. Built by hand: a
-     * default-locale `String.format` would write Arabic-Indic digits in an Arabic interface.
+     * Lowercase hex without separators: exactly what `apksigner verify --print-certs` prints as "certificate SHA-256
+     * digest" (the apk Terms promise "the same value"), and the same form as the engine digest on the same page, so
+     * people can compare character by character. Built by hand: a default-locale `String.format` would write
+     * Arabic-Indic digits in an Arabic interface.
      */
-    fun format(digest: ByteArray): String = digest.joinToString(":") { byte ->
+    fun format(digest: ByteArray): String = digest.joinToString("") { byte ->
         val value = byte.toInt() and 0xFF
         "${HEX[value shr 4]}${HEX[value and 0x0F]}"
     }
 
-    private const val HEX = "0123456789ABCDEF"
+    private const val HEX = "0123456789abcdef"
 
     @Suppress("DEPRECATION")
     private fun signatures(context: Context): List<Signature> {

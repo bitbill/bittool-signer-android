@@ -61,6 +61,9 @@ android {
                 storePassword = releaseSigningKeys.getValue("storePassword")
                 keyAlias = releaseSigningKeys.getValue("keyAlias")
                 keyPassword = releaseSigningKeys.getValue("keyPassword")
+                // v2 + v3: v3 lets the signing key be rotated later without breaking updates of installed copies.
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
         if (hasUploadKey) {
@@ -69,6 +72,8 @@ android {
                 storePassword = uploadSigningKeys.getValue("storePassword")
                 keyAlias = uploadSigningKeys.getValue("keyAlias")
                 keyPassword = uploadSigningKeys.getValue("keyPassword")
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }

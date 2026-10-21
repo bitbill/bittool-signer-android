@@ -30,7 +30,7 @@ data class BuildInfo(
     /** Source repository shown on the Open Source page (`BuildConfig.REPOSITORY_URL`; owner decision). */
     val repositoryUrl: String,
     /**
-     * SHA-256 of the APK signing certificate as uppercase colon-separated hex (`AB:CD:…`), for the Open Source › This
+     * SHA-256 of the APK signing certificate as lowercase hex without separators (the `apksigner verify --print-certs` form), for the Open Source › This
      * build "Signing certificate" row (activity-settings.md §14.8; for `apk` users compare it with bittool.com/signer,
      * for `play` it is the Play App Signing certificate). `:app`'s provider reads it once from `PackageManager`
      * (`GET_SIGNING_CERTIFICATES` / `signingInfo.apkContentsSigners` on API 28+, `GET_SIGNATURES` below; the first

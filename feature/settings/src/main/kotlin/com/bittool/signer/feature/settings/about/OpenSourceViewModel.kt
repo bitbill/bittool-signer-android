@@ -32,7 +32,7 @@ data class OpenSourceUiState(
     /** This app's source (`BuildConfig.REPOSITORY_URL`, DECISIONS.md §9.1). */
     val repository: String,
     val distribution: Distribution,
-    /** Upper-case colon-separated SHA-256 of the signing certificate, or null ("Unavailable"). */
+    /** SHA-256 of the signing certificate as lowercase hex (the apksigner form), or null ("Unavailable"). */
     val signingCertificate: String?,
     /** Lower-case hex SHA-256 of the bundled `signer.js`. */
     val engineDigest: Measured<String> = Measured.Reading,

@@ -29,7 +29,7 @@ object SettingsTestData {
         distribution = Distribution.DirectApk,
         isDebug = false,
         repositoryUrl = "https://github.com/bitbill/bittool-signer-android",
-        signingCertificateSha256 = "AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23:45:67:89",
+        signingCertificateSha256 = "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
     )
 
     private fun token(chainId: String?, family: String, address: String, name: String, symbol: String, decimals: Int, icon: String) =

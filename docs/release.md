@@ -106,9 +106,9 @@ A partially configured key fails the build and names the missing values.
   - `jarsigner -verify` must pass on the AAB.
   - Without an upload key, the `apk`, `play` and AAB certificates must be equal. With one, the play APK and the AAB must be equal.
 
-**Signature schemes.** The APKs carry **v2 only**. That is the AGP default at minSdk 26: no v1 is needed, and AGP does not add v3 unless asked. ownbit-build-release §7.2.5 expected "v2 + v3", but v3 is not required to install or to update. A future key rotation signs *that* release with a v3.1 lineage (`apksigner rotate`, then `apksigner sign --lineage`), whatever the current release carries. To add v3 now, the owner of `app/**` sets `enableV3Signing = true` on the release signing config.
+**Signature schemes.** Release and upload signing configs enable **v2 + v3** (`enableV3Signing = true` in `app/build.gradle.kts`; no v1 is needed at minSdk 26), as ownbit-build-release §7.2.5 expects. A future key rotation signs *that* release with a v3.1 lineage (`apksigner rotate`, then `apksigner sign --lineage`). Debug-signed verification runs carry AGP's default for the debug key.
 
-**Fingerprint formats.** `apksigner verify --print-certs` prints the certificate SHA-256 as 64 lowercase hex digits. That is the form the `apk` Terms of Use tell users to compare. The app's Settings › Fully Open Source › This build › Signing certificate shows the same digest as uppercase, colon-separated hex, the `keytool` and Play Console form (`SigningCertificate.kt`). Publish both forms on bittool.com/signer.
+**Fingerprint formats.** `apksigner verify --print-certs` prints the certificate SHA-256 as 64 lowercase hex digits. That is the form the `apk` Terms of Use tell users to compare. The app's Settings › Fully Open Source › This build › Signing certificate shows exactly that form (`SigningCertificate.kt`), as the Terms promise. Publish it on bittool.com/signer, and the `keytool` / Play Console form (uppercase, colon-separated) next to it for people who check with those tools.
 
 This is an open point for the owner of `app/**` and the legal review (§8). The `apk` Terms say "the same value appears in Settings › Fully Open Source › This build", but the app shows that digest in the other format. ownbit-build-release §11 recommended the `apksigner` form (lowercase, no separators), so users can compare character by character. Either the app shows that form, or the Terms name both forms. Until then, the website must show both forms side by side.
 
@@ -232,7 +232,6 @@ The review covers:
 
 - the Android platform wording: Keystore, TEE / StrongBox, no backup, FLAG_SECURE, the clipboard;
 - the distribution clauses;
-- the `apk` Terms' verification clause: it says the in-app Signing certificate shows "the same value" as `apksigner`, but the app shows it in the colon-separated uppercase form (§4);
 - the claims `LegalTextsTest` enforces: no networking code, "Clear Activity", the two-minute clipboard clearing, the platform-security and backup claims;
 - the effective date.
 
@@ -503,4 +502,4 @@ Open items that block or condition the first release. Each one is owned outside 
 5. The **native-speaker review** of the Android-only translations (§9).
 6. **All of §11** on real phones.
 7. The APKs are v2-signed only (§4). This is not a defect; it is a note for the owner of `app/**` if v3 is wanted.
-8. The **signing-certificate format** (§4, §8). The app shows the digest as uppercase colon-separated hex, while the `apk` Terms promise "the same value" that `apksigner` prints in lowercase. This is for the owner of `app/**` and the legal review: change the in-app format or the Terms wording.
+8. ~~The signing-certificate format~~ — resolved: the app shows the `apksigner` form (lowercase hex), matching the `apk` Terms.
