@@ -32,4 +32,7 @@ object SignTags {
     const val SIGNATURE = "scan.signature"
     const val PASTE_SHEET = "signing.pasteSheet"
     const val AUTHORIZE_SHEET = "authorize.sheet"
+    /** Android-only: the review's scrolling content and its pinned bar (absent while the wallet is matched). */
+    const val REVIEW_LIST = "scan.review.list"
+    const val SIGN_BAR = "signing.bar"
 }

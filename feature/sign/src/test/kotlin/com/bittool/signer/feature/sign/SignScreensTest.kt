@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertiesAndroid
@@ -15,6 +16,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.ResolvedTextDirection
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.height
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -25,6 +28,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -105,6 +109,26 @@ class SignScreensTest {
         compose.onNodeWithTag(SignTags.PASTE).assertIsNotEnabled()
         compose.onNodeWithTag(SignTags.FILE).assertIsNotEnabled()
         compose.onNodeWithTag(SignTags.SCAN).assertIsEnabled()
+    }
+
+    /** QA sign-08: between the picker closing and the review, Import File shows that the file is being read. */
+    @Test
+    fun importFileShowsItsProgressWhileTheFileIsRead() {
+        var busy by mutableStateOf(true)
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                ScanHomeContent(ScanHomeUiState(busy = busy), onScan = {}, onPaste = {}, onImportFile = {})
+            }
+        }
+        val progress = SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo, ProgressBarRangeInfo.Indeterminate)
+        compose.onNodeWithTag(SignTags.FILE)
+            .assertIsNotEnabled()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Reading request…"))
+        compose.onNode(progress and hasAnyAncestor(hasTestTag(SignTags.FILE)), useUnmergedTree = true).assertExists()
+        busy = false
+        compose.waitForIdle()
+        compose.onNodeWithTag(SignTags.FILE).assertIsEnabled().assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+        compose.onNode(progress, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
@@ -202,6 +226,45 @@ class SignScreensTest {
         review(ReviewStates.matching)
         compose.onNodeWithText("Finding the matching wallet…").assertExists()
         compose.onNodeWithTag(SignTags.AUTHORIZE).assertDoesNotExist()
+    }
+
+    /**
+     * QA sign-17: iOS draws nothing in the bar while the wallet is matched; an empty bar strip with its hairline must not
+     * wait above the tab bar either. The bar comes in once there is something to sign (or "Cannot Sign").
+     */
+    @Test
+    fun whileMatchingThereIsNoEmptyBarAboveTheTabBar() {
+        var state by mutableStateOf(ReviewStates.matching)
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                RequestReviewContent(state, onReject = {}, onToggleRisk = {}, onRetry = {}, onAuthorize = {})
+            }
+        }
+        compose.onNodeWithTag(SignTags.SIGN_BAR).assertDoesNotExist()
+        state = ReviewStates.bitcoinReady
+        compose.waitForIdle()
+        compose.onNode(hasTestTag(SignTags.AUTHORIZE) and hasAnyAncestor(hasTestTag(SignTags.SIGN_BAR))).assertIsEnabled()
+        state = ReviewStates.noMatch
+        compose.waitForIdle()
+        compose.onNode(hasTestTag(SignTags.AUTHORIZE) and hasAnyAncestor(hasTestTag(SignTags.SIGN_BAR))).assert(hasText("Cannot Sign"))
+    }
+
+    /**
+     * QA sign-11: the sheet is as tall as its content (iOS medium detent) with Sign at its bottom; the toast host it
+     * carries for the overlay notice must not stretch it to the window height (this window is 1,800 dp tall).
+     */
+    @Test
+    fun theAuthorizeSheetIsAsTallAsItsContentWithSignAtItsBottom() {
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                AuthorizeSheet(ReviewStates.authorize, onSign = { it.wipe() }, onCancel = {}, onDismissed = {})
+            }
+        }
+        compose.waitForIdle()
+        val sheet = compose.onNodeWithTag(SignTags.AUTHORIZE_SHEET).getUnclippedBoundsInRoot()
+        val sign = compose.onNodeWithTag(SignTags.AUTHORIZE_SIGN).getUnclippedBoundsInRoot()
+        assertTrue(sheet.height < 900.dp, "the sheet is ${sheet.height} tall")
+        assertTrue(sheet.bottom - sign.bottom < 48.dp, "Sign ends ${sheet.bottom - sign.bottom} above the sheet's bottom")
     }
 
     @Test

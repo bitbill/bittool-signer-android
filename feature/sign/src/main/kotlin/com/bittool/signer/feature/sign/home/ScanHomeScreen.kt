@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.ScrollState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -52,6 +53,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,7 +62,6 @@ import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StepRow
-import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.pressScale
 import com.bittool.signer.core.designsystem.modifier.readableWidth
@@ -69,7 +71,7 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
-import com.bittool.signer.core.ui.text.Callout
+import com.bittool.signer.feature.sign.common.RevealedErrorCallout
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.symbolSize
 import kotlinx.coroutines.flow.Flow
@@ -123,7 +125,8 @@ private fun clipboardText(context: Context): CharSequence? {
 /**
  * Scan home (iOS `ScanHomeView`, `Features/Sign/ScanTab.swift:108-223`): the large title "Scan"; the scan card (one
  * button, `signing.scan`, read as "Scan signing request"); "Paste Request" and "Import File" (disabled while an import
- * runs); the import error; "How signing works".
+ * runs, Import File showing its progress); the import error, scrolled into view when it appears (it is laid out below
+ * the tiles, often under the fold); "How signing works".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -177,11 +180,12 @@ fun ScanHomeContent(
                     icon = SignerIcons.NoteAdd,
                     tag = SignTags.FILE,
                     enabled = !state.busy,
+                    busy = state.busy,
                     onClick = onImportFile,
                     modifier = Modifier.weight(1f),
                 )
             }
-            state.error?.let { Callout(text = it, tone = Tone.Danger) }
+            state.error?.let { RevealedErrorCallout(it) }
             HowSigningWorks()
         }
     }
@@ -264,6 +268,13 @@ private fun ScanGlyphTile(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * A tile under the scan card (iOS `optionTile`): the symbol over the label, top-aligned so that both tiles keep their
+ * symbols on one line when only one label wraps (large text, longer translations); labels break by phrase and balance
+ * their lines (no single glyph left on a line of its own in Japanese or Korean). [busy]: the file import this tile
+ * started is running — its symbol becomes a spinner and TalkBack hears "Reading request…" (the picker has closed, the
+ * engine is still reading: DECISIONS §5 "still show progress"); the tile stays at full strength while the other dims.
+ */
 @Composable
 private fun OptionTile(
     title: String,
@@ -272,12 +283,19 @@ private fun OptionTile(
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    busy: Boolean = false,
 ) {
     val colors = SignerTheme.colors
+    val typography = SignerTheme.typography
     val interaction = remember { MutableInteractionSource() }
+    val reading = stringResource(R.string.sign_reading_request)
     Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxHeight().pressScale(interaction).testTag(tag),
+        modifier = modifier
+            .fillMaxHeight()
+            .pressScale(interaction)
+            .then(if (busy) Modifier.semantics { stateDescription = reading } else Modifier)
+            .testTag(tag),
         enabled = enabled,
         shape = SignerShapes.tile,
         color = colors.card,
@@ -285,12 +303,24 @@ private fun OptionTile(
         interactionSource = interaction,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 18.dp).alpha(if (enabled) 1f else 0.4f),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 18.dp).alpha(if (enabled || busy) 1f else 0.4f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
         ) {
-            Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(symbolSize(26.dp, SignerTheme.typography.title2)))
-            Text(title, style = SignerTheme.typography.subheadline.semibold(), color = colors.label, textAlign = TextAlign.Center)
+            val symbol = symbolSize(26.dp, typography.title2)
+            Box(Modifier.size(symbol), contentAlignment = Alignment.Center) {
+                if (busy) {
+                    CircularProgressIndicator(Modifier.size(symbol * 0.8f), color = colors.accent, strokeWidth = 2.5.dp)
+                } else {
+                    Icon(icon, contentDescription = null, tint = colors.accent, modifier = Modifier.size(symbol))
+                }
+            }
+            Text(
+                text = title,
+                style = typography.subheadline.semibold().copy(lineBreak = LineBreak.Heading),
+                color = colors.label,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

@@ -112,6 +112,7 @@ val SignPages: Map<String, @Composable () -> Unit> = linkedMapOf(
     "02-scan-home-error" to {
         ScanHomeContent(ScanHomeUiState(busy = false, error = UiText.Ios("This file is larger than 512 KB.")), onScan = {}, onPaste = {}, onImportFile = {})
     },
+    "02b-scan-home-importing" to { ScanHomeContent(ScanHomeUiState(busy = true), onScan = {}, onPaste = {}, onImportFile = {}) },
     "03-paste-request" to { SheetPreview { PasteSheetPreview(PasteUiState(), "") } },
     "04-paste-request-error" to {
         SheetPreview { PasteSheetPreview(PasteUiState(error = UiText.Verbatim("Unsupported signing QR format")), "unsupported-qr-test-fixture") }

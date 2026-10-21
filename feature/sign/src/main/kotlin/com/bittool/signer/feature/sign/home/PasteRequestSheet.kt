@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
-import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -41,16 +40,17 @@ import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
-import com.bittool.signer.core.ui.text.Callout
+import com.bittool.signer.feature.sign.common.RevealedErrorCallout
 import com.bittool.signer.feature.sign.common.SheetHeader
 import com.bittool.signer.feature.sign.common.SignTags
 
 /**
  * "Paste Request" (inventory row 49; iOS `PasteRequestSheet`, `Features/Sign/ScanTab.swift:263-325`): a full sheet with
  * "Cancel", the instruction, a monospaced editor (`signing.payload`, no autocorrect or capitalisation), "Paste from
- * Clipboard" (replaces the text), the import error, and "Review Request" (`signing.decode`) pinned above the keyboard,
- * enabled once the text is not blank. Every dismissal (Cancel, swipe, Back) discards the text. Once the request is
- * reviewed ([PasteUiState.closing]) the sheet slides away by itself, as iOS `dismiss()` does, instead of vanishing.
+ * Clipboard" (replaces the text), the import error (scrolled into view above the keyboard), and "Review Request"
+ * (`signing.decode`) pinned above the keyboard, enabled once the text is not blank. Every dismissal (Cancel, swipe,
+ * Back) discards the text. Once the request is reviewed ([PasteUiState.closing]) the sheet slides away by itself, as
+ * iOS `dismiss()` does, instead of vanishing.
  */
 @Composable
 internal fun PasteRequestSheet(
@@ -137,6 +137,7 @@ internal fun ColumnScope.PasteRequestBody(
             Icon(SignerIcons.Paste, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
             Text(stringResource(R.string.paste_from_clipboard), style = typography.subheadline.semibold(), color = colors.accent)
         }
-        state.error?.let { Callout(text = it, tone = Tone.Danger) }
+        // Under the editor like iOS; brought into view, since the keyboard usually covers this end of the sheet.
+        state.error?.let { RevealedErrorCallout(it) }
     }
 }
