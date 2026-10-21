@@ -26,13 +26,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentDataType
+import androidx.compose.ui.autofill.FillableData
+import androidx.compose.ui.autofill.createFromText
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDataType
 import androidx.compose.ui.semantics.editableText
+import androidx.compose.ui.semantics.fillableData
+import androidx.compose.ui.semantics.inputText
 import androidx.compose.ui.semantics.isSensitiveData
+import androidx.compose.ui.semantics.onFillData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -99,7 +107,10 @@ enum class PasswordKind(val english: String, @StringRes val title: Int) {
  *   `clearText()`) and swallows the undo / redo shortcuts, so Ctrl+Z never types a cleared secret back. Its text menu
  *   offers Paste and Select All only ([secretTextMenu]: no Copy, Cut, Share, Autofill or other app's text action).
  *   Callers clear a ViewModel-held state with [wipe] so the history goes at once, also while the field is off screen.
- * - [imeAction] and [onSubmit] wire the keyboard action (Done submits, Next moves on after [onSubmit]).
+ * - Autofill gets nothing either (backlog B27): the node reports no fillable data, bullets as its input text and its
+ *   autofill value, and refuses to be filled, on top of the window's exclusion.
+ * - [imeAction] and [onSubmit] wire the keyboard action (Done submits, Next moves on after [onSubmit] to the next
+ *   field, never onto the field's own eye button).
  * - The box: [containerColor] (the card colour by default; `raised` on a card) with radius 14 and padding 14, the
  *   translated placeholder in body, entered text laid out left to right.
  */
@@ -133,6 +144,7 @@ fun PasswordField(
             .collect { hasHistory -> if (hasHistory) state.undoState.clearHistory() }
     }
     val placeholder = stringResource(kind.title)
+    val traversal = remember { KeyboardActionTraversal() }
     NoPersonalizedLearning {
         BasicSecureTextField(
             state = state,
@@ -142,7 +154,15 @@ fun PasswordField(
                 // secret (BasicSecureTextField reports its plain text to accessibility).
                 .semantics {
                     isSensitiveData = markSensitive
-                    if (!shown) editableText = AnnotatedString(maskForAccessibility(state.text.length))
+                    val mask = AnnotatedString(maskForAccessibility(state.text.length))
+                    if (!shown) editableText = mask
+                    // Nor to Autofill (backlog B27): the text field also publishes what was typed as its input text
+                    // and its autofill value, which only the app-wide Autofill exclusion kept away. Revealed or not,
+                    // the node holds no fillable data, both carry the bullets, and no service can write into it.
+                    contentDataType = ContentDataType.None
+                    inputText = mask
+                    FillableData.createFromText(mask.text)?.let { fillableData = it }
+                    onFillData { false }
                 }
                 .testTag(kind.english)
                 .secretTextMenu()
@@ -157,7 +177,14 @@ fun PasswordField(
             ),
             onKeyboardAction = KeyboardActionHandler { performDefaultAction ->
                 onSubmit()
-                performDefaultAction()
+                // "Next" moves on to the next field (iOS `onSubmit { focus = .confirmation }`), not onto this field's
+                // own eye button, which would take the keyboard away (QA setup-04). The eye stays reachable by Tab.
+                traversal.running = true
+                try {
+                    performDefaultAction()
+                } finally {
+                    traversal.running = false
+                }
             },
             textObfuscationMode = if (shown) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
             cursorBrush = SolidColor(colors.accent),
@@ -195,7 +222,9 @@ fun PasswordField(
                     if (revealable) {
                         IconButton(
                             onClick = { revealed = !revealed },
-                            modifier = Modifier.testTag(kind.revealTag),
+                            modifier = Modifier
+                                .focusProperties { if (traversal.running) canFocus = false }
+                                .testTag(kind.revealTag),
                         ) {
                             Icon(
                                 imageVector = if (revealed) SignerIcons.VisibilityOff else SignerIcons.Visibility,
@@ -209,6 +238,15 @@ fun PasswordField(
             },
         )
     }
+}
+
+/**
+ * Set while a field's keyboard action runs its default (moving focus on "Next"): the eye button is then no focus
+ * target, so the search lands on the next field. Read by the eye's `focusProperties` during that search; not snapshot
+ * state.
+ */
+private class KeyboardActionTraversal {
+    var running = false
 }
 
 /**
