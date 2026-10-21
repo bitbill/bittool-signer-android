@@ -6,12 +6,14 @@ import android.content.Context
 import android.text.InputType
 import android.view.KeyEvent
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.BackEventCompat
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
@@ -22,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextRange
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
 import com.bittool.signer.core.data.testing.FakeSignerStore
@@ -326,6 +329,57 @@ class PhraseKeyboardTest {
         compose.waitForIdle()
         assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "nothing was copied")
         assertEquals("legal", phrase(), "nothing was cut")
+    }
+
+    /**
+     * Accessibility services do not use the menu or the keys: they call the editor's own Copy and Cut actions
+     * (`ACTION_COPY` / `ACTION_CUT`: TalkBack's actions menu, "copy" in Voice Access, Switch Access). With BitTool's
+     * keyboard and with the system keyboard those never put recovery words on the clipboard either (ARCHITECTURE §4.4,
+     * final audit A01), and Cut deletes nothing. Checked on the semantics actions and on the platform actions a service
+     * sends through the view's `AccessibilityNodeProvider`, which report the refusal. The Paste action still goes in.
+     */
+    @Test
+    fun accessibilityCopyAndCutActionsNeverReachTheClipboard() {
+        flow()
+        tapEditor()
+        type(*letters("legal"), Bip39KeyboardTags.SPACE, *letters("winner"))
+        val clipboard = compose.activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        fun selectAll() = compose.runOnIdle { model.fields.phrase.edit { selection = TextRange(0, length) } }
+        fun assertCopyAndCutRefused(keyboard: PhraseKeyboard) {
+            assertEquals(keyboard, model.phraseKeyboard)
+            clipboard.setPrimaryClip(ClipData.newPlainText("other", "zoo"))
+            for (action in listOf(SemanticsActions.CopyText, SemanticsActions.CutText)) {
+                selectAll()
+                editor.performSemanticsAction(action)
+                compose.waitForIdle()
+                assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "${action.name} put nothing on the clipboard ($keyboard)")
+                assertEquals("legal winner", phrase(), "${action.name} deleted nothing ($keyboard)")
+            }
+            for ((name, action) in listOf("ACTION_COPY" to AccessibilityNodeInfo.ACTION_COPY, "ACTION_CUT" to AccessibilityNodeInfo.ACTION_CUT)) {
+                selectAll()
+                val id = editor.fetchSemanticsNode().id
+                val performed = compose.runOnIdle {
+                    val provider = view.accessibilityNodeProvider
+                    assertNotNull(provider.createAccessibilityNodeInfo(id), "the editor has a node a service can act on ($keyboard)")
+                    provider.performAction(id, action, null)
+                }
+                compose.waitForIdle()
+                assertFalse(performed, "$name is refused ($keyboard)")
+                assertEquals("zoo", clipboard.primaryClip?.getItemAt(0)?.text?.toString(), "$name put nothing on the clipboard ($keyboard)")
+                assertEquals("legal winner", phrase(), "$name deleted nothing ($keyboard)")
+            }
+        }
+        assertCopyAndCutRefused(PhraseKeyboard.InApp)
+        compose.onNodeWithTag(Bip39KeyboardTags.SYSTEM).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(SwitchToSystemKeyboardDialogTags.SWITCH).performClick()
+        compose.waitForIdle()
+        editor.assertIsFocused()
+        assertCopyAndCutRefused(PhraseKeyboard.System)
+        // Paste reads the clipboard as before, over the selection.
+        selectAll()
+        editor.performSemanticsAction(SemanticsActions.PasteText)
+        compose.waitUntil(5_000) { phrase() == "zoo" }
     }
 
     @Test

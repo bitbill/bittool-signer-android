@@ -1,5 +1,7 @@
 package com.bittool.signer.feature.setup.phrase
 
+import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -58,16 +60,23 @@ import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.platform.AndroidClipboard
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.PlatformTextInputInterceptor
 import androidx.compose.ui.platform.PlatformTextInputMethodRequest
 import androidx.compose.ui.platform.PlatformTextInputSession
+import androidx.compose.ui.platform.nativeClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.copyText
+import androidx.compose.ui.semantics.cutText
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -109,7 +118,10 @@ import com.bittool.signer.core.l10n.R as L10n
  * autocorrection, **no suggestions** ([NoSuggestions]), no personalised learning (incognito keyboard), no autofill
  * content type and the hosting window excluded from Autofill. Pasting works through
  * the system menu, which offers only Paste and Select All ([secretTextMenu]): typed recovery words never reach the
- * clipboard (ARCHITECTURE §4.4; iOS offers Copy) nor another app's text action such as "Translate". The text is never
+ * clipboard (ARCHITECTURE §4.4; iOS offers Copy) nor another app's text action such as "Translate". No other route
+ * copies them either: the copy and cut keys are refused ([isCopyOrCutShortcut]), so are the Copy and Cut actions
+ * that accessibility services (TalkBack, Voice Access, Switch Access) call ([refuseCopyAndCut]), and the field writes
+ * to a clipboard that only reads ([rememberNoWriteClipboard]). The text is never
  * masked. While it holds text the view is accessibility-sensitive (gaps G5), and a
  * screenshot raises the "may contain" warning without clearing anything. Named "Recovery phrase" for TalkBack, tagged
  * `recovery.input.visible`.
@@ -144,11 +156,13 @@ internal fun RecoveryPhraseEditor(
     AccessibilitySensitive(active = state.text.isNotEmpty())
     ExcludeFromAutofill()
     val interfaceDirection = LocalLayoutDirection.current
+    val noWrites = rememberNoWriteClipboard()
     InAppKeyboardInput(inAppKeyboard) {
         // With the in-app keyboard the request never reaches an input method anyway; with the system keyboard it asks
         // for no suggestion strip, inside InAppKeyboardInput's incognito session.
         NoSuggestions {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+            // Copy and Cut, from whatever route, write to a clipboard that only reads (Paste keeps working).
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr, LocalClipboard provides noWrites) {
                 BasicTextField(
                     state = state,
                     modifier = modifier
@@ -159,6 +173,8 @@ internal fun RecoveryPhraseEditor(
                         // the editor directly with the in-app keyboard), or a keyboard app's own Copy button, never
                         // puts recovery words on the clipboard.
                         .onPreviewKeyEvent(::isCopyOrCutShortcut)
+                        // Nor do the accessibility actions (outside the field's own semantics, so these win).
+                        .refuseCopyAndCut(state)
                         .secretTextMenu()
                         .testTag(EDITOR_TAG),
                     textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
@@ -252,6 +268,50 @@ internal fun isCopyOrCutShortcut(event: KeyEvent): Boolean {
     if (key == Key.Copy || key == Key.Cut) return true
     return (event.isCtrlPressed || event.isMetaPressed) &&
         (key == Key.C || key == Key.X || key == Key.Insert || key == Key.NumPadInsert)
+}
+
+/**
+ * Refuses the Copy and Cut actions a text field publishes to accessibility services while text is selected
+ * (`ACTION_COPY` / `ACTION_CUT`: TalkBack's actions menu, "copy" in Voice Access, Switch Access): neither puts the
+ * recovery words on the clipboard and Cut deletes nothing, as with the keys and the menu. The field's own semantics
+ * cannot be dropped, only replaced: this goes in the modifier given to `BasicTextField`, outside the field's own
+ * modifiers on the same node, where the outermost action wins. Replaced only while the field publishes them (a
+ * selection), so no action appears that the field would not offer. Paste and Select All stay.
+ */
+internal fun Modifier.refuseCopyAndCut(state: TextFieldState): Modifier = semantics {
+    if (!state.selection.collapsed) {
+        copyText { false }
+        cutText { false }
+    }
+}
+
+/**
+ * The clipboard the phrase editor's text field uses: it reads [LocalClipboard] (Paste, and the check for something to
+ * paste) and **never writes**, so a copy or cut through any route Compose has, now or in a later release (the menu,
+ * a key, an accessibility action, a keyboard app's Copy button), leaves the clipboard as it was (ARCHITECTURE §4.4,
+ * DECISIONS §6). The other routes are refused before they get here too ([isCopyOrCutShortcut], [secretTextMenu],
+ * [refuseCopyAndCut]); this is the backstop. Remembered: the field rebuilds its paste state on a new clipboard.
+ */
+@Composable
+internal fun rememberNoWriteClipboard(): Clipboard {
+    val clipboard = LocalClipboard.current
+    return remember(clipboard) { NoWriteClipboard(clipboard) }
+}
+
+/**
+ * Reads through [clipboard], drops every write. An [AndroidClipboard]: Compose's text field asks the platform
+ * `ClipboardManager` (the `nativeClipboardManager` of the clipboard it is given) whether there is text to paste, and
+ * that extension accepts only this interface (Compose marks it `@VisibleForTesting`, but it is the only way to give a
+ * field its own clipboard on Android without breaking Paste).
+ */
+@SuppressLint("VisibleForTests")
+private class NoWriteClipboard(private val clipboard: Clipboard) : AndroidClipboard {
+    override suspend fun getClipEntry(): ClipEntry? = clipboard.getClipEntry()
+
+    override suspend fun setClipEntry(clipEntry: ClipEntry?) = Unit
+
+    override val clipboardManager: ClipboardManager
+        get() = clipboard.nativeClipboardManager
 }
 
 /**
