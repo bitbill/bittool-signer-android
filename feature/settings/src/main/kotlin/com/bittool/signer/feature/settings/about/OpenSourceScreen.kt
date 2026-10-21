@@ -97,7 +97,6 @@ internal fun OpenSourceContent(state: OpenSourceUiState, onBack: () -> Unit, onO
     )
     val notices = stringResource(R.string.third_party_notices)
     val engineSourceLabel = stringResource(R.string.settings_engine_source)
-    val engineRepository = stringResource(R.string.settings_engine_repository)
     val steps = listOf(
         stringResource(R.string.clone_the_repository_and_check_out_the_tag_for_version_x, isolate(state.version)),
         stringResource(R.string.run_cd_engine_npm_ci_npm_run_build),
@@ -147,7 +146,7 @@ internal fun OpenSourceContent(state: OpenSourceUiState, onBack: () -> Unit, onO
                     footer = stringResource(R.string.the_engine_bundle_is_deterministic_the_same_sources),
                 ) {
                     item(key = "source") {
-                        RepositoryBlock(label = engineSourceLabel, url = engineRepository, tag = OpenSourceTags.ENGINE_REPOSITORY, copyTag = null)
+                        RepositoryBlock(label = engineSourceLabel, url = state.repository, tag = OpenSourceTags.ENGINE_REPOSITORY, copyTag = null)
                     }
                     item(key = "steps") { RebuildSteps(steps) }
                 }

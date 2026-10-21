@@ -169,8 +169,10 @@ class RecoveryPhraseViewModel internal constructor(
     /** Cancel / Done: everything is cleared, then the page closes (iOS `clear(); dismiss()`). Once only. */
     fun close() {
         if (_state.value.closing) return
-        clear()
+        // Closing first: a state without the phrase that is not closing would bring the password form back for the
+        // exit animation, and its delayed focus would open the keyboard over the page underneath.
         _state.update { it.copy(closing = true) }
+        clear()
         events.trySend(RecoveryPhraseEvent.Close)
     }
 

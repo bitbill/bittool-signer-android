@@ -32,7 +32,7 @@ import com.bittool.signer.core.ui.theme.SignerTheme as AppearanceTheme
 class RootSlots(
     val welcome: @Composable (onStart: (SetupIntent) -> Unit) -> Unit = { WelcomeScreen(onStart = it) },
     val main: @Composable (viewModel: RootViewModel, showsScanBadge: Boolean) -> Unit = { viewModel, badge ->
-        MainScaffold(router = viewModel.router, showsScanBadge = badge)
+        MainScaffold(router = viewModel.router, showsScanBadge = badge, canOpenCamera = viewModel::canOpenCamera)
     },
     val introduction: IntroductionContent = { p, complete, cancel -> OnboardingPager(p.intent, complete, cancel) },
     val steps: SetupStepsContent = { p, finished, cancelled -> SetupFlowHost(p, finished, cancelled) },

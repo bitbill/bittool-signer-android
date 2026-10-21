@@ -105,6 +105,7 @@ fun MainScaffold(
     router: AppRouter,
     showsScanBadge: Boolean,
     modifier: Modifier = Modifier,
+    canOpenCamera: () -> Boolean = { true },
     navController: NavHostController = rememberNavController(),
     destinations: NavGraphBuilder.(NavController) -> Unit = { signerDestinations(it) },
 ) {
@@ -187,7 +188,7 @@ fun MainScaffold(
             router.selectTab(Tab.Wallets)
             navigator.backFromTabRoot()
         }
-        RouterGlue(navigator, router)
+        RouterGlue(navigator, router, canOpenCamera)
     }
 }
 

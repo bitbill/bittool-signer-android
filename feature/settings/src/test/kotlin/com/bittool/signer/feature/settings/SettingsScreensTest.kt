@@ -385,7 +385,7 @@ class SettingsScreensTest {
         val list = compose.onNodeWithTag(OpenSourceTags.LIST)
         list.performScrollToNode(hasText("Google Play"))
         list.performScrollToNode(hasTestTag(OpenSourceTags.ENGINE_REPOSITORY))
-        compose.onNodeWithTag(OpenSourceTags.ENGINE_REPOSITORY).assert(hasText("https://github.com/bitbill/bittool-signer-ios"))
+        compose.onNodeWithTag(OpenSourceTags.ENGINE_REPOSITORY).assert(hasText("https://github.com/bitbill/bittool-signer-android"))
         list.performScrollToNode(hasText("Clone the repository and check out the tag for version", substring = true))
         list.performScrollToNode(hasTestTag(OpenSourceTags.NOTICES))
         assertNoLinks(compose)

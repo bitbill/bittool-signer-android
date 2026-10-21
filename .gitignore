@@ -22,3 +22,6 @@ secrets.properties
 .claude/
 # Release / upload signing keys and anything kept next to them (never committed).
 /keystore/
+
+# Engine build dependencies (installed by npm ci).
+/engine/node_modules/

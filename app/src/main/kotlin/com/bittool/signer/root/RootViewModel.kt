@@ -112,6 +112,10 @@ class RootViewModel @Inject constructor(
     val router: AppRouter,
 ) : ViewModel() {
 
+    /** The camera may open for a scan request: no request under review and no signature waiting (iOS `openCameraIfAsked`). */
+    fun canOpenCamera(): Boolean = store.state.value.let { it.review == null && !it.hasSignedResponse }
+
+
     private val retrying = MutableStateFlow(false)
 
     val uiState: StateFlow<RootUiState> = combine(

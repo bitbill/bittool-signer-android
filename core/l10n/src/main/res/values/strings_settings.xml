@@ -31,7 +31,6 @@
     <!-- Android-only: label of the engine repository in "Rebuild it yourself" (DECISIONS.md §9.1). -->
     <string name="settings_engine_source">Signing engine source</string>
     <!-- The repository signer.js is built from (DECISIONS.md §9.1): the shared engine in the iOS repository. -->
-    <string name="settings_engine_repository" translatable="false">https://github.com/bitbill/bittool-signer-ios</string>
 
     <!-- Compatibility › Formats "QR formats" values: protocol tokens, verbatim on iOS (SettingsTab.swift:175-188). -->
     <string name="settings_formats_bitcoin" translatable="false">crypto-account (account xpub), crypto-psbt, BBQR, Base64 PSBT</string>

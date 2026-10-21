@@ -17,6 +17,7 @@ import com.bittool.signer.core.navigation.AppRouter
 import com.bittool.signer.core.navigation.ModalRouteClasses
 import com.bittool.signer.core.navigation.ScanGraph
 import com.bittool.signer.core.navigation.ScanRoute
+import com.bittool.signer.core.navigation.ScannerRoute
 import com.bittool.signer.core.navigation.SettingsGraph
 import com.bittool.signer.core.navigation.SettingsRoute
 import com.bittool.signer.core.navigation.Tab
@@ -177,8 +178,20 @@ class ShellNavigator(val navController: NavHostController) {
  * stack). Compose this after the NavHost (its graph must exist).
  */
 @Composable
-fun RouterGlue(navigator: ShellNavigator, router: AppRouter) {
+fun RouterGlue(navigator: ShellNavigator, router: AppRouter, canOpenCamera: () -> Boolean = { true }) {
     val navController = navigator.navController
+    // The Wallets toolbar "Scan" goes straight to the camera (owner request): the Scan tab is shown underneath, so a
+    // finished scan lands on its review, but the camera opens now instead of after the tab has appeared.
+    LaunchedEffect(navigator, router) {
+        router.scanRequest.collect {
+            if (router.consumeScanRequest()) {
+                navigator.showTab(Tab.Scan)
+                if (canOpenCamera() && navController.currentDestination?.hasRoute<ScannerRoute>() != true) {
+                    navController.navigate(ScannerRoute) { launchSingleTop = true }
+                }
+            }
+        }
+    }
     LaunchedEffect(navigator, router) {
         router.tab.collect(navigator::showTab)
     }

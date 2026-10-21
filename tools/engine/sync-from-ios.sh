@@ -28,5 +28,11 @@ grouped=$(python3 -c "import sys; print(f'{int(sys.argv[1]):_}')" "$bytes")
 sed -i '' -E "s/(const val EXPECTED_SHA256 = \")[0-9a-f]{64}(\")/\1$sha\2/; s/(const val EXPECTED_BYTES = )[0-9_]+/\1$grouped/" "$KT"
 cmp "$SRC" "$DST"
 echo "signer.js synced from iOS: $sha ($bytes bytes)"
+# The engine source too, so anyone can rebuild signer.js from this repository alone (Open Source page, "Rebuild it
+# yourself"). Only the output path of build.mjs differs from iOS; the bundle bytes do not depend on it.
+rsync -a --delete --exclude node_modules "$IOS/engine/" "$ROOT/engine/"
+sed -i '' -e "s#'../BitToolSigner/Resources/signer.js'#'../core/engine/src/main/assets/engine/signer.js'#g" \
+  -e "s#file:'BitToolSigner/Resources/signer.js'#file:'core/engine/src/main/assets/engine/signer.js'#" "$ROOT/engine/build.mjs"
+echo "engine source synced from iOS into engine/ (rebuild: cd engine && npm ci --ignore-scripts && npm run build)"
 "$ROOT/tools/l10n/sync-from-ios.sh" "$IOS"
 echo "Next: tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest"
