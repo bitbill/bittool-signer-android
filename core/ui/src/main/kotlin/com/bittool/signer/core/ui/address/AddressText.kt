@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,13 +44,13 @@ import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
-import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AddressFormatter
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
@@ -161,12 +160,9 @@ fun CopyableAddress(
                 },
             )
         }
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
-        if (menu && rememberWindowGateReleased()) DropdownMenu(
-            expanded = true,
-            onDismissRequest = { menu = false },
-            containerColor = SignerTheme.colors.elevatedCard,
-        ) {
+        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10) and publishes its
+        // test tags as resource ids in debuggable builds (backlog B26).
+        SignerDropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             DropdownMenuItem(
                 text = { Text(menuLabel) },
                 leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },

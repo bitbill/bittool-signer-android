@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +59,8 @@ import kotlinx.coroutines.delay
  * and "Copy Payload" → "Copied" for 1.5 s. Long payloads show the first [PayloadText.DISPLAY_LIMIT] characters (copy
  * includes everything) and get break opportunities inside long runs (see [PayloadText]).
  *
+ * Whether it is expanded is saved state (`rememberSaveable`), so it survives a tab switch, as the iOS view keeps it.
+ *
  * Test tags: `<tag>Toggle`, `<tag>` (the payload text), `<tag>Copy`.
  */
 @Composable
@@ -71,7 +74,9 @@ fun PayloadDisclosure(
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val reduceMotion = SignerTheme.reduceMotion
-    var expanded by remember { mutableStateOf(false) }
+    // Saved like iOS view state: switching tabs and back keeps an opened payload open (QA sign-14). The payload is
+    // public (pairing data, a signature response), never a secret.
+    var expanded by rememberSaveable { mutableStateOf(false) }
     val rotation by animateFloatAsState(if (expanded) 90f else 0f, SignerMotion.disclosure(reduceMotion), label = "chevron")
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val shownLabel = stringResource(if (expanded) R.string.shown else R.string.hidden)

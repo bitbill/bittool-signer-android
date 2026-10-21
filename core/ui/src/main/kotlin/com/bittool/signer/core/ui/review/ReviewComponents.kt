@@ -54,6 +54,7 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.bold
 import com.bittool.signer.core.designsystem.theme.contentDirection
+import com.bittool.signer.core.designsystem.theme.localizedDirection
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.rounded
@@ -113,22 +114,32 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
             BadgesRow(networkBadge = { NetworkBadge(review) }, decodeBadge = { DecodeBadge(review.decodeStatus) })
             Box(Modifier.padding(top = 4.dp)) { SummaryIcon(review) }
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                // Engine text, translated where the catalogue has it: a phrase left in English keeps its own direction
+                // in a right-to-left interface (its full stop stays at its end, QA sign-02).
+                val action = reviewActionLine(review, reviewText, resources)
                 Text(
-                    text = reviewActionLine(review, reviewText, resources),
-                    style = typography.subheadline.semibold(),
+                    text = action,
+                    style = typography.subheadline.semibold().localizedDirection(action),
                     color = colors.secondaryLabel,
                     textAlign = TextAlign.Center,
                 )
                 ReviewPresentation.amountText(review)?.let { amount -> AmountLine(amount, display) }
                 ReviewPresentation.secondaryHeadline(review)?.let { secondary ->
-                    Text(reviewText.headline(secondary), style = typography.subheadline, color = colors.secondaryLabel, textAlign = TextAlign.Center)
+                    val shown = reviewText.headline(secondary)
+                    Text(
+                        text = shown,
+                        style = typography.subheadline.localizedDirection(shown),
+                        color = colors.secondaryLabel,
+                        textAlign = TextAlign.Center,
+                    )
                 }
                 ReviewPresentation.textHeadline(review)?.let { headline ->
                     val limit = ReviewPresentation.headlineLineLimit(display)
+                    val shown = reviewText.headline(headline)
                     SelectionContainer {
                         Text(
-                            text = reviewText.headline(headline),
-                            style = typography.title3.semibold(),
+                            text = shown,
+                            style = typography.title3.semibold().localizedDirection(shown),
                             color = colors.label,
                             textAlign = TextAlign.Center,
                             maxLines = limit ?: Int.MAX_VALUE,
@@ -143,7 +154,13 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
             ReviewPresentation.counterparty(review)?.let { counterparty ->
                 RaisedBox(Modifier.semantics(mergeDescendants = true) {}) {
                     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(reviewText.phrase(counterparty.label), style = typography.caption.semibold(), color = colors.secondaryLabel, textAlign = TextAlign.Center)
+                        val label = reviewText.phrase(counterparty.label)
+                        Text(
+                            text = label,
+                            style = typography.caption.semibold().localizedDirection(label),
+                            color = colors.secondaryLabel,
+                            textAlign = TextAlign.Center,
+                        )
                         AddressText(counterparty.value, style = typography.callout, textAlign = TextAlign.Center)
                         val contract = review.contract
                         if (contract != null && ReviewPresentation.showsNoticeInSummary(review)) ContractNotice(contract, compact = true)
@@ -187,9 +204,11 @@ private fun AmountLine(amount: String, display: ReviewDisplay?) {
             // An NFT order price can be 78 raw digits: it wraps in full instead of shrinking or being cut off.
             BasicText(amount, style = style.ltr(), modifier = Modifier.fillMaxWidth().testTag(HEADLINE_TAG))
         } else {
+            // The engine's amount and symbol, verbatim: "0.0008 BTC" and "Unlimited USDT" keep their order in a
+            // right-to-left interface (QA sign-02).
             BasicText(
                 text = amount,
-                style = style,
+                style = style.contentDirection(),
                 maxLines = ReviewPresentation.amountLineLimit(display) ?: Int.MAX_VALUE,
                 overflow = TextOverflow.Ellipsis,
                 autoSize = TextAutoSize.StepBased(minFontSize = style.fontSize * 0.5f, maxFontSize = style.fontSize),
@@ -545,7 +564,8 @@ private fun DetailRow(field: ReviewField, reviewText: ReviewText) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Text(reviewText.label(field.label), style = typography.caption.semibold(), color = colors.secondaryLabel)
+        val label = reviewText.label(field.label)
+        Text(label, style = typography.caption.semibold().localizedDirection(label), color = colors.secondaryLabel)
         when (ReviewPresentation.rowStyle(field)) {
             ReviewPresentation.DetailRowStyle.Address -> CopyableAddress(field.value, style = typography.footnote)
             ReviewPresentation.DetailRowStyle.Identifier -> SelectionContainer {

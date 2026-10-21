@@ -2,6 +2,8 @@ package com.bittool.signer.core.designsystem.component
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -10,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -17,6 +20,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
@@ -31,13 +36,19 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.SignerTypography
+import com.bittool.signer.core.designsystem.theme.containsRightToLeftLetters
+import com.bittool.signer.core.designsystem.theme.localizedDirection
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -247,13 +258,15 @@ class ComponentsTest {
         val textLeft = origin + (0 until layout.lineCount).minOf { layout.getLineLeft(it) }
         val textRight = origin + (0 until layout.lineCount).maxOf { layout.getLineRight(it) }
         val button = compose.onNodeWithTag("button").fetchSemanticsNode().boundsInRoot
-        // Icon (20 dp) + gap (8 dp) + the lines, centred in the capsule as one group.
+        // Icon (20 dp beside the 17 sp label, scaled with the label's font) + gap (8 dp) + the lines, centred in the
+        // capsule as one group.
         val px = compose.density.density
-        val iconAndGap = 28f * px
+        val icon = Density(px, 2f).run { 17.sp.toDp().value } * 20f / 17f * px
+        val iconAndGap = icon + 8f * px
         val expectedLeft = button.left + (button.width - (iconAndGap + textRight - textLeft)) / 2f + iconAndGap
         assertTrue(kotlin.math.abs(textLeft - expectedLeft) <= 2f, "text starts at $textLeft, expected $expectedLeft")
-        // The icon is drawn just before the text: the first ink on the capsule's middle row is within the 20 dp icon
-        // box that ends 8 dp before the lines (it used to sit 20 dp from the capsule's edge).
+        // The icon is drawn just before the text: the first ink on the capsule's middle row is within the icon box that
+        // ends 8 dp before the lines (it used to sit 20 dp from the capsule's edge).
         val image = compose.onNodeWithTag("button").captureToImage().toPixelMap()
         val row = image.height / 2
         val fill = image[(12f * px).toInt(), row]
@@ -262,7 +275,160 @@ class ComponentsTest {
             kotlin.math.abs(c.red - fill.red) + kotlin.math.abs(c.green - fill.green) + kotlin.math.abs(c.blue - fill.blue) > 0.2f
         }
         val iconBoxLeft = textLeft - button.left - iconAndGap
-        assertTrue(firstInk >= iconBoxLeft - 1f && firstInk <= iconBoxLeft + 20f * px, "icon ink at $firstInk, icon box from $iconBoxLeft")
+        assertTrue(firstInk >= iconBoxLeft - 1f && firstInk <= iconBoxLeft + icon, "icon ink at $firstInk, icon box from $iconBoxLeft")
+    }
+
+    /**
+     * QA setup-12: a button's leading symbol follows the font size like the label (iOS symbols scale with Dynamic
+     * Type): 20 dp beside the 17 sp label, and as much larger as the label at font scale 2, where it used to stay 20 dp
+     * next to text of nearly twice the size. Measured as the content width left of the label: padding 20 + icon + 8.
+     */
+    @Test
+    fun aButtonIconScalesWithTheFont() {
+        var fontScale by mutableStateOf(1f)
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    Box {
+                        PrimaryButton("Create", onClick = {}, icon = SignerIcons.Add, fillWidth = false, modifier = Modifier.testTag("button"))
+                    }
+                }
+            }
+        }
+        for (scale in listOf(1f, 2f)) {
+            fontScale = scale
+            compose.waitForIdle()
+            val labelDp = Density(compose.density.density, scale).run { 17.sp.toDp().value }
+            val expected = maxOf(labelDp, 17f) * 20f / 17f
+            val button = compose.onNodeWithTag("button").fetchSemanticsNode().boundsInRoot
+            val label = compose.onNodeWithText("Create", useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            val icon = (label.left - button.left) / compose.density.density - 20f - 8f
+            assertEquals(expected, icon, 1f, "icon size at font scale $scale")
+        }
+    }
+
+    /**
+     * QA setup-12, the other buttons with a glyph beside text: the tonal pill's symbol follows its subheadline label
+     * (iOS `CompactActionLabelStyle` sets the symbol's font), 18 dp at the default size and larger with the font, also at
+     * accessibility sizes, where the pill shows the symbol alone. Measured as the pill's width: 12 dp padding each side.
+     */
+    @Test
+    fun aPillIconScalesWithTheFont() {
+        var fontScale by mutableStateOf(1f)
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    Box { TonalPillButton("Pair", SignerIcons.QrCode, onClick = {}, modifier = Modifier.testTag("pill")) }
+                }
+            }
+        }
+        for (scale in listOf(1.6f, 2f)) {
+            fontScale = scale
+            compose.waitForIdle()
+            val labelDp = Density(compose.density.density, scale).run { 15.sp.toDp().value }
+            val expected = labelDp * 18f / 15f
+            val pill = compose.onNodeWithTag("pill").fetchSemanticsNode().boundsInRoot
+            val icon = pill.width / compose.density.density - 2 * 12f
+            assertEquals(expected, icon, 1f, "icon size at font scale $scale")
+        }
+    }
+
+    /**
+     * QA setup-11: iOS draws `checkmark.seal.fill` at the font size `size × 0.62`, which covers 0.406 of the disc's
+     * diameter on the Done step's screenshot, against 0.331 for the Material glyph in a box of that size. Counted here
+     * on fully inked rows only (no anti-aliased edge), the old glyph covers 0.31 and the iOS-sized one 0.38.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun theHeroGlyphCoversItsDiscLikeTheIosSymbol() {
+        content { SymbolHero(SignerIcons.VerifiedFilled, color = SignerColorsForTest.success, size = 64.dp, modifier = Modifier.testTag("hero")) }
+        val image = compose.onNodeWithTag("hero").captureToImage().toPixelMap()
+        val tone = SignerColorsForTest.success
+        fun isGlyph(x: Int, y: Int): Boolean {
+            val c = image[x, y]
+            return kotlin.math.abs(c.red - tone.red) + kotlin.math.abs(c.green - tone.green) + kotlin.math.abs(c.blue - tone.blue) < 0.12f
+        }
+        val rows = (0 until image.height).filter { y -> (0 until image.width).any { x -> isGlyph(x, y) } }
+        val glyph = (rows.last() - rows.first() + 1).toFloat()
+        val disc = 64f * 1.7f * compose.density.density
+        val share = glyph / disc
+        assertTrue(share in 0.36f..0.42f, "the glyph covers $share of the disc")
+    }
+
+    /** QA sign-11: a sheet holding a toast host keeps its content height; the toast still shows inside it. */
+    @Test
+    fun aToastHostDoesNotGrowTheBoxItIsIn() {
+        val state = StatusToastState()
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                // The room a bottom sheet measures its content in.
+                Box(Modifier.height(600.dp)) {
+                    Box(Modifier.testTag("sheet")) {
+                        Box(Modifier.fillMaxWidth().height(120.dp))
+                        StatusToastHost(state)
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag("sheet").assertHeightIsEqualTo(120.dp)
+        compose.runOnIdle { state.show("Copied") }
+        compose.onNodeWithText("Copied").assertIsDisplayed()
+        compose.onNodeWithTag("sheet").assertHeightIsEqualTo(120.dp)
+        val toast = compose.onNodeWithText("Copied").fetchSemanticsNode().boundsInRoot
+        val sheet = compose.onNodeWithTag("sheet").fetchSemanticsNode().boundsInRoot
+        assertTrue(toast.bottom <= sheet.bottom - 24f * compose.density.density + 1f, "the toast sits 24 dp above the bottom")
+    }
+
+    /**
+     * QA sign-02 (Settings in Arabic): a section footer whose translation is still missing is English; laid out right to
+     * left its full stop moved to the front. English keeps its own direction; an Arabic footer keeps the interface
+     * direction, also when it starts with the Latin product name.
+     *
+     * Checked on the style each footer is laid out with: the layout that Compose hands to tests through semantics for a
+     * plain `Text` is rebuilt from the unresolved style, so it never shows the interface direction an unspecified
+     * direction resolves to when drawn.
+     */
+    @Test
+    fun sectionFootersFollowTheirLanguageInARightToLeftInterface() {
+        val english = "Every signature still needs the wallet's password."
+        val arabic = "لغة الواجهة."
+        val product = "BitTool Signer لا يتصل بالإنترنت."
+        compose.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    Column {
+                        GroupedSection(footer = english) { item { Box(Modifier.height(10.dp)) } }
+                        GroupedSection(footer = arabic) { item { Box(Modifier.height(10.dp)) } }
+                        GroupedSection(footer = product) { item { Box(Modifier.height(10.dp)) } }
+                    }
+                }
+            }
+        }
+        fun direction(text: String): TextDirection {
+            val node = compose.onNodeWithText(text, useUnmergedTree = true).fetchSemanticsNode()
+            val layouts = mutableListOf<TextLayoutResult>()
+            node.config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            return layouts.single().layoutInput.style.textDirection
+        }
+        assertEquals(TextDirection.Content, direction(english), "English: its own direction")
+        assertEquals(TextDirection.Unspecified, direction(arabic), "Arabic: the interface direction")
+        assertEquals(TextDirection.Unspecified, direction(product), "Arabic starting in Latin: the interface direction")
+    }
+
+    /** The rule behind [localizedDirection]: only right-to-left text in a right-to-left interface keeps its direction. */
+    @Test
+    fun localizedDirectionLeavesOnlyRightToLeftTranslationsToTheInterface() {
+        val style = SignerTheme_typographyForTest.footnote
+        assertEquals(TextDirection.Content, style.localizedDirection("Reject.", LayoutDirection.Rtl).textDirection)
+        assertEquals(TextDirection.Unspecified, style.localizedDirection("رفض.", LayoutDirection.Rtl).textDirection)
+        assertEquals(TextDirection.Unspecified, style.localizedDirection("BitTool Signer رفض.", LayoutDirection.Rtl).textDirection)
+        // Left to right, every text keeps its own direction (an Arabic wallet name in an English sentence stays inside it).
+        assertEquals(TextDirection.Content, style.localizedDirection("رفض.", LayoutDirection.Ltr).textDirection)
+        assertEquals(TextDirection.Content, style.localizedDirection("Delete “محفظتي”?", LayoutDirection.Ltr).textDirection)
+        assertTrue(containsRightToLeftLetters("שלום"))
+        assertTrue(!containsRightToLeftLetters("0.0008 BTC · 12 words"))
     }
 
     /** iOS plays `.success` with every status toast; a warning toast (an overlay blocked a tap) must not. */
@@ -277,3 +443,9 @@ class ComponentsTest {
         assertNull(state.current?.haptic)
     }
 }
+
+/** The light palette the tests draw with. */
+private val SignerColorsForTest = SignerColors.Light
+
+/** The type scale the tests draw with. */
+private val SignerTheme_typographyForTest = SignerTypography.Default

@@ -7,9 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -25,10 +28,13 @@ import com.bittool.signer.core.model.scanning.QrScanPurpose
 import com.bittool.signer.core.scanner.CameraPermissionStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /** The scanner chrome's states (iOS `QRScannerView.statusPanel` and top bar, `QRScannerView.swift:63-126`). */
 @RunWith(RobolectricTestRunner::class)
@@ -158,6 +164,56 @@ class QrScannerContentTest {
         assertEquals(1, resets)
         // The top bar stays where it is.
         compose.onNodeWithContentDescription("Close").assertIsDisplayed()
+    }
+
+    /**
+     * QA sign-09 (camera denied, font scale 2 on a 393 × 807 dp phone): the status panel overlapped the lower half of
+     * the viewfinder and, black at 62 % on the 80 % dim, was invisible, so the mint brackets ran through its text. The
+     * window now keeps clear of the panel, and the panel is a visible surface on the dim.
+     */
+    @Test
+    @Config(qualifiers = "w393dp-h807dp")
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    fun theDeniedPanelIsAVisibleSurfaceClearOfTheBrackets() {
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale = 2f)) {
+                Box(Modifier.size(width = 393.dp, height = 807.dp).testTag("page")) {
+                    QrScannerContent(
+                        chrome = chrome(permission = CameraPermissionStatus.Denied),
+                        onToggleTorch = {},
+                        onOpenSettings = {},
+                        onReset = {},
+                        onClose = {},
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        val page = compose.onNodeWithTag("page").fetchSemanticsNode().boundsInRoot
+        val panel = compose.onNodeWithTag(ScannerTags.PANEL).fetchSemanticsNode().boundsInRoot
+        val button = compose.onNodeWithTag(ScannerTags.OPEN_SETTINGS).fetchSemanticsNode().boundsInRoot
+        val image = compose.onNodeWithTag("page").captureToImage().toPixelMap()
+        val px = compose.density.density
+        fun at(x: Float, y: Float) = image[(x - page.left).toInt(), (y - page.top).toInt()]
+        // No bracket stroke (mint: green well above red) anywhere on the panel above its mint button.
+        var bracket = 0
+        var y = panel.top + 1f
+        while (y < button.top - 2f * px) {
+            var x = panel.left + 1f
+            while (x < panel.right - 1f) {
+                val c = at(x, y)
+                if (c.green - c.red > 0.06f && c.green > 0.12f) bracket++
+                x += 1f
+            }
+            y += 1f
+        }
+        assertEquals(0, bracket, "bracket pixels on the panel")
+        // The panel stands out from the dim around it (just above its top edge, at its middle).
+        fun luminance(c: androidx.compose.ui.graphics.Color) = 0.2126f * c.red + 0.7152f * c.green + 0.0722f * c.blue
+        val inside = luminance(at(panel.center.x, panel.top + 6f * px))
+        val outside = luminance(at(panel.center.x, panel.top - 6f * px))
+        assertTrue(inside - outside > 0.08f, "panel $inside vs dim $outside")
     }
 
     @Test

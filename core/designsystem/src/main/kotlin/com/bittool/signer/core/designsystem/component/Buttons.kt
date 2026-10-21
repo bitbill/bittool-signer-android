@@ -40,6 +40,7 @@ import com.bittool.signer.core.designsystem.modifier.pressScale
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.glyphSize
 import com.bittool.signer.core.designsystem.theme.semibold
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -47,7 +48,8 @@ import kotlin.math.floor
 /**
  * The primary call to action (iOS `ActionLabel` in a `.prominentAction()` button, `Design/DesignSystem.swift:47-54,
  * 94-133`): a full-width accent capsule, at least 52 dp high, label `body` semibold in `onAccent`, optional leading
- * [icon] (20 dp, 8 dp gap).
+ * [icon] (20 dp at the default text size, 8 dp gap). The icon scales with the label like an SF Symbol with Dynamic
+ * Type ([BUTTON_GLYPH_RATIO] of the label's font size), so it never shrinks to a dot beside text at double size.
  *
  * - [busy]: a spinner replaces the content while the label stays laid out (opacity 0) so the width never changes and
  *   TalkBack still reads the label; taps are ignored while busy. The spinner is `onAccent`, or `secondaryLabel` when
@@ -111,6 +113,18 @@ fun SecondaryButton(
     )
 }
 
+/**
+ * A button glyph's size against its label's font size: 20 dp beside the 17 sp body label (iOS `ActionLabel`'s symbol at
+ * `.body`), scaled with the font from there (QA setup-12).
+ */
+internal const val BUTTON_GLYPH_RATIO = 20f / 17f
+
+/** [TonalPillButton]'s glyph: 18 dp beside its 15 sp subheadline label (iOS symbol at `.subheadline`), scaled from there. */
+internal const val PILL_GLYPH_RATIO = 18f / 15f
+
+/** [TextAction]'s optional glyph: 18 dp beside its 17 sp body label, scaled from there. */
+internal const val TEXT_ACTION_GLYPH_RATIO = 18f / 17f
+
 /** Accent at 14 % on the surface: the tonal fill of secondary and pill buttons. */
 internal fun tonalFill(colors: SignerColors): Color = colors.accent.copy(alpha = 0.14f)
 
@@ -132,6 +146,7 @@ private fun SignerButton(
     val interaction = remember { MutableInteractionSource() }
     val accessibilityText = SignerTheme.isAccessibilityTextSize
     val labelStyle = typography.body.semibold()
+    val glyph = labelStyle.glyphSize(BUTTON_GLYPH_RATIO)
     Surface(
         onClick = { if (!busy) onClick() },
         modifier = modifier
@@ -153,12 +168,12 @@ private fun SignerButton(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = content)
+                if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(glyph), tint = content)
                 ShrinkingLabel(text, labelStyle.copy(color = content), maxLines = if (accessibilityText) 2 else 1)
             }
             if (busy) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp).clearAndSetSemantics {},
+                    modifier = Modifier.size(glyph).clearAndSetSemantics {},
                     color = if (enabled) content else SignerTheme.colors.secondaryLabel,
                     strokeWidth = 2.dp,
                 )
@@ -230,13 +245,16 @@ private class LineExtent {
  * A small tonal pill (iOS wallet-card actions "Pair" / "Addresses", `.bordered` `.regular` capsule with
  * `CompactActionLabelStyle`, `Features/Wallets/WalletsTab.swift:108-127,142-153`): icon + `subheadline` semibold
  * label, 6 dp apart, shrinking to 85 %. At accessibility text sizes only the icon is shown; [text] stays the
- * accessibility label. 48 dp touch target.
+ * accessibility label. 48 dp touch target. The icon is 18 dp at the default text size and scales with the label's font
+ * like the iOS symbol (QA setup-12), also when it is shown alone.
  */
 @Composable
 fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = SignerTheme.colors
     val iconOnly = SignerTheme.isAccessibilityTextSize
     val interaction = remember { MutableInteractionSource() }
+    val labelStyle = SignerTheme.typography.subheadline.semibold()
+    val glyph = labelStyle.glyphSize(PILL_GLYPH_RATIO)
     Surface(
         onClick = onClick,
         modifier = modifier
@@ -253,9 +271,9 @@ fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifi
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.accentOnTint)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(glyph), tint = colors.accentOnTint)
             if (!iconOnly) {
-                ShrinkingLabel(text, SignerTheme.typography.subheadline.semibold().copy(color = colors.accentOnTint), minScale = 0.85f)
+                ShrinkingLabel(text, labelStyle.copy(color = colors.accentOnTint), minScale = 0.85f)
             }
         }
     }
@@ -264,7 +282,7 @@ fun TonalPillButton(text: String, icon: ImageVector, onClick: () -> Unit, modifi
 /**
  * A text action for top bars and inline links (iOS toolbar `Button("Cancel" / "Done" / "Reject")`, plain tinted
  * buttons such as "Export as File"): accent, or danger when [destructive] (Reject, Clear). [emphasized] uses semibold
- * for the confirming action of a bar ("Done").
+ * for the confirming action of a bar ("Done"). An [icon] is 18 dp at the default text size and scales with the label.
  */
 @Composable
 fun TextAction(
@@ -285,11 +303,11 @@ fun TextAction(
         colors = ButtonDefaults.textButtonColors(contentColor = color, disabledContentColor = colors.tertiaryLabel),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     ) {
+        val style = SignerTheme.typography.body.let { if (emphasized) it.semibold() else it }
         if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(style.glyphSize(TEXT_ACTION_GLYPH_RATIO)))
             Box(Modifier.size(6.dp))
         }
-        val style = SignerTheme.typography.body.let { if (emphasized) it.semibold() else it }
         Text(text, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

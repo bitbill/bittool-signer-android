@@ -2,6 +2,7 @@ package com.bittool.signer.core.designsystem.component
 
 import android.content.pm.ApplicationInfo
 import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,6 +109,42 @@ class TestTagsTest {
         } finally {
             debuggable(false)
         }
+    }
+
+    /**
+     * Backlog B26: a pop-up menu is a window of its own too (ProfileMenu, the App Lock wallet menu, Copy Address), so
+     * its items' tags were invisible to UiAutomator. `SignerDropdownMenu` publishes them in debuggable builds.
+     */
+    @Test
+    fun dropdownMenusPublishTheirTestTagsInDebuggableBuilds() {
+        debuggable(true)
+        try {
+            var expanded by mutableStateOf(false)
+            content {
+                SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    DropdownMenuItem(text = { Text("Travel Signer") }, onClick = {}, modifier = Modifier.testTag("appLock.wallet.1"))
+                }
+            }
+            compose.onNodeWithTag("appLock.wallet.1").assertDoesNotExist()
+            expanded = true
+            compose.waitForIdle()
+            publishesResourceId("appLock.wallet.1").assertExists()
+        } finally {
+            debuggable(false)
+        }
+    }
+
+    @Test
+    fun releaseMenusPublishNoTestTags() {
+        debuggable(false)
+        var shown by mutableStateOf(true)
+        content {
+            SignerDropdownMenu(expanded = shown, onDismissRequest = { shown = false }) {
+                DropdownMenuItem(text = { Text("Copy Address") }, onClick = {}, modifier = Modifier.testTag("address.copy"))
+            }
+        }
+        compose.onNodeWithTag("address.copy").assertExists()
+        publishesResourceId("address.copy").assertDoesNotExist()
     }
 
     @Test

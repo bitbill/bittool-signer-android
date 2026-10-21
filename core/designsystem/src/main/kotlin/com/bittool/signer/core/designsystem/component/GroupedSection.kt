@@ -38,6 +38,7 @@ import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.contentDirection
+import com.bittool.signer.core.designsystem.theme.localizedDirection
 import com.bittool.signer.core.designsystem.theme.semibold
 
 /**
@@ -69,8 +70,10 @@ private class GroupedSectionScopeImpl : GroupedSectionScope {
  * The Android rendition of an iOS inset-grouped list section (`List(.insetGrouped)`, `Form`, design-system §5.19,
  * §9.5): an optional [header] (subheadline semibold in `accentOnTint`, sentence case, 16 dp in, marked as a heading),
  * one `card` with radius 22 holding the rows separated by opaque hairlines, and an optional [footer] (footnote,
- * secondary). Callouts and full-bleed headers float outside the card: put them next to the section, not in it.
- * Not lazy: a section holds a handful of rows; long lists use `LazyColumn` items with the same row composables.
+ * secondary; laid out with `localizedDirection`, so in a right-to-left interface a footer that has no translation yet
+ * keeps its full stop at its end, QA sign-02). Callouts and full-bleed headers float outside the card: put them next
+ * to the section, not in it. Not lazy: a section holds a handful of rows; long lists use `LazyColumn` items with the
+ * same row composables.
  */
 @Composable
 fun GroupedSection(
@@ -119,7 +122,7 @@ fun GroupedSection(
         if (footer != null) {
             Text(
                 text = footer,
-                style = typography.footnote,
+                style = typography.footnote.localizedDirection(footer),
                 color = colors.secondaryLabel,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp),
             )

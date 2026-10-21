@@ -13,23 +13,35 @@ import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.autofill.ContentDataType
+import androidx.compose.ui.autofill.FillableData
+import androidx.compose.ui.autofill.createFromText
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.platform.InspectableValue
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleOwner
@@ -162,6 +174,41 @@ class PasswordFieldTest {
     }
 
     /**
+     * QA setup-01 / wallets-01 (backlog B1 re-verified): the round 1 device was API 31, where there is no
+     * accessibility-data-sensitive filter (API 34+), so every service, `uiautomator dump` included, gets the node. Its
+     * text must still be the bullets, for the wallet password and for a hidden passphrase alike.
+     */
+    @Test
+    @Config(sdk = [32])
+    fun beforeApi34EveryServiceGetsBulletsOnly() {
+        val password = TextFieldState()
+        val passphrase = TextFieldState()
+        lateinit var view: View
+        compose.setContent {
+            view = LocalView.current
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                Column {
+                    PasswordField(PasswordKind.WalletPassword, password)
+                    PasswordField(PasswordKind.Passphrase, passphrase, revealable = true)
+                }
+            }
+        }
+        for ((kind, state) in listOf(PasswordKind.WalletPassword to password, PasswordKind.Passphrase to passphrase)) {
+            val field = compose.onNodeWithTag(kind.english)
+            field.performTextInput(SECRET)
+            compose.runOnIdle { assertEquals(SECRET, state.text.toString(), "typing still reaches the state") }
+            val id = field.fetchSemanticsNode().id
+            compose.runOnIdle {
+                val info = assertNotNull(view.accessibilityNodeProvider.createAccessibilityNodeInfo(id), "${kind.english}: the node exists")
+                assertTrue(info.isPassword, "${kind.english}: a password node")
+                // Checked without printing the node's text (ARCHITECTURE §4.9).
+                assertTrue(info.text?.toString() == "•".repeat(SECRET.length), "${kind.english}: one bullet per character")
+                assertFalse(info.text.toString().contains(SECRET), "${kind.english}: the typed secret is not in the node")
+            }
+        }
+    }
+
+    /**
      * The debug UI-test switch of gaps G5.3 (`LocalSensitiveDataMarking`) covers the field's own node marking too, so a
      * harness that has to turn the marking off is not left with password fields its UiAutomator cannot see. The bullets
      * do not depend on it: what was typed never reaches accessibility.
@@ -259,6 +306,57 @@ class PasswordFieldTest {
     private fun asAccessibilityTool(on: Boolean) {
         val manager = ApplicationProvider.getApplicationContext<Context>().getSystemService(AccessibilityManager::class.java)
         AccessibilityManager::class.java.getMethod("setRequestFromAccessibilityTool", Boolean::class.javaPrimitiveType).invoke(manager, on)
+    }
+
+    /**
+     * Backlog B27: besides its (masked) text, a text field publishes what was typed as its input text and its autofill
+     * value, and accepts autofill data. For a secret field none of that carries the secret, typed or revealed: the node
+     * is not fillable, both carry the bullets, and filling is refused.
+     */
+    @Test
+    fun autofillSemanticsNeverCarryTheSecret() {
+        val state = TextFieldState()
+        content { PasswordField(PasswordKind.Passphrase, state, revealable = true) }
+        val field = compose.onNodeWithTag(PasswordKind.Passphrase.english)
+        field.performTextInput(SECRET)
+        for (revealed in listOf(false, true)) {
+            if (revealed) compose.onNodeWithTag(PasswordKind.Passphrase.revealTag).performClick()
+            val config = field.fetchSemanticsNode().config
+            val mask = "•".repeat(SECRET.length)
+            assertEquals(ContentDataType.None, config[SemanticsProperties.ContentDataType], "not fillable (revealed: $revealed)")
+            assertTrue(config[SemanticsProperties.InputText].text == mask, "input text is the bullets (revealed: $revealed)")
+            val fillable = config.getOrNull(SemanticsProperties.FillableData)
+            assertTrue(fillable == null || fillable.textValue?.toString() == mask, "autofill value is the bullets (revealed: $revealed)")
+            val fill = config[SemanticsActions.OnFillData].action
+            assertFalse(assertNotNull(fill).invoke(assertNotNull(FillableData.createFromText("Autofilled1!"))), "filling is refused")
+        }
+        compose.runOnIdle { assertEquals(SECRET, state.text.toString(), "an autofill attempt changed nothing") }
+    }
+
+    /**
+     * QA setup-04 (iOS `WalletSetupFlow.swift:263`, `onSubmit { focus = .confirmation }`): "Next" on the passphrase moves
+     * to "Confirm passphrase". In the keyboard input mode (a hardware keyboard, an IME Enter key event) the field's own
+     * eye button is focusable too, and the default "Next" landed on it, which took the keyboard away.
+     */
+    @Test
+    fun nextOnThePassphraseMovesToItsConfirmationNotOntoTheEye() {
+        lateinit var inputMode: InputModeManager
+        content {
+            inputMode = LocalInputModeManager.current
+            PasswordField(PasswordKind.Passphrase, remember { TextFieldState() }, revealable = true, imeAction = ImeAction.Next)
+            PasswordField(PasswordKind.ConfirmPassphrase, remember { TextFieldState() }, revealable = true)
+        }
+        compose.runOnIdle { inputMode.requestInputMode(InputMode.Keyboard) }
+        compose.runOnIdle { assertEquals(InputMode.Keyboard, inputMode.inputMode, "precondition: buttons are focusable") }
+        val passphrase = compose.onNodeWithTag(PasswordKind.Passphrase.english)
+        passphrase.performSemanticsAction(SemanticsActions.RequestFocus)
+        passphrase.assertIsFocused()
+        passphrase.performImeAction()
+        compose.onNodeWithTag(PasswordKind.ConfirmPassphrase.english).assertIsFocused()
+        compose.onNodeWithTag(PasswordKind.Passphrase.revealTag).assertIsNotFocused()
+        // The eye is still a focus target of its own for keyboard navigation (Tab from the field reaches it).
+        compose.onNodeWithTag(PasswordKind.ConfirmPassphrase.revealTag).performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag(PasswordKind.ConfirmPassphrase.revealTag).assertIsFocused()
     }
 
     @Test

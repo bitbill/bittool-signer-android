@@ -42,6 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -72,6 +74,7 @@ internal object ScannerTags {
     const val CLOSE = "scanner.close"
     const val TORCH = "scanner.torch"
     const val OPEN_SETTINGS = "scanner.openSettings"
+    const val PANEL = "scanner.panel"
 }
 
 /** What the scanner chrome shows; resolved strings only (the caller resolves at draw time). */
@@ -125,6 +128,8 @@ private fun ScannerPage(
     camera: @Composable () -> Unit,
 ) {
     val authorized = chrome.permission == CameraPermissionStatus.Granted
+    // The window keeps clear of the top bar and the status panel, whatever their height (large text, long messages).
+    val clearance = remember { ViewfinderClearance() }
     // iOS `Color.black.ignoresSafeArea()`: the backdrop behind the camera image, not a surface of the palette.
     Box(modifier.fillMaxSize().background(Color.Black)) {
         if (authorized) camera()
@@ -133,6 +138,7 @@ private fun ScannerPage(
             active = authorized,
             animationsEnabled = chrome.animationsEnabled,
             modifier = Modifier.fillMaxSize(),
+            clearance = clearance,
         )
         Column(
             Modifier
@@ -147,9 +153,15 @@ private fun ScannerPage(
                 torchOn = chrome.torchOn,
                 onToggleTorch = onToggleTorch,
                 onClose = onClose,
+                modifier = Modifier.onGloballyPositioned { clearance.top = it.boundsInRoot().bottom },
             )
             Spacer(Modifier.weight(1f))
-            StatusPanel(chrome, onOpenSettings, onReset)
+            StatusPanel(
+                chrome,
+                onOpenSettings,
+                onReset,
+                Modifier.onGloballyPositioned { clearance.bottom = it.boundsInRoot().top },
+            )
         }
     }
 }
@@ -162,8 +174,9 @@ private fun ScannerTopBar(
     torchOn: Boolean,
     onToggleTorch: () -> Unit,
     onClose: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         val closeLabel = stringResource(L10n.string.close)
         GlassCircleButton(
             onClick = onClose,
@@ -244,7 +257,12 @@ private data class PanelTarget(val kind: PanelKind, val error: String?)
  * fit under the top bar (large font sizes, landscape), the panel scrolls instead of pushing its button off-screen.
  */
 @Composable
-private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onReset: () -> Unit) {
+private fun StatusPanel(
+    chrome: ScannerChrome,
+    onOpenSettings: () -> Unit,
+    onReset: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val kind = when {
         chrome.permission == CameraPermissionStatus.Denied ||
             chrome.permission == CameraPermissionStatus.PermanentlyDenied -> PanelKind.CameraDenied
@@ -252,10 +270,11 @@ private fun StatusPanel(chrome: ScannerChrome, onOpenSettings: () -> Unit, onRes
         else -> PanelKind.Reading
     }
     Box(
-        Modifier
+        modifier
             .widthIn(max = 420.dp)
             .fillMaxWidth()
-            .background(PanelMaterial, PanelShape)
+            .testTag(ScannerTags.PANEL)
+            .background(SignerTheme.colors.raised.copy(alpha = PANEL_ALPHA), PanelShape)
             .animateContentSize(spring(dampingRatio = 1f, stiffness = 987f))
             .clip(PanelShape)
             .verticalScroll(rememberScrollState()),
@@ -412,11 +431,15 @@ private fun MintButton(text: String, onClick: () -> Unit, modifier: Modifier = M
 }
 
 /**
- * Android renditions of iOS `.ultraThinMaterial` over the dimmed camera: the status panel and the glass circles of the
- * top bar. A material is a translucent blur rather than a palette colour (design-system.md §2.3), so the design system
- * has no token for it; these two exist only on the scanner's always-dark page.
+ * Android renditions of iOS `.ultraThinMaterial` over the dimmed camera, on the scanner's always-dark page. A material
+ * is a translucent blur rather than a palette colour (design-system.md §2.3), and Android has no blur behind a view:
+ *
+ * - The status panel is the dark `raised` grey (`#2C2C2E`) at [PANEL_ALPHA]: a visible surface on the 80 % dim of a
+ *   denied camera (black at 62 % was the same black as its surround, QA sign-09) that still lets the camera image show
+ *   through faintly, with white text readable on any image behind it.
+ * - The glass circles of the top bar are white at 16 %.
  */
-private val PanelMaterial = Color.Black.copy(alpha = 0.62f)
+private const val PANEL_ALPHA = 0.86f
 private val GlassMaterial = Color.White.copy(alpha = 0.16f)
 
 private val PanelShape = RoundedCornerShape(22.dp)

@@ -6,6 +6,7 @@ import android.os.TransactionTooLargeException
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -28,6 +29,25 @@ class PayloadDisclosureTest {
     val compose = createComposeRule()
 
     private val zwsp = PayloadText.ZERO_WIDTH_SPACE
+
+    /**
+     * QA sign-14: expand "Payload (JSON)" on the signature, switch to another tab and back: iOS keeps the disclosure
+     * open (TabView keeps view state); a tab switch restores saved state only.
+     */
+    @Test
+    fun anOpenedPayloadStaysOpenAcrossATabSwitch() {
+        val restoration = StateRestorationTester(compose)
+        restoration.setContent {
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                PayloadDisclosure(title = "Payload (JSON)", text = "{\"type\": \"crypto-psbt\"}", tag = "signature.payload")
+            }
+        }
+        compose.onNodeWithTag("signature.payloadToggle").performClick()
+        compose.onNodeWithTag("signature.payload").assertExists()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithTag("signature.payload").assertExists()
+        compose.onNodeWithTag("signature.payloadToggle").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Shown"))
+    }
 
     @Test
     fun shortPayloadsAreShownUnchanged() {

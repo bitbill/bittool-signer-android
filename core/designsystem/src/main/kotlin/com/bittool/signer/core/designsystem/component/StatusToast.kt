@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -98,9 +99,28 @@ fun rememberStatusToastState(): StatusToastState = remember { StatusToastState()
  * live region, so TalkBack announces it in the current language (iOS posts an English-only announcement; Android
  * announces the localised message). Place it last in the screen's root `Box` so it draws above the content; touches
  * pass through.
+ *
+ * Inside a `Box` (the usual place) the host overlays the box without taking part in its measurement
+ * (`matchParentSize`): the box is as large as its other content, so a sheet that holds a toast host still sizes to its
+ * content instead of growing to the full window height (QA sign-11). This overload is picked automatically for a call
+ * in a `BoxScope`; the one without a receiver fills the space it is given.
+ */
+@Composable
+fun BoxScope.StatusToastHost(state: StatusToastState, modifier: Modifier = Modifier, bottomSpacing: Dp = 24.dp) {
+    StatusToastLayer(state, modifier.matchParentSize(), bottomSpacing)
+}
+
+/**
+ * [StatusToastHost] outside a `Box`: the host fills the space it is given ([fillMaxSize]) and puts the toast at its
+ * bottom centre. Prefer the `BoxScope` overload, which never changes the size of its container.
  */
 @Composable
 fun StatusToastHost(state: StatusToastState, modifier: Modifier = Modifier, bottomSpacing: Dp = 24.dp) {
+    StatusToastLayer(state, modifier, bottomSpacing)
+}
+
+@Composable
+private fun StatusToastLayer(state: StatusToastState, modifier: Modifier, bottomSpacing: Dp) {
     val haptics = rememberSignerHaptics()
     val toast = state.current
     if (toast != null) {
