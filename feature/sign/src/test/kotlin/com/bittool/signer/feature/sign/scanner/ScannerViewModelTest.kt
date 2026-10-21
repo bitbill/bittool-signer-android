@@ -137,7 +137,10 @@ class ScannerViewModelTest {
         assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "closed once")
     }
 
-    /** Audit A09: a frame still queued behind one with the engine is never read once a review came from elsewhere. */
+    /**
+     * Audit A09: a frame still queued behind one with the engine is never read once a review came from elsewhere; the
+     * camera closes when the frame with the store comes back (its call is never cancelled by the closing scanner).
+     */
     @Test
     fun framesQueuedWhenAReviewArrivesFromElsewhereAreDroppedAndTheCameraClosesOnce() = runTest {
         val first = CompletableDeferred<Double>()
@@ -149,11 +152,77 @@ class ScannerViewModelTest {
         runCurrent()
         store.setState { it.copy(review = SignFixtures.bitcoinSend) }
         runCurrent()
-        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events)
+        assertEquals(emptyList(), events, "A is still with the store")
         first.complete(0.3)
         runCurrent()
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "closed once A is back")
         assertEquals(listOf("A"), received(), "B would have cleared the imported review")
-        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "the late result does not close it again")
+        assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size)
+        vm.receive("C")
+        runCurrent()
+        assertEquals(listOf("A"), received())
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events, "closed once")
+    }
+
+    /**
+     * The store publishes the review of the scanner's own last frame inside `receive`, before it matches the wallets
+     * (`DefaultSignerStore.prepare`: review, then `resolveSigningPlan`). Closing the camera at the review pops the
+     * scanner, which clears this ViewModel with the call still running: the matching was cancelled and the review
+     * stayed on "Finding the matching wallet…" with no way to retry. The camera closes once the call is back (on iOS
+     * the call is an unstructured task that the closing camera never cancels, `ScanTab.swift:68-81`).
+     */
+    @Test
+    fun theCameraClosesOnItsOwnReviewOnlyOnceTheStoreHasMatchedIt() = runTest {
+        val matching = CompletableDeferred<Unit>()
+        var matched = false
+        store.onReceiveFrame = {
+            store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+            matching.await()
+            matched = true
+            1.0
+        }
+        val viewModels = ViewModelStore()
+        val vm = ViewModelProvider.create(
+            viewModels,
+            viewModelFactory { initializer { ScannerViewModel(store, backgroundScope) } },
+        )[ScannerViewModel::class]
+        val events = mutableListOf<ScannerEvent>()
+        // The scanner route pops on Completed, and its ViewModel is cleared with it.
+        backgroundScope.launch { vm.events.collect { events += it; viewModels.clear() } }
+        runCurrent()
+        vm.receive("UR:CRYPTO-PSBT/LAST")
+        runCurrent()
+        assertEquals(emptyList(), events, "the camera stays while its request is being matched")
+        matching.complete(Unit)
+        runCurrent()
+        assertTrue(matched, "the matching ran to its end")
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events)
+        assertEquals(1.0, vm.uiState.value.progress)
+        assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size)
+    }
+
+    /**
+     * Backgrounded while the store matched the scanner's own review: the store reports the call as cancelled and keeps
+     * the review ("Matching interrupted. Try again."). The camera closes onto it rather than staying up over a review
+     * and ignoring every code (as before audit A09).
+     */
+    @Test
+    fun aReviewInterruptedWhileItsFrameWasMatchedClosesTheCameraOntoIt() = runTest {
+        val matching = CompletableDeferred<Double>()
+        store.onReceiveFrame = {
+            store.setState { it.copy(review = SignFixtures.bitcoinSend) }
+            matching.await()
+        }
+        val vm = scanner()
+        val events = eventsOf(vm)
+        runCurrent()
+        vm.receive("UR:CRYPTO-PSBT/LAST")
+        runCurrent()
+        store.suspendSession()
+        matching.completeExceptionally(CancellationException("The session changed; the late result is discarded."))
+        runCurrent()
+        assertEquals(listOf<ScannerEvent>(ScannerEvent.Completed), events)
+        assertNull(vm.uiState.value.error, "a cancellation is never shown")
         assertEquals(1, store.calls<FakeSignerStore.Call.EndScan>().size)
     }
 

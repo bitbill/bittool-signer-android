@@ -79,7 +79,10 @@ sealed interface ScannerEvent {
  * - A review or a signature that reaches the store from anywhere else (a file import that finishes while the camera
  *   is up) completes the session too. On iOS the camera is a cover of Scan Home (`ScanTab.swift:147`), and `ScanTab`
  *   replaces Home as soon as the store has either (`:96-104`), which dismisses the cover: the camera never stays open
- *   over a review, ignoring every code it is pointed at.
+ *   over a review, ignoring every code it is pointed at. While a frame is with the store, the session completes when
+ *   that call returns, whatever its outcome: the store publishes a completed request's review before matching it,
+ *   inside the call, and closing the camera clears this ViewModel, which would cancel the matching (iOS runs the call
+ *   as a task the closing cover never cancels).
  * - [stop] (Close, Back, completion, or the ViewModel going away) resets the session and ends the engine scan session.
  *
  * Main thread only (`viewModelScope` is `Dispatchers.Main.immediate`).
@@ -107,7 +110,12 @@ class ScannerViewModel @Inject constructor(
     init {
         start()
         viewModelScope.launch {
-            store.state.map(::closesTheCamera).distinctUntilChanged().collect { closes -> if (closes) complete() }
+            store.state.map(::closesTheCamera).distinctUntilChanged().collect { closes ->
+                // While a frame is with the store, its call ends the session (drain): the store publishes the review of
+                // a completed request before it matches the wallets, inside that same call, and closing now would clear
+                // this ViewModel and cancel the matching with it.
+                if (closes && !_uiState.value.processing) complete()
+            }
         }
     }
 
@@ -175,6 +183,13 @@ class ScannerViewModel @Inject constructor(
             }
             if (token != id) return@launch
             _uiState.update { it.copy(processing = false) }
+            if (closesTheCamera(store.state.value)) {
+                // This frame's review (matched, or interrupted while matching), or one published elsewhere during the
+                // call (a file import): the camera closes onto it, whatever this frame's own outcome.
+                outcome.onSuccess { value -> _uiState.update { it.copy(progress = maxOf(it.progress, value)) } }
+                complete()
+                return@launch
+            }
             if (epoch != store.state.value.securityEpoch) {
                 // Interrupted by backgrounding: retry this part with the next frame.
                 queue.addFirst(frame)
@@ -183,7 +198,7 @@ class ScannerViewModel @Inject constructor(
             outcome.fold(
                 onSuccess = { value ->
                     _uiState.update { it.copy(progress = maxOf(it.progress, value)) }
-                    if (closesTheCamera(store.state.value)) complete() else drain()
+                    drain()
                 },
                 onFailure = { e ->
                     if (e is CancellationException) return@fold
