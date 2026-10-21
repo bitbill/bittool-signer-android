@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -57,6 +56,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
@@ -71,6 +71,7 @@ import com.bittool.signer.core.designsystem.brand.BrandTile
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
@@ -135,6 +136,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
         onUsePassword = viewModel::usePassword,
         onUseBiometrics = viewModel::useBiometrics,
         onSelectWallet = viewModel::selectWallet,
+        onClearWallet = viewModel::clearWallet,
         onUnlock = {
             // The field is cleared before the check runs: a wrong password has to be typed again (UIT:789-795).
             val secret = SecretText.of(password.text)
@@ -144,7 +146,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
     )
 }
 
-/** Stateless lock screen (screenshots, previews). */
+/** Stateless lock screen (screenshots, previews). [onClearWallet] is the menu's "Choose a wallet". */
 @Composable
 fun AppLockContent(
     state: AppLockUiState,
@@ -156,6 +158,7 @@ fun AppLockContent(
     onSelectWallet: (WalletId) -> Unit,
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,
+    onClearWallet: () -> Unit = {},
 ) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
@@ -203,6 +206,7 @@ fun AppLockContent(
                         password = password,
                         focusRequester = focusRequester,
                         onSelectWallet = onSelectWallet,
+                        onClearWallet = onClearWallet,
                         onUnlock = onUnlock,
                         onUseBiometrics = onUseBiometrics,
                         onBlocked = { toast.show(overlayBlocked, SignerIcons.WarningFilled, HapticKind.Warning) },
@@ -279,6 +283,7 @@ private fun PasswordForm(
     password: TextFieldState,
     focusRequester: FocusRequester,
     onSelectWallet: (WalletId) -> Unit,
+    onClearWallet: () -> Unit,
     onUnlock: () -> Unit,
     onUseBiometrics: () -> Unit,
     onBlocked: () -> Unit,
@@ -293,7 +298,7 @@ private fun PasswordForm(
                 style = typography.subheadline,
                 color = colors.secondaryLabel,
             )
-            WalletPicker(state = state, onSelect = onSelectWallet)
+            WalletPicker(state = state, onSelect = onSelectWallet, onClear = onClearWallet)
             PasswordField(
                 kind = PasswordKind.WalletPassword,
                 state = password,
@@ -329,15 +334,17 @@ private fun PasswordForm(
 
 /**
  * The wallet menu (iOS menu `Picker("Wallet")`): "Wallet" with the chosen wallet's name, or "Choose a wallet", and a
- * menu of the wallet names. Names only: fingerprints stay behind the lock.
+ * menu of "Choose a wallet" (no wallet, iOS `tag(nil as UUID?)`) followed by the wallet names, the current choice
+ * checked. Names only: fingerprints stay behind the lock.
  */
 @Composable
-private fun WalletPicker(state: AppLockUiState, onSelect: (WalletId) -> Unit) {
+private fun WalletPicker(state: AppLockUiState, onSelect: (WalletId) -> Unit, onClear: () -> Unit) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     var expanded by remember { mutableStateOf(false) }
     val label = stringResource(R.string.wallet)
-    val value = state.selectedName ?: stringResource(R.string.choose_a_wallet)
+    val noWallet = stringResource(R.string.choose_a_wallet)
+    val value = state.selectedName ?: noWallet
     Box(Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -377,23 +384,41 @@ private fun WalletPicker(state: AppLockUiState, onSelect: (WalletId) -> Unit) {
             Spacer(Modifier.width(4.dp))
             Icon(SignerIcons.UnfoldMore, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        // The app's menu (backlog B29): a popup window of its own on the elevated card colour, which publishes its items'
+        // tags as resource ids in debuggable builds. It opens at once: the window gate it checks is not provided around
+        // the lock window (the lock screen is what the gate waits for), so it reads as open here.
+        SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            WalletMenuItem(text = noWallet, selected = state.selectedWallet == null, tag = AppLockTags.NO_WALLET) {
+                expanded = false
+                onClear()
+            }
             state.wallets.forEach { wallet ->
-                DropdownMenuItem(
-                    text = { Text(wallet.name, style = typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    onClick = {
-                        expanded = false
-                        onSelect(wallet.id)
-                    },
-                    trailingIcon = if (wallet.id == state.selectedWallet) {
-                        { Icon(SignerIcons.Check, contentDescription = null, tint = colors.accent) }
-                    } else {
-                        null
-                    },
-                )
+                WalletMenuItem(
+                    text = wallet.name,
+                    selected = wallet.id == state.selectedWallet,
+                    tag = AppLockTags.walletOption(wallet.id),
+                ) {
+                    expanded = false
+                    onSelect(wallet.id)
+                }
             }
         }
     }
+}
+
+/** One choice of the wallet menu: checked and `selected` when it is the current one, as in `ProfileMenu`. */
+@Composable
+private fun WalletMenuItem(text: String, selected: Boolean, tag: String, onClick: () -> Unit) {
+    DropdownMenuItem(
+        text = { Text(text, style = SignerTheme.typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+        onClick = onClick,
+        trailingIcon = if (selected) {
+            { Icon(SignerIcons.Check, contentDescription = null, tint = SignerTheme.colors.accent) }
+        } else {
+            null
+        },
+        modifier = Modifier.testTag(tag).semantics { this.selected = selected },
+    )
 }
 
 /** Test tags of the lock screen: the iOS accessibility identifiers, plus Android-only ones. */
@@ -405,4 +430,10 @@ object AppLockTags {
     const val UNLOCK = "appLock.unlock"
     const val USE_BIOMETRICS = "appLock.useBiometrics"
     const val ERROR = "appLock.error"
+
+    /** "Choose a wallet", the first item of the [WALLET] menu (no wallet). */
+    const val NO_WALLET = "$WALLET.none"
+
+    /** A wallet in the [WALLET] menu: `appLock.wallet.<wallet id>`, like the Wallets tab's `wallet.card.<id>`. */
+    fun walletOption(id: WalletId): String = "$WALLET.$id"
 }

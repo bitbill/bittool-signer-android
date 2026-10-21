@@ -12,6 +12,7 @@ import com.bittool.signer.core.common.coroutines.ApplicationScope
 import com.bittool.signer.core.common.harness.UiTestEnvironment
 import com.bittool.signer.core.common.harness.UiTestRun
 import com.bittool.signer.core.common.log.Log
+import com.bittool.signer.core.crypto.vault.SignerFiles
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.data.preferences.DataStoreSignerPreferences
 import com.bittool.signer.core.l10n.resolve
@@ -24,6 +25,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.io.File
+import java.io.IOException
 import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +48,7 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
  * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
+ * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); later launches of the run keep it, only a reset run starts a new journal |
  *
  * While a run is active, `DebugUiTestModule` binds the file-backed [FixtureDeviceKeyStore] (so a cold launch with the
  * same run id opens the same wallets), the file-backed [FixtureJournalCipher] (Activity works on an emulator without a
@@ -65,6 +68,7 @@ object DebugUiTestHarness : UiTestEnvironment {
     const val EXTRA_LOCALE = "bts.uitest.locale"
     const val EXTRA_ALLOW_CAPTURE = "bts.uitest.allowCapture"
     const val EXTRA_LOSE_DEVICE_KEYS = "bts.uitest.loseDeviceKeys"
+    const val EXTRA_UNREADABLE_JOURNAL = "bts.uitest.unreadableJournal"
 
     private const val TAG = "UiTestHarness"
     private const val DEFAULT_LOCALE = "en-US"
@@ -107,6 +111,14 @@ object DebugUiTestHarness : UiTestEnvironment {
         if (extras.flag(EXTRA_LOSE_DEVICE_KEYS) == true) {
             val lost = FixtureDeviceKeyStore.loseWalletKeys(File(parsed.root, FixtureDeviceKeyStore.DIRECTORY))
             Log.i(TAG) { "UI-test run: $lost wallet device keys deleted (lost)" }
+        }
+        if (extras.flag(EXTRA_UNREADABLE_JOURNAL) == true) {
+            try {
+                FixtureJournalCipher.makeUnreadable(File(parsed.root, SignerFiles.RECEIPTS_FILE))
+                Log.i(TAG) { "UI-test run: Activity journal made unreadable" }
+            } catch (e: IOException) {
+                Log.w(TAG) { "UI-test run: the Activity journal could not be replaced (${e.javaClass.simpleName})" }
+            }
         }
         run = parsed
         applyLocale(parsed.localeTag)

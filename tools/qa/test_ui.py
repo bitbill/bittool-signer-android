@@ -136,6 +136,40 @@ class UiToolTest(unittest.TestCase):
         self.assertEqual('true', start[start.index('bts.uitest.loseDeviceKeys') + 1])
         self.assertNotIn('bts.uitest.reset', start)
 
+    def launch(self, *flags, run_id=None):
+        """`ui.py launch` with [flags]; the `am start` arguments it sends."""
+        shots = pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, shots, True)
+        if run_id:
+            (shots / '.run-id').write_text(run_id + '\n', encoding='utf-8')
+        patches = (mock.patch.object(ui, 'SHOTS', str(shots)),
+                   mock.patch.object(sys, 'argv', ['ui.py', 'launch', *flags]))
+        for patch in patches:
+            patch.start()
+        try:
+            fake = self.fake([])
+            with mock.patch('builtins.print'):
+                ui.command('launch')
+        finally:
+            for patch in patches:
+                patch.stop()
+        return next(call for call in fake.calls if call[:3] == ['shell', 'am', 'start'])
+
+    def test_unreadable_journal_asks_the_harness_for_an_unreadable_activity_journal(self):
+        # A fresh run (fixtures, reset): Activity is unreadable from the first load.
+        start = self.launch('--fixtures', '1', '--unreadable-journal')
+        self.assertEqual('--ez', start[start.index('bts.uitest.unreadableJournal') - 1])
+        self.assertEqual('true', start[start.index('bts.uitest.unreadableJournal') + 1])
+        self.assertIn('bts.uitest.reset', start)
+        # With --keep: the previous run's journal (its receipts) becomes unreadable.
+        start = self.launch('--keep', '--unreadable-journal', run_id='11111111-2222-3333-4444-555555555555')
+        self.assertEqual('11111111-2222-3333-4444-555555555555', start[start.index('bts.uitest.run') + 1])
+        self.assertEqual('true', start[start.index('bts.uitest.unreadableJournal') + 1])
+        self.assertNotIn('bts.uitest.reset', start)
+
+    def test_a_plain_launch_leaves_the_journal_alone(self):
+        self.assertNotIn('bts.uitest.unreadableJournal', self.launch('--fixtures', '1'))
+
     def test_long_text_is_typed_in_short_quoted_chunks(self):
         fake = self.fake([])
         text = "It's a long & tricky (text); $HOME \"quoted\""

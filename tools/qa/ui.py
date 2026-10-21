@@ -2,6 +2,7 @@
 """Drives the debug app on the emulator for QA tours (adb + uiautomator; no test APK needed).
 
     tools/qa/ui.py launch [--fixtures N] [--dark] [--locale zh-Hans] [--lock] [--keep] [--run UUID] [--lose-keys]
+                          [--unreadable-journal]
                                               fresh harness run (or --keep: the same run id again), capture allowed
     tools/qa/ui.py dump                       list visible nodes: [index] text | desc | resource-id | bounds
     tools/qa/ui.py tap TEXT_OR_ID [--nth K]   tap the node whose text, content-desc or resource-id (test tag) matches
@@ -20,7 +21,11 @@ keeps FLAG_SECURE off for the run (`bts.uitest.allowCapture`), otherwise screens
 `launch --keep` reuses the run id of the previous launch (stored in $QA_SHOTS/.run-id) unless `--run` names one, so a
 cold relaunch opens the same wallets. `--lose-keys` (`bts.uitest.loseDeviceKeys`) deletes the run's fixture wallet keys
 before anything is injected: every existing wallet then has a provably lost device key (backlog B9/B24). It implies
-`--keep` (a reset run has no wallets whose keys could be lost).
+`--keep` (a reset run has no wallets whose keys could be lost). `--unreadable-journal` (`bts.uitest.unreadableJournal`)
+replaces the run's Activity journal with one no key opens, so Activity shows "Activity Unavailable" (and the "could not
+be read" alert at launch). It works on a fresh run (with --fixtures) and with --keep; the run keeps the unreadable
+journal on later launches, since the app never overwrites one (signatures still complete, with the "could not be
+saved" alert); only a fresh run starts a new journal.
 
 `dump` (and everything that finds nodes) deletes the previous dump first, asks uiautomator for every window
 (`--windows`: dialogs, sheets and the keyboard too, where the device supports it) and fails loudly when uiautomator
@@ -203,6 +208,8 @@ def command(cmd):
             extras += ['--ez', 'bts.uitest.appLock', 'true']
         if arg('--lose-keys'):
             extras += ['--ez', 'bts.uitest.loseDeviceKeys', 'true']
+        if arg('--unreadable-journal'):
+            extras += ['--ez', 'bts.uitest.unreadableJournal', 'true']
         print(adb('shell', 'am', 'start', '-W', '-n', f'{PKG}/{ACTIVITY}', *extras).strip())
         time.sleep(3)
     elif cmd == 'dump':

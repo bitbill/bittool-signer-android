@@ -37,6 +37,7 @@ import com.bittool.signer.core.navigation.ConnectRoute
 import com.bittool.signer.core.navigation.LanguageRoute
 import com.bittool.signer.core.navigation.ScanGraph
 import com.bittool.signer.core.navigation.ScanRoute
+import com.bittool.signer.core.navigation.ScannerRoute
 import com.bittool.signer.core.navigation.SettingsGraph
 import com.bittool.signer.core.navigation.SettingsRoute
 import com.bittool.signer.core.navigation.SubmitWalletRoute
@@ -75,7 +76,10 @@ class NavigationGlueTest {
             page<ConnectRoute>("connect")
             page<ChangePasswordRoute>("change-password")
         }
-        navigation<ScanGraph>(startDestination = ScanRoute) { page<ScanRoute>("scan-root") }
+        navigation<ScanGraph>(startDestination = ScanRoute) {
+            page<ScanRoute>("scan-root")
+            page<ScannerRoute>("scanner")
+        }
         navigation<ActivityGraph>(startDestination = ActivityRoute) { page<ActivityRoute>("activity-root") }
         navigation<SettingsGraph>(startDestination = SettingsRoute) {
             page<SettingsRoute>("settings-root")
@@ -116,7 +120,7 @@ class NavigationGlueTest {
 
     private val routes = listOf(
         WalletsRoute::class, WalletDetailRoute::class, ConnectRoute::class, ChangePasswordRoute::class, ScanRoute::class,
-        ActivityRoute::class, SettingsRoute::class, LanguageRoute::class, SubmitWalletRoute::class,
+        ScannerRoute::class, ActivityRoute::class, SettingsRoute::class, LanguageRoute::class, SubmitWalletRoute::class,
     )
 
     @Test
@@ -314,6 +318,29 @@ class NavigationGlueTest {
         compose.onNodeWithTag(Tab.Scan.testTag).assertDoesNotExist()
         onUi { nav.popBackStack() }
         compose.onNodeWithTag(Tab.Scan.testTag).assertExists()
+    }
+
+    /**
+     * Backlog B33 (iOS parity of the review): iOS `ScanTab` swaps Home, the review and the signature in place at the root
+     * of the tab's `NavigationStack`, and `MainTabView` keeps the bar on all three ("The tab bar stays expanded: a
+     * signing app should keep Activity and Settings one tap away after scrolling a long review"). Here the three stages
+     * share `ScanRoute` (feature:sign `ScanTabScreen`), so the bar and its badge stay up; only the camera is modal.
+     */
+    @Test
+    fun theScanTabKeepsTheTabBarAndOnlyTheCameraHidesIt() {
+        show(badge = true)
+        tap(Tab.Scan)
+        compose.onNodeWithTag("scan-root").assertExists()
+        compose.onNodeWithTag(Tab.Activity.testTag).assertExists()
+        compose.onNodeWithTag(Tab.Scan.testTag)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Selected, true))
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "A signing request is waiting"))
+        onUi { nav.navigate(ScannerRoute) }
+        compose.onNodeWithTag("scanner").assertExists()
+        compose.onNodeWithTag(Tab.Scan.testTag).assertDoesNotExist()
+        onUi { nav.popBackStack() }
+        compose.onNodeWithTag(Tab.Activity.testTag).assertExists()
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, ScanRoute::class), stack())
     }
 
     @Test
