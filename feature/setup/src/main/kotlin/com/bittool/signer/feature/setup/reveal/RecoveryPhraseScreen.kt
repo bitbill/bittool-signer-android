@@ -24,12 +24,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -47,6 +52,7 @@ import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.security.RecoverySessionFactory
+import com.bittool.signer.core.security.window.WindowFocusReturn
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
@@ -86,7 +92,16 @@ fun RecoveryPhraseScreen(onClose: () -> Unit, viewModel: RecoveryPhraseViewModel
     )
 }
 
-/** The stateless page (previews and screenshot tests). */
+/**
+ * The stateless page (previews and screenshot tests).
+ *
+ * Once the password unlocked the wallet nothing is focused (iOS `passwordFocused = false`,
+ * `WalletSecuritySheets.swift:114`; QA regression-02). The focused password form must not simply leave the
+ * composition: Compose then clears the view focus, and in keyboard mode (the password confirmed with Enter on a
+ * hardware keyboard) Android hands it to the first focusable control, which left a focus ring on the Cancel / Done
+ * cross. So the form stays until it has given up the focus under a [WindowFocusReturn] hold, then the phrase replaces
+ * it (one frame later).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RecoveryPhraseContent(
@@ -99,6 +114,7 @@ internal fun RecoveryPhraseContent(
 ) {
     val colors = SignerTheme.colors
     val revealed = state.revealed
+    var formFocused by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     CompositionLocalProvider(LocalRecoverySessions provides sessions) {
         OverlayGuardHost(modifier) {
@@ -139,7 +155,7 @@ internal fun RecoveryPhraseContent(
                         when {
                             // Wiped and leaving: the page slides away without the phrase and without the form.
                             state.closing -> Unit
-                            revealed != null -> {
+                            revealed != null && !formFocused -> {
                                 // Backgrounding discards the phrase anyway; the key also resets the panel's own state.
                                 key(state.securityEpoch) {
                                     RecoveryBackupPanel(
@@ -150,7 +166,13 @@ internal fun RecoveryPhraseContent(
                                 }
                                 Callout(stringResource(L10n.string.anyone_with_these_words_can_take_your_funds_write_them), tone = Tone.Warning)
                             }
-                            else -> PasswordForm(state, password, onUnlock)
+                            else -> PasswordForm(
+                                state = state,
+                                password = password,
+                                onUnlock = onUnlock,
+                                onFocusChanged = { formFocused = it },
+                                unlocked = revealed != null,
+                            )
                         }
                     }
                 }
@@ -159,15 +181,39 @@ internal fun RecoveryPhraseContent(
     }
 }
 
+/**
+ * The password, its note, an error and Continue. [onFocusChanged] reports whether something in the form has the focus;
+ * once [unlocked], the form gives the focus up without handing it to another control (see [RecoveryPhraseContent]).
+ */
 @Composable
-private fun PasswordForm(state: RecoveryPhraseUiState, password: TextFieldState, onUnlock: () -> Unit) {
+private fun PasswordForm(
+    state: RecoveryPhraseUiState,
+    password: TextFieldState,
+    onUnlock: () -> Unit,
+    onFocusChanged: (Boolean) -> Unit,
+    unlocked: Boolean,
+) {
     val focus = remember { FocusRequester() }
+    val view = LocalView.current
+    val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) {
         // iOS focuses the field after 350 ms, once the sheet has settled.
         delay(FOCUS_DELAY_MILLIS)
         runCatching { focus.requestFocus() }
     }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LaunchedEffect(unlocked) {
+        if (!unlocked) return@LaunchedEffect
+        // Clearing the focus in keyboard mode would focus the first control (View.clearFocus); the hold keeps every
+        // view of the window from taking it, so nothing is focused afterwards, as on iOS. Touch mode is unaffected.
+        val hold = WindowFocusReturn.hold(view)
+        try {
+            focusManager.clearFocus(force = true)
+        } finally {
+            hold.release()
+        }
+        onFocusChanged(false)
+    }
+    Column(Modifier.onFocusChanged { onFocusChanged(it.hasFocus) }, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Stays enabled while unlocking, like iOS (QA wallets-05): disabling the focused field took its focus (to the
         // close button) and closed the keyboard, so a wrong password needed another tap on the field. `unlock` ignores
         // a second submit while busy, and the field was emptied when the attempt started.
