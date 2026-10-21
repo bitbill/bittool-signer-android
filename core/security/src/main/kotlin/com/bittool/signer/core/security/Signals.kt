@@ -36,7 +36,8 @@ class BiometricCancellationException(val reason: Reason) : CancellationException
  * The synchronous signals the recovery sessions observe: the Android mapping of the iOS notifications that
  * `RecoveryPrivacySession` and `RecoveryScreenshotSession` subscribe to (app-shell.md §15.8: screenshot →
  * `ScreenCaptureCallback`, `willResignActive` → `ON_PAUSE`, `didEnterBackground` → `ON_STOP` without a configuration
- * change, `capturedDidChange` → screen-recording callback, `didBecomeActive` → `ON_RESUME`).
+ * change, `capturedDidChange` → screen-recording callback or display listener (mirroring), `didBecomeActive` →
+ * `ON_RESUME`).
  */
 enum class PrivacySignal {
     /** `onStart` after a stay in the background (iOS `willEnterForegroundNotification`). */

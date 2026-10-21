@@ -32,9 +32,11 @@ import kotlinx.coroutines.flow.asStateFlow
  * | `onStop` while changing configurations (per-app language, …) | stays Inactive | nothing: not a background visit |
  *
  * The background edge comes from the activity, never from `ProcessLifecycleOwner`, whose `ON_STOP` is ~700 ms late
- * while iOS revokes at once. Capture: API 35+ `WindowManager.addScreenRecordingCallback` (registered in `onStart`,
- * removed in `onStop`; its initial state is applied at once), API 34+ `Activity.registerScreenCaptureCallback`; below,
- * [isCaptured] stays false and `FLAG_SECURE` blanks recordings and screenshots anyway.
+ * while iOS revokes at once. Capture, all registered in `onStart` and removed in `onStop`, each initial state applied at
+ * once: [isCaptured] = recording (API 35+ `WindowManager.addScreenRecordingCallback`; below 35 `FLAG_SECURE` blanks
+ * recordings) **or** mirroring to another display (every API level, [DisplayMirroring]: `FLAG_SECURE` does not blank a
+ * secure external display), like iOS `UIScreen.isCaptured` ("recorded, mirrored, AirPlayed or otherwise cloned").
+ * Screenshots: API 34+ `Activity.registerScreenCaptureCallback`.
  *
  * Synchronous delivery: [privacySignals] observers (the recovery sessions) run inside the lifecycle callback, so a
  * revealed phrase is concealed before `onPause` returns; [phase] and [isCaptured] are updated before any signal is
@@ -101,8 +103,24 @@ internal class DefaultAppLifecycleMonitor @Inject constructor() : AppLifecycleMo
         dispatch(LifecycleEvent.DidEnterBackground)
     }
 
-    /** The screen-recording callback: VISIBLE ↔ NOT_VISIBLE (each change is an iOS `capturedDidChange`). */
-    internal fun onCaptureChanged(captured: Boolean) {
+    private var recording = false
+    private var mirrored = false
+
+    /** The screen-recording callback: VISIBLE ↔ NOT_VISIBLE. */
+    internal fun onRecordingChanged(recording: Boolean) {
+        this.recording = recording
+        publishCapture()
+    }
+
+    /** The display listener: a display that can mirror the screen was connected, switched on, off or removed. */
+    internal fun onMirroringChanged(mirrored: Boolean) {
+        this.mirrored = mirrored
+        publishCapture()
+    }
+
+    /** Recorded or mirrored; each change of the combination is an iOS `capturedDidChange`. */
+    private fun publishCapture() {
+        val captured = recording || mirrored
         if (_isCaptured.value == captured) return
         _isCaptured.value = captured
         signals.post(PrivacySignal.CaptureChanged)
@@ -132,7 +150,8 @@ internal class DefaultAppLifecycleMonitor @Inject constructor() : AppLifecycleMo
             capture?.close()
             capture = CaptureCallbacks.register(
                 activity = owner as FragmentActivity,
-                onRecording = ::onCaptureChanged,
+                onRecording = ::onRecordingChanged,
+                onMirroring = ::onMirroringChanged,
                 onScreenshot = ::onScreenshot,
             )
         }
