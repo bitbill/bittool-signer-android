@@ -71,6 +71,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
@@ -386,7 +388,7 @@ private fun StepHeader(step: Int, total: Int, title: String, message: String) {
     Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         StepProgress(step, total, Modifier.padding(bottom = 6.dp))
         Text(stringResource(L10n.string.step_x_of_x, step, total), style = typography.footnote.semibold(), color = colors.accent)
-        Text(title, style = typography.largeTitle.headingLineBreaks(), color = colors.label, modifier = Modifier.semantics { heading() })
+        LargeTitle(title)
         Text(message, style = typography.body, color = colors.secondaryLabel)
     }
 }
@@ -409,9 +411,34 @@ private fun StepProgress(step: Int, total: Int, modifier: Modifier = Modifier) {
 /**
  * Line breaking for titles (QA setup-15): balanced lines, and on API 33+ breaks at phrase boundaries in Japanese and
  * Korean ("ウォレットを作成しました" no longer leaves "した" alone on the second line). Below API 33 only the balancing
- * applies.
+ * applies; [LargeTitle] adds the phrase boundaries there.
  */
 internal fun TextStyle.headingLineBreaks(): TextStyle = copy(lineBreak = LineBreak.Heading)
+
+/**
+ * A setup large title (iOS `.font(.largeTitle.weight(.bold))`): [headingLineBreaks], a heading for TalkBack, and on
+ * Android 8–12L the phrase boundaries the platform only offers from API 33 ([HeadingPhrases], QA regression-13), so a
+ * Japanese or Korean title never breaks inside a phrase. The joiners are for the line breaker only: TalkBack and the
+ * accessibility tree read [text] exactly as written.
+ */
+@Composable
+internal fun LargeTitle(text: String, modifier: Modifier = Modifier, textAlign: TextAlign? = null) {
+    val style = SignerTheme.typography.largeTitle.headingLineBreaks()
+    val color = SignerTheme.colors.label
+    val drawn = remember(text) { HeadingPhrases.keepTogether(text) }
+    if (drawn == text) {
+        Text(text, style = style, color = color, textAlign = textAlign, modifier = modifier.semantics { heading() })
+    } else {
+        Box(
+            modifier.clearAndSetSemantics {
+                this.text = AnnotatedString(text)
+                heading()
+            },
+        ) {
+            Text(drawn, style = style, color = color, textAlign = textAlign)
+        }
+    }
+}
 
 /**
  * A footer error (iOS `Callout(verbatim: error, tone: .danger)`): the shared `UiText` callout, so engine text keeps its

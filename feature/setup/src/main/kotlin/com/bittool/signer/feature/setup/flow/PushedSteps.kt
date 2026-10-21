@@ -37,10 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -77,7 +76,7 @@ import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
 import com.bittool.signer.feature.setup.ui.SetupTopBar
 import com.bittool.signer.feature.setup.ui.LocalOverlayBlocked
-import com.bittool.signer.feature.setup.ui.headingLineBreaks
+import com.bittool.signer.feature.setup.ui.LargeTitle
 import com.bittool.signer.feature.setup.ui.keepTogetherInView
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -85,12 +84,19 @@ import com.bittool.signer.core.l10n.R as L10n
  * Step 2 of creating (iOS `BackupPhraseStep`, `WalletSetupFlow.swift:279-312`; setup-backup §6.2): the backup panel
  * (rebuilt on every security-epoch change: concealed, Words, its sheets closed), Security Tips and "I’ve Written Them
  * Down in Order", which needs the words (or the cards) to have been shown — the QR code alone does not count.
+ *
+ * Android addition (QA regression-08): with accessibility text sizes, or on a short window (landscape), Security Tips
+ * moves from the pinned bar into the page under the panel, as on the Recovery Phrase page. At font scale 2 the bar
+ * with Security Tips and a two-line button took about 45 % of the height and the words scrolled through a slot one
+ * row high; the bar now holds what decides the step only (an error, the button and its hint).
  */
 @Composable
 internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
     var showingTips by remember { mutableStateOf(false) }
     val hasPassphrase by remember(state.usePassphrase) { derivedStateOf { fields.hasPassphrase(state.usePassphrase) } }
+    val windowHeight = LocalWindowInfo.current.containerDpSize.height
+    val tipsInPage = SignerTheme.isAccessibilityTextSize || windowHeight < COMPACT_PAGE_HEIGHT
     SetupScaffold(
         topBar = { scroll ->
             SetupTopBar(
@@ -107,7 +113,7 @@ internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewM
         message = stringResource(L10n.string.write_these_x_words_on_paper_in_order_and_keep_them, state.words.size),
         footer = {
             ErrorCallout(state.error)
-            SecurityTipsButton(onClick = { showingTips = true })
+            if (!tipsInPage) SecurityTipsButton(onClick = { showingTips = true })
             PrimaryButton(
                 text = stringResource(L10n.string.ive_written_them_down_in_order),
                 onClick = model::confirmBackup,
@@ -135,9 +141,16 @@ internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewM
                 onReveal = model::markRevealed,
             )
         }
+        if (tipsInPage) SecurityTipsButton(onClick = { showingTips = true })
     }
     if (showingTips) SecurityTipsSheet(onDismiss = { showingTips = false })
 }
+
+/**
+ * Below this window height (small phones, landscape) the backup step keeps Security Tips in the page (iOS app-shell
+ * "compact": a viewport under 560 points).
+ */
+private val COMPACT_PAGE_HEIGHT = 560.dp
 
 /**
  * Step 3 of creating (iOS `VerifyBackupStep`, `WalletSetupFlow.swift:314-344`; setup-backup §6.3, §8.8): the fill-in
@@ -408,13 +421,7 @@ internal fun SetupCompleteStep(state: WalletSetupUiState, model: WalletSetupView
             ) {
                 SymbolHero(SignerIcons.VerifiedFilled, color = colors.success, size = 64.dp, bounce = true, modifier = Modifier.padding(top = 24.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        stringResource(title),
-                        style = typography.largeTitle.headingLineBreaks(),
-                        color = colors.label,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.semantics { heading() }.testTag("setup.doneTitle"),
-                    )
+                    LargeTitle(stringResource(title), textAlign = TextAlign.Center, modifier = Modifier.testTag("setup.doneTitle"))
                     Text(stringResource(message), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.Center)
                 }
                 state.identity?.let { identity ->
