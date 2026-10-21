@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -57,6 +56,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.testTag
@@ -71,6 +71,7 @@ import com.bittool.signer.core.designsystem.brand.BrandTile
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
@@ -377,19 +378,26 @@ private fun WalletPicker(state: AppLockUiState, onSelect: (WalletId) -> Unit) {
             Spacer(Modifier.width(4.dp))
             Icon(SignerIcons.UnfoldMore, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        // The app's menu (backlog B29): a popup window of its own on the elevated card colour, which publishes its items'
+        // tags as resource ids in debuggable builds. It opens at once: the window gate it checks is not provided around
+        // the lock window (the lock screen is what the gate waits for), so it reads as open here.
+        SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             state.wallets.forEach { wallet ->
+                val isSelected = wallet.id == state.selectedWallet
                 DropdownMenuItem(
                     text = { Text(wallet.name, style = typography.body, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     onClick = {
                         expanded = false
                         onSelect(wallet.id)
                     },
-                    trailingIcon = if (wallet.id == state.selectedWallet) {
+                    trailingIcon = if (isSelected) {
                         { Icon(SignerIcons.Check, contentDescription = null, tint = colors.accent) }
                     } else {
                         null
                     },
+                    modifier = Modifier
+                        .testTag(AppLockTags.walletOption(wallet.id))
+                        .semantics { selected = isSelected },
                 )
             }
         }
@@ -405,4 +413,7 @@ object AppLockTags {
     const val UNLOCK = "appLock.unlock"
     const val USE_BIOMETRICS = "appLock.useBiometrics"
     const val ERROR = "appLock.error"
+
+    /** A wallet in the [WALLET] menu: `appLock.wallet.<wallet id>`, like the Wallets tab's `wallet.card.<id>`. */
+    fun walletOption(id: WalletId): String = "$WALLET.$id"
 }
