@@ -19,7 +19,8 @@ import androidx.compose.ui.unit.IntSize
  * A touch on an element with this modifier hits that element, so the hit test does not give it to the neighbour. The
  * element reacts to nothing and consumes nothing: the touch still reaches its ancestors, so a drag that starts on it
  * still scrolls the page. It adds no semantics. The neighbour keeps the rest of its expanded target, including its
- * 48 dp bounds for accessibility services.
+ * 48 dp bounds for accessibility services. Being a pointer target itself, the element is expanded the same way, so a
+ * gap between the two goes to whichever edge is nearer.
  */
 internal fun Modifier.ownsItsTouches(): Modifier = this then OwnsItsTouchesElement
 

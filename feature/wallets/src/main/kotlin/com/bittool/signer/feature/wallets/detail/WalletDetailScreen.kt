@@ -66,8 +66,8 @@ import com.bittool.signer.core.ui.text.currentLocale
 import com.bittool.signer.core.ui.text.localizedLongName
 import com.bittool.signer.core.ui.wallet.WalletAvatar
 import com.bittool.signer.feature.wallets.common.WalletIdentity
-import com.bittool.signer.feature.wallets.common.keepsEndInView
 import com.bittool.signer.feature.wallets.common.ownsItsTouches
+import com.bittool.signer.feature.wallets.common.undoesScrollBackOnShrink
 import com.bittool.signer.feature.wallets.list.fingerprintText
 import java.time.Instant
 import java.time.ZoneId
@@ -167,9 +167,9 @@ fun WalletDetailContent(
             val listState = rememberLazyListState()
             LazyColumn(
                 state = listState,
-                // The Rename dialog's keyboard hides the tab bar, so the page grows and shrinks behind the dialog: scrolled
-                // to the end, it stays at the end (QA regression-04).
-                modifier = Modifier.keepsEndInView(listState).fillMaxSize(),
+                // The Rename dialog's keyboard hides the tab bar, so the page grows and shrinks behind the dialog: near its
+                // end, the rows come back to where they were (QA regression-04).
+                modifier = Modifier.undoesScrollBackOnShrink(listState).fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = padding.calculateStartPadding(direction) + SignerMetrics.pagePadding,
                     end = padding.calculateEndPadding(direction) + SignerMetrics.pagePadding,
