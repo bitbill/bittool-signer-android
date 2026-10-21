@@ -41,7 +41,7 @@ class WalletsViewModel @Inject constructor(
     /** The person tapped Wallets while it was already shown: the list scrolls back to the top. */
     val reselections: Flow<Tab> = router.reselections.filter { it == Tab.Wallets }
 
-    /** Toolbar "Scan" (`wallets.scan`): Scan tab, and the camera opens once (iOS `router.startScanning()`). */
+    /** Toolbar "Scan" (`wallets.scan`): the camera opens once, right over Wallets (iOS `router.startScanning()`). */
     fun scan() = router.startScanning()
 
     /**

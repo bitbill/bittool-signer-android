@@ -28,7 +28,7 @@ class AppRouterTest {
         val router = AppRouter()
         assertFalse(router.consumeScanRequest(), "nothing has been asked for yet")
         router.startScanning()
-        assertEquals(Tab.Scan, router.tab.value)
+        assertEquals(Tab.Wallets, router.tab.value, "the camera opens over the current tab")
         assertTrue(router.consumeScanRequest(), "the camera opens")
         assertFalse(router.consumeScanRequest(), "it does not open a second time")
     }

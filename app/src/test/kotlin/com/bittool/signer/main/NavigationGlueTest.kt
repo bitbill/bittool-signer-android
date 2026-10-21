@@ -78,7 +78,6 @@ class NavigationGlueTest {
         }
         navigation<ScanGraph>(startDestination = ScanRoute) {
             page<ScanRoute>("scan-root")
-            page<ScannerRoute>("scanner")
         }
         navigation<ActivityGraph>(startDestination = ActivityRoute) { page<ActivityRoute>("activity-root") }
         navigation<SettingsGraph>(startDestination = SettingsRoute) {
@@ -86,6 +85,7 @@ class NavigationGlueTest {
             page<LanguageRoute>("language")
         }
         page<SubmitWalletRoute>("submit-wallet")
+        page<ScannerRoute>("scanner")
     }
 
     private inline fun <reified T : Any> NavGraphBuilder.page(tag: String) {

@@ -193,7 +193,6 @@ private fun PasswordForm(
     unlocked: Boolean,
 ) {
     val focus = remember { FocusRequester() }
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
     // Clearing the focus in keyboard mode would focus the first control (View.clearFocus); this clears it while no
     // view of the window may take it, so nothing is focused afterwards, as on iOS. Touch mode is unaffected.
     val clearFocus = rememberClearFocus(force = true)
@@ -209,8 +208,7 @@ private fun PasswordForm(
     LaunchedEffect(Unit) {
         // iOS focuses the field after 350 ms, once the sheet has settled.
         delay(FOCUS_DELAY_MILLIS)
-        // Not on a page that is leaving (popped, its exit animation running): the keyboard would flash over the next.
-        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) runCatching { focus.requestFocus() }
+        runCatching { focus.requestFocus() }
     }
     LaunchedEffect(unlocked) {
         if (!unlocked) return@LaunchedEffect

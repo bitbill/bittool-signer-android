@@ -52,7 +52,6 @@ class ScanFlowTest {
     fun theCameraDoesNotReopenAfterASignatureIsFinished() = runTest {
         // The Wallets toolbar "Scan".
         router.startScanning()
-        assertEquals(Tab.Scan, router.tab.value)
         val tab = tab()
         runCurrent()
         assertTrue(tab.consumeScanRequest(), "the camera opens")

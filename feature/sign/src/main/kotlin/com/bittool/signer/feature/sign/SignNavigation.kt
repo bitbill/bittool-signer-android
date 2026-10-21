@@ -20,8 +20,8 @@ import com.bittool.signer.feature.sign.tab.ScanTabScreen
  *
  * - [ScanRoute]: Home, Review or Signature chosen from `SignerState` ([ScanTabScreen]); the paste sheet, the file
  *   picker, the "Discard partial signatures?" dialog, the authorize sheet and the export picker are hosted there.
- * - [ScannerRoute]: the full-screen camera, a modal route without the tab bar that slides up over the tab (iOS
- *   `fullScreenCover`) and back down when closed, by its cross, system Back or a completed request.
+ *
+ * The camera itself is [scannerDestination], registered at the root.
  */
 fun NavGraphBuilder.scanDestinations(navController: NavController) {
     composable<ScanRoute>(
@@ -37,6 +37,15 @@ fun NavGraphBuilder.scanDestinations(navController: NavController) {
             },
         )
     }
+}
+
+/**
+ * [ScannerRoute]: the full-screen camera, a root-level modal route without the tab bar that slides up over the page that
+ * opened it (iOS `fullScreenCover`), the Scan home or the Wallets toolbar, and back down when closed, by its cross, system
+ * Back or a completed request. Registered outside the tab graphs, so the Wallets toolbar opens it right over Wallets: a
+ * cancelled scan leaves Wallets where it was, and a request that arrives selects Scan, where its review is.
+ */
+fun NavGraphBuilder.scannerDestination(navController: NavController) {
     composable<ScannerRoute>(
         enterTransition = { slideInVertically(SignerMotion.smooth(0.35)) { it } },
         exitTransition = { ExitTransition.KeepUntilTransitionsFinished },

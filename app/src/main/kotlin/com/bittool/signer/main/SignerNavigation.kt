@@ -29,11 +29,13 @@ import com.bittool.signer.feature.settings.settingsDestinations
 import com.bittool.signer.feature.settings.settingsSharedDestinations
 import com.bittool.signer.feature.setup.recoveryPhraseDestination
 import com.bittool.signer.feature.sign.scanDestinations
+import com.bittool.signer.feature.sign.scannerDestination
 import com.bittool.signer.feature.wallets.walletsDestinations
 
 /**
  * The one navigation graph (ARCHITECTURE.md §2.2): a nested graph per tab, every feature registering its own
- * destinations through its frozen entry point, plus the root-level "Submit a Wallet" (it keeps the current tab).
+ * destinations through its frozen entry point, plus the root-level "Submit a Wallet" and camera (they keep the current
+ * tab).
  * Start: the Wallets graph. Not destinations: setup (an overlay), Welcome and onboarding (stages), the lock (a window),
  * sheets and dialogs (hosted by their screens).
  */
@@ -52,6 +54,7 @@ fun NavGraphBuilder.signerDestinations(navController: NavController) {
         settingsDestinations(navController)
     }
     settingsSharedDestinations(navController)
+    scannerDestination(navController)
 }
 
 /** The tab whose graph holds this destination, or null for root-level destinations ("Submit a Wallet"). */
@@ -109,8 +112,12 @@ class ShellNavigator(val navController: NavHostController) {
             return Tab.entries.any { it != Tab.Wallets && destination.hasRoute(it.root::class) }
         }
 
-    /** Shows [tab] with its own stack; nothing when it already shows. */
+    /**
+     * Shows [tab] with its own stack; nothing when it already shows. The camera closes first: it is never saved into the
+     * stack left behind (a request scanned from the Wallets toolbar selects Scan while the camera is over Wallets).
+     */
     fun showTab(tab: Tab) {
+        if (navController.currentDestination?.hasRoute<ScannerRoute>() == true) navController.popBackStack()
         if (shownTab != tab) {
             navController.navigate(tab.graph) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -180,14 +187,16 @@ class ShellNavigator(val navController: NavHostController) {
 @Composable
 fun RouterGlue(navigator: ShellNavigator, router: AppRouter, canOpenCamera: () -> Boolean = { true }) {
     val navController = navigator.navController
-    // The Wallets toolbar "Scan" goes straight to the camera (owner request): the Scan tab is shown underneath, so a
-    // finished scan lands on its review, but the camera opens now instead of after the tab has appeared.
+    // The Wallets toolbar "Scan" opens the camera right over Wallets (owner request), without showing the Scan tab: a
+    // cancelled scan is back on Wallets, a scanned request selects Scan (RootViewModel), where its review is. With a
+    // review or a signature already waiting, Scan shows it instead.
     LaunchedEffect(navigator, router) {
         router.scanRequest.collect {
             if (router.consumeScanRequest()) {
-                navigator.showTab(Tab.Scan)
-                if (canOpenCamera() && navController.currentDestination?.hasRoute<ScannerRoute>() != true) {
-                    navController.navigate(ScannerRoute) { launchSingleTop = true }
+                when {
+                    !canOpenCamera() -> router.selectTab(Tab.Scan)
+                    navController.currentDestination?.hasRoute<ScannerRoute>() != true ->
+                        navController.navigate(ScannerRoute) { launchSingleTop = true }
                 }
             }
         }

@@ -46,11 +46,11 @@ class WalletsViewModelsTest {
     }
 
     @Test
-    fun theScanButtonSelectsScanAndAsksForTheCameraOnce() {
+    fun theScanButtonAsksForTheCameraOnceOverWallets() {
         val router = AppRouter()
         val vm = WalletsViewModel(WalletFixtures.store(), FakeSignerPreferences(), router)
         vm.scan()
-        assertEquals(Tab.Scan, router.tab.value)
+        assertEquals(Tab.Wallets, router.tab.value)
         assertTrue(router.consumeScanRequest())
         assertFalse(router.consumeScanRequest())
     }

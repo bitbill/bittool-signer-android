@@ -131,9 +131,11 @@ class AppRouter @Inject constructor() {
         open(route)
     }
 
-    /** iOS `startScanning`: select Scan and ask it to open the camera once. */
+    /**
+     * iOS `startScanning`: ask for the camera once. The tab stays: the camera opens over the current page (`:app`'s
+     * RouterGlue), and a scanned request selects Scan.
+     */
     fun startScanning() {
-        _tab.value = Tab.Scan
         _scanRequest.value += 1
     }
 
