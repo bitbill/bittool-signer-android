@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">O teclado próprio do BitTool mantém sua frase de recuperação dentro deste app. O teclado do sistema, ou qualquer teclado de terceiros que você instalou, pode ver as palavras que você digita e aprendê-las ou registrá-las. Mude apenas se precisar digitar uma frase de recuperação em chinês, japonês ou coreano.</string>
     <string name="keyboard_switch_keep">Manter o teclado BitTool</string>
     <string name="keyboard_switch_confirm">Mudar mesmo assim</string>
+    <string name="keyboard_paste_empty">Não há texto na área de transferência para colar.</string>
 </resources>

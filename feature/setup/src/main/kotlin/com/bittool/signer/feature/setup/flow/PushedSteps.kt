@@ -36,7 +36,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -62,6 +61,7 @@ import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.password.PasswordRequirements
 import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
+import com.bittool.signer.core.ui.window.windowHeight
 import com.bittool.signer.feature.setup.backup.BackupVerificationChips
 import com.bittool.signer.feature.setup.backup.BackupVerificationGrid
 import com.bittool.signer.feature.setup.backup.RecoveryBackupPanel
@@ -96,7 +96,9 @@ internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewM
     val fields = model.fields
     var showingTips by remember { mutableStateOf(false) }
     val hasPassphrase by remember(state.usePassphrase) { derivedStateOf { fields.hasPassphrase(state.usePassphrase) } }
-    val windowHeight = LocalWindowInfo.current.containerDpSize.height
+    // Follows a rotation, which this activity handles itself (not LocalWindowInfo: QA activity-keyboard-01). Both read
+    // unconditionally: a composable read inside `||` would only run sometimes.
+    val windowHeight = windowHeight()
     val tipsInPage = SignerTheme.isAccessibilityTextSize || windowHeight < COMPACT_PAGE_HEIGHT
     SetupScaffold(
         topBar = { scroll ->

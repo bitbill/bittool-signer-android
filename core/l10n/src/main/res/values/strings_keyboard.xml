@@ -21,4 +21,6 @@
     <string name="keyboard_switch_keep">Keep BitTool keyboard</string>
     <!-- The warning's other action: switch to the system keyboard. -->
     <string name="keyboard_switch_confirm">Switch anyway</string>
+    <!-- Shown for a moment above the keys of the app's keyboard, and read out by TalkBack, when its Paste key is tapped while the clipboard holds no text. -->
+    <string name="keyboard_paste_empty">The clipboard has no text to paste.</string>
 </resources>

@@ -45,8 +45,10 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -71,14 +73,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -97,6 +102,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.theme.SignerColors
@@ -106,6 +112,7 @@ import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
+import com.bittool.signer.core.ui.window.windowHeight
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -146,13 +153,17 @@ sealed interface KeyboardSuggestions {
  * layouts): the suggestion row, then `qwertyuiop` / `asdfghjkl` / paste · `zxcvbnm` · backspace / system keyboard ·
  * space · Done, in lower case — a–z covers the English, Spanish, French, Italian, Czech and Portuguese word lists,
  * which the editor matches without accents. The tray runs under the navigation bar; the keys stay at most 720 dp wide
- * and get shorter on short windows (landscape). Labels follow the font size up to [Bip39KeyboardDefaults.LABEL_FONT_SCALE_CAP]
- * (the rows keep their height). Every key's whole cell, gaps included, is its touch target.
+ * and get shorter on short windows (landscape), also after a rotation the activity handles itself (`windowHeight`).
+ * Labels follow the font size up to [Bip39KeyboardDefaults.LABEL_FONT_SCALE_CAP] (the rows keep their height). Every
+ * key's whole cell, gaps included, is its touch target.
  *
  * Behaviour: a pressed key changes colour, a letter shows its preview above it (drawn in this window, so it is as
  * secure as the window: no popup), every press plays the keyboard-tap haptic through the view (the system's touch
  * feedback setting decides; no sound is played), backspace deletes on touch-down and repeats, faster, while held,
  * until there is nothing left to delete: the first activation that changes nothing ends the repeat and its haptic.
+ * Paste looks unavailable (and is, for TalkBack) while the clipboard holds no text, known from the clip's description
+ * only, so nothing is read and no clipboard notice shows before Paste ([rememberClipboardHasText]); a tap then plays the
+ * reject haptic and says "The clipboard has no text to paste." in the top row for a moment.
  * Keys never take the focus, so the editor keeps its caret and selection. TalkBack reads every key by name and
  * activates it with a double tap. While it is shown the window is marked accessibility-sensitive (API 34+): only
  * accessibility tools see the keys being pressed.
@@ -172,12 +183,28 @@ fun Bip39Keyboard(
     colors: Bip39KeyboardColors = Bip39KeyboardDefaults.colors(),
 ) {
     val view = LocalView.current
+    val context = LocalContext.current
     val clipboard = LocalClipboard.current
+    val haptics = rememberSignerHaptics()
     val scope = rememberCoroutineScope()
     val metrics = rememberKeyboardMetrics()
     val interfaceDirection = LocalLayoutDirection.current
+    // Whether Paste has text to insert, from the clip's description only (no read, no clipboard notice).
+    val canPaste by rememberClipboardHasText(clipboard)
+    // "Nothing to paste" in the top row: > 0 while it shows (each refused paste starts it again), until the next key.
+    var pasteRefused by remember { mutableIntStateOf(0) }
+    LaunchedEffect(pasteRefused) {
+        if (pasteRefused == 0) return@LaunchedEffect
+        delay(PASTE_HINT_MS)
+        pasteRefused = 0
+    }
+    val refusePaste: () -> Unit = {
+        haptics.reject()
+        pasteRefused++
+    }
     val tick: () -> Unit = remember(view) {
         {
+            pasteRefused = 0
             view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             Unit
         }
@@ -210,7 +237,15 @@ fun Bip39Keyboard(
                     .fillMaxWidth()
                     .padding(horizontal = metrics.trayPadding),
             ) {
-                SuggestionRow(suggestions, interfaceDirection, colors, metrics, onPick = { word -> tick(); onSuggestion(word) })
+                val nothingToPaste = stringResource(L10n.string.keyboard_paste_empty)
+                SuggestionRow(
+                    suggestions = if (pasteRefused > 0) KeyboardSuggestions.Hint(nothingToPaste) else suggestions,
+                    interfaceDirection = interfaceDirection,
+                    colors = colors,
+                    metrics = metrics,
+                    announce = pasteRefused > 0,
+                    onPick = { word -> tick(); onSuggestion(word) },
+                )
                 val letter: @Composable RowScope.(Char, Float, Alignment, PreviewEdge) -> Unit = { c, weight, alignment, edge ->
                     LetterKey(c, weight, alignment, edge, colors, metrics, onPress = tick) {
                         change { text, selection -> Bip39KeyboardEdits.insert(text, selection, c.toString()) }
@@ -238,18 +273,25 @@ fun Bip39Keyboard(
                 }
                 KeyRow(metrics) {
                     val pasteLabel = stringResource(L10n.string.paste_from_clipboard)
+                    // Without text on the clipboard the key looks unavailable (and is, for TalkBack); a tap says why
+                    // nothing happens instead of the usual press: a reject haptic and "nothing to paste" in the top row.
                     Key(
                         weight = 1.5f, style = KeyStyle.Function, tag = Bip39KeyboardTags.PASTE, description = pasteLabel,
-                        colors = colors, metrics = metrics, onPress = tick,
+                        colors = colors, metrics = metrics, onPress = if (canPaste) tick else NO_FEEDBACK,
+                        enabled = canPaste,
                         onActivate = {
-                            scope.launch {
-                                val clip = runCatching {
-                                    clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text
-                                }.getOrNull()
-                                change { text, selection -> Bip39KeyboardEdits.paste(text, selection, clip) }
+                            if (!clipboard.platformClipboard(context).hasTextToPaste()) {
+                                refusePaste()
+                            } else {
+                                scope.launch {
+                                    val clip = runCatching {
+                                        clipboard.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text
+                                    }.getOrNull()
+                                    if (!change { text, selection -> Bip39KeyboardEdits.paste(text, selection, clip) }) refusePaste()
+                                }
                             }
                         },
-                    ) { KeyIcon(SignerIcons.Paste, colors.functionContent) }
+                    ) { KeyIcon(SignerIcons.Paste, if (canPaste) colors.functionContent else colors.functionContent.copy(alpha = UNAVAILABLE_ALPHA)) }
                     ROWS[2].forEach { c -> letter(c, 1f, Alignment.Center, PreviewEdge.Center) }
                     val deleteBackward = { change(Bip39KeyboardEdits::deleteBackward) }
                     Key(
@@ -433,9 +475,10 @@ internal fun keyboardMetrics(windowHeight: Dp): KeyboardMetrics {
 private val COMPACT_HEIGHT = 400.dp
 private val REGULAR_HEIGHT = 640.dp
 
+/** The metrics for the current window, following rotations ([windowHeight]: not `LocalWindowInfo`, QA activity-keyboard-01). */
 @Composable
 @ReadOnlyComposable
-private fun rememberKeyboardMetrics(): KeyboardMetrics = keyboardMetrics(LocalWindowInfo.current.containerDpSize.height)
+private fun rememberKeyboardMetrics(): KeyboardMetrics = keyboardMetrics(windowHeight())
 
 /**
  * This style with its font size (and line height) growing with the font scale only up to [cap] times the design size:
@@ -464,6 +507,14 @@ private val ROWS = arrayOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
 private const val REPEAT_DELAY_MS = 400L
 private const val REPEAT_INTERVAL_MS = 70L
 private const val REPEAT_MIN_INTERVAL_MS = 35L
+
+/** How long "nothing to paste" stays in the top row (unless a key is pressed first). */
+private const val PASTE_HINT_MS = 2_500L
+
+/** A key's content while the key cannot act (Paste with nothing to paste): Material's disabled content alpha. */
+private const val UNAVAILABLE_ALPHA = 0.38f
+
+private val NO_FEEDBACK: () -> Unit = {}
 
 private val KeyShape = RoundedCornerShape(8.dp)
 private val KEY_RADIUS = 8.dp
@@ -519,7 +570,8 @@ private class KeyPreview(val layout: TextLayoutResult, val edge: PreviewEdge)
  * [onActivate] on release inside the key. With [onRepeat] (backspace) it fires that instead, on touch-down and then
  * repeatedly while held, for as long as it changes something: the first activation that returns false ends the repeat,
  * so a held backspace on an empty phrase plays no more haptics (the touch-down press keeps its one, like every key).
- * Never focusable. TalkBack: a button named by [description] or by its text, activated by [onActivate].
+ * Never focusable. TalkBack: a button named by [description] or by its text, activated by [onActivate], and read as
+ * unavailable when not [enabled] (a touch still activates it: the key itself then explains why nothing happens).
  */
 @Composable
 private fun RowScope.Key(
@@ -532,6 +584,7 @@ private fun RowScope.Key(
     onPress: () -> Unit,
     onActivate: () -> Unit,
     onRepeat: (() -> Boolean)? = null,
+    enabled: Boolean = true,
     visualFraction: Float = 1f,
     visualAlignment: Alignment = Alignment.Center,
     preview: KeyPreview? = null,
@@ -588,6 +641,7 @@ private fun RowScope.Key(
             .semantics(mergeDescendants = true) {
                 role = Role.Button
                 if (description != null) contentDescription = description
+                if (!enabled) disabled()
                 onClick {
                     latestActivate()
                     true
@@ -661,6 +715,7 @@ private fun SuggestionRow(
     interfaceDirection: LayoutDirection,
     colors: Bip39KeyboardColors,
     metrics: KeyboardMetrics,
+    announce: Boolean,
     onPick: (String) -> Unit,
 ) {
     // The same height with or without chips, so the keys never jump.
@@ -687,7 +742,11 @@ private fun SuggestionRow(
                     color = colors.hint,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    // A hint that answers a key (Paste with nothing to paste) is also read out by TalkBack.
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .then(if (announce) Modifier.semantics { liveRegion = LiveRegionMode.Polite } else Modifier),
                 )
             }
             KeyboardSuggestions.None -> Unit

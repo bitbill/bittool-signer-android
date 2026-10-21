@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "สลับต่อไป"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "ไม่มีข้อความในคลิปบอร์ดให้วาง"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "เพื่อการแยกขาดที่สุด ให้ใช้โทรศัพท์เฉพาะเครื่องหนึ่งและปิดการเชื่อมต่อทั้งหมดไว้"

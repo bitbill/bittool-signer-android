@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">La tastiera integrata di BitTool mantiene la tua frase di recupero all’interno di questa app. La tastiera di sistema, o qualsiasi tastiera di terze parti che hai installato, può vedere le parole che digiti e impararle o registrarle. Cambia solo se devi digitare una frase di recupero in cinese, giapponese o coreano.</string>
     <string name="keyboard_switch_keep">Mantieni la tastiera BitTool</string>
     <string name="keyboard_switch_confirm">Cambia comunque</string>
+    <string name="keyboard_paste_empty">Negli appunti non c’è testo da incollare.</string>
 </resources>

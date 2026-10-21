@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "Vẫn chuyển"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "Không có văn bản nào trong bộ nhớ tạm để dán."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Để cách ly triệt để nhất, hãy dùng một chiếc điện thoại riêng và luôn tắt các kết nối của máy."

@@ -8,4 +8,5 @@
     <string name="keyboard_switch_message">แป้นพิมพ์ของ BitTool เองจะเก็บวลีกู้คืนของคุณไว้ภายในแอปนี้ แป้นพิมพ์ระบบหรือแป้นพิมพ์ของบุคคลที่สามที่คุณติดตั้งไว้สามารถเห็นคำที่คุณพิมพ์ และอาจเรียนรู้หรือบันทึกคำเหล่านั้น สลับเฉพาะเมื่อคุณต้องพิมพ์วลีกู้คืนภาษาจีน ญี่ปุ่น หรือเกาหลีเท่านั้น</string>
     <string name="keyboard_switch_keep">ใช้แป้นพิมพ์ BitTool ต่อ</string>
     <string name="keyboard_switch_confirm">สลับต่อไป</string>
+    <string name="keyboard_paste_empty">ไม่มีข้อความในคลิปบอร์ดให้วาง</string>
 </resources>

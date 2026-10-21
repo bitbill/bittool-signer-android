@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "Усе одно перейти"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "У буфері обміну немає тексту для вставлення."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "Для найсуворішої ізоляції використовуйте окремий телефон і тримайте його з’єднання вимкненими."

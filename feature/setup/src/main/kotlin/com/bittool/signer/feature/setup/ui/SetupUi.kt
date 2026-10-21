@@ -74,10 +74,12 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
+import com.bittool.signer.core.designsystem.component.FirstLineIcon
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.NavIconTags
 import com.bittool.signer.core.designsystem.component.PhraseText
@@ -85,20 +87,25 @@ import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.component.Tone
+import com.bittool.signer.core.designsystem.component.icon
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
+import com.bittool.signer.core.designsystem.component.toneColor
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.keepInViewAboveBar
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
+import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.theme.headingLineBreaks
 import com.bittool.signer.core.designsystem.theme.phraseLineBreaks
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.security.RecoverySessionFactory
 import com.bittool.signer.core.ui.text.Callout
+import com.bittool.signer.core.ui.text.asString
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
@@ -443,13 +450,52 @@ internal fun BodyText(
 
 /**
  * A footer error (iOS `Callout(verbatim: error, tone: .danger)`): the shared `UiText` callout, so engine text keeps its
- * own direction.
+ * own direction. Tagged `setup.error`.
+ *
+ * With a [maxLines] (the import step while the in-app keyboard is up, at accessibility text sizes or on a short window:
+ * QA activity-keyboard-03) the message is drawn on at most that many lines, ending in an ellipsis, so the bar leaves
+ * the page room for what is being fixed; TalkBack still reads the whole message, and without the limit it is drawn
+ * whole again. It is the same callout (tone at 12 %, radius 16, padding 14, the first-line glyph, subheadline in the
+ * message's own direction), drawn here because the design system's has no line limit; its text is tagged
+ * `setup.error.text`.
  */
 @Composable
-internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier) {
+internal fun ErrorCallout(error: UiText?, modifier: Modifier = Modifier, maxLines: Int = Int.MAX_VALUE) {
     if (error == null) return
-    Callout(text = error, modifier = modifier.testTag("setup.error"), tone = Tone.Danger)
+    if (maxLines == Int.MAX_VALUE) {
+        Callout(text = error, modifier = modifier.testTag(ERROR_TAG), tone = Tone.Danger)
+        return
+    }
+    val colors = SignerTheme.colors
+    val style = SignerTheme.typography.subheadline.contentDirection()
+    val color = colors.toneColor(Tone.Danger)
+    Row(
+        modifier = modifier
+            .testTag(ERROR_TAG)
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.12f), SignerShapes.callout)
+            .padding(14.dp)
+            .semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        FirstLineIcon(Tone.Danger.icon(), color, style)
+        val text = error.asString()
+        PhraseText(
+            text = text,
+            style = style.phraseLineBreaks(),
+            color = colors.label,
+            maxLines = maxLines,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).testTag(ERROR_TEXT_TAG),
+        )
+    }
 }
+
+/** How many lines a footer error keeps while the in-app keyboard is up and space is short ([ErrorCallout]). */
+internal const val SHORTENED_ERROR_LINES = 2
+
+private const val ERROR_TAG = "setup.error"
+private const val ERROR_TEXT_TAG = "setup.error.text"
 
 /**
  * An inline tinted text button with an optional leading icon and trailing direction arrow (iOS `Button { Label(…) }`

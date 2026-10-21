@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "التبديل على أي حال"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "لا يوجد في الحافظة نص للصقه."
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "لأقصى عزل، استخدم هاتفًا مخصصًا وأبقِ كل اتصالاته مغلقة."

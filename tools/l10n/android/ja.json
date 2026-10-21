@@ -109,6 +109,10 @@
    "source": "Switch anyway",
    "value": "それでも切り替える"
   },
+  "keyboard_paste_empty": {
+   "source": "The clipboard has no text to paste.",
+   "value": "クリップボードに貼り付けるテキストがありません。"
+  },
   "onboarding_prepare_body": {
    "source": "For the strongest isolation, use a dedicated phone and keep its connections off.",
    "value": "最も確実に隔離するには、専用のスマートフォンを用意し、通信をすべてオフのままにしてください。"
