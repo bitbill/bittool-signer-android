@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The e2e test APK (self-instrumenting, gaps.md G1.0). It declares nothing: the app is driven from outside through
+    UiAutomator and shell commands (am, pm), and screenshots are written by the shell (screencap).
+-->
+<manifest />
