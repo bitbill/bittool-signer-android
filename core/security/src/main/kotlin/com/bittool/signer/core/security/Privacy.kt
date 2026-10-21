@@ -37,9 +37,12 @@ interface AppLifecycleMonitor {
     val events: SharedFlow<LifecycleEvent>
 
     /**
-     * Screen recording/mirroring visible (API 35+ `WindowManager.addScreenRecordingCallback`; always false below — the
-     * activity's `FLAG_SECURE` blanks recordings there). Becoming true → `suspendSession()`, conceal, refuse reveal,
-     * show the "recorded or mirrored" cover.
+     * The screen is recorded or mirrored, as iOS `UIScreen.isCaptured`: a screen recording or cast shows the app (API 35+
+     * `WindowManager.addScreenRecordingCallback`; below 35 the activity's `FLAG_SECURE` blanks recordings), or another
+     * display that can mirror it is connected and on (every API level: an external, wireless or simulated presentation
+     * display other than the built-in one, the activity's own and the app's private ones; `FLAG_SECURE` does not blank
+     * secure external displays). Becoming true → `suspendSession()`, conceal, refuse reveal, show the "recorded or
+     * mirrored" cover.
      */
     val isCaptured: StateFlow<Boolean>
 

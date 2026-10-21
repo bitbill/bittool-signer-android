@@ -1,5 +1,6 @@
 package com.bittool.signer.core.scanner
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +37,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,14 +74,18 @@ import androidx.lifecycle.compose.currentStateAsState
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospacedDigit
+import com.bittool.signer.core.designsystem.window.LocalWindowGateOpen
 import com.bittool.signer.core.model.QrEncodingException
 import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.scanner.internal.QrWindowEffects
 import com.bittool.signer.core.scanner.internal.hostWindow
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import com.bittool.signer.core.l10n.R as L10n
 
@@ -98,16 +105,24 @@ import com.bittool.signer.core.l10n.R as L10n
  *   (the code is under the privacy cover otherwise), also with animations removed, because the motion carries data.
  *   A new set of frames restarts at part 1; pause survives it, as on iOS. Below the plate: play/pause, a progress bar
  *   and the "i/n" counter (fixed width, LTR, tabular digits).
+ * - An animated code's encoded frames and the part it reached are kept by its screen ([QrFrameCache]), so returning to
+ *   it after a tab switch, a push or a configuration change neither shows the spinner nor restarts at part 1 (iOS
+ *   `@State` survives `TabView` switches). They are forgotten when the code leaves a resumed screen. A one-frame code is
+ *   never kept after it leaves. Pause is saved with the screen, as on iOS.
  * - TalkBack: "QR code" for one frame; "Animated QR code, part i of n" for several, updated (polite live region) only
  *   when the animation is paused, never four times a second (design-system.md §9.5, Ownbit improvement on iOS).
- * - While shown and resumed, the hosting window (the sheet's own window inside a bottom sheet) keeps the screen on
- *   (Android polish: iOS relies on its idle timer; wallets-pairing.md §13.5, activity-settings.md §9). Brightness is
- *   left alone unless the caller opts in with [maxBrightness]: iOS never changes it (design-system.md §9.5), and a
- *   brighter screen also makes a recovery-phrase code easier to photograph over a shoulder. Both requests are
- *   reference-counted per window and restored when the last code leaves.
+ * - Keep-screen-on only while an animated code plays in view (encoded, not paused, screen resumed, not under App Lock
+ *   or the "recorded or mirrored" cover: `LocalWindowGateOpen` open), on the hosting window (the sheet's own window
+ *   inside a bottom sheet): Android polish for a code that must stay in view until the other wallet has read every
+ *   part (ARCHITECTURE §1.12, design-system.md §9.5). Never for a one-frame code, which includes the
+ *   recovery-phrase QR: iOS never disables its idle timer, and the system's auto-lock is what conceals an unattended
+ *   code (the activity pauses) and starts the App Lock clock (QA audit A02). Brightness is left alone unless the caller
+ *   opts in with [maxBrightness]: iOS never changes it, and a brighter screen also makes a recovery-phrase code easier
+ *   to photograph over a shoulder. Both requests are reference-counted per window and restored when the last code
+ *   leaves.
  *
- * Only public or already-protected data belongs here: frames stay in composition memory and are never cached across
- * screens.
+ * Only public or already-protected data belongs here: frames stay in composition memory (animated ones also in their
+ * screen's [QrFrameCache]) and are never kept across screens.
  *
  * @param maxSide largest plate side (iOS callers: 250 backup, 280 address, 300 coin pairing, 320 activity,
  *   340 signature, 360 wallet pairing).
@@ -125,31 +140,50 @@ fun QrCodeView(
     initial: List<QrMatrix>? = null,
     maxBrightness: Boolean = false,
 ) {
-    val immediate = remember(frames, initial) { QrFrames.prepared(frames, initial) }
-    var rendered by remember { mutableStateOf<RenderedQr?>(null) }
-    val current = immediate ?: rendered?.takeIf { it.frames == frames }
-    val images = current?.images.orEmpty()
-    val ready = images.isNotEmpty()
     val count = frames.size
     val animated = count > 1
+    // Only animated codes are kept by their screen (A13): a one-frame code may be the recovery phrase.
+    val cache = if (animated) QrFrameCache.forCurrentScreen() else null
+    val immediate = remember(frames, initial) { QrFrames.prepared(frames, initial) }
+    val parked = remember(frames, cache) { cache?.ready(frames) }
+    var rendered by remember { mutableStateOf<RenderedQr?>(null) }
+    val current = immediate ?: rendered?.takeIf { it.frames == frames } ?: parked
+    val images = current?.images.orEmpty()
+    val ready = images.isNotEmpty()
 
-    var index by remember(frames) { mutableIntStateOf(0) }
-    var paused by remember { mutableStateOf(false) }
-    var describedPart by remember(frames) { mutableIntStateOf(1) }
+    var index by remember(frames, cache) { mutableIntStateOf(cache?.index(frames) ?: 0) }
+    var paused by rememberSaveable { mutableStateOf(false) }
+    var describedPart by remember(frames, cache) { mutableIntStateOf(index + 1) }
     val imageCount by rememberUpdatedState(images.size)
 
-    LaunchedEffect(frames, immediate) {
+    LaunchedEffect(frames, immediate, cache) {
         if (immediate != null) {
             // Kept, so a caller that later drops its prepared matrices for the same frames shows no spinner.
             rendered = immediate
             return@LaunchedEffect
         }
         if (rendered?.frames == frames) return@LaunchedEffect
-        val encoded = withContext(Dispatchers.Default) { QrFrames.render(frames) }
+        val encoded = cache?.render(frames) ?: withContext(Dispatchers.Default) { QrFrames.render(frames) }
         rendered = RenderedQr(frames, encoded)
     }
 
-    val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    if (cache != null) {
+        val owner by rememberUpdatedState(lifecycleOwner)
+        DisposableEffect(cache, frames) {
+            onDispose {
+                // Below RESUMED the code leaves with its screen (tab switch, push, background, configuration change)
+                // and is kept for its return; on a resumed screen the code itself went away and is forgotten.
+                if (owner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                    cache.drop(frames)
+                } else {
+                    cache.park(frames, index)
+                }
+            }
+        }
+    }
+
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateAsState()
     val resumed = lifecycleState.isAtLeast(Lifecycle.State.RESUMED)
     val interval = intervalMillis.coerceAtLeast(MIN_INTERVAL_MILLIS)
     LaunchedEffect(frames, ready, paused, resumed, interval) {
@@ -160,7 +194,10 @@ fun QrCodeView(
         }
     }
 
-    QrDisplayWindowEffects(maxBrightness)
+    // Closed while App Lock is up or the screen is recorded or mirrored: the code is covered, so it must not hold the
+    // screen on beneath the lock or the cover (the device would then never sleep or lock).
+    val inView = LocalWindowGateOpen.current
+    QrDisplayWindowEffects(keepScreenOn = animated && ready && !paused && inView, maxBrightness = maxBrightness)
 
     val label = if (animated) {
         stringResource(L10n.string.animated_qr_code_part_x_of_x, describedPart, count)
@@ -225,18 +262,30 @@ internal class RenderedQr(val frames: List<String>, val images: List<ImageBitmap
 internal object QrFrames {
     private val encoder = ZxingQrCodeEncoder()
 
+    /** How many times [render] ran (tests: a code shown again must not be encoded again). */
+    @VisibleForTesting
+    val renderCalls = AtomicInteger()
+
     /** [initial] as images when it was prepared for exactly these frames (`QRCodeView.swift:47`), else null. */
     fun prepared(frames: List<String>, initial: List<QrMatrix>?): RenderedQr? {
         if (initial == null || frames.isEmpty() || initial.size != frames.size) return null
         return RenderedQr(frames, initial.map(QrRendering::imageBitmap))
     }
 
-    /** Encodes and renders every frame (CPU work: call off the main thread); frames that do not fit are left out. */
-    fun render(frames: List<String>): List<ImageBitmap> = frames.mapNotNull { frame ->
-        try {
-            QrRendering.imageBitmap(encoder.encode(frame))
-        } catch (e: QrEncodingException) {
-            null
+    /**
+     * Encodes and renders every frame (CPU work: call off the main thread); frames that do not fit are left out.
+     * Cancellable between frames, so a code that goes away stops costing CPU.
+     */
+    suspend fun render(frames: List<String>): List<ImageBitmap> {
+        renderCalls.incrementAndGet()
+        val context = currentCoroutineContext()
+        return frames.mapNotNull { frame ->
+            context.ensureActive()
+            try {
+                QrRendering.imageBitmap(encoder.encode(frame))
+            } catch (e: QrEncodingException) {
+                null
+            }
         }
     }
 }
@@ -334,16 +383,22 @@ private fun rememberCounterWidth(widest: String, style: TextStyle): Dp {
 }
 
 /**
- * Keeps the screen on and, when [maxBrightness], at full brightness while composed and resumed, on the window that
- * hosts this composition (activity, dialog or bottom sheet).
+ * While composed and resumed, on the window that hosts this composition (activity, dialog or bottom sheet): keeps the
+ * screen on when [keepScreenOn], runs it at full brightness when [maxBrightness]. Separate effects, so pausing an
+ * animated code never touches the brightness.
  */
 @Composable
-private fun QrDisplayWindowEffects(maxBrightness: Boolean) {
+private fun QrDisplayWindowEffects(keepScreenOn: Boolean, maxBrightness: Boolean) {
     val view = LocalView.current
+    LifecycleResumeEffect(view, keepScreenOn) {
+        val window = if (keepScreenOn) view.hostWindow() else null
+        window?.let { QrWindowEffects.acquire(it, QrWindowEffects.Effect.KeepScreenOn) }
+        onPauseOrDispose { window?.let { QrWindowEffects.release(it, QrWindowEffects.Effect.KeepScreenOn) } }
+    }
     LifecycleResumeEffect(view, maxBrightness) {
-        val window = view.hostWindow()
-        window?.let { QrWindowEffects.acquire(it, maxBrightness) }
-        onPauseOrDispose { window?.let { QrWindowEffects.release(it, maxBrightness) } }
+        val window = if (maxBrightness) view.hostWindow() else null
+        window?.let { QrWindowEffects.acquire(it, QrWindowEffects.Effect.FullBrightness) }
+        onPauseOrDispose { window?.let { QrWindowEffects.release(it, QrWindowEffects.Effect.FullBrightness) } }
     }
 }
 
