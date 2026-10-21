@@ -6,8 +6,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
@@ -117,8 +120,29 @@ data class SignerTypography(
  */
 val SignerMonospace: FontFamily = FontFamily.Monospace
 
-/** SF Mono equivalent (`.monospaced()`). Identifiers drawn with it should also be [ltr]. */
+/**
+ * SF Mono equivalent (`.monospaced()`). Identifiers drawn with it should also be [ltr]. For a translated sentence that
+ * embeds an identifier ("Fingerprint %s"), also mark the identifier with [monospacedRun].
+ */
 fun TextStyle.monospaced(): TextStyle = copy(fontFamily = SignerMonospace)
+
+/**
+ * [text] with the monospaced family ([SignerMonospace]) as a span on [value] alone: its first occurrence, without the
+ * bidi isolates or marks around it. For a translated sentence that embeds an identifier, drawn in a [monospaced] style
+ * like iOS (`Text("Fingerprint \(value)").font(.caption.monospaced())`): left to right it looks the same, and in a
+ * right-to-left language the identifier is meant to keep the monospaced face. With the family on the whole sentence
+ * only, Android 12 drew the Latin value after an Arabic word and its isolate in a proportional face (QA
+ * regression-10); the value therefore also carries the family as a typeface span of its own, as QA proposed. [text]
+ * that does not contain [value] (or an empty [value]) comes back without a span. Pure.
+ */
+fun monospacedRun(text: String, value: String): AnnotatedString {
+    val start = if (value.isEmpty()) -1 else text.indexOf(value)
+    if (start < 0) return AnnotatedString(text)
+    return buildAnnotatedString {
+        append(text)
+        addStyle(SpanStyle(fontFamily = SignerMonospace), start, start + value.length)
+    }
+}
 
 /** Tabular figures (`.monospacedDigit()`): counters and percentages that must not jitter. */
 fun TextStyle.monospacedDigit(): TextStyle = copy(fontFeatureSettings = "tnum")

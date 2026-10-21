@@ -39,6 +39,8 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.theme.localizedDirection
+import com.bittool.signer.core.designsystem.theme.phraseBreakable
+import com.bittool.signer.core.designsystem.theme.phraseLineBreaks
 import com.bittool.signer.core.designsystem.theme.semibold
 
 /**
@@ -246,7 +248,9 @@ fun NavRow(
 
 /**
  * A switch row (iOS `Toggle` with a `Label`): leading [icon], [title] (and optional [subtitle]), and a Material switch
- * whose checked track is the accent. The whole row toggles (`Role.Switch`, state read by TalkBack).
+ * whose checked track is the accent. The whole row toggles (`Role.Switch`, state read by TalkBack). The subtitle breaks
+ * Japanese and Korean lines between phrases, also below API 33 (`phraseLineBreaks`, `phraseBreakable`; backlog B31):
+ * "「25 番目の単語」を / 追加します。", never "…を追加しま / す。".
  */
 @Composable
 fun SwitchRow(
@@ -272,7 +276,13 @@ fun SwitchRow(
         if (icon != null) Icon(icon, contentDescription = null, tint = if (enabled) colors.accent else colors.tertiaryLabel, modifier = Modifier.size(24.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = typography.body, color = if (enabled) colors.label else colors.tertiaryLabel)
-            if (subtitle != null) Text(subtitle, style = typography.footnote, color = colors.secondaryLabel)
+            if (subtitle != null) {
+                Text(
+                    text = phraseBreakable(subtitle),
+                    style = typography.footnote.phraseLineBreaks(),
+                    color = colors.secondaryLabel,
+                )
+            }
         }
         Switch(
             checked = checked,

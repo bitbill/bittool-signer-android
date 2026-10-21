@@ -32,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.monospaced
+import com.bittool.signer.core.designsystem.theme.monospacedRun
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.util.Graphemes
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
@@ -143,13 +145,25 @@ fun WalletIdentityHeader(
             Text(
                 // In a right-to-left interface the value is isolated so it stays left to right inside the sentence;
                 // left to right the text stays plain, the same string as the Wallets list ("Fingerprint 73C5DA0A").
-                text = stringResource(R.string.fingerprint_x, isolateInRightToLeft(value)),
+                text = fingerprintLine(value),
                 style = typography.caption.monospaced(),
                 color = colors.secondaryLabel,
             )
         }
     }
 }
+
+/**
+ * The "Fingerprint %@" line (iOS `Text("Fingerprint \(value)").font(.caption.monospaced())`) for [value], the
+ * upper-cased fingerprint or "Setup required": the value isolated in a right-to-left interface only
+ * ([isolateInRightToLeft]; left to right the plain "Fingerprint 73C5DA0A" every list shows), with the monospaced family
+ * on the value itself ([monospacedRun]) so it keeps its face after an Arabic word (QA regression-10). Draw it in a
+ * `monospaced()` style.
+ */
+@Composable
+@ReadOnlyComposable
+fun fingerprintLine(value: String): AnnotatedString =
+    monospacedRun(stringResource(R.string.fingerprint_x, isolateInRightToLeft(value)), value)
 
 /** Wraps [value] in Unicode first-strong isolates (FSI … PDI) so its direction does not leak into the sentence. */
 fun isolate(value: String): String = buildString {

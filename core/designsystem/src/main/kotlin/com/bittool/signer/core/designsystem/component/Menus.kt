@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.WindowFocusHoldEffect
 import com.bittool.signer.core.designsystem.window.appExposesTestTags
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.designsystem.window.windowTestTags
@@ -19,7 +20,9 @@ import com.bittool.signer.core.designsystem.window.windowTestTags
  * Same window rules as [SignerAlertDialog]: the menu is a popup window of its own, so it waits for
  * `LocalWindowGateOpen` (a menu requested while App Lock is up appears after unlock) and, in debuggable builds,
  * publishes the test tags of its items as resource ids itself (`windowTestTags`; the activity root's flag does not
- * reach a separate window, backlog B26). [modifier] applies to the menu's content inside that window.
+ * reach a separate window, backlog B26). An item chosen with the keyboard leaves no focus ring on the page's first
+ * control: the anchor's window gets the focus back where it was, or nowhere (`WindowFocusHoldEffect`, backlog B30).
+ * [modifier] applies to the menu's content inside that window.
  */
 @Composable
 fun SignerDropdownMenu(
@@ -30,6 +33,7 @@ fun SignerDropdownMenu(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (!expanded || !rememberWindowGateReleased()) return
+    WindowFocusHoldEffect()
     val exposeTestTags = appExposesTestTags()
     DropdownMenu(
         expanded = true,

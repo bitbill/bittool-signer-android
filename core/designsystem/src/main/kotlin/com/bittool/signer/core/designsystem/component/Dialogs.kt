@@ -31,6 +31,7 @@ import com.bittool.signer.core.designsystem.theme.ElevatedSurfaceLevel
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
+import com.bittool.signer.core.designsystem.window.WindowFocusHoldEffect
 import com.bittool.signer.core.designsystem.window.appExposesTestTags
 import com.bittool.signer.core.designsystem.window.rememberSecureFlagPolicy
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
@@ -65,7 +66,9 @@ data class DialogAction(
  * `secure = true`), except in the debug screenshot tour ([rememberSecureFlagPolicy]). Modal: a tap outside does
  * nothing; Back and the system dismiss call [onDismissRequest] (the cancel action) unless [dismissOnBack] is false
  * (busy). In debuggable builds the window publishes its test tags as resource
- * ids itself (`windowTestTags`): the root's flag does not reach a separate window.
+ * ids itself (`windowTestTags`): the root's flag does not reach a separate window. Keyboard focus: the caller's window
+ * comes back with the control that had the focus focused again, or with nothing focused, never with the focus on the
+ * page's first control (`WindowFocusHoldEffect`, QA wallets-12, backlog B30).
  */
 @Composable
 fun SignerAlertDialog(
@@ -80,6 +83,7 @@ fun SignerAlertDialog(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     if (!rememberWindowGateReleased()) return
+    WindowFocusHoldEffect()
     val exposeTestTags = appExposesTestTags()
     val securePolicy = rememberSecureFlagPolicy(secure)
     ElevatedSurfaceLevel {
@@ -154,7 +158,8 @@ interface SignerSheetScope : ColumnScope {
  *
  * Same window rules as [SignerAlertDialog]: waits for `LocalWindowGateOpen`, hides foreign overlays on API 31+, and with
  * [secure] the sheet window is `FLAG_SECURE` (paste, authorize, recovery cards; not in the debug screenshot tour,
- * [rememberSecureFlagPolicy]), and in debuggable builds the content publishes its test tags as resource ids.
+ * [rememberSecureFlagPolicy]), in debuggable builds the content publishes its test tags as resource ids, and the
+ * caller's window gets no stray keyboard focus when the sheet goes (`WindowFocusHoldEffect`).
  * [testTag] tags the sheet content.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -169,6 +174,7 @@ fun SignerBottomSheet(
     content: @Composable SignerSheetScope.() -> Unit,
 ) {
     if (!rememberWindowGateReleased()) return
+    WindowFocusHoldEffect()
     val canDismiss by rememberUpdatedState(dismissible)
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
     val state = rememberModalBottomSheetState(

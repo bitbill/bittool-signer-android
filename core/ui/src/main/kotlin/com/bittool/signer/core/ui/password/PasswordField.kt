@@ -113,6 +113,16 @@ enum class PasswordKind(val english: String, @StringRes val title: Int) {
  *   field, never onto the field's own eye button).
  * - The box: [containerColor] (the card colour by default; `raised` on a card) with radius 14 and padding 14, the
  *   translated placeholder in body, entered text laid out left to right.
+ * - Logcat (QA production-r02): each field, when it appears, logs "BasicSecureTextField: Failed to fetch show password
+ *   setting, using value: true" at warning level (twice: touch and hardware-keyboard input) with a
+ *   `SettingNotFoundException: show_password`. Compose reads the system
+ *   "Show passwords" setting (`Settings.System.TEXT_SHOW_PASSWORD`) on every `BasicSecureTextField` below API 37,
+ *   whatever its obfuscation mode, with the `getInt` overload that throws when the device never stored the setting (a
+ *   fresh emulator image, a device where nobody touched the switch), and falls back to `true`. It is harmless here: the
+ *   value only matters for `TextObfuscationMode.System`, and this field uses `RevealLastTyped` (iOS shows the last
+ *   typed character too) or `Visible`; the message holds no text of the field. The app cannot avoid it cleanly: the
+ *   read is unconditional and its provider is internal to Compose, the app may not write system settings, and a plain
+ *   text field would lose the password semantics, masking and copy protection above.
  */
 @Suppress("UNUSED_PARAMETER") // isNew: see the KDoc, kept for the iOS call sites' intent.
 @OptIn(ExperimentalFoundationApi::class)
