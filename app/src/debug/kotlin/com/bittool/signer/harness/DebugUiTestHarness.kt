@@ -53,8 +53,8 @@ import kotlinx.coroutines.launch
  * of a process wins: extras of a later launch (a `singleTask` relaunch, `onNewIntent`) are ignored, because every
  * singleton is already bound to the first run — the e2e suite force-stops the app before each launch.
  *
- * This class exists only in debug builds; the release check `check<Variant>ReleaseHasNoHarness` fails a release whose
- * R8 output still contains it.
+ * This class exists only in debug builds; the release check `check<Variant>HasNoHarness` (e.g.
+ * `checkApkReleaseHasNoHarness`) fails a release whose R8 output still contains it.
  */
 object DebugUiTestHarness : UiTestEnvironment {
     const val EXTRA_RUN = "bts.uitest.run"

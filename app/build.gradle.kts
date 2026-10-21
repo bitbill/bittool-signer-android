@@ -218,9 +218,10 @@ abstract class CheckMergedPermissions : DefaultTask() {
 
 /**
  * Release sanity after R8 (ARCHITECTURE §3 W2-shell): the debug UI-test harness (`app/src/debug`) must not exist in a
- * release build, neither as a class in the R8 mapping nor as its intent-extra keys in the dex. Neither may the
- * test-support key stores of `:core:crypto` (backlog B23: `TestKeystore` builds keys usable while the device is locked,
- * `InMemoryDeviceKeyStore` software keys): nothing in the app references them, so R8 must have removed them.
+ * release build, neither as a class in the R8 mapping (kept, or with members inlined elsewhere) nor as its intent-extra
+ * keys in the dex. Neither may the test-support key stores of `:core:crypto` (backlog B23: `TestKeystore` builds keys
+ * usable while the device is locked, `InMemoryDeviceKeyStore` software keys): nothing in the app references them, so R8
+ * must have removed them.
  */
 abstract class CheckReleaseHasNoHarness : DefaultTask() {
     @get:InputFile
@@ -241,7 +242,12 @@ abstract class CheckReleaseHasNoHarness : DefaultTask() {
             "DebugUiTestModule", "TestKeystore", "InMemoryDeviceKeyStore",
         )
         val mappingText = mapping.get().asFile.readText()
-        val inMapping = forbidden.filter { name -> Regex("""(?m)^\S*\b$name\b\S* -> """).containsMatchIn(mappingText) }
+        // A kept class (`com.….TestKeystore -> a.b:`) and also a member R8 inlined into a kept class (an indented
+        // frame `1:1:… com.….TestKeystore.journalCipher():43:43 -> a`): a small factory method is inlined into its
+        // caller and its class can vanish while the weaker keys it builds are still made.
+        val inMapping = forbidden.filter { name ->
+            Regex("""(?<![\w$.])com\.bittool\.signer\.(?:[\w$]+\.)*$name(?![\w])""").containsMatchIn(mappingText)
+        }
         val apks = apkDirectory.get().asFile.walkTopDown().filter { it.isFile && it.extension == "apk" }.toList()
         if (apks.isEmpty()) throw GradleException("No APK found in ${apkDirectory.get().asFile}")
         val marker = "bts.uitest.".toByteArray(Charsets.US_ASCII)
