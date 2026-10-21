@@ -46,7 +46,7 @@ fun phraseBreakable(text: String): String = PhraseBreaks.forSdk(text, Build.VERS
  */
 object PhraseBreaks {
     /** U+2060 WORD JOINER. */
-    const val WORD_JOINER: Char = '⁠'
+    const val WORD_JOINER: Char = '\u2060'
 
     /** [text] as [phraseBreakable] draws it on API level [sdkInt]. Pure. */
     fun forSdk(text: String, sdkInt: Int): String =

@@ -10,11 +10,17 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
@@ -26,9 +32,11 @@ import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.component.SignerBottomSheet
 import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
+import kotlinx.coroutines.flow.first
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -165,6 +173,60 @@ class DesignWindowsFocusTest {
         }
         openUseWithTheKeyboardAndClose()
         assertNothingFocusedOnThePage()
+    }
+
+    /**
+     * The hold ends no later than the page learns it has the window focus back: a control focused at that moment gets
+     * the focus. feature:setup's keyboard switch does exactly this after `SwitchToSystemKeyboardDialog` (it waits for
+     * `LocalWindowInfo.isWindowFocused`, then focuses the recreated editor so the system keyboard can show).
+     */
+    @Test
+    fun aFocusRequestMadeOnceThePageHasTheWindowFocusBackIsGranted() {
+        val editor = FocusRequester()
+        var refocus by mutableStateOf(false)
+        var granted: Boolean? = null
+        compose.setContent {
+            root = LocalView.current.rootView
+            val windowInfo = LocalWindowInfo.current
+            LaunchedEffect(refocus) {
+                if (!refocus) return@LaunchedEffect
+                snapshotFlow { windowInfo.isWindowFocused }.first { it }
+                granted = editor.requestFocus(FocusDirection.Enter)
+            }
+            SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                Column {
+                    Button(onClick = {}, modifier = Modifier.testTag("first")) { Text("Back") }
+                    Button(onClick = {}, modifier = Modifier.testTag("editor").focusRequester(editor)) { Text("Editor") }
+                    if (shown) {
+                        SignerAlertDialog(
+                            title = "Switch to the system keyboard?",
+                            text = null,
+                            confirm = DialogAction("Switch") { shown = false },
+                            onDismissRequest = { shown = false },
+                        )
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        WindowSignals.setTouchMode(root, inTouchMode = true)
+        WindowSignals.windowFocus(root, hasFocus = true)
+        root.findFocus()?.clearFocus()
+        shown = true
+        compose.waitForIdle()
+        val above = WindowSignals.topWindowRoot()
+        WindowSignals.windowFocus(root, hasFocus = false)
+        WindowSignals.leaveTouchModeIn(above, root)
+        shown = false
+        refocus = true
+        compose.waitForIdle()
+        assertNull(granted, "The page waits for the window focus")
+        WindowSignals.windowFocus(root, hasFocus = true)
+        compose.waitForIdle()
+
+        assertEquals(true, granted)
+        compose.onNodeWithTag("editor").assertIsFocused()
+        compose.onNodeWithTag("first").assertIsNotFocused()
     }
 
     @Test

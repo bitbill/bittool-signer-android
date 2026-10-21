@@ -12,7 +12,7 @@ import org.junit.Test
 class MonospacedRunTest {
     @Test
     fun theValueAloneCarriesTheMonospacedFamily() {
-        val sentence = "البصمة ⁨F7FB19CD⁩"
+        val sentence = "البصمة \u2068F7FB19CD\u2069"
         val line = monospacedRun(sentence, "F7FB19CD")
         assertEquals(sentence, line.text)
         assertEquals(listOf(AnnotatedString.Range(SpanStyle(fontFamily = SignerMonospace), 8, 16)), line.spanStyles)

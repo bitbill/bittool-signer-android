@@ -130,9 +130,9 @@ fun TextStyle.monospaced(): TextStyle = copy(fontFamily = SignerMonospace)
  * [text] with the monospaced family ([SignerMonospace]) as a span on [value] alone: its first occurrence, without the
  * bidi isolates or marks around it. For a translated sentence that embeds an identifier, drawn in a [monospaced] style
  * like iOS (`Text("Fingerprint \(value)").font(.caption.monospaced())`): left to right it looks the same, and in a
- * right-to-left language the identifier keeps the monospaced face. With the family on the whole sentence only, Android
- * 12 drew the Latin value after an Arabic word and its isolate in the Arabic font's proportional Latin letters (QA
- * regression-10); the span makes the value a text run of its own, laid out like a Latin-only monospaced text. [text]
+ * right-to-left language the identifier is meant to keep the monospaced face. With the family on the whole sentence
+ * only, Android 12 drew the Latin value after an Arabic word and its isolate in a proportional face (QA
+ * regression-10); the value therefore also carries the family as a typeface span of its own, as QA proposed. [text]
  * that does not contain [value] (or an empty [value]) comes back without a span. Pure.
  */
 fun monospacedRun(text: String, value: String): AnnotatedString {
