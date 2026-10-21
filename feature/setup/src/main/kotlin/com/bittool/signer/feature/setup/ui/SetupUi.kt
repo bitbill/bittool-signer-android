@@ -1,6 +1,13 @@
 package com.bittool.signer.feature.setup.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +20,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,7 +47,9 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +75,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.NavIcon
@@ -265,6 +276,12 @@ private class KeepTogetherInViewNode : Modifier.Node(), BringIntoViewModifierNod
  * The bar rises with the keyboard and the scrolling viewport above it shrinks: `keepInViewAboveBar` keeps the focused
  * field, and the line being typed, above the bar and its edge fade, also while the bar grows (QA setup-02). Blocks that
  * should stay visible together while one of their fields is typed in carry [keepTogetherInView].
+ *
+ * The in-app recovery-phrase keyboard ([keyboard], shown while [keyboardVisible]) is part of the bottom bar, under the
+ * footer and full width: it slides up from the bottom edge like a system keyboard, the bar grows with it, and the same
+ * `keepInViewAboveBar` keeps the editor above both. While it is up the footer leaves the navigation-bar inset to it
+ * (the keyboard's tray runs under the navigation bar), continuously while it slides. [footerVisible] false hides the
+ * footer (a window too short for the footer, the keyboard and the editor together).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -279,20 +296,40 @@ internal fun SetupScaffold(
     centering: ScrollCentering? = null,
     footerBottomPadding: Dp = 8.dp,
     footerMaxWidth: Dp = SignerMetrics.readableWidth,
+    footerVisible: Boolean = true,
+    keyboardVisible: Boolean = false,
+    keyboard: @Composable () -> Unit = {},
     footer: @Composable ColumnScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val density = LocalDensity.current
+    val reduceMotion = SignerTheme.reduceMotion
+    // The keyboard's current (animated) height: the footer's bottom inset is reduced by it, so the footer never jumps.
+    var keyboardHeight by remember { mutableStateOf(0.dp) }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = { topBar(scrollBehavior) },
         bottomBar = {
-            BottomActionBar(
-                canScrollUnder = scrollState.canScrollForward,
-                bottomPadding = footerBottomPadding,
-                maxWidth = footerMaxWidth,
-                content = footer,
-            )
+            Column(Modifier.fillMaxWidth()) {
+                // Not in an AnimatedVisibility: its clip would cut off the fade the bar draws above itself. The
+                // keyboard's slide covers the change.
+                if (footerVisible) {
+                    BottomActionBar(
+                        modifier = Modifier.consumeWindowInsets(PaddingValues(bottom = keyboardHeight)),
+                        canScrollUnder = scrollState.canScrollForward,
+                        bottomPadding = footerBottomPadding,
+                        maxWidth = footerMaxWidth,
+                        content = footer,
+                    )
+                }
+                KeyboardSlot(
+                    visible = keyboardVisible,
+                    reduceMotion = reduceMotion,
+                    modifier = Modifier.onSizeChanged { keyboardHeight = with(density) { it.height.toDp() } },
+                    keyboard = keyboard,
+                )
+            }
         },
         containerColor = SignerTheme.colors.page,
         contentWindowInsets = WindowInsets(0),
@@ -321,6 +358,25 @@ internal fun SetupScaffold(
         }
     }
 }
+
+/**
+ * Where [SetupScaffold] puts the in-app keyboard: full width under the footer, anchored at the bottom edge so it slides
+ * up into the growing bar (none without animations). The slot stays laid out (0 high) while the keyboard is gone, so
+ * [modifier]'s size reports always end at 0.
+ */
+@Composable
+private fun KeyboardSlot(visible: Boolean, reduceMotion: Boolean, modifier: Modifier, keyboard: @Composable () -> Unit) {
+    Box(modifier.fillMaxWidth()) {
+        AnimatedVisibility(
+            visible = visible,
+            enter = if (reduceMotion) EnterTransition.None else expandVertically(KeyboardMotion, expandFrom = Alignment.Bottom),
+            exit = if (reduceMotion) ExitTransition.None else shrinkVertically(KeyboardMotion, shrinkTowards = Alignment.Bottom),
+        ) { keyboard() }
+    }
+}
+
+/** The in-app keyboard's slide (about the system keyboard's 0.3 s, no bounce). */
+private val KeyboardMotion: FiniteAnimationSpec<IntSize> = SignerMotion.smooth(0.3, IntSize.VisibilityThreshold)
 
 /** The step header: progress, "Step %lld of %lld", title and message as one element (setup-backup §5, §12.1). */
 @Composable
