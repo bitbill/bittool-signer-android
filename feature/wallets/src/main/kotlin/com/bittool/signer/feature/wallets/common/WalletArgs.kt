@@ -48,7 +48,10 @@ data class WalletIdentity(
     val createdAtMillis: Long,
     val ready: Boolean,
     val duplicate: Boolean,
-    /** QA L4: no ready public data and a provably lost device key (`SignerState.hasLostDeviceKey`). */
+    /**
+     * QA L4: a provably lost device key (`SignerState.hasLostDeviceKey`). Usually without ready public data (the
+     * public-data key goes with the device keys); a wallet with a ready index counts once another proof found its loss.
+     */
     val keyLost: Boolean = false,
     /** QA L4: no ready public data and no secure lock screen (`SignerState.deviceSecure`): a lock comes first. */
     val screenLockRequired: Boolean = false,
@@ -69,7 +72,7 @@ data class WalletIdentity(
                 createdAtMillis = wallet.createdAtMillis,
                 ready = ready,
                 duplicate = state.isDuplicate(id),
-                keyLost = !ready && state.deviceSecure && state.hasLostDeviceKey(id),
+                keyLost = state.deviceSecure && state.hasLostDeviceKey(id),
                 screenLockRequired = !ready && !state.deviceSecure,
             )
         }

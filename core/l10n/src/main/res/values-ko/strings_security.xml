@@ -14,7 +14,7 @@
     <string name="security_delete_footer_biometric">삭제하려면 생체 인증으로 확인한 뒤 이 지갑의 암호가 필요합니다.</string>
     <string name="security_overlay_blocked">다른 앱이 BitTool Signer 위에 표시되고 있습니다. 그 앱을 닫은 뒤 다시 시도하세요.</string>
     <string name="security_no_unlock_path_title">잠금을 해제할 방법이 없습니다</string>
-    <string name="security_no_unlock_path_message">이 기기의 화면 잠금을 제거할 때 여기 있는 모든 지갑의 기기 키가 삭제되어, 어떤 지갑 암호로도 BitTool Signer의 잠금을 해제할 수 없고 지문 또는 얼굴 인식도 설정되어 있지 않습니다. 앱 잠금 없이 계속하여 앱을 연 다음, 이 지갑들을 제거하고 각 복구 구문을 다시 가져오세요. 자산에는 영향이 없습니다.</string>
+    <string name="security_no_unlock_path_message">여기 있는 모든 지갑의 기기 키가 사라져(Android는 화면 잠금을 제거하면 이 키들을 삭제합니다), 어떤 지갑 암호로도 BitTool Signer의 잠금을 해제할 수 없고 지문 또는 얼굴 인식도 사용할 수 없습니다. 앱 잠금 없이 계속한 다음, 이 지갑들을 제거하고 각 복구 구문을 다시 가져오세요. 앱 잠금은 나중에 설정에서 다시 켤 수 있습니다. 자산에는 영향이 없습니다.</string>
     <string name="security_no_unlock_path_continue">앱 잠금 없이 계속</string>
     <string name="security_app_lock_save_failed">앱 잠금을 변경하지 못했습니다. 다시 시도하세요.</string>
 </resources>

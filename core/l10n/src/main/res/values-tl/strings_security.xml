@@ -14,7 +14,7 @@
     <string name="security_delete_footer_biometric">Sa pagbura, hihingin ang biometric na kumpirmasyon, tapos ang password ng wallet na ito.</string>
     <string name="security_overlay_blocked">May ibang app na nakapatong sa BitTool Signer. Isara ito, tapos subukan muli.</string>
     <string name="security_no_unlock_path_title">Walang paraan para mag-unlock</string>
-    <string name="security_no_unlock_path_message">Nabura ang mga device key ng lahat ng wallet dito nang alisin ang screen lock ng device na ito, kaya walang password ng wallet na makakapag-unlock sa BitTool Signer, at walang naka-set up na fingerprint o face unlock. Magpatuloy nang walang App Lock para buksan ang app, tapos alisin ang mga wallet na ito at i-import muli ang mga recovery phrase nila. Hindi apektado ang pondo.</string>
+    <string name="security_no_unlock_path_message">Wala na ang mga device key ng lahat ng wallet dito (binubura ito ng Android kapag inalis ang screen lock), kaya walang password ng wallet na makakapag-unlock sa BitTool Signer, at walang available na fingerprint o face unlock. Magpatuloy nang walang App Lock, tapos alisin ang mga wallet na ito at i-import muli ang mga recovery phrase nila. Puwede mong i-on muli ang App Lock sa Mga setting mamaya. Hindi apektado ang pondo.</string>
     <string name="security_no_unlock_path_continue">Magpatuloy nang walang App Lock</string>
     <string name="security_app_lock_save_failed">Hindi mabago ang App Lock. Subukan muli.</string>
 </resources>

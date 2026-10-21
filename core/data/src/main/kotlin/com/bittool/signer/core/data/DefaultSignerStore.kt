@@ -203,9 +203,12 @@ class DefaultSignerStore @Inject constructor(
                 runCatchingCancellable { publicRepository.unverifiedWalletKeyId(id) }.getOrNull()?.let { claims[id] = it }
             }
             val secure = originals.isEmpty() || deviceSecure(fallback = current.deviceSecure)
-            provenLostKeys.retainAll(originals.map { it.id }.toSet())
-            val lost = lostDeviceKeys(unready, secure)
+            val listed = originals.map { it.id }
+            provenLostKeys.retainAll(listed.toSet())
+            proveLostDeviceKeys(unready, secure)
             if (loading != reloadEpoch) return@withContext
+            // Also a loss another proof found meanwhile (setup, the Delete page), even for a wallet with a ready index.
+            val lost = knownLostKeys(listed, secure)
             unverifiedKeyIds = claims
             // AppStore.swift:140-141: every wallet whose ready index shares its walletKeyId with another.
             val duplicates = indexes.entries.groupBy({ it.value.walletKeyId }, { it.key }).values
@@ -248,10 +251,13 @@ class DefaultSignerStore @Inject constructor(
             reload()
             return@withContext
         }
-        val unready = current.wallets.map { it.id }.filter { current.metadataStatus(it) != PublicMetadataStatus.Ready }
-        if (unready.isEmpty()) return@withContext
-        val lost = lostDeviceKeys(unready, secure)
-        if (loaded == reloadEpoch && lost != current.lostKeyWalletIds) _state.update { it.copy(lostKeyWalletIds = lost) }
+        val listed = current.wallets.map { it.id }
+        val unready = listed.filterTo(HashSet()) { current.metadataStatus(it) != PublicMetadataStatus.Ready }
+        if (unready.isEmpty() && provenLostKeys.isEmpty()) return@withContext
+        proveLostDeviceKeys(unready, secure)
+        if (loaded != reloadEpoch) return@withContext
+        val lost = knownLostKeys(current.wallets.map { it.id }, secure)
+        if (lost != current.lostKeyWalletIds) _state.update { it.copy(lostKeyWalletIds = lost) }
     }
 
     /** `WalletVault.isDeviceSecure`, or [fallback] when the query fails (never throws except cancellation). */
@@ -259,22 +265,26 @@ class DefaultSignerStore @Inject constructor(
         runCatchingCancellable { withContext(default) { vault.isDeviceSecure() } }.getOrDefault(fallback)
 
     /**
-     * QA L4: which of [ids] have a provably lost device key (`WalletVault.isDeviceKeyLost`, false when unsure), the
-     * proven ones remembered in [provenLostKeys]. None without a secure lock screen: then every wallet first needs one.
+     * QA L4: proves the loss of each of [ids] not yet proven (`WalletVault.isDeviceKeyLost`, false when unsure) and
+     * remembers the proven ones in [provenLostKeys]. Nothing without a secure lock screen: then every wallet first needs one.
      */
-    private suspend fun lostDeviceKeys(ids: List<WalletId>, secure: Boolean): Set<WalletId> {
-        if (!secure) return emptySet()
-        val lost = LinkedHashSet<WalletId>()
+    private suspend fun proveLostDeviceKeys(ids: Collection<WalletId>, secure: Boolean) {
+        if (!secure) return
         for (id in ids) {
-            val proven = id in provenLostKeys ||
-                runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(id) } }.getOrDefault(false)
-            if (proven) {
+            if (id in provenLostKeys) continue
+            if (runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(id) } }.getOrDefault(false)) {
                 provenLostKeys += id
-                lost += id
             }
         }
-        return lost
     }
+
+    /**
+     * QA L4: the wallets of [listed] (in that order) whose loss was proven — by a load, or by any other proof this store
+     * made ([isDeviceKeyLost], asked by setup and the Delete page also for wallets with a ready index). None without a
+     * secure lock screen.
+     */
+    private fun knownLostKeys(listed: List<WalletId>, secure: Boolean): Set<WalletId> =
+        if (secure) listed.filterTo(LinkedHashSet()) { it in provenLostKeys } else emptySet()
 
     override fun suspendSession() {
         // AppStore.swift:86-94.
@@ -599,7 +609,17 @@ class DefaultSignerStore @Inject constructor(
     override suspend fun isDeviceKeyLost(walletId: WalletId): Boolean = withContext(main) {
         // QA backlog B9. A query for the Delete page: no password, no counted attempt, false whenever unsure.
         if (current.wallet(walletId) == null) return@withContext false
-        runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(walletId) } }.getOrDefault(false)
+        val lost = runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(walletId) } }.getOrDefault(false)
+        if (lost && current.wallet(walletId) != null) {
+            // QA L4: a loss is final, so every page shows it from now on — also for a wallet with a ready index, which a
+            // load never probes (setup's "Open Wallet" then lands on "Remove This Wallet" directly). Display only: the
+            // removal proves it again in the vault.
+            provenLostKeys += walletId
+            if (current.deviceSecure && walletId !in current.lostKeyWalletIds) {
+                _state.update { it.copy(lostKeyWalletIds = knownLostKeys(it.wallets.map { w -> w.id }, secure = true)) }
+            }
+        }
+        lost
     }
 
     override suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) = withContext(main) {

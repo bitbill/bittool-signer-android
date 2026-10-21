@@ -318,7 +318,7 @@ internal fun WalletCard(
                         color = colors.secondaryLabel,
                     )
                 }
-                if (wallet.ready) NetworkLogoStack(Modifier.padding(top = 2.dp), size = 16.dp)
+                if (wallet.ready && !wallet.keyLost) NetworkLogoStack(Modifier.padding(top = 2.dp), size = 16.dp)
             }
             Icon(SignerIcons.ChevronRight, contentDescription = null, tint = colors.tertiaryLabel, modifier = Modifier.size(18.dp))
         }
@@ -336,7 +336,10 @@ internal fun WalletCard(
                 .height(0.5.dp)
                 .background(colors.opaqueSeparator),
         )
-        if (wallet.ready) {
+        if (wallet.keyLost) {
+            // Before the ready case: a wallet whose index is still readable but whose key is gone cannot sign either.
+            CardAction(SignerIcons.Delete, stringResource(R.string.wallets_lost_key_remove), colors.danger, "wallet.remove.$id", onRemove)
+        } else if (wallet.ready) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -354,8 +357,6 @@ internal fun WalletCard(
                     modifier = Modifier.weight(1f).testTag("wallet.addresses.$id"),
                 )
             }
-        } else if (wallet.keyLost) {
-            CardAction(SignerIcons.Delete, stringResource(R.string.wallets_lost_key_remove), colors.danger, "wallet.remove.$id", onRemove)
         } else if (wallet.screenLockRequired) {
             CardAction(SignerIcons.DeviceLock, stringResource(R.string.open_settings), colors.accent, "wallet.screenLock.$id", onSetScreenLock)
         } else {

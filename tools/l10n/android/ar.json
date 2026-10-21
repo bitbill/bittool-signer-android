@@ -442,16 +442,16 @@
    "value": "بدأ سجل النشاط من جديد"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "حُذف المفتاح الذي كان يحمي سجل النشاط السابق عند إزالة قفل الشاشة من هذا الجهاز، لذا لم تعد قراءة ذلك السجل ممكنة. تظهر التوقيعات الجديدة هنا من جديد. لا تتأثر محافظك ولا التوقيعات التي أنشأتها من قبل."
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "لم يعد المفتاح الذي كان يحمي سجل النشاط السابق موجودًا على هذا الجهاز (يحذفه Android عند إزالة قفل الشاشة)، لذا لم تعد قراءة ذلك السجل ممكنة. بدأ سجل جديد، وتظهر التوقيعات الجديدة هنا. لا تتأثر التوقيعات التي أنشأتها من قبل."
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "لا توجد طريقة لإلغاء القفل"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "حُذفت مفاتيح الجهاز لكل المحافظ هنا عند إزالة قفل الشاشة من هذا الجهاز، لذا لا يمكن لأي كلمة مرور محفظة إلغاء قفل BitTool Signer، ولم يُضبط إلغاء القفل ببصمة الإصبع أو بالوجه. تابع دون قفل التطبيق لفتحه، ثم أزِل هذه المحافظ واستورد عباراتها الاحتياطية من جديد. لا تتأثر الأموال."
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "لم تعد مفاتيح الجهاز لكل المحافظ هنا موجودة (يحذفها Android عند إزالة قفل الشاشة)، لذا لا يمكن لأي كلمة مرور محفظة إلغاء قفل BitTool Signer، ولا يتوفر إلغاء القفل ببصمة الإصبع أو بالوجه. تابع دون قفل التطبيق، ثم أزِل هذه المحافظ واستورد عباراتها الاحتياطية من جديد. يمكنك تشغيل قفل التطبيق مرة أخرى لاحقًا من الإعدادات. لا تتأثر الأموال."
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

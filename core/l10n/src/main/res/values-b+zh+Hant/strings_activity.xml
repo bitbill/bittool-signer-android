@@ -7,6 +7,6 @@
     <string name="activity_partial_signature_created">已產生部分簽名</string>
     <string name="activity_unreadable_title">活動記錄無法使用</string>
     <string name="activity_restarted_title">活動記錄已重新開始</string>
-    <string name="activity_restarted_message">保護先前活動記錄的金鑰在移除這台裝置的螢幕鎖定時已被刪除，因此無法再讀取那份記錄。新的簽名會重新列在這裡。你的錢包和已建立的簽名不受影響。</string>
+    <string name="activity_restarted_message">保護先前活動記錄的金鑰已不在這台裝置上（移除螢幕鎖定時，Android 會刪除該金鑰），因此無法再讀取那份記錄。已開始新的記錄，新的簽名會列在這裡。已建立的簽名不受影響。</string>
     <string name="activity_export_failed">無法儲存檔案。</string>
 </resources>

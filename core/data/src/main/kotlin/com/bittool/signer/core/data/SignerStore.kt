@@ -177,7 +177,8 @@ interface SignerStore {
      * demonstrably answers, or a permanently invalidated one), so the wallet can never be unlocked again and
      * [removeWalletWithLostDeviceKey] may remove it without its password (QA backlog B9). False when the wallet is not
      * listed, without a secure lock screen, and whenever the loss is not proven; never throws except
-     * `CancellationException`. No password, no counted attempt, no state change.
+     * `CancellationException`. No password, no counted attempt. Android (QA L4): a proven loss is final, so it is also
+     * recorded in [SignerState.lostKeyWalletIds] (for display only), also for a wallet with a ready index.
      *
      * Android-only (iOS has no way out of this dead end). The default is false.
      */

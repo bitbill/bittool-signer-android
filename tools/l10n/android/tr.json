@@ -442,16 +442,16 @@
    "value": "Etkinlik yeniden başladı"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "Önceki etkinlik kaydını koruyan anahtar, bu cihazın ekran kilidi kaldırıldığında silindi; bu yüzden o kayıt artık okunamıyor. Yeni imzalar burada yeniden listelenir. Cüzdanlarınız ve zaten oluşturduğunuz imzalar bundan etkilenmez."
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "Önceki etkinlik kaydını koruyan anahtar artık bu cihazda değil (Android, ekran kilidi kaldırıldığında bu anahtarı siler); bu yüzden o kayıt artık okunamıyor. Yeni bir kayıt başlatıldı ve yeni imzalar burada listelenir. Zaten oluşturduğunuz imzalar bundan etkilenmez."
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "Kilidi açmanın yolu yok"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "Bu cihazın ekran kilidi kaldırıldığında buradaki tüm cüzdanların cihaz anahtarları silindi; bu yüzden hiçbir cüzdan parolası BitTool Signer’ın kilidini açamaz ve parmak izi ya da yüzle kilit açma da kurulu değil. Uygulamayı açmak için uygulama kilidi olmadan devam edin, ardından bu cüzdanları kaldırın ve kurtarma ifadelerini yeniden içe aktarın. Paranız etkilenmez."
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "Buradaki tüm cüzdanların cihaz anahtarları artık yok (Android, ekran kilidi kaldırıldığında bunları siler); bu yüzden hiçbir cüzdan parolası BitTool Signer’ın kilidini açamaz ve parmak izi ya da yüzle kilit açma da kullanılamıyor. Uygulama kilidi olmadan devam edin, ardından bu cüzdanları kaldırın ve kurtarma ifadelerini yeniden içe aktarın. Uygulama kilidini daha sonra Ayarlar’dan yeniden açabilirsiniz. Paranız etkilenmez."
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

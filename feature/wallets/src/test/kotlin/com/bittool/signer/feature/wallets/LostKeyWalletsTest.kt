@@ -90,6 +90,50 @@ class LostKeyWalletsTest {
     }
 
     @Test
+    fun aWalletWithAReadyIndexWhoseKeyIsProvenLostOffersOnlyItsRemovalToo() {
+        // Review of L4/B21: setup's "Open that wallet, choose Remove This Wallet" also holds for a wallet whose public data
+        // is still readable but whose device key is proven gone; Pair and Addresses would lead nowhere useful.
+        val state = lostKeyState.copy(lostKeyWalletIds = setOf(WalletFixtures.readyId, WalletFixtures.repairId))
+        val identity = WalletIdentity.of(state, WalletFixtures.readyId)!!
+        assertTrue(identity.ready && identity.keyLost)
+        assertFalse(identity.needsRepair)
+        assertFalse(WalletIdentity.of(state.copy(deviceSecure = false), WalletFixtures.readyId)!!.keyLost)
+
+        val removed = mutableListOf<Any>()
+        content {
+            WalletsContent(
+                uiState = WalletsUiState(identities(state), loaded = true),
+                actions = WalletsActions(onRemove = { removed += it }),
+            )
+        }
+        val id = WalletFixtures.readyId
+        compose.onNodeWithTag("wallet.connect.$id").assertDoesNotExist()
+        compose.onNodeWithTag("wallet.addresses.$id").assertDoesNotExist()
+        compose.onNodeWithTag("wallet.remove.$id").performClick()
+        assertEquals(listOf<Any>(id), removed)
+    }
+
+    @Test
+    fun theWalletPageOfAReadyWalletWhoseKeyIsProvenLostOffersItsRemoval() {
+        val state = lostKeyState.copy(lostKeyWalletIds = setOf(WalletFixtures.readyId))
+        val removed = mutableListOf<Unit>()
+        content {
+            WalletDetailContent(
+                uiState = WalletDetailUiState(walletId = WalletFixtures.readyId, identity = WalletIdentity.of(state, WalletFixtures.readyId)),
+                actions = WalletDetailActions(onDelete = { removed += Unit }),
+                toast = rememberStatusToastState(),
+                onCopyFingerprint = {},
+                onRename = {},
+            )
+        }
+        compose.onNodeWithTag("detail.deviceKeyLost").assertExists()
+        listOf("detail.recoveryPhrase", "detail.changePassword", "detail.rename", "detail.delete")
+            .forEach { compose.onNodeWithTag(it).assertDoesNotExist() }
+        compose.onNodeWithTag("detail.removeLostKey").performScrollTo().performClick()
+        assertEquals(1, removed.size)
+    }
+
+    @Test
     fun withoutAScreenLockTheCardOpensTheScreenLockSettings() {
         var opened = 0
         content {

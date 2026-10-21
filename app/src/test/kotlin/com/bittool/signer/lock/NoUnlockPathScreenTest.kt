@@ -43,6 +43,10 @@ class NoUnlockPathScreenTest {
         compose.waitForIdle()
         compose.onNodeWithTag(AppLockTags.NO_UNLOCK_PATH).assertExists()
         compose.onNodeWithText("No Way to Unlock").assertExists()
+        // Review of L2: what the person needs to know, in plain words — Continue turns App Lock off, and it can be
+        // turned on again; no biometric is *available* (enrolled or not).
+        compose.onNodeWithText("You can turn App Lock on again later in Settings.", substring = true).assertExists()
+        compose.onNodeWithText("no fingerprint or face unlock is available", substring = true).assertExists()
         compose.onNodeWithTag(AppLockTags.UNLOCK).assertDoesNotExist()
         compose.onNodeWithTag(AppLockTags.BIOMETRIC).assertDoesNotExist()
 

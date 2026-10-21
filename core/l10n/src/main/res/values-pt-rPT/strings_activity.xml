@@ -7,6 +7,6 @@
     <string name="activity_partial_signature_created">Assinatura parcial criada</string>
     <string name="activity_unreadable_title">Atividade indisponível</string>
     <string name="activity_restarted_title">Atividade recomeçada</string>
-    <string name="activity_restarted_message">A chave que protegia o registo de atividade anterior foi eliminada quando o bloqueio de ecrã deste dispositivo foi removido, pelo que esse registo já não pode ser lido. As novas assinaturas voltam a aparecer aqui. As suas carteiras e as assinaturas que já criou não são afetadas.</string>
+    <string name="activity_restarted_message">A chave que protegia o registo de atividade anterior já não está neste dispositivo (o Android elimina-a quando o bloqueio de ecrã é removido), pelo que esse registo já não pode ser lido. Foi iniciado um novo registo, e as novas assinaturas aparecem aqui. As assinaturas que já criou não são afetadas.</string>
     <string name="activity_export_failed">Não foi possível guardar o ficheiro.</string>
 </resources>

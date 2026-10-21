@@ -442,16 +442,16 @@
    "value": "เริ่มบันทึกกิจกรรมใหม่แล้ว"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "คีย์ที่ปกป้องระเบียนกิจกรรมก่อนหน้าถูกลบไปเมื่อนำการล็อกหน้าจอของอุปกรณ์นี้ออก จึงอ่านระเบียนนั้นไม่ได้อีก ลายเซ็นใหม่จะแสดงที่นี่อีกครั้ง กระเป๋าของคุณและลายเซ็นที่สร้างไว้แล้วไม่ได้รับผลกระทบ"
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "คีย์ที่ปกป้องระเบียนกิจกรรมก่อนหน้าไม่อยู่บนอุปกรณ์นี้แล้ว (Android จะลบคีย์นี้เมื่อนำการล็อกหน้าจอออก) จึงอ่านระเบียนนั้นไม่ได้อีก ได้เริ่มระเบียนใหม่แล้ว และลายเซ็นใหม่จะแสดงที่นี่ ลายเซ็นที่สร้างไว้แล้วไม่ได้รับผลกระทบ"
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "ไม่มีวิธีปลดล็อก"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "คีย์ของอุปกรณ์สำหรับกระเป๋าทุกใบที่นี่ถูกลบไปเมื่อนำการล็อกหน้าจอของอุปกรณ์นี้ออก จึงไม่มีรหัสผ่านกระเป๋าใดปลดล็อก BitTool Signer ได้ และยังไม่ได้ตั้งค่าการปลดล็อกด้วยลายนิ้วมือหรือใบหน้า ดำเนินการต่อโดยไม่ใช้ล็อกแอปเพื่อเปิดแอป แล้วนำกระเป๋าเหล่านี้ออกและนำเข้าวลีกู้คืนของกระเป๋าเหล่านั้นอีกครั้ง เงินของคุณไม่ได้รับผลกระทบ"
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "คีย์ของอุปกรณ์สำหรับกระเป๋าทุกใบที่นี่ไม่มีอยู่แล้ว (Android จะลบคีย์เหล่านี้เมื่อนำการล็อกหน้าจอออก) จึงไม่มีรหัสผ่านกระเป๋าใดปลดล็อก BitTool Signer ได้ และใช้การปลดล็อกด้วยลายนิ้วมือหรือใบหน้าไม่ได้ ดำเนินการต่อโดยไม่ใช้ล็อกแอป แล้วนำกระเป๋าเหล่านี้ออกและนำเข้าวลีกู้คืนของกระเป๋าเหล่านั้นอีกครั้ง คุณเปิดล็อกแอปอีกครั้งได้ภายหลังในการตั้งค่า เงินของคุณไม่ได้รับผลกระทบ"
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

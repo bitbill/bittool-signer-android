@@ -71,6 +71,10 @@ class ActivityRestartNoticeTest {
         }
         compose.onNodeWithText("Activity Started Again").assertIsDisplayed()
         compose.onNodeWithText("No Signatures Yet").assertDoesNotExist()
+        // The event that deletes the record's key (a removed screen lock) deletes the wallets' device keys too: the
+        // notice must not tell the person their wallets are unaffected (review of L1).
+        compose.onNodeWithText("A new record was started", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("wallets", substring = true, ignoreCase = true).assertDoesNotExist()
         compose.onNodeWithTag(ActivityTags.RESTART_NOTICE_OK).performClick()
         assertEquals(1, dismissed)
     }

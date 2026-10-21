@@ -7,6 +7,6 @@
     <string name="activity_partial_signature_created">Teilsignatur erstellt</string>
     <string name="activity_unreadable_title">Verlauf nicht verfügbar</string>
     <string name="activity_restarted_title">Verlauf neu begonnen</string>
-    <string name="activity_restarted_message">Der Schlüssel, der den bisherigen Verlauf schützte, wurde beim Entfernen der Displaysperre dieses Geräts gelöscht, daher lässt sich dieser Verlauf nicht mehr lesen. Neue Signaturen erscheinen hier wieder. Ihre Wallets und die bereits erstellten Signaturen sind davon nicht betroffen.</string>
+    <string name="activity_restarted_message">Der Schlüssel, der den bisherigen Verlauf schützte, ist nicht mehr auf diesem Gerät (Android löscht ihn, wenn die Displaysperre entfernt wird), daher lässt sich dieser Verlauf nicht mehr lesen. Ein neuer Verlauf wurde begonnen, und neue Signaturen erscheinen hier. Bereits erstellte Signaturen sind davon nicht betroffen.</string>
     <string name="activity_export_failed">Die Datei konnte nicht gespeichert werden.</string>
 </resources>

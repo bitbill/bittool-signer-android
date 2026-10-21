@@ -442,16 +442,16 @@
    "value": "Aktivitas dimulai lagi"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "Kunci yang melindungi catatan aktivitas sebelumnya terhapus saat kunci layar perangkat ini dihapus, jadi catatan itu tidak bisa dibaca lagi. Tanda tangan baru kembali tercantum di sini. Dompet Anda dan tanda tangan yang sudah Anda buat tidak terpengaruh."
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "Kunci yang melindungi catatan aktivitas sebelumnya sudah tidak ada di perangkat ini (Android menghapusnya saat kunci layar dihapus), jadi catatan itu tidak bisa dibaca lagi. Catatan baru sudah dimulai, dan tanda tangan baru tercantum di sini. Tanda tangan yang sudah Anda buat tidak terpengaruh."
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "Tidak ada cara membuka kunci"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "Kunci perangkat semua dompet di sini terhapus saat kunci layar perangkat ini dihapus, jadi tidak ada kata sandi dompet yang bisa membuka kunci BitTool Signer, dan buka kunci dengan sidik jari atau wajah belum diatur. Lanjutkan tanpa kunci aplikasi untuk membuka aplikasi, lalu keluarkan dompet-dompet ini dan impor lagi frasa pemulihannya. Dana tidak terpengaruh."
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "Kunci perangkat semua dompet di sini sudah tidak ada (Android menghapusnya saat kunci layar dihapus), jadi tidak ada kata sandi dompet yang bisa membuka kunci BitTool Signer, dan buka kunci dengan sidik jari atau wajah tidak tersedia. Lanjutkan tanpa kunci aplikasi, lalu keluarkan dompet-dompet ini dan impor lagi frasa pemulihannya. Anda bisa menyalakan kunci aplikasi lagi nanti di Pengaturan. Dana tidak terpengaruh."
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

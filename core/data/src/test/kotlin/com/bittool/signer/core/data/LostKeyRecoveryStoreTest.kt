@@ -147,6 +147,40 @@ class LostKeyRecoveryStoreTest {
     }
 
     @Test
+    fun aLossProvenForAWalletWithAReadyIndexIsShownFromThenOn() = JvmStore.run {
+        // Review of L4/B21: setup's duplicate check (and the Delete page) prove the loss of a wallet whose index is still
+        // readable (its key went, the public-data key did not). Setup then says "Open that wallet, choose Remove This
+        // Wallet", so its page must offer exactly that — a load never probes a ready wallet, so the store keeps the proof.
+        store.reload()
+        val lost = create("Lost")
+        val fine = create("Fine", passphrase = "other account")
+        vault.loseDeviceKey(lost.id)
+        store.reload()
+        assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(lost.id))
+        assertTrue(state.lostKeyWalletIds.isEmpty(), "not probed by a load")
+
+        assertFalse(store.isDeviceKeyLost(fine.id))
+        assertTrue(store.isDeviceKeyLost(lost.id))
+        assertEquals(setOf(lost.id), state.lostKeyWalletIds, "the proof is remembered for every page")
+
+        repeat(2) { store.reload() }
+        store.refreshDeviceKeys()
+        assertEquals(setOf(lost.id), state.lostKeyWalletIds, "kept by later loads and foreground refreshes")
+        assertEquals(1, vault.lossChecks[lost.id], "a proven loss is final: never proven again by a load")
+
+        vault.deviceSecure = false
+        store.refreshDeviceKeys()
+        assertTrue(state.lostKeyWalletIds.isEmpty(), "without a screen lock, a lock comes first")
+        vault.deviceSecure = true
+        store.refreshDeviceKeys()
+        assertEquals(setOf(lost.id), state.lostKeyWalletIds)
+
+        store.removeWalletWithLostDeviceKey(lost.id)
+        assertTrue(state.lostKeyWalletIds.isEmpty())
+        assertEquals(listOf(fine.id), state.wallets.map { it.id })
+    }
+
+    @Test
     fun withoutAScreenLockNoWalletCountsAsLostAndTheStateSaysALockIsNeeded() = JvmStore.run {
         store.reload()
         val wallet = create()

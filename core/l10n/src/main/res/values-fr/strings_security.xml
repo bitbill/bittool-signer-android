@@ -14,7 +14,7 @@
     <string name="security_delete_footer_biometric">La suppression demande une confirmation biométrique, puis le mot de passe de ce portefeuille.</string>
     <string name="security_overlay_blocked">Une autre app s’affiche par-dessus BitTool Signer. Fermez-la, puis réessayez.</string>
     <string name="security_no_unlock_path_title">Déverrouillage impossible</string>
-    <string name="security_no_unlock_path_message">Les clés d’appareil de tous les portefeuilles présents ici ont été supprimées lorsque le verrouillage de l’écran de cet appareil a été retiré : aucun mot de passe de portefeuille ne peut donc déverrouiller BitTool Signer, et aucun déverrouillage par empreinte digitale ou par reconnaissance faciale n’est configuré. Continuez sans le verrouillage de l’app pour l’ouvrir, puis retirez ces portefeuilles et importez à nouveau leurs phrases de récupération. Les fonds ne sont pas affectés.</string>
+    <string name="security_no_unlock_path_message">Les clés d’appareil de tous les portefeuilles présents ici ont disparu (Android les supprime lorsque le verrouillage de l’écran est retiré) : aucun mot de passe de portefeuille ne peut donc déverrouiller BitTool Signer, et aucun déverrouillage par empreinte digitale ou par reconnaissance faciale n’est disponible. Continuez sans le verrouillage de l’app, puis retirez ces portefeuilles et importez à nouveau leurs phrases de récupération. Vous pourrez réactiver le verrouillage de l’app plus tard dans les Réglages. Les fonds ne sont pas affectés.</string>
     <string name="security_no_unlock_path_continue">Continuer sans verrouillage de l’app</string>
     <string name="security_app_lock_save_failed">Le verrouillage de l’app n’a pas pu être modifié. Réessayez.</string>
 </resources>

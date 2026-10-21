@@ -810,7 +810,8 @@ chevrons, LTR for addresses and hex). Test tags = the iOS `accessibilityIdentifi
 ### 4.8 Android-only hardening (DECISIONS §9.7, gaps G4–G5)
 - `Modifier.obscuredTouchGuard { toast(security_overlay_blocked) }` on: `signing.risk`, `signing.authorize`,
   `authorize.sign`, `delete.backupConfirmed`, `vaultManagement.submit`, the delete dialog's "Delete", `setup.finish`,
-  `settings.appLock`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, the "Clear Activity" confirmation, `appLock.unlock`.
+  `settings.appLock`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, the "Clear Activity" confirmation, `appLock.unlock`,
+  `appLock.continueWithoutAppLock` (QA L2).
 - `AccessibilitySensitive(active = revealed)` on: revealed word grids, revealed cards, revealed recovery QR, the
   verification board, the non-empty phrase editor, a visible passphrase, the authorize sheet.
 
@@ -937,8 +938,14 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
       its key is gone, else Repair). It never resets a password, matches a request, signs or is displayed.
     - **Wallets (L4):** each reload (and `refreshDeviceKeys`, called by `:app` on every foreground) proves the loss for
       wallets without a ready index only (cached once proven: a loss is final) and records the lock-screen state
-      (`SignerState.lostKeyWalletIds`, `deviceSecure`). Cards and wallet pages then say "This Wallet Can’t Be Unlocked"
-      with Remove, or "Screen Lock Required" with Open Settings; Repair is offered only where it can work.
+      (`SignerState.lostKeyWalletIds`, `deviceSecure`). A loss another proof found (`SignerStore.isDeviceKeyLost`:
+      setup's duplicate check, the Delete page) is kept there too, also for a wallet with a ready index, so setup's
+      "Open that wallet, choose Remove This Wallet" always holds. Cards and wallet pages then say "This Wallet Can’t Be
+      Unlocked" with Remove (before Pair/Addresses), or "Screen Lock Required" with Open Settings; Repair is offered
+      only where it can work. The list is display only: the removal proves the loss again in the vault.
+    - **Wording:** the cause is told as what Android does ("Android deletes it when the screen lock is removed"), not as
+      a certainty about this device, and the Activity notice never says the wallets are unaffected (the same event
+      usually deletes their keys).
 
 Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
 scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.

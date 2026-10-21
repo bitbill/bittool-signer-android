@@ -7,6 +7,6 @@
     <string name="activity_partial_signature_created">一部の署名を作成しました</string>
     <string name="activity_unreadable_title">履歴を利用できません</string>
     <string name="activity_restarted_title">履歴を新しく始めました</string>
-    <string name="activity_restarted_message">以前の履歴を保護していた鍵は、この端末の画面ロックを削除したときに削除されたため、その履歴はもう読み込めません。新しい署名は再びここに表示されます。ウォレットと作成済みの署名には影響しません。</string>
+    <string name="activity_restarted_message">以前の履歴を保護していた鍵がこの端末にもう存在しないため（Android は画面ロックが削除されるとこの鍵を削除します）、その履歴は読み込めません。新しい履歴を開始したので、新しい署名はここに表示されます。作成済みの署名には影響しません。</string>
     <string name="activity_export_failed">ファイルを保存できませんでした。</string>
 </resources>

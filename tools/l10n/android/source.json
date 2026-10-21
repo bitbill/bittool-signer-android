@@ -34,13 +34,13 @@
    "area": "activity",
    "english": "Activity Started Again",
    "formatted": true,
-   "context": "Android-only (QA L1): a notice at the top of Activity, shown once after the record's key was deleted together with the device's screen lock, and BitTool Signer started a new, empty record. Title."
+   "context": "Android-only (QA L1): a notice at the top of Activity, shown once after the record's Keystore key was proven gone (Android deletes it when the device's screen lock is removed) and BitTool Signer started a new, empty record. Title."
   },
   "activity_restarted_message": {
    "area": "activity",
-   "english": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
+   "english": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
    "formatted": true,
-   "context": "Text of that notice (dismissed with the iOS \"OK\")."
+   "context": "Text of that notice (dismissed with the iOS \"OK\"). It must not say the wallets are unaffected: the same event usually deletes their device keys too (the wallet pages say so). \"Signatures you already created\" are the ones already handed to the wallet app, which stay valid."
   },
   "activity_export_failed": {
    "area": "activity",
@@ -298,13 +298,13 @@
    "area": "security",
    "english": "No Way to Unlock",
    "formatted": true,
-   "context": "Lock screen (QA L2): no unlock path can succeed. Every wallet's device key was deleted when the device's screen lock was removed (Android also deletes the enrolled fingerprints then). Title of the explanation card."
+   "context": "Lock screen (QA L2): no unlock path can succeed. Every wallet's device key is proven gone (Android deletes these keys, and the enrolled fingerprints, when the device's screen lock is removed) and no strong biometric can run. Title of the explanation card."
   },
   "security_no_unlock_path_message": {
    "area": "security",
-   "english": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
+   "english": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
    "formatted": true,
-   "context": "Text of that card."
+   "context": "Text of that card. \"Continue Without App Lock\" turns App Lock off; \"Settings\" is this app's Settings tab, where the App Lock switch is (security_app_lock). \"Funds are not affected.\" as in wallets_lost_key_message."
   },
   "security_no_unlock_path_continue": {
    "area": "security",

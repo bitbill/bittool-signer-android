@@ -7,6 +7,6 @@
     <string name="activity_partial_signature_created">Utworzono częściowy podpis</string>
     <string name="activity_unreadable_title">Aktywność niedostępna</string>
     <string name="activity_restarted_title">Aktywność rozpoczęta od nowa</string>
-    <string name="activity_restarted_message">Klucz, który chronił wcześniejszy rejestr aktywności, został usunięty razem z blokadą ekranu tego urządzenia, więc tego rejestru nie da się już odczytać. Nowe podpisy znów pojawiają się tutaj. Nie ma to wpływu na Twoje portfele ani na już utworzone podpisy.</string>
+    <string name="activity_restarted_message">Klucza, który chronił wcześniejszy rejestr aktywności, nie ma już na tym urządzeniu (Android usuwa go po usunięciu blokady ekranu), więc tego rejestru nie da się już odczytać. Rozpoczęto nowy rejestr i nowe podpisy pojawiają się tutaj. Nie ma to wpływu na już utworzone podpisy.</string>
     <string name="activity_export_failed">Nie udało się zapisać pliku.</string>
 </resources>

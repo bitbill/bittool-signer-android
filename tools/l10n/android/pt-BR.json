@@ -442,16 +442,16 @@
    "value": "Atividade recomeçada"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "A chave que protegia o registro de atividade anterior foi excluída quando o bloqueio de tela deste dispositivo foi removido, por isso esse registro não pode mais ser lido. As novas assinaturas voltam a aparecer aqui. Suas carteiras e as assinaturas que você já criou não são afetadas."
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "A chave que protegia o registro de atividade anterior não está mais neste dispositivo (o Android a exclui quando o bloqueio de tela é removido), por isso esse registro não pode mais ser lido. Um novo registro foi iniciado, e as novas assinaturas aparecem aqui. As assinaturas que você já criou não são afetadas."
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "Não há como desbloquear"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "As chaves de dispositivo de todas as carteiras daqui foram excluídas quando o bloqueio de tela deste dispositivo foi removido, por isso nenhuma senha de carteira pode desbloquear o BitTool Signer, e não há desbloqueio por impressão digital ou facial configurado. Continue sem o bloqueio do app para abri-lo e depois remova essas carteiras e importe de novo as frases de recuperação delas. Os fundos não são afetados."
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "As chaves de dispositivo de todas as carteiras daqui não existem mais (o Android as exclui quando o bloqueio de tela é removido), por isso nenhuma senha de carteira pode desbloquear o BitTool Signer, e não há desbloqueio por impressão digital ou facial disponível. Continue sem o bloqueio do app e depois remova essas carteiras e importe de novo as frases de recuperação delas. Você pode ativar o bloqueio do app de novo mais tarde em Ajustes. Os fundos não são afetados."
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

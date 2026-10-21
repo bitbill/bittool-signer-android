@@ -60,11 +60,12 @@ data class SignerState(
      */
     val activityRestarted: Boolean = false,
     /**
-     * Android-only (QA L4): the wallets without a ready public index whose device key is provably gone
-     * (`WalletVault.isDeviceKeyLost`), looked at by every reload and [SignerStore.refreshDeviceKeys]. Such a wallet can
-     * never be unlocked or repaired; the only way on is "Remove This Wallet" and a new import. A proven loss is final,
-     * so it is not proven again for as long as the wallet is listed. Empty without a secure lock screen ([deviceSecure]).
-     * Wallets with a ready index are not looked at here (the Delete page and every password operation still are).
+     * Android-only (QA L4): the wallets whose device key is provably gone (`WalletVault.isDeviceKeyLost`). Every reload
+     * and [SignerStore.refreshDeviceKeys] look at the wallets without a ready public index; a wallet with a ready index
+     * is listed once another proof found its loss ([SignerStore.isDeviceKeyLost]: setup's duplicate check, the Delete
+     * page). Such a wallet can never be unlocked or repaired; the only way on is "Remove This Wallet" and a new import.
+     * A proven loss is final, so it is not proven again for as long as the wallet is listed. Empty without a secure lock
+     * screen ([deviceSecure]). Display only: the removal proves the loss again in the vault.
      */
     val lostKeyWalletIds: Set<WalletId> = emptySet(),
     /**

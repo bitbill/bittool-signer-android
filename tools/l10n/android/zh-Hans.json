@@ -442,16 +442,16 @@
    "value": "活动记录已重新开始"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "保护先前活动记录的密钥在移除这台设备的屏幕锁定时已被删除，因此无法再读取那份记录。新的签名会重新列在这里。你的钱包和已创建的签名不受影响。"
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "保护先前活动记录的密钥已不在这台设备上（移除屏幕锁定时，Android 会删除该密钥），因此无法再读取那份记录。已开始新的记录，新的签名会列在这里。已创建的签名不受影响。"
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "无法解锁"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "移除这台设备的屏幕锁定时，这里所有钱包的设备密钥都已被删除，因此任何钱包密码都无法解锁 BitTool Signer，而且也没有设置指纹或人脸解锁。请选择不使用 App 锁继续，打开 App 后移除这些钱包，再重新导入它们的助记词。资产不受影响。"
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "这里所有钱包的设备密钥都已不存在（移除屏幕锁定时，Android 会删除这些密钥），因此任何钱包密码都无法解锁 BitTool Signer，也无法使用指纹或人脸解锁。请选择不使用 App 锁继续，然后移除这些钱包，再重新导入它们的助记词。之后可以在设置中重新开启 App 锁。资产不受影响。"
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",

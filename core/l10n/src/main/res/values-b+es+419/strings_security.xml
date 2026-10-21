@@ -14,7 +14,7 @@
     <string name="security_delete_footer_biometric">Para eliminarla se pedirá una confirmación biométrica y después la contraseña de esta billetera.</string>
     <string name="security_overlay_blocked">Otra app se superpone a BitTool Signer. Ciérrala y vuelve a intentarlo.</string>
     <string name="security_no_unlock_path_title">No hay forma de desbloquear</string>
-    <string name="security_no_unlock_path_message">Las claves de dispositivo de todas las billeteras de aquí se eliminaron al quitar el bloqueo de pantalla de este dispositivo, así que ninguna contraseña de billetera puede desbloquear BitTool Signer, y no hay configurado ningún desbloqueo con huella digital o facial. Continúa sin el bloqueo de la app para abrirla; después quita estas billeteras e importa de nuevo sus frases de recuperación. Los fondos no se ven afectados.</string>
+    <string name="security_no_unlock_path_message">Las claves de dispositivo de todas las billeteras de aquí ya no existen (Android las elimina cuando se quita el bloqueo de pantalla), así que ninguna contraseña de billetera puede desbloquear BitTool Signer, y no hay ningún desbloqueo con huella digital o facial disponible. Continúa sin el bloqueo de la app y después quita estas billeteras e importa de nuevo sus frases de recuperación. Puedes volver a activar el bloqueo de la app más tarde en Configuración. Los fondos no se ven afectados.</string>
     <string name="security_no_unlock_path_continue">Continuar sin bloqueo de la app</string>
     <string name="security_app_lock_save_failed">No se pudo cambiar el bloqueo de la app. Vuelve a intentarlo.</string>
 </resources>

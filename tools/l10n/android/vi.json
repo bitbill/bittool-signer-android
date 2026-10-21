@@ -442,16 +442,16 @@
    "value": "Hoạt động đã bắt đầu lại"
   },
   "activity_restarted_message": {
-   "source": "The key that protected the earlier activity record was deleted when this device’s screen lock was removed, so that record can no longer be read. New signatures are listed here again. Your wallets and the signatures you already created are not affected.",
-   "value": "Khóa bảo vệ bản ghi hoạt động trước đây đã bị xóa khi khóa màn hình của thiết bị này bị gỡ, nên không thể đọc bản ghi đó nữa. Chữ ký mới lại được liệt kê ở đây. Các ví của bạn và những chữ ký bạn đã tạo không bị ảnh hưởng."
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "Khóa bảo vệ bản ghi hoạt động trước đây không còn trên thiết bị này (Android xóa khóa này khi khóa màn hình bị gỡ), nên không thể đọc bản ghi đó nữa. Một bản ghi mới đã được bắt đầu, và chữ ký mới được liệt kê ở đây. Những chữ ký bạn đã tạo không bị ảnh hưởng."
   },
   "security_no_unlock_path_title": {
    "source": "No Way to Unlock",
    "value": "Không có cách mở khóa"
   },
   "security_no_unlock_path_message": {
-   "source": "The device keys of every wallet here were deleted when this device’s screen lock was removed, so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is set up. Continue without App Lock to open the app, then remove these wallets and import their recovery phrases again. Funds are not affected.",
-   "value": "Khóa thiết bị của mọi ví ở đây đã bị xóa khi khóa màn hình của thiết bị này bị gỡ, nên không mật khẩu ví nào có thể mở khóa BitTool Signer, và chưa thiết lập mở khóa bằng vân tay hoặc khuôn mặt. Hãy tiếp tục mà không dùng khóa ứng dụng để mở ứng dụng, rồi gỡ các ví này và nhập lại cụm từ khôi phục của chúng. Tiền không bị ảnh hưởng."
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "Khóa thiết bị của mọi ví ở đây không còn nữa (Android xóa các khóa này khi khóa màn hình bị gỡ), nên không mật khẩu ví nào có thể mở khóa BitTool Signer, và không thể mở khóa bằng vân tay hoặc khuôn mặt. Hãy tiếp tục mà không dùng khóa ứng dụng, rồi gỡ các ví này và nhập lại cụm từ khôi phục của chúng. Bạn có thể bật lại khóa ứng dụng sau trong Cài đặt. Tiền không bị ảnh hưởng."
   },
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",
