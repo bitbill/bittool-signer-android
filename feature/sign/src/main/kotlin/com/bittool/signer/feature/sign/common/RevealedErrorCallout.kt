@@ -4,7 +4,9 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -19,12 +21,14 @@ import com.bittool.signer.core.ui.text.Callout
  * `Callout(verbatim:tone: .danger)`. Each time it appears or its [text] changes, the scrolling parents move it into
  * their visible area — above the keyboard in a sheet whose action is pinned over the IME, above the tab bar on a page —
  * and TalkBack reads it out (polite live region). Laid out below the fold it would look as if nothing had happened
- * (QA sign-06, sign-07).
+ * (QA sign-06, sign-07). [beforeReveal] runs first each time (the paste sheet puts the keyboard away there).
  */
 @Composable
-internal fun RevealedErrorCallout(text: UiText, modifier: Modifier = Modifier) {
+internal fun RevealedErrorCallout(text: UiText, modifier: Modifier = Modifier, beforeReveal: suspend () -> Unit = {}) {
     val requester = remember { BringIntoViewRequester() }
+    val prepare by rememberUpdatedState(beforeReveal)
     LaunchedEffect(text) {
+        prepare()
         // The callout is composed in this frame and placed at its end: wait for the next frame so it has bounds.
         withFrameNanos { }
         requester.bringIntoView()

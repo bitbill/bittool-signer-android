@@ -10,6 +10,7 @@
     <string name="sign_reading_request">Đang đọc yêu cầu…</string>
     <string name="sign_keep_animated_code_in_view">Giữ mã động trong khung hình · %1$d phần</string>
     <string name="sign_psbt_payload_note">psbt_base64 chính là PSBT mà mã QR này mang theo; decoded được đọc ra từ đó để tham khảo.</string>
+    <string name="sign_acknowledgement_hint">Để ký, hãy chọn ô ở cuối phần xem xét.</string>
     <string name="sign_file_unreadable">Không đọc được tệp.</string>
     <string name="sign_file_not_saved">Không lưu được tệp.</string>
 </resources>

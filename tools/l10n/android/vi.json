@@ -313,6 +313,10 @@
    "source": "psbt_base64 is the exact PSBT this QR code carries; decoded is read from it for reference.",
    "value": "psbt_base64 chính là PSBT mà mã QR này mang theo; decoded được đọc ra từ đó để tham khảo."
   },
+  "sign_acknowledgement_hint": {
+   "source": "Check the box at the end of the review to sign.",
+   "value": "Để ký, hãy chọn ô ở cuối phần xem xét."
+  },
   "sign_file_unreadable": {
    "source": "The file could not be read.",
    "value": "Không đọc được tệp."

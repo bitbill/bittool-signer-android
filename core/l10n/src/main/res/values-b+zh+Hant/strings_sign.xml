@@ -10,6 +10,7 @@
     <string name="sign_reading_request">正在讀取請求…</string>
     <string name="sign_keep_animated_code_in_view">請讓動態 QR Code 保持在畫面內 · %1$d 個影格</string>
     <string name="sign_psbt_payload_note">psbt_base64 是這個 QR Code 承載的原始 PSBT；decoded 是從中解析出的內容，僅供參考。</string>
+    <string name="sign_acknowledgement_hint">勾選審核內容末尾的核取方塊後即可簽名。</string>
     <string name="sign_file_unreadable">無法讀取檔案。</string>
     <string name="sign_file_not_saved">無法儲存檔案。</string>
 </resources>

@@ -163,14 +163,17 @@ internal fun ListFootnote(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** A sticky day header on the opaque page colour (rows never show through), styled like a `GroupedSection` header. */
+/**
+ * A sticky day header on the opaque page colour (rows never show through), in the `GroupedSection` header's place and
+ * type, in the secondary label colour of the iOS section header (`ActivityTab.swift:27`; `light-30-activity.png`).
+ */
 @Composable
 internal fun DayHeader(text: String, modifier: Modifier = Modifier) {
     Box(modifier.fillMaxWidth().background(SignerTheme.colors.page)) {
         Text(
             text = text,
             style = SignerTheme.typography.subheadline.semibold(),
-            color = SignerTheme.colors.accentOnTint,
+            color = SignerTheme.colors.secondaryLabel,
             modifier = SectionFrame
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
                 .semantics { heading() },

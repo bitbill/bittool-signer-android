@@ -47,7 +47,7 @@ import com.bittool.signer.core.model.signing.MatchingIssue
 import com.bittool.signer.core.ui.address.AddressText
 import com.bittool.signer.core.ui.text.asString
 import com.bittool.signer.core.ui.wallet.WalletAvatar
-import com.bittool.signer.core.ui.wallet.isolate
+import com.bittool.signer.core.ui.wallet.isolateInRightToLeft
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.message
 import com.bittool.signer.feature.sign.common.res
@@ -167,7 +167,9 @@ internal fun TaskCard(item: TaskItem, showsAddress: Boolean, showsPath: Boolean,
                 Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(name, style = typography.headline, color = colors.label)
                     Text(
-                        text = stringResource(R.string.fingerprint_x, isolate(fingerprint)),
+                        // "Fingerprint 73C5DA0A" like the Wallets list and the security pages; the value is isolated
+                        // only in a right-to-left interface, where it must keep its own order (QA regression-06).
+                        text = stringResource(R.string.fingerprint_x, isolateInRightToLeft(fingerprint)),
                         style = typography.caption.monospaced(),
                         color = colors.secondaryLabel,
                     )

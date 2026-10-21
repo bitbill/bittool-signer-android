@@ -10,6 +10,7 @@
     <string name="sign_reading_request">Binabasa ang kahilingan…</string>
     <string name="sign_keep_animated_code_in_view">Panatilihing nakikita ang animated na code · %1$d bahagi</string>
     <string name="sign_psbt_payload_note">Ang psbt_base64 ay ang eksaktong PSBT na dala ng QR code na ito; ang decoded ay binasa mula rito para sa sanggunian.</string>
+    <string name="sign_acknowledgement_hint">Lagyan ng tsek ang kahon sa dulo ng pagsusuri para makalagda.</string>
     <string name="sign_file_unreadable">Hindi nabasa ang file.</string>
     <string name="sign_file_not_saved">Hindi na-save ang file.</string>
 </resources>

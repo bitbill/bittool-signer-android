@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -63,6 +62,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.EmptyState
 import com.bittool.signer.core.designsystem.component.SegmentedControl
+import com.bittool.signer.core.designsystem.component.SignerDropdownMenu
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.StatusToastState
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
@@ -73,7 +73,6 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
-import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.AddressFormatter
 import com.bittool.signer.core.model.registry.KnownContractEntry
@@ -97,6 +96,8 @@ object ReferenceTags {
     const val LIST = "reference.list"
     const val TOKEN_ROW = "reference.token"
     const val CONTRACT_ROW = "reference.contract"
+    /** Android-only: "Copy Contract Address" in a row's menu (iOS has no identifier for the context-menu item). */
+    const val COPY = "reference.copy"
 }
 
 /** One network's tokens and contracts (inventory rows 67–68). */
@@ -355,14 +356,11 @@ private fun CopyMenuRow(
                 .height(0.5.dp)
                 .background(SignerTheme.colors.separator),
         )
-        // A popup window: it waits for the window gate like every other window (ARCHITECTURE §1.10).
-        if (menu && rememberWindowGateReleased()) {
+        // A popup window: SignerDropdownMenu waits for the window gate like every other window (ARCHITECTURE §1.10)
+        // and publishes the item's test tag as a resource id in debuggable builds (backlog B26, B29).
+        if (menu) {
             val menuContent: @Composable () -> Unit = {
-                DropdownMenu(
-                    expanded = true,
-                    onDismissRequest = { menu = false },
-                    containerColor = SignerTheme.colors.elevatedCard,
-                ) {
+                SignerDropdownMenu(expanded = true, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(
                         text = { Text(copyLabel) },
                         leadingIcon = { Icon(SignerIcons.Copy, contentDescription = null) },
@@ -370,6 +368,7 @@ private fun CopyMenuRow(
                             menu = false
                             copy()
                         },
+                        modifier = Modifier.testTag(ReferenceTags.COPY),
                     )
                 }
             }

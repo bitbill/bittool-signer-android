@@ -12,15 +12,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -115,6 +124,65 @@ class SignLayoutTest {
     fun atTheDefaultTextSizeTheAcknowledgementIsPinnedAboveSign() {
         review(fontScale = 1f)
         compose.onNode(hasTestTag(SignTags.RISK) and hasAnyAncestor(hasTestTag(SignTags.SIGN_BAR))).assertFullyVisible()
+        compose.onNodeWithTag(RISK_HINT).assertDoesNotExist()
+    }
+
+    private val riskInBar = hasTestTag(SignTags.RISK) and hasAnyAncestor(hasTestTag(SignTags.SIGN_BAR))
+
+    /**
+     * Backlog B32: where the acknowledgement goes is known before the first frame. It used to be measured in the bar
+     * first, so the first frame showed it there, and the next one moved it into the list.
+     */
+    @Test
+    fun atLargeTextTheFirstFrameAlreadyHasTheAcknowledgementInTheList() {
+        compose.mainClock.autoAdvance = false
+        review(fontScale = 2f)
+        compose.onNode(riskInBar).assertDoesNotExist()
+        compose.onNodeWithTag(SignTags.AUTHORIZE).assertExists()
+        repeat(3) {
+            compose.mainClock.advanceTimeByFrame()
+            compose.onNode(riskInBar).assertDoesNotExist()
+        }
+    }
+
+    /** Backlog B32, when matching ends: the bar slides in with Sign only; the acknowledgement never rides in with it. */
+    @Test
+    fun atLargeTextTheBarArrivingAfterMatchingNeverCarriesTheAcknowledgement() {
+        var state by mutableStateOf(ReviewStates.matching)
+        show(fontScale = 2f) { RequestReviewContent(state, onReject = {}, onToggleRisk = {}, onRetry = {}, onAuthorize = {}) }
+        compose.onNodeWithTag(SignTags.SIGN_BAR).assertDoesNotExist()
+        compose.mainClock.autoAdvance = false
+        state = ReviewStates.partial
+        repeat(10) {
+            compose.mainClock.advanceTimeByFrame()
+            compose.onNode(riskInBar).assertDoesNotExist()
+        }
+        compose.onNodeWithTag(SignTags.SIGN_BAR).assertExists()
+    }
+
+    /**
+     * Backlog B32: with the acknowledgement in the list the disabled Sign said nothing. The bar now says where the box
+     * is, a tap there scrolls to it, and the line goes once the box is ticked.
+     */
+    @Test
+    fun atLargeTextTheBarPointsToTheAcknowledgementUntilItIsTicked() {
+        var state by mutableStateOf(ReviewStates.partial)
+        show(fontScale = 2f) {
+            RequestReviewContent(state, onReject = {}, onToggleRisk = { state = state.copy(riskAccepted = !state.riskAccepted) }, onRetry = {}, onAuthorize = {})
+        }
+        val hint = compose.onNode(hasTestTag(RISK_HINT) and hasAnyAncestor(hasTestTag(SignTags.SIGN_BAR)))
+        hint.assertIsDisplayed()
+            .assert(hasText("Check the box at the end of the review to sign."))
+            .assertHasClickAction()
+        val belowTheFold = compose.onAllNodesWithTag(SignTags.RISK).fetchSemanticsNodes().isEmpty() ||
+            runCatching { compose.onNodeWithTag(SignTags.RISK).assertIsNotDisplayed() }.isSuccess
+        assertTrue(belowTheFold, "precondition: the box is below the fold")
+        hint.performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(SignTags.RISK).assertFullyVisible().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithTag(RISK_HINT).assertDoesNotExist()
+        compose.onNodeWithTag(SignTags.AUTHORIZE).assertIsEnabled()
     }
 
     /** QA sign-06: the import error sits under the editor, which the keyboard covers; it is scrolled into view. */
@@ -129,6 +197,40 @@ class SignLayoutTest {
         }
         error = UiText.Verbatim("Unsupported signing QR format")
         compose.onNodeWithText("Unsupported signing QR format", useUnmergedTree = true).assertFullyVisible()
+    }
+
+    /**
+     * QA regression-05: above the keyboard the sheet shows little more than the editor, so bringing the error into view
+     * scrolled the typed text and the caret under the sheet's header. The keyboard goes down first (here it gives the
+     * sheet the height it takes), then the error comes into view with the whole editor still above it.
+     */
+    @Test
+    fun aPasteErrorPutsTheKeyboardAwaySoTheTypedRequestStaysInView() {
+        var error by mutableStateOf<UiText?>(null)
+        var height by mutableStateOf(300.dp)
+        var hidden = 0
+        val keyboard = object : SoftwareKeyboardController {
+            override fun show() = Unit
+
+            override fun hide() {
+                hidden++
+                height = 640.dp
+            }
+        }
+        show {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                Column(Modifier.height(height).testTag(VIEWPORT)) {
+                    PasteRequestBody(PasteUiState(error = error), remember { TextFieldState("garbage-request") }, onPasteFromClipboard = {}, Modifier.weight(1f, fill = false))
+                }
+            }
+        }
+        error = UiText.Verbatim("Unsupported signing QR format")
+        compose.waitForIdle()
+        assertEquals(1, hidden, "the keyboard is put away once")
+        compose.onNodeWithText("Unsupported signing QR format", useUnmergedTree = true).assertFullyVisible()
+        val viewport = compose.onNodeWithTag(VIEWPORT).getUnclippedBoundsInRoot()
+        val editor = compose.onNodeWithTag(SignTags.PAYLOAD).getUnclippedBoundsInRoot()
+        assertTrue(editor.top >= viewport.top, "the editor starts at ${editor.top}, above the sheet's top ${viewport.top}")
     }
 
     /** QA sign-07: an Import File error is laid out under the tiles, below the fold; it is scrolled into view. */
@@ -157,5 +259,11 @@ class SignLayoutTest {
         assertEquals(pasteTop, fileTop, "both labels (and the symbols above them) start at the same height")
         assertEquals(LineBreak.Heading, paste.layoutInput.style.lineBreak)
         assertEquals(LineBreak.Heading, file.layoutInput.style.lineBreak)
+    }
+
+    private companion object {
+        /** `SignTags.RISK_HINT`, spelled out. */
+        const val RISK_HINT = "signing.riskHint"
+        const val VIEWPORT = "test.viewport"
     }
 }
