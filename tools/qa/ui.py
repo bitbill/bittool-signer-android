@@ -4,12 +4,14 @@
     tools/qa/ui.py launch [--fixtures N] [--dark] [--locale zh-Hans] [--lock] [--keep] [--run UUID] [--lose-keys]
                           [--unreadable-journal]
                                               fresh harness run (or --keep: the same run id again), capture allowed
-    tools/qa/ui.py dump                       list visible nodes: [index] text | desc | resource-id | bounds
-    tools/qa/ui.py tap TEXT_OR_ID [--nth K]   tap the node whose text, content-desc or resource-id (test tag) matches
+    tools/qa/ui.py dump [--all]               list the app's visible nodes: [index] text | desc | resource-id | bounds
+    tools/qa/ui.py tap TEXT_OR_ID [--nth K] [--all]
+                                              tap the node whose text, content-desc or resource-id (test tag) matches
     tools/qa/ui.py tapxy X Y
     tools/qa/ui.py type TEXT                  type into the focused field (spaces supported; ASCII only)
     tools/qa/ui.py key back|enter|home|tab|del
     tools/qa/ui.py swipe up|down|left|right
+    tools/qa/ui.py focus                      the window and the app that have the input focus now
     tools/qa/ui.py shot NAME [--size 900]     screenshot to $QA_SHOTS/NAME.png (and a downscaled NAME-s.png to view)
     tools/qa/ui.py wait TEXT_OR_ID [--timeout 20]
     tools/qa/ui.py font 1.0|1.3|2.0           system font scale
@@ -29,9 +31,20 @@ saved" alert); only a fresh run starts a new journal.
 
 `dump` (and everything that finds nodes) deletes the previous dump first, asks uiautomator for every window
 (`--windows`: dialogs, sheets and the keyboard too, where the device supports it) and fails loudly when uiautomator
-does not produce a fresh dump (e.g. "could not get idle state" under load) instead of reading a stale file. The app's
-windows are listed (and matched) before the system's, so `tap Back` is the app's Back, not the navigation bar's. `type`
+does not produce a fresh dump (e.g. "could not get idle state" under load) instead of reading a stale file. `type`
 sends the text in short chunks: `input text` drops characters of long strings on a loaded emulator.
+
+Only the app's own nodes (package com.bittool.signer.debug) are listed and matched: another app on the same emulator
+uses the same test tags (`onboarding.next`, `tab.scan`), and a dump taken while the signer's window has no hierarchy
+listed that app's nodes (QA round 2). `--all` adds every other window (the system bars, the keyboard, a permission
+dialog or BiometricPrompt), the app's windows still first, so `tap Back --all` is the app's Back, not the navigation
+bar's.
+
+Input (`tap`, `tapxy`, `type`, `key`, `swipe`) goes only to the app: before each one the tool reads the focused window
+from `dumpsys window displays` and its owner from `dumpsys window windows` (never `grep -m1 mCurrentFocus` over the
+whole `dumpsys window`, whose first section is the LAST ANR's stale window) and stops when it is another app's. A
+tapped node must belong to the window that has the focus (a system dialog's node with `--all`); `--force` skips the
+check. `dump` warns when another app's window has the focus.
 """
 import os
 import re
@@ -104,29 +117,33 @@ def window_trees(root, package=PKG):
     return sorted(trees, key=foreign)
 
 
-def parse_nodes(xml, package=PKG):
-    """The nodes of a uiautomator dump (one window or `--windows`): the app's windows first (window_trees)."""
+def parse_nodes(xml, package=PKG, every_package=False):
+    """The nodes of a uiautomator dump (one window or `--windows`), the app's windows first (window_trees): only
+    [package]'s nodes unless [every_package]. A node without a package attribute is not the app's."""
     root = ET.fromstring(xml)
     out = []
     for n in (node for tree in window_trees(root, package) for node in tree.iter('node')):
+        if not every_package and n.get('package') != package:
+            continue
         b = re.findall(r'\d+', n.get('bounds', ''))
         if len(b) != 4:
             continue
         x1, y1, x2, y2 = map(int, b)
         out.append({
             'text': n.get('text', ''), 'desc': n.get('content-desc', ''), 'id': n.get('resource-id', ''),
+            'package': n.get('package', ''),
             'cls': n.get('class', '').split('.')[-1], 'clickable': n.get('clickable') == 'true',
             'bounds': (x1, y1, x2, y2), 'center': ((x1 + x2) // 2, (y1 + y2) // 2),
         })
     return out
 
 
-def nodes():
-    return parse_nodes(dump_xml())
+def nodes(every_package=False):
+    return parse_nodes(dump_xml(), every_package=every_package)
 
 
-def find(query, nth=0, ns=None):
-    ns = nodes() if ns is None else ns
+def find(query, nth=0, ns=None, every_package=False):
+    ns = nodes(every_package) if ns is None else ns
 
     def keys(n):
         return [n['text'], n['desc'], n['id'], n['id'].split('/')[-1]]
@@ -136,6 +153,70 @@ def find(query, nth=0, ns=None):
     q = query.lower()
     loose = [n for n in ns if any(q in k.lower() for k in keys(n) if k)]
     return loose[nth] if nth < len(loose) else None
+
+
+WINDOW_HEADER = re.compile(r'^\s*Window #\d+ Window\{([0-9a-f]+) u\d+ (.*)\}:\s*$')
+FOCUS_LINE = re.compile(r'^\s*(mCurrentFocus|mFocusedApp)=(.*)$')
+SECTION = re.compile(r'^WINDOW MANAGER .*\(dumpsys window (\w+)\)')
+
+
+def parse_focus(text):
+    """The focused window and app in `dumpsys window displays` + `dumpsys window windows` output:
+    {'window': title, 'window_package': package, 'app_package': package}, each None when unknown.
+
+    Only the DISPLAY CONTENTS section is read for the focus (its first display): a full `dumpsys window` starts with
+    the LAST ANR section, whose mCurrentFocus is the window of an old ANR. A dialog's mCurrentFocus names its title, not
+    its package ("Window{150ec4b u0 BitTool Signer}"), so the package comes from that window's entry in the WINDOWS
+    section ("package=...")."""
+    section = None
+    current = app = None
+    packages = {}
+    pending = None
+    for line in text.splitlines():
+        m = SECTION.match(line)
+        if m:
+            section = m.group(1)
+            continue
+        if section == 'displays':
+            f = FOCUS_LINE.match(line)
+            if f and f.group(1) == 'mCurrentFocus' and current is None:
+                current = f.group(2).strip()
+            elif f and f.group(1) == 'mFocusedApp' and app is None:
+                app = f.group(2).strip()
+        elif section == 'windows':
+            w = WINDOW_HEADER.match(line)
+            if w:
+                pending = w.group(1)
+                continue
+            p = re.search(r'\bpackage=(\S+)', line)
+            if p and pending:
+                packages[pending] = p.group(1)
+                pending = None
+    out = {'window': None, 'window_package': None, 'app_package': None}
+    w = re.match(r'Window\{([0-9a-f]+) u\d+ (.*)\}', current or '')
+    if w:
+        out['window'] = w.group(2)
+        out['window_package'] = packages.get(w.group(1)) or (w.group(2).split('/')[0] if '/' in w.group(2) else None)
+    a = re.match(r'ActivityRecord\{[0-9a-f]+ u\d+ ([^/ ]+)/', app or '')
+    if a:
+        out['app_package'] = a.group(1)
+    return out
+
+
+def focus_state():
+    """parse_focus of the device now."""
+    return parse_focus(adb('shell', 'dumpsys window displays; dumpsys window windows'))
+
+
+def require_focus(package=PKG):
+    """Raises AdbError unless [package]'s window has the input focus, so input never reaches another app; --force
+    skips the check."""
+    if arg('--force'):
+        return
+    state = focus_state()
+    if state['window_package'] != package:
+        raise AdbError(f"not sent: the focused window is {state['window']!r} ({state['window_package']}), the focused "
+                       f"app {state['app_package']}; expected {package} (--force sends it anyway)")
 
 
 def text_chunks(text, size=TYPE_CHUNK):
@@ -213,25 +294,33 @@ def command(cmd):
         print(adb('shell', 'am', 'start', '-W', '-n', f'{PKG}/{ACTIVITY}', *extras).strip())
         time.sleep(3)
     elif cmd == 'dump':
-        for i, n in enumerate(nodes()):
+        state = focus_state()
+        if state['window_package'] != PKG:
+            print(f"warning: the focused window is {state['window']!r} ({state['window_package']}), the focused app "
+                  f"{state['app_package']}", file=sys.stderr)
+        for i, n in enumerate(nodes(bool(arg('--all')))):
             if n['text'] or n['desc'] or (n['id'] and not n['id'].startswith('android:')):
                 flag = '*' if n['clickable'] else ' '
                 print(f"[{i}]{flag} {n['text'][:70]!r} | {n['desc'][:40]!r} | {n['id'].split('/')[-1]} | {n['cls']} | {n['bounds']}")
     elif cmd == 'tap':
-        n = find(sys.argv[2], arg('--nth', 0, int))
+        n = find(sys.argv[2], arg('--nth', 0, int), every_package=bool(arg('--all')))
         if not n:
             sys.exit(f'not found: {sys.argv[2]}')
+        require_focus(n['package'] or PKG)
         adb('shell', 'input', 'tap', *map(str, n['center']))
         time.sleep(0.8)
         print('tapped', n['text'] or n['desc'] or n['id'], n['center'])
     elif cmd == 'tapxy':
+        require_focus()
         adb('shell', 'input', 'tap', sys.argv[2], sys.argv[3])
         time.sleep(0.8)
     elif cmd == 'type':
+        require_focus()
         type_text(sys.argv[2])
         time.sleep(0.5)
     elif cmd == 'key':
         code = {'back': '4', 'enter': '66', 'home': '3', 'tab': '61', 'del': '67'}[sys.argv[2]]
+        require_focus()
         adb('shell', 'input', 'keyevent', code)
         time.sleep(0.8)
     elif cmd == 'swipe':
@@ -239,6 +328,7 @@ def command(cmd):
         w, h = 1080, 2220
         seg = {'up': (w // 2, h * 3 // 4, w // 2, h // 4), 'down': (w // 2, h // 4, w // 2, h * 3 // 4),
                'left': (w * 4 // 5, h // 2, w // 5, h // 2), 'right': (w // 5, h // 2, w * 4 // 5, h // 2)}[d]
+        require_focus()
         adb('shell', 'input', 'swipe', *map(str, seg), '300')
         time.sleep(0.8)
     elif cmd == 'shot':
@@ -252,11 +342,14 @@ def command(cmd):
         small = os.path.join(SHOTS, sys.argv[2] + '-s.png')
         subprocess.run(['sips', '-Z', str(arg('--size', 900, int)), path, '--out', small], capture_output=True)
         print(small)
+    elif cmd == 'focus':
+        state = focus_state()
+        print(f"window {state['window']!r} ({state['window_package']}), app {state['app_package']}")
     elif cmd == 'wait':
         deadline = time.time() + arg('--timeout', 20, int)
         while time.time() < deadline:
             try:
-                if find(sys.argv[2]):
+                if find(sys.argv[2], every_package=bool(arg('--all'))):
                     print('found', sys.argv[2])
                     return
             except AdbError:

@@ -38,17 +38,15 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 
 /**
  * "Rename Wallet" (inventory row 29, `WalletDetailView.swift:117-125`): a text field pre-filled with the current name
  * (word capitalisation), the message "The fingerprint and addresses stay the same.", "Cancel" and "Save" (disabled
  * while the trimmed text is empty). No password is asked; the store validates the 1–40 character rule. Saved with the
- * Enter key, it leaves no focus ring on the page's back arrow ([WindowFocusReturnEffect], QA wallets-12).
+ * Enter key, it leaves no focus ring on the page's back arrow (`SignerAlertDialog` holds the page's focus, QA wallets-12).
  */
 @Composable
 internal fun RenameWalletDialog(currentName: String, onSave: (String) -> Unit, onCancel: () -> Unit) {
-    WindowFocusReturnEffect()
     val state = remember { TextFieldState(currentName, TextRange(currentName.length)) }
     val canSave = state.text.toString().trimWhitespacesAndNewlines().isNotEmpty()
     val save = { if (canSave) onSave(state.text.toString()) }
@@ -66,7 +64,6 @@ internal fun RenameWalletDialog(currentName: String, onSave: (String) -> Unit, o
 /** "Unable to Rename" with the store's message and "OK" (inventory row 30, `WalletDetailView.swift:126-128`). */
 @Composable
 internal fun UnableToRenameDialog(message: String, onDismiss: () -> Unit) {
-    WindowFocusReturnEffect()
     SignerAlertDialog(
         title = stringResource(R.string.unable_to_rename),
         text = message,

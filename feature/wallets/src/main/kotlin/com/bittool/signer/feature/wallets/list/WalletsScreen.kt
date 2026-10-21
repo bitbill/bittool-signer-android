@@ -1,5 +1,6 @@
 package com.bittool.signer.feature.wallets.list
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,14 +42,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,10 +75,10 @@ import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.navigation.SetupIntent
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.logo.NetworkLogoStack
+import com.bittool.signer.core.ui.security.openScreenLockSettings
 import com.bittool.signer.core.ui.wallet.WalletAvatar
-import com.bittool.signer.core.ui.wallet.isolate
+import com.bittool.signer.core.ui.wallet.fingerprintLine
 import com.bittool.signer.feature.wallets.common.IconAction
 import com.bittool.signer.feature.wallets.common.WalletIdentity
 import kotlinx.coroutines.coroutineScope
@@ -90,21 +93,30 @@ data class WalletsActions(
     val onAddresses: (WalletId) -> Unit = {},
     val onScan: () -> Unit = {},
     val onAddWallet: (SetupIntent) -> Unit = {},
+    /** QA L4: "Remove This Wallet" on the card of a wallet whose device key is gone (the Delete page's removal, B9). */
+    val onRemove: (WalletId) -> Unit = {},
+    /** QA L4: "Open Settings" on the card of a wallet that needs a screen lock first. */
+    val onSetScreenLock: () -> Unit = {},
 )
 
 /**
  * The Wallets tab root (inventory row 26, iOS `WalletsTab`, wallets-pairing.md §4): a large collapsing "Wallets" title
  * with "Scan" and the "Add Wallet" menu, then one card per wallet in vault order and the "Keys and signing stay on this
- * device." footer. Reselecting the tab scrolls back to the top.
+ * device." footer. Reselecting the tab scrolls back to the top. [onRemove] opens the removal of a wallet whose device
+ * key is gone (QA L4).
  */
 @Composable
 fun WalletsScreen(
     onOpenWallet: (WalletId) -> Unit,
     onPair: (WalletId) -> Unit,
     onAddresses: (WalletId) -> Unit,
+    onRemove: (WalletId) -> Unit = onOpenWallet,
     viewModel: WalletsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val activity = LocalActivity.current
+    val onSetScreenLock = remember(activity, context) { { openScreenLockSettings(activity ?: context) } }
     WalletsContent(
         uiState = uiState,
         actions = WalletsActions(
@@ -113,6 +125,8 @@ fun WalletsScreen(
             onAddresses = onAddresses,
             onScan = viewModel::scan,
             onAddWallet = viewModel::addWallet,
+            onRemove = onRemove,
+            onSetScreenLock = onSetScreenLock,
         ),
         scrollToTop = viewModel.reselections,
     )
@@ -186,6 +200,8 @@ fun WalletsContent(
                     onOpen = { actions.onOpenWallet(wallet.id) },
                     onPair = { actions.onPair(wallet.id) },
                     onAddresses = { actions.onAddresses(wallet.id) },
+                    onRemove = { actions.onRemove(wallet.id) },
+                    onSetScreenLock = actions.onSetScreenLock,
                     modifier = Modifier.animateItem(),
                 )
             }
@@ -214,9 +230,8 @@ private fun AddWalletMenu(onAddWallet: (SetupIntent) -> Unit) {
             modifier = Modifier.testTag("wallets.add"),
         )
         // A popup window, the design system's menu: it waits for the window gate (ARCHITECTURE §1.10), uses the elevated
-        // card colour and publishes its items' tags as resource ids in debuggable builds (backlog B26, B29). Chosen with
-        // the keyboard, it leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12).
-        if (expanded) WindowFocusReturnEffect()
+        // card colour, publishes its items' tags as resource ids in debuggable builds (backlog B26, B29) and, chosen
+        // with the keyboard, leaves no focus ring on "Scan" under the setup flow it opens (QA wallets-12, backlog B30).
         SignerDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.create_new_wallet)) },
@@ -243,6 +258,10 @@ private fun AddWalletMenu(onAddWallet: (SetupIntent) -> Unit) {
 /**
  * One wallet (iOS `WalletCard`, `WalletsTab.swift:69-141`): identity on top (opens the wallet page), quick public
  * actions below. "There is no 'current' or 'default' wallet; every card is equal and self-contained."
+ *
+ * Android-only (QA L4, production-04): a wallet without public data says what is wrong where the person looks first.
+ * Its device key gone (the screen lock was removed): "This Wallet Can’t Be Unlocked" and "Remove This Wallet"; no
+ * screen lock: "Screen Lock Required" and "Open Settings". Only otherwise "Repair wallet data", which can then work.
  */
 @Composable
 internal fun WalletCard(
@@ -251,6 +270,8 @@ internal fun WalletCard(
     onPair: () -> Unit,
     onAddresses: () -> Unit,
     modifier: Modifier = Modifier,
+    onRemove: () -> Unit = onOpen,
+    onSetScreenLock: () -> Unit = {},
 ) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
@@ -285,12 +306,17 @@ internal fun WalletCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = stringResource(R.string.fingerprint_x, fingerprintText(wallet.fingerprint)),
-                    style = typography.caption.monospaced(),
-                    color = colors.secondaryLabel,
-                )
-                if (wallet.ready) NetworkLogoStack(Modifier.padding(top = 2.dp), size = 16.dp)
+                when {
+                    wallet.keyLost -> CardStatus(stringResource(R.string.wallets_lost_key_title), colors.danger)
+                    wallet.screenLockRequired -> CardStatus(stringResource(R.string.setup_screen_lock_required), colors.warning)
+                    // "Fingerprint 73C5DA0A", the value in the monospaced face and, right to left, isolated (core:ui).
+                    else -> Text(
+                        text = fingerprintLine(wallet.fingerprint ?: stringResource(R.string.ui_setup_required)),
+                        style = typography.caption.monospaced(),
+                        color = colors.secondaryLabel,
+                    )
+                }
+                if (wallet.ready && !wallet.keyLost) NetworkLogoStack(Modifier.padding(top = 2.dp), size = 16.dp)
             }
             Icon(SignerIcons.ChevronRight, contentDescription = null, tint = colors.tertiaryLabel, modifier = Modifier.size(18.dp))
         }
@@ -308,7 +334,10 @@ internal fun WalletCard(
                 .height(0.5.dp)
                 .background(colors.opaqueSeparator),
         )
-        if (wallet.ready) {
+        if (wallet.keyLost) {
+            // Before the ready case: a wallet whose index is still readable but whose key is gone cannot sign either.
+            CardAction(SignerIcons.Delete, stringResource(R.string.wallets_lost_key_remove), colors.danger, "wallet.remove.$id", onRemove)
+        } else if (wallet.ready) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -326,38 +355,39 @@ internal fun WalletCard(
                     modifier = Modifier.weight(1f).testTag("wallet.addresses.$id"),
                 )
             }
+        } else if (wallet.screenLockRequired) {
+            CardAction(SignerIcons.DeviceLock, stringResource(R.string.open_settings), colors.accent, "wallet.screenLock.$id", onSetScreenLock)
         } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = SignerMetrics.minTouchTarget)
-                    .clickable(role = Role.Button, onClick = onOpen)
-                    .testTag("wallet.repair.$id")
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(SignerIcons.Build, contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
-                Text(
-                    text = stringResource(R.string.repair_wallet_data_2),
-                    style = typography.subheadline.semibold(),
-                    color = colors.accent,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            CardAction(SignerIcons.Build, stringResource(R.string.repair_wallet_data_2), colors.accent, "wallet.repair.$id", onOpen)
         }
     }
 }
 
-/**
- * The "Fingerprint %@" value: the upper-case fingerprint, or "Setup required" (V on iOS) without public data. In a
- * right-to-left interface the value is wrapped in Unicode isolates so it stays left to right inside the translated
- * sentence; left-to-right text stays plain (the e2e suite matches "Fingerprint 73C5DA0A" literally).
- */
+/** The line under the name of a card whose wallet cannot be used as it is (QA L4), in place of the fingerprint. */
 @Composable
-internal fun fingerprintText(fingerprint: String?): String {
-    val value = fingerprint ?: stringResource(R.string.ui_setup_required)
-    return if (LocalLayoutDirection.current == LayoutDirection.Rtl) isolate(value) else value
+private fun CardStatus(text: String, color: Color) {
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(SignerIcons.WarningFilled, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+        Text(text = text, style = SignerTheme.typography.caption.semibold(), color = color)
+    }
+}
+
+/** The card's one action when its wallet has no public data: Repair, "Remove This Wallet" or "Open Settings". */
+@Composable
+private fun CardAction(icon: ImageVector, text: String, color: Color, tag: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = SignerMetrics.minTouchTarget)
+            .clickable(role = Role.Button, onClick = onClick)
+            .testTag(tag)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+        Text(text = text, style = SignerTheme.typography.subheadline.semibold(), color = color, modifier = Modifier.weight(1f))
+    }
 }
 
 @Composable

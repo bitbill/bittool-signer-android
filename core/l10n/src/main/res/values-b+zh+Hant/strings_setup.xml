@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">助記詞已重新隱藏，但截圖中可能已經包含它。請從相簿以及任何同步副本中刪除，並保留離線手抄備份。</string>
     <string name="setup_screenshot_may_contain">此截圖可能包含你的助記詞或其中部分單詞。請從相簿以及任何同步副本中刪除，並保留離線手抄備份。</string>
     <string name="setup_screen_lock_required">需要螢幕鎖定</string>
-    <string name="setup_lost_key_message">這組助記詞屬於本機上的一個錢包，但該錢包的裝置金鑰已不存在，因此無法重設其密碼。請開啟該錢包，選擇「刪除錢包」，再選擇「移除這個錢包」，然後重新匯入這組助記詞。</string>
+    <string name="setup_lost_key_message">這組助記詞屬於本機上的一個錢包，但該錢包的裝置金鑰已不存在，因此無法重設其密碼。請開啟該錢包，選擇「移除這個錢包」，然後重新匯入這組助記詞。</string>
     <string name="setup_lost_key_open_wallet">開啟錢包</string>
+    <string name="setup_repair_duplicate_title">這個錢包需要修復</string>
+    <string name="setup_repair_duplicate_message">這組助記詞屬於本機上一個公開資料需要修復的錢包。請開啟該錢包，用它的密碼選擇「修復錢包資料」。重新匯入這組助記詞只會多出一個使用相同金鑰的錢包。</string>
 </resources>

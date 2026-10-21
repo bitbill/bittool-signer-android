@@ -33,8 +33,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -51,12 +49,13 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.security.RecoverySessionFactory
-import com.bittool.signer.core.security.window.WindowFocusReturn
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.wallet.WalletIdentityHeader
 import com.bittool.signer.feature.setup.backup.RecoveryBackupPanel
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.LocalRecoverySessions
 import com.bittool.signer.feature.setup.ui.OverlayGuardHost
@@ -99,8 +98,8 @@ fun RecoveryPhraseScreen(onClose: () -> Unit, viewModel: RecoveryPhraseViewModel
  * `WalletSecuritySheets.swift:114`; QA regression-02). The focused password form must not simply leave the
  * composition: Compose then clears the view focus, and in keyboard mode (the password confirmed with Enter on a
  * hardware keyboard) Android hands it to the first focusable control, which left a focus ring on the Cancel / Done
- * cross. So the form stays until it has given up the focus under a [WindowFocusReturn] hold, then the phrase replaces
- * it (one frame later).
+ * cross. So the form stays until it has given up the focus while the window is held (`rememberClearFocus`), then the
+ * phrase replaces it (one frame later).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -194,8 +193,9 @@ private fun PasswordForm(
     unlocked: Boolean,
 ) {
     val focus = remember { FocusRequester() }
-    val view = LocalView.current
-    val focusManager = LocalFocusManager.current
+    // Clearing the focus in keyboard mode would focus the first control (View.clearFocus); this clears it while no
+    // view of the window may take it, so nothing is focused afterwards, as on iOS. Touch mode is unaffected.
+    val clearFocus = rememberClearFocus(force = true)
     var continueFocused by remember { mutableStateOf(false) }
     val submit = {
         // In keyboard mode Continue can hold the focus (Tab from the field, then Enter). The attempt empties the field,
@@ -212,14 +212,7 @@ private fun PasswordForm(
     }
     LaunchedEffect(unlocked) {
         if (!unlocked) return@LaunchedEffect
-        // Clearing the focus in keyboard mode would focus the first control (View.clearFocus); the hold keeps every
-        // view of the window from taking it, so nothing is focused afterwards, as on iOS. Touch mode is unaffected.
-        val hold = WindowFocusReturn.hold(view)
-        try {
-            focusManager.clearFocus(force = true)
-        } finally {
-            hold.release()
-        }
+        clearFocus()
         onFocusChanged(false)
     }
     Column(Modifier.onFocusChanged { onFocusChanged(it.hasFocus) }, verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -233,7 +226,7 @@ private fun PasswordForm(
             onSubmit = onUnlock,
             modifier = Modifier.focusRequester(focus),
         )
-        Text(
+        BodyText(
             stringResource(L10n.string.the_recovery_phrase_stays_hidden_until_you_choose_to),
             style = SignerTheme.typography.footnote,
             color = SignerTheme.colors.secondaryLabel,

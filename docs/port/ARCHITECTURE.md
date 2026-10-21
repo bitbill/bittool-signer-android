@@ -317,6 +317,8 @@ separator, fill, success, warning, danger, mint, ink, scannerScrim); `SignerMoti
 | `SegmentedControl(options: List<String>, selectedIndex, onSelect, modifier)` | sliding thumb, `Role.Tab` | `Picker(.segmented)` | Connect, backup Words/QR, word count, Compatibility, NetworkReference |
 | `GroupedSection(modifier, header: String? = null, footer: String? = null, content: GroupedSectionScope.() -> Unit)`; `ValueRow(label, value)`; `NavRow(title, icon, onClick, subtitle = null, value = null, destructive = false)`; `SwitchRow(title, icon, checked, onCheckedChange, enabled = true)` | inset-grouped list rendition | `List(.insetGrouped)`, `Form`, `LabeledContent`, `Toggle` | detail, Settings, Activity detail, Addresses |
 | `EmptyState(icon, title, description, modifier, action: (@Composable () -> Unit)? = null)` | centred empty view | `ContentUnavailableView` | Activity, search results |
+| `PhraseText(text, style, modifier, color, textAlign, overflow, maxLines, onTextLayout)`; `TextStyle.headingLineBreaks()`, `TextStyle.phraseLineBreaks()`, `phraseBreakable(text)`, `PhraseBreaks` | Japanese and Korean lines break between phrases on every API level (word joiners in the drawn copy below API 33, Korean below 35); the node reads the text as written (QA setup-15, regression-13, B31) | Japanese/Korean phrase breaking | large titles, setup running text, onboarding titles, `SwitchRow` subtitles, `Callout` |
+| `rememberClearFocus(force = false): () -> Unit`, `WindowFocusHoldEffect()` | clear the focus with nothing focused afterwards, also in keyboard mode; hold the page's window while a dialog, sheet or menu is up (`SignerAlertDialog`, `SignerBottomSheet`, `SignerDropdownMenu` call it themselves). Every feature clears the focus through `rememberClearFocus` (QA regression-02/03, B30) | `focused = nil` | every "stop editing" moment |
 | `SignerAlertDialog(title, text, confirm: DialogAction, dismiss: DialogAction? = null, secure = false, onDismissRequest)`; `data class DialogAction(text, destructive = false, enabled = true, onClick)` | `AlertDialog`, `SecureFlagPolicy.SecureOn` when [secure]; honours `LocalWindowGateOpen` (not shown until released); `setHideOverlayWindows(true)` on its own window (API 31+, G4.1) | `.alert`, `.confirmationDialog` | all confirmations |
 | `SignerBottomSheet(onDismissRequest, skipPartiallyExpanded = true, secure = false, dismissible = true, content)` | `ModalBottomSheet` with secure policy, blocks dismiss while busy; same gate and overlay rules as the dialog | `.sheet` | paste, authorize, tips, cards, address detail, signature QR, legal |
 | `val LocalWindowGateOpen: ProvidableCompositionLocal<Boolean>` (default true; a Boolean, so it does not clash with `:core:security`'s `WindowGate`), `@Composable fun rememberWindowGateReleased(): Boolean` | Ownbit `core/designsystem/.../WindowGate.kt` semantics: a window that has not appeared yet waits while closed; a window already shown stays. Every feature-owned `Dialog`/`Popup` window (e.g. setup's recovery-scanner `Dialog`) checks `rememberWindowGateReleased()` too | iOS presents beneath the lock window | :app provides it; every window |
@@ -810,7 +812,8 @@ chevrons, LTR for addresses and hex). Test tags = the iOS `accessibilityIdentifi
 ### 4.8 Android-only hardening (DECISIONS §9.7, gaps G4–G5)
 - `Modifier.obscuredTouchGuard { toast(security_overlay_blocked) }` on: `signing.risk`, `signing.authorize`,
   `authorize.sign`, `delete.backupConfirmed`, `vaultManagement.submit`, the delete dialog's "Delete", `setup.finish`,
-  `settings.appLock`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, the "Clear Activity" confirmation, `appLock.unlock`.
+  `settings.appLock`, `recovery.reveal`, `cards.reveal`, `backup.qr.reveal`, the "Clear Activity" confirmation, `appLock.unlock`,
+  `appLock.continueWithoutAppLock` (QA L2).
 - `AccessibilitySensitive(active = revealed)` on: revealed word grids, revealed cards, revealed recovery QR, the
   verification board, the non-empty phrase editor, a visible passphrase, the authorize sheet.
 
@@ -918,6 +921,33 @@ Wave 0 counts: `:core:model` 109 tests, `:core:common` 7, `:core:navigation` 10,
     under its lock) and then commits like `deleteWallet`. A public-data key this process used is created again only
     when the same proof shows it gone, so the phrase imports again without a relaunch. Every other deletion keeps the
     iOS biometric-then-password path. Strings: `wallets_lost_key_*`, `crypto_device_key_loss_unconfirmed`.
+19. **Removing the screen lock (QA round 2 L1–L4, Android-only; iOS never meets it):** Android then deletes every
+    `setUnlockedDeviceRequired` key — the wallets' device keys, the public-data HMAC key, the journal key — and the
+    enrolled fingerprints; a new lock brings none back. Every "lost" verdict rests on one proof, `KeystoreLossProof`
+    (item 18's three agreeing looks against probe keys, one process-wide lock), and only ever unlocks a way *out*:
+    - **Activity (L1):** `JournalCipher.discardLostKey` proves the journal key gone; `ReceiptRepository.startOverIfKeyLost`
+      then records a one-time notice (`receipts.restarted`, no data) and removes the journal nobody can open, so the
+      next record seals under a new key. `SignerState.activityRestarted` shows "Activity Started Again" until "OK"
+      (`acknowledgeActivityRestart`). A journal whose key is not provably gone keeps the iOS behaviour (unreadable,
+      alert, never overwritten silently).
+    - **App Lock (L2):** `AppAccessController.hasNoUnlockPath` is true only while locked, with no strong biometric, and
+      when the vault lists ≥ 1 wallet and proves every device key lost; the lock screen then explains it and offers
+      "Continue Without App Lock", which proves it again and turns App Lock off (persisted). A wrong password, an
+      unreadable wallet list or one live key keeps App Lock closed. It authorises nothing about a wallet.
+    - **Re-import (L3):** for wallets whose sidecar cannot be authenticated, the store keeps the `walletKeyId` the sidecar
+      *claims* (`PublicWalletRepository.unverifiedWalletKeyId`, private to the store) for duplicate detection only:
+      `findExistingWallet` reports it as unverified, `createWallet` refuses it, setup leads to that wallet (Remove when
+      its key is gone, else Repair). It never resets a password, matches a request, signs or is displayed.
+    - **Wallets (L4):** each reload (and `refreshDeviceKeys`, called by `:app` on every foreground) proves the loss for
+      wallets without a ready index only (cached once proven: a loss is final) and records the lock-screen state
+      (`SignerState.lostKeyWalletIds`, `deviceSecure`). A loss another proof found (`SignerStore.isDeviceKeyLost`:
+      setup's duplicate check, the Delete page) is kept there too, also for a wallet with a ready index, so setup's
+      "Open that wallet, choose Remove This Wallet" always holds. Cards and wallet pages then say "This Wallet Can’t Be
+      Unlocked" with Remove (before Pair/Addresses), or "Screen Lock Required" with Open Settings; Repair is offered
+      only where it can work. The list is display only: the removal proves the loss again in the vault.
+    - **Wording:** the cause is told as what Android does ("Android deletes it when the screen lock is removed"), not as
+      a certainty about this device, and the Activity notice never says the wallets are unaffected (the same event
+      usually deletes their keys).
 
 Open questions for the owner: none blocking. `SignerStore.receive` returns progress as `Double` 0…1 (iOS); the
 scanner UI converts it. The Android "Allow camera" button text (scan-sign §23.5) needs a new key if product wants it.

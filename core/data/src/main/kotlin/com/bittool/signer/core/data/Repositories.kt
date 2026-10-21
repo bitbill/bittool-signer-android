@@ -62,6 +62,18 @@ interface PublicWalletRepository {
 
     /** Deletes the sidecar if present. */
     suspend fun remove(walletId: WalletId)
+
+    /**
+     * Android-only (QA L3): the `walletKeyId` the sidecar of [walletId] **claims**, read without checking its MAC — for a
+     * wallet whose public index cannot be authenticated (the public-data key was lost with the screen lock), so a
+     * re-import of its phrase is recognised instead of creating a second wallet with the same keys. **Duplicate
+     * detection only**: never for signing, matching, display or any decision that grants something; an attacker who
+     * can write the file controls it. Null when there is no sidecar, it is malformed, names another wallet or has no
+     * index. Never throws except `CancellationException`.
+     *
+     * The default is null (no unauthenticated identity is ever offered).
+     */
+    suspend fun unverifiedWalletKeyId(walletId: WalletId): String? = null
 }
 
 /**
@@ -79,6 +91,24 @@ interface PublicWalletRepository {
 interface ReceiptRepository {
     suspend fun read(): List<SigningReceipt>
     suspend fun write(records: List<SigningReceipt>)
+
+    /**
+     * Android-only (QA L1): when the journal file exists but its key is **provably** gone (`JournalCipher.discardLostKey`,
+     * the multi-look proof of the wallets' device keys; removing the screen lock deletes the key), nothing can ever open
+     * it again: the file is removed, so [read] gives an empty journal and the next [write] seals under a new key, and the
+     * person's one-time notice is recorded first ([hasRestartNotice]). Returns whether it did. A journal whose key is not
+     * provably lost (a damaged file, a key that only fails to load, a locked or flaky Keystore) stays exactly as it is
+     * (false). Never throws except `CancellationException`.
+     *
+     * Members added after Wave 1 have conservative defaults: an implementation without them never replaces a journal.
+     */
+    suspend fun startOverIfKeyLost(): Boolean = false
+
+    /** Whether [startOverIfKeyLost] started the journal again and the person has not acknowledged it yet (persisted). */
+    suspend fun hasRestartNotice(): Boolean = false
+
+    /** The person read the notice: [hasRestartNotice] is false from now on. Best effort. */
+    suspend fun acknowledgeRestartNotice() {}
 }
 
 /**

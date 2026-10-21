@@ -1,6 +1,7 @@
 package com.bittool.signer.core.data.testing
 
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.data.ExistingWalletMatch
 import com.bittool.signer.core.data.PreparedConnect
 import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.data.SignerStore
@@ -92,6 +93,8 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
         data object ClearRequest : Call
         data object ClearHistory : Call
         data class ReviewStoredRequest(val json: String, val expectedRequestHash: String) : Call
+        data object RefreshDeviceKeys : Call
+        data object AcknowledgeActivityRestart : Call
     }
 
     // ---- Scriptable behaviour -----------------------------------------------------------------------------------
@@ -111,6 +114,16 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
             created
         }
     var onExistingWallet: suspend (mnemonic: SecretText, passphrase: SecretText) -> WalletId? = { _, _ -> null }
+
+    /**
+     * [findExistingWallet] (QA L3; recorded as [Call.ExistingWallet] like [existingWallet]): by default [onExistingWallet]'s
+     * answer as a verified match.
+     */
+    var onFindExistingWallet: suspend (mnemonic: SecretText, passphrase: SecretText) -> ExistingWalletMatch? = { mnemonic, passphrase ->
+        onExistingWallet(mnemonic, passphrase)?.let { ExistingWalletMatch(it, verified = true) }
+    }
+    var onRefreshDeviceKeys: suspend () -> Unit = {}
+    var onAcknowledgeActivityRestart: suspend () -> Unit = { setState { it.copy(activityRestarted = false) } }
     var onResetPassword: suspend (walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText) -> Unit =
         { _, _, _, _ -> suspendSession() }
     var onCompleteSetup: suspend (walletId: WalletId, password: SecretText) -> Unit = { _, _ -> }
@@ -202,6 +215,21 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
     override suspend fun existingWallet(mnemonic: SecretText, passphrase: SecretText): WalletId? {
         recorded += Call.ExistingWallet(mnemonic.text(), passphrase.text())
         return onExistingWallet(mnemonic, passphrase)
+    }
+
+    override suspend fun findExistingWallet(mnemonic: SecretText, passphrase: SecretText): ExistingWalletMatch? {
+        recorded += Call.ExistingWallet(mnemonic.text(), passphrase.text())
+        return onFindExistingWallet(mnemonic, passphrase)
+    }
+
+    override suspend fun refreshDeviceKeys() {
+        recorded += Call.RefreshDeviceKeys
+        onRefreshDeviceKeys()
+    }
+
+    override suspend fun acknowledgeActivityRestart() {
+        recorded += Call.AcknowledgeActivityRestart
+        onAcknowledgeActivityRestart()
     }
 
     override suspend fun resetPassword(walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText) {
@@ -336,6 +364,7 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
                 wallets = s.wallets.filterNot { it.id == id },
                 publicWallets = s.publicWallets - id,
                 metadataStatuses = s.metadataStatuses - id,
+                lostKeyWalletIds = s.lostKeyWalletIds - id,
                 navigationResetEpoch = s.navigationResetEpoch + 1,
             )
         }

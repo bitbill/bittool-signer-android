@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">試行回数が多すぎたため生体認証がロックされました。ウォレットのパスワードを使うか、先に画面ロックでスマートフォンのロックを解除してください。</string>
     <string name="security_delete_footer_biometric">削除には生体認証による確認の後、このウォレットのパスワードが必要です。</string>
     <string name="security_overlay_blocked">別のアプリが BitTool Signer の上に表示されています。そのアプリを閉じてから、もう一度お試しください。</string>
+    <string name="security_no_unlock_path_title">ロックを解除する方法がありません</string>
+    <string name="security_no_unlock_path_message">ここにあるすべてのウォレットのデバイス鍵が失われているため（Android は画面ロックが削除されるとこれらの鍵を削除します）、どのウォレットのパスワードでも BitTool Signer のロックを解除できません。また、指紋認証や顔認証も利用できません。App ロックなしで続行し、これらのウォレットを削除してから、それぞれのリカバリーフレーズをもう一度インポートしてください。App ロックは後で「設定」からもう一度オンにできます。資産には影響しません。</string>
+    <string name="security_no_unlock_path_continue">App ロックなしで続行</string>
     <string name="security_app_lock_save_failed">App ロックを変更できませんでした。もう一度お試しください。</string>
 </resources>

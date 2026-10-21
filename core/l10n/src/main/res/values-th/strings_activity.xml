@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">แสดงคำเตือนแล้ว</string>
     <string name="activity_partial_signature_created">สร้างลายเซ็นบางส่วนแล้ว</string>
     <string name="activity_unreadable_title">กิจกรรมใช้งานไม่ได้</string>
+    <string name="activity_restarted_title">เริ่มบันทึกกิจกรรมใหม่แล้ว</string>
+    <string name="activity_restarted_message">คีย์ที่ปกป้องระเบียนกิจกรรมก่อนหน้าไม่อยู่บนอุปกรณ์นี้แล้ว (Android จะลบคีย์นี้เมื่อนำการล็อกหน้าจอออก) จึงอ่านระเบียนนั้นไม่ได้อีก ได้เริ่มระเบียนใหม่แล้ว และลายเซ็นใหม่จะแสดงที่นี่ ลายเซ็นที่สร้างไว้แล้วไม่ได้รับผลกระทบ</string>
     <string name="activity_export_failed">ไม่สามารถบันทึกไฟล์ได้</string>
 </resources>

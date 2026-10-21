@@ -39,13 +39,16 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.flowWithLifecycle
+import com.bittool.signer.core.designsystem.component.Callout
 import com.bittool.signer.core.designsystem.component.DialogAction
 import com.bittool.signer.core.designsystem.component.EmptyState
 import com.bittool.signer.core.designsystem.component.GroupedSection
+import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.component.SignerAlertDialog
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.StatusToastState
 import com.bittool.signer.core.designsystem.component.TextAction
+import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.haptics.HapticKind
 import com.bittool.signer.core.designsystem.icon.SignerIcons
@@ -64,6 +67,10 @@ object ActivityTags {
     const val CLEAR = "activity.clear"
     const val CLEAR_CONFIRM = "activity.clearConfirm"
     const val LIST = "activity.list"
+
+    /** Android-only (QA L1): the notice that the record was started again, and its "OK". */
+    const val RESTART_NOTICE = "activity.restartNotice"
+    const val RESTART_NOTICE_OK = "activity.restartNotice.ok"
 }
 
 /** The Activity tab root (iOS `ActivityTab`, inventory row 56–57). */
@@ -84,12 +91,17 @@ fun ActivityScreen(
         onDismissClear = viewModel::onClearDismissed,
         modifier = modifier,
         scrollToTop = scrollToTop,
+        onDismissRestartNotice = viewModel::onRestartNoticeDismissed,
     )
 }
 
 /**
  * Stateless Activity list (previews, screenshots and Compose tests). Each [scrollToTop] emission (tab reselection)
  * scrolls the list back to the top and expands the large title.
+ *
+ * Android-only (QA L1): after the record was started again because its key was lost with the screen lock, the tab says
+ * so once ([ActivityUiState.restartNotice]): as the empty state while nothing was signed since, else above the list,
+ * until "OK" ([onDismissRestartNotice]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,6 +114,7 @@ internal fun ActivityContent(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     scrollToTop: Flow<Unit> = emptyFlow(),
+    onDismissRestartNotice: () -> Unit = {},
 ) {
     val toast = rememberStatusToastState()
     val bar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -130,6 +143,22 @@ internal fun ActivityContent(
                         description = stringResource(R.string.data_activity_unreadable),
                     )
                 }
+                state.days.isEmpty() && state.restartNotice -> CenteredState(insets) {
+                    EmptyState(
+                        icon = SignerIcons.History,
+                        title = stringResource(R.string.activity_restarted_title),
+                        description = stringResource(R.string.activity_restarted_message),
+                        modifier = Modifier.testTag(ActivityTags.RESTART_NOTICE),
+                        action = {
+                            SecondaryButton(
+                                text = stringResource(R.string.ok),
+                                onClick = onDismissRestartNotice,
+                                fillWidth = false,
+                                modifier = Modifier.testTag(ActivityTags.RESTART_NOTICE_OK),
+                            )
+                        },
+                    )
+                }
                 state.days.isEmpty() -> CenteredState(insets) {
                     EmptyState(
                         icon = SignerIcons.Signature,
@@ -137,7 +166,7 @@ internal fun ActivityContent(
                         description = stringResource(R.string.signatures_you_create_on_this_device_are_listed_here),
                     )
                 }
-                else -> ActivityList(state, insets, listState, onOpenReceipt)
+                else -> ActivityList(state, insets, listState, onOpenReceipt, onDismissRestartNotice)
             }
         }
         StatusToastHost(toast)
@@ -152,6 +181,7 @@ private fun ActivityList(
     insets: PaddingValues,
     listState: LazyListState,
     onOpenReceipt: (String) -> Unit,
+    onDismissRestartNotice: () -> Unit,
 ) {
     val formats = rememberActivityDateFormats()
     val reviewText = rememberReviewText()
@@ -164,6 +194,11 @@ private fun ActivityList(
             .testTag(ActivityTags.LIST),
         contentPadding = listContentPadding(insets, top = 0.dp),
     ) {
+        if (state.restartNotice) {
+            item(key = "restartNotice", contentType = "notice") {
+                RestartNotice(onDismissRestartNotice, SectionFrame.padding(top = 8.dp, bottom = 4.dp))
+            }
+        }
         state.days.forEach { day ->
             stickyHeader(key = "header-${day.key}", contentType = "header") {
                 DayHeader(formats.day(day.date))
@@ -236,6 +271,24 @@ private fun ActivityRow(entry: ActivityEntry, title: String, time: String, onCli
         }
         if (!stacked) Text(time, style = typography.caption.monospacedDigit(), color = colors.secondaryLabel, maxLines = 1)
         Icon(SignerIcons.ChevronRight, contentDescription = null, tint = colors.tertiaryLabel, modifier = Modifier.size(18.dp))
+    }
+}
+
+/** QA L1: the record was started again (its key went with the screen lock); "OK" ends the notice for good. */
+@Composable
+private fun RestartNotice(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.testTag(ActivityTags.RESTART_NOTICE), horizontalAlignment = Alignment.End) {
+        Callout(
+            text = stringResource(R.string.activity_restarted_message),
+            title = stringResource(R.string.activity_restarted_title),
+            tone = Tone.Info,
+        )
+        TextAction(
+            text = stringResource(R.string.ok),
+            onClick = onDismiss,
+            emphasized = true,
+            modifier = Modifier.testTag(ActivityTags.RESTART_NOTICE_OK),
+        )
     }
 }
 

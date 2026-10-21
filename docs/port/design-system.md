@@ -727,7 +727,15 @@ buttons) · `labelMedium` = caption 12/16 SemiBold (navigation labels) · `label
 - ⚠ Do not combine fixed `lineHeight` with `includeFontPadding = false` + `LineHeightStyle.Trim` for Thai/Arabic/Vietnamese
   (tall marks clip). Use `Trim.None` and `lineHeight ≥ 1.3 × fontSize`, or leave `lineHeight` unspecified for those locales.
 - RTL (Arabic is one of the 21 languages): addresses, hashes, paths, payloads, fingerprints, counters ("%lld/%lld") must be
-  laid out `TextDirection.Ltr` (Ownbit `ltrText()`); chevrons use AutoMirrored icons.
+  laid out `TextDirection.Ltr` (Ownbit `ltrText()`); chevrons use AutoMirrored icons. Every "Fingerprint %@" line is
+  `fingerprintLine` (core:ui): the value isolated in RTL only and in the monospaced family as a run of its own. In
+  Arabic the value is drawn in the system's monospaced face (measured on the API 31 QA emulator:
+  `FingerprintFaceDeviceTest`); its capitals and digits simply look like an ordinary sans without the typewriter-like
+  lower case of the English line (what QA regression-10 read as a proportional face).
+- Japanese and Korean titles and running text break between phrases on every API level through `PhraseText`
+  (`headingLineBreaks` / `phraseLineBreaks` styles; word joiners in the drawn copy below API 33, Korean below 35; read
+  as written by TalkBack): large titles, setup's running text, onboarding titles, `SwitchRow` subtitles and every
+  `Callout` (setup's warnings and notes). Not for selectable text (a copy would carry the joiners).
 
 ### 9.4 Shapes, spacing, elevation
 ```kotlin

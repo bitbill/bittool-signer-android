@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">قُفلت المصادقة الحيوية بعد محاولات كثيرة. استخدم كلمة مرور المحفظة، أو افتح هاتفك بقفل الشاشة أولًا.</string>
     <string name="security_delete_footer_biometric">يطلب الحذف تأكيدًا بالمصادقة الحيوية أولًا، ثم كلمة مرور هذه المحفظة.</string>
     <string name="security_overlay_blocked">يعرض تطبيق آخر محتوى فوق BitTool Signer. أغلقه ثم حاول مرة أخرى.</string>
+    <string name="security_no_unlock_path_title">لا توجد طريقة لإلغاء القفل</string>
+    <string name="security_no_unlock_path_message">لم تعد مفاتيح الجهاز لكل المحافظ هنا موجودة (يحذفها Android عند إزالة قفل الشاشة)، لذا لا يمكن لأي كلمة مرور محفظة إلغاء قفل BitTool Signer، ولا يتوفر إلغاء القفل ببصمة الإصبع أو بالوجه. تابع دون قفل التطبيق، ثم أزِل هذه المحافظ واستورد عباراتها الاحتياطية من جديد. يمكنك تشغيل قفل التطبيق مرة أخرى لاحقًا من الإعدادات. لا تتأثر الأموال.</string>
+    <string name="security_no_unlock_path_continue">المتابعة دون قفل التطبيق</string>
     <string name="security_app_lock_save_failed">تعذّر تغيير قفل التطبيق. حاول مرة أخرى.</string>
 </resources>

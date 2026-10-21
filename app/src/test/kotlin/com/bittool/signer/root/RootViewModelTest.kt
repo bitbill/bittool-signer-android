@@ -197,6 +197,8 @@ class RootViewModelTest {
         assertEquals(1, access.backgroundCalls)
         viewModel.onEnterForeground()
         assertEquals(1, access.foregroundCalls)
+        // QA L4: a screen lock removed or set in Settings meanwhile changes which wallets can still be unlocked.
+        assertEquals(1, store.calls<FakeSignerStore.Call.RefreshDeviceKeys>().size)
     }
 
     @Test

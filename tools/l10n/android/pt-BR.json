@@ -266,8 +266,8 @@
    "value": "Bloqueio de tela necessário"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Esta frase de recuperação pertence a uma carteira neste dispositivo cuja chave de dispositivo não existe mais, por isso a senha dela não pode ser redefinida. Abra essa carteira, escolha “Excluir a carteira” e depois “Remover esta carteira”, e importe a frase de novo."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Esta frase de recuperação pertence a uma carteira neste dispositivo cuja chave de dispositivo não existe mais, por isso a senha dela não pode ser redefinida. Abra essa carteira, escolha “Remover esta carteira” e importe a frase de novo."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Remover"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Esta carteira precisa de reparo"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Esta frase de recuperação pertence a uma carteira neste dispositivo cujos dados públicos precisam de reparo. Abra essa carteira e escolha “Reparar os dados da carteira” com a senha dela. Importar a frase de novo só adicionaria uma segunda carteira com as mesmas chaves."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Atividade recomeçada"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "A chave que protegia o registro de atividade anterior não está mais neste dispositivo (o Android a exclui quando o bloqueio de tela é removido), por isso esse registro não pode mais ser lido. Um novo registro foi iniciado, e as novas assinaturas aparecem aqui. As assinaturas que você já criou não são afetadas."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Não há como desbloquear"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "As chaves de dispositivo de todas as carteiras daqui não existem mais (o Android as exclui quando o bloqueio de tela é removido), por isso nenhuma senha de carteira pode desbloquear o BitTool Signer, e não há desbloqueio por impressão digital ou facial disponível. Continue sem o bloqueio do app e depois remova essas carteiras e importe de novo as frases de recuperação delas. Você pode ativar o bloqueio do app de novo mais tarde em Ajustes. Os fundos não são afetados."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Continuar sem bloqueio do app"
   }
  }
 }

@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Com avisos</string>
     <string name="activity_partial_signature_created">Assinatura parcial criada</string>
     <string name="activity_unreadable_title">Atividade indisponível</string>
+    <string name="activity_restarted_title">Atividade recomeçada</string>
+    <string name="activity_restarted_message">A chave que protegia o registro de atividade anterior não está mais neste dispositivo (o Android a exclui quando o bloqueio de tela é removido), por isso esse registro não pode mais ser lido. Um novo registro foi iniciado, e as novas assinaturas aparecem aqui. As assinaturas que você já criou não são afetadas.</string>
     <string name="activity_export_failed">Não foi possível salvar o arquivo.</string>
 </resources>

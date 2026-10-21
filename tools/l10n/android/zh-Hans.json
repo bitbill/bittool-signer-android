@@ -266,8 +266,8 @@
    "value": "需要屏幕锁定"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "这组助记词属于本机上的一个钱包，但该钱包的设备密钥已不存在，因此无法重置其密码。请打开该钱包，选择「删除钱包」，再选择「移除这个钱包」，然后重新导入这组助记词。"
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "这组助记词属于本机上的一个钱包，但该钱包的设备密钥已不存在，因此无法重置其密码。请打开该钱包，选择「移除这个钱包」，然后重新导入这组助记词。"
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "移除"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "这个钱包需要修复"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "这组助记词属于本机上一个公开数据需要修复的钱包。请打开该钱包，用它的密码选择「修复钱包数据」。重新导入这组助记词只会多出一个使用相同密钥的钱包。"
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "活动记录已重新开始"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "保护先前活动记录的密钥已不在这台设备上（移除屏幕锁定时，Android 会删除该密钥），因此无法再读取那份记录。已开始新的记录，新的签名会列在这里。已创建的签名不受影响。"
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "无法解锁"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "这里所有钱包的设备密钥都已不存在（移除屏幕锁定时，Android 会删除这些密钥），因此任何钱包密码都无法解锁 BitTool Signer，也无法使用指纹或人脸解锁。请选择不使用 App 锁继续，然后移除这些钱包，再重新导入它们的助记词。之后可以在设置中重新开启 App 锁。资产不受影响。"
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "不使用 App 锁继续"
   }
  }
 }

@@ -29,7 +29,7 @@ import androidx.compose.ui.platform.LocalView
  * ([holdIfUnfocused] does not hold it): Android returns the focus there, to the control that opened the dialog. Holds
  * of one window add up; the window takes focus again when the last one ends. Main thread only.
  *
- * The same contract as `:core:security`'s `WindowFocusReturn` (the App Lock window and the Wallets dialogs), which this
+ * The same contract as `:core:security`'s `WindowFocusReturn` (the App Lock window holds with it), which this
  * module cannot call (`:core:security` depends on it). The two never touch the same view: that one blocks the window's
  * root (its `DecorView`), this one the root's child that holds the content, so holds of both on one window combine
  * (either keeps the window unfocusable) and each restores only what it changed, in whatever order they end.
@@ -191,17 +191,19 @@ fun WindowFocusHoldEffect() {
 /**
  * `FocusManager.clearFocus()` that leaves nothing focused, also in keyboard mode, where Android would otherwise hand
  * the focus to the window's first control at once ([WindowFocusHold.clearingFocus]; iOS `focused = false`, QA
- * regression-03). For a field's Done / Enter action and other "stop editing" moments.
+ * regression-02, regression-03). For a field's Done / Enter action and other "stop editing" moments: every feature
+ * clears the focus through it, never through `LocalFocusManager.current.clearFocus()` directly. [force] is
+ * `FocusManager.clearFocus(force)`: also when a component has captured the focus.
  */
 @Composable
-fun rememberClearFocus(): () -> Unit {
+fun rememberClearFocus(force: Boolean = false): () -> Unit {
     val view = LocalView.current
     val focusManager = LocalFocusManager.current
-    return remember(view, focusManager) { { clearFocusQuietly(view, focusManager) } }
+    return remember(view, focusManager, force) { { clearFocusQuietly(view, focusManager, force) } }
 }
 
 /** [rememberClearFocus] outside composition. */
 @MainThread
-fun clearFocusQuietly(view: View, focusManager: FocusManager) {
-    WindowFocusHold.clearingFocus(view) { focusManager.clearFocus() }
+fun clearFocusQuietly(view: View, focusManager: FocusManager, force: Boolean = false) {
+    WindowFocusHold.clearingFocus(view) { focusManager.clearFocus(force) }
 }

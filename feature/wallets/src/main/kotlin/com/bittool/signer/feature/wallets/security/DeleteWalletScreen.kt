@@ -40,7 +40,6 @@ import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
-import com.bittool.signer.core.security.window.WindowFocusReturnEffect
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
 import com.bittool.signer.core.ui.password.wipe
@@ -210,7 +209,6 @@ internal const val CHECKING_SPINNER_DELAY_MILLIS = 300L
  */
 @Composable
 internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
-    WindowFocusReturnEffect()
     SignerAlertDialog(
         title = stringResource(R.string.wallets_lost_key_dialog_title),
         text = stringResource(R.string.wallets_lost_key_dialog_message),
@@ -233,7 +231,6 @@ internal fun RemoveLostWalletDialog(onRemove: () -> Unit, onCancel: () -> Unit, 
  */
 @Composable
 internal fun DeletePasswordDialog(onDelete: (SecretText) -> Unit, onCancel: () -> Unit, onBlocked: () -> Unit) {
-    WindowFocusReturnEffect()
     val password = remember { TextFieldState() }
     DisposableEffect(password) { onDispose { password.wipe() } }
     val focus = remember { FocusRequester() }

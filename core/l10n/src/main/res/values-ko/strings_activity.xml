@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">경고 표시됨</string>
     <string name="activity_partial_signature_created">일부 서명을 만들었습니다</string>
     <string name="activity_unreadable_title">활동 기록을 사용할 수 없습니다</string>
+    <string name="activity_restarted_title">활동 기록을 새로 시작했습니다</string>
+    <string name="activity_restarted_message">이전 활동 기록을 보호하던 키가 이 기기에 더 이상 없어(Android는 화면 잠금을 제거하면 이 키를 삭제합니다), 그 기록은 더 이상 읽을 수 없습니다. 새 기록을 시작했으며, 새 서명은 여기에 표시됩니다. 이미 만든 서명에는 영향이 없습니다.</string>
     <string name="activity_export_failed">파일을 저장하지 못했습니다.</string>
 </resources>

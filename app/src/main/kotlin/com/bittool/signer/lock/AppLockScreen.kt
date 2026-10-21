@@ -137,6 +137,7 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
         onUseBiometrics = viewModel::useBiometrics,
         onSelectWallet = viewModel::selectWallet,
         onClearWallet = viewModel::clearWallet,
+        onContinueWithoutAppLock = viewModel::continueWithoutAppLock,
         onUnlock = {
             // The field is cleared before the check runs: a wrong password has to be typed again (UIT:789-795).
             val secret = SecretText.of(password.text)
@@ -146,7 +147,10 @@ fun AppLockScreen(viewModel: AppLockViewModel = hiltViewModel()) {
     )
 }
 
-/** Stateless lock screen (screenshots, previews). [onClearWallet] is the menu's "Choose a wallet". */
+/**
+ * Stateless lock screen (screenshots, previews). [onClearWallet] is the menu's "Choose a wallet".
+ * [onContinueWithoutAppLock] is the Android-only way out when no unlock path is left (QA L2, [AppLockUiState.noUnlockPath]).
+ */
 @Composable
 fun AppLockContent(
     state: AppLockUiState,
@@ -159,6 +163,7 @@ fun AppLockContent(
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,
     onClearWallet: () -> Unit = {},
+    onContinueWithoutAppLock: () -> Unit = {},
 ) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
@@ -195,12 +200,20 @@ fun AppLockContent(
                     textAlign = TextAlign.Center,
                 )
             }
+            val mode = when {
+                state.noUnlockPath -> LockMode.NoUnlockPath
+                state.usePassword -> LockMode.Password
+                else -> LockMode.Biometrics
+            }
+            val onBlocked = { toast.show(overlayBlocked, SignerIcons.WarningFilled, HapticKind.Warning) }
             AnimatedContent(
-                targetState = state.usePassword,
+                targetState = mode,
                 transitionSpec = { fadeIn() togetherWith fadeOut() using SizeTransform(clip = false) },
                 label = "lockMode",
-            ) { usePassword ->
-                if (usePassword) {
+            ) { shown ->
+                if (shown == LockMode.NoUnlockPath) {
+                    NoUnlockPathCard(state = state, onContinue = onContinueWithoutAppLock, onBlocked = onBlocked)
+                } else if (shown == LockMode.Password) {
                     PasswordForm(
                         state = state,
                         password = password,
@@ -209,7 +222,7 @@ fun AppLockContent(
                         onClearWallet = onClearWallet,
                         onUnlock = onUnlock,
                         onUseBiometrics = onUseBiometrics,
-                        onBlocked = { toast.show(overlayBlocked, SignerIcons.WarningFilled, HapticKind.Warning) },
+                        onBlocked = onBlocked,
                     )
                 } else {
                     BiometricActions(state = state, onBiometrics = onBiometrics, onUsePassword = onUsePassword)
@@ -252,6 +265,46 @@ private fun KeepInViewAboveKeyboard(requester: BringIntoViewRequester, key: Any)
         // After the frame that laid the message (and the shrunk viewport) out.
         withFrameNanos { }
         requester.bringIntoView()
+    }
+}
+
+/** What the lock screen offers: the iOS biometric actions or password form, or the Android-only explanation (QA L2). */
+private enum class LockMode { Biometrics, Password, NoUnlockPath }
+
+/**
+ * QA L2 (Android-only): no unlock path can succeed — every wallet's device key went with the device's screen lock, and
+ * so did the fingerprints. Says so in plain words and offers the one way on: "Continue Without App Lock" (App Lock
+ * proves it again, then turns itself off). Guarded against touches through overlays like "Unlock".
+ */
+@Composable
+private fun NoUnlockPathCard(state: AppLockUiState, onContinue: () -> Unit, onBlocked: () -> Unit) {
+    val colors = SignerTheme.colors
+    val typography = SignerTheme.typography
+    SignerCard(padding = PaddingValues(18.dp), modifier = Modifier.testTag(AppLockTags.NO_UNLOCK_PATH)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(SignerIcons.DeviceLock, contentDescription = null, tint = colors.warning, modifier = Modifier.size(22.dp))
+                Text(
+                    text = stringResource(R.string.security_no_unlock_path_title),
+                    style = typography.headline,
+                    color = colors.label,
+                    modifier = Modifier.semantics { heading() },
+                )
+            }
+            Text(
+                text = stringResource(R.string.security_no_unlock_path_message),
+                style = typography.subheadline,
+                color = colors.secondaryLabel,
+            )
+            PrimaryButton(
+                text = stringResource(R.string.security_no_unlock_path_continue),
+                icon = SignerIcons.LockOpen,
+                busy = state.continuing,
+                enabled = !state.continuing,
+                onClick = onContinue,
+                modifier = Modifier.testTag(AppLockTags.CONTINUE_WITHOUT_APP_LOCK).obscuredTouchGuard(onBlocked),
+            )
+        }
     }
 }
 
@@ -430,6 +483,10 @@ object AppLockTags {
     const val UNLOCK = "appLock.unlock"
     const val USE_BIOMETRICS = "appLock.useBiometrics"
     const val ERROR = "appLock.error"
+
+    /** Android-only (QA L2): the explanation that no unlock path is left, and its "Continue Without App Lock". */
+    const val NO_UNLOCK_PATH = "appLock.noUnlockPath"
+    const val CONTINUE_WITHOUT_APP_LOCK = "appLock.continueWithoutAppLock"
 
     /** "Choose a wallet", the first item of the [WALLET] menu (no wallet). */
     const val NO_WALLET = "$WALLET.none"

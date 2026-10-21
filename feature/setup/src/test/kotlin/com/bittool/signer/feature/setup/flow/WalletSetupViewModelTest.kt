@@ -11,6 +11,7 @@ import com.bittool.signer.core.crypto.bip39.Bip39Candidates
 import com.bittool.signer.core.crypto.bip39.Bip39Language
 import com.bittool.signer.core.data.SignerState
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
+import com.bittool.signer.core.data.ExistingWalletMatch
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.AppIssue
@@ -112,11 +113,36 @@ class WalletSetupViewModelTest {
     // ---------------------------------------------------------------------------------------------------------------
     // Presentation hooks
 
+    /** The default name as the UI resolves it, here with the English text of the two iOS keys. */
+    private fun WalletSetupViewModel.englishDefaultName(): String = defaultName { text ->
+        val ios = text as UiText.Ios
+        ios.args.fold(ios.english) { english, arg -> english.replaceFirst("%lld", arg.toString()) }
+    }
+
+    private fun walletsNamed(vararg names: String) =
+        store.setState { s -> s.copy(wallets = names.mapIndexed { index, name -> VaultMetadata(WalletId.random(), name, index.toLong()) }) }
+
     @Test
     fun theDefaultNameIsMyWalletForTheFirstWalletAndNumberedAfterwards() = runTest(dispatcher) {
-        assertEquals(UiText.Ios("My Wallet"), model().defaultName)
-        store.setState { it.copy(wallets = listOf(VaultMetadata(WalletId.random(), "Existing", 1L), VaultMetadata(WalletId.random(), "Second", 2L))) }
-        assertEquals(UiText.Ios("Wallet %lld", listOf(3)), model().defaultName)
+        assertEquals("My Wallet", model().englishDefaultName())
+        walletsNamed("Existing", "Second")
+        assertEquals("Wallet 3", model().englishDefaultName())
+    }
+
+    @Test
+    fun theDefaultNameIsNeverOneAWalletHereAlreadyHas() = runTest(dispatcher) {
+        // QA production-06: "My Wallet" + "Wallet 2", then "My Wallet" deleted: iOS proposes "Wallet 2" a second time.
+        walletsNamed("Wallet 2")
+        assertEquals("Wallet 3", model().englishDefaultName())
+        walletsNamed("Wallet 2", "Wallet 3", " wallet 4 ")
+        assertEquals("Wallet 5", model().englishDefaultName(), "compared trimmed and ignoring case")
+        walletsNamed("Travel", "Wallet 4")
+        assertEquals("Wallet 3", model().englishDefaultName(), "a free number is kept as iOS proposes it")
+        val asked = mutableListOf<UiText>()
+        model().defaultName { asked += it; "Wallet" }
+        assertEquals<List<UiText>>(listOf(UiText.Ios("Wallet %lld", listOf(3))), asked, "the text is resolved in the current language")
+        walletsNamed("Wallet")
+        assertEquals("Wallet", model().defaultName { "Wallet" }, "a text without its number ends the search with iOS's proposal")
     }
 
     @Test
@@ -951,5 +977,71 @@ class WalletSetupViewModelTest {
         assertFalse(model.state.duplicateKeyLost)
         model.openLostKeyWallet()
         assertFalse(model.hasEnded, "only a lost key leads away")
+    }
+
+    /**
+     * QA L3 (production-03): the phrase of a wallet whose public index cannot be authenticated any more (the public-data
+     * key went with the screen lock) is recognised from the identity its sidecar claims. Before, the check found nothing
+     * and "Import Wallet" created a second wallet with the same keys; now the step leads to the wallet's removal.
+     */
+    @Test
+    fun aWalletKnownOnlyByItsUnverifiedIdentityIsNeverImportedTwice() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onFindExistingWallet = { _, _ -> ExistingWalletMatch(existing.id, verified = false) }
+        store.lostDeviceKeys = setOf(existing.id)
+        val model = started(SetupIntent.Restore)
+        val events = events(model)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertEquals(existing.id, model.state.duplicateOf)
+        assertTrue(model.state.duplicateUnverified)
+        assertTrue(model.state.duplicateKeyLost)
+        assertTrue(model.state.duplicateCannotReset)
+
+        model.setPasswords()
+        model.resetPassword()
+        model.createWallet()
+        assertTrue(store.calls<Call.ResetPassword>().isEmpty(), "an unverified identity never authorises a reset")
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty(), "and no second wallet with the same keys")
+
+        model.openLostKeyWallet()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(WalletDetailRoute(existing.id))), events.filterIsInstance<SetupEvent.Finish>())
+        assertFalse(model.hasDraftSecrets())
+    }
+
+    @Test
+    fun anUnverifiedWalletWhoseKeyIsFineLeadsToItsRepair() = runTest(dispatcher) {
+        // Its public data is damaged but its device key is in place: Repair (with its password) is the way, not a reset.
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onFindExistingWallet = { _, _ -> ExistingWalletMatch(existing.id, verified = false) }
+        val model = started(SetupIntent.Restore)
+        val events = events(model)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertTrue(model.state.duplicateUnverified)
+        assertFalse(model.state.duplicateKeyLost)
+        model.setPasswords()
+        model.resetPassword()
+        model.createWallet()
+        assertTrue(store.calls<Call.ResetPassword>().isEmpty())
+        assertTrue(store.calls<Call.CreateWallet>().isEmpty())
+        model.openLostKeyWallet()
+        assertEquals(listOf<SetupEvent>(SetupEvent.Finish(WalletDetailRoute(existing.id))), events.filterIsInstance<SetupEvent.Finish>())
+    }
+
+    @Test
+    fun leavingThePasswordStepForgetsAnUnverifiedAnswer() = runTest(dispatcher) {
+        val existing = VaultMetadata(WalletId.random(), "Public fixture 1", 1L)
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onFindExistingWallet = { _, _ -> ExistingWalletMatch(existing.id, verified = false) }
+        val model = started(SetupIntent.Restore)
+        model.type(model.fields.phrase, FakeSignerStore.PUBLIC_FIXTURE_12)
+        model.startImport()
+        assertTrue(model.state.duplicateUnverified)
+        model.pop()
+        assertFalse(model.state.duplicateUnverified)
+        assertNull(model.state.duplicateOf)
     }
 }

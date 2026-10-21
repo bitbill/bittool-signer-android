@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">Nakatago na muli ang phrase, pero posibleng nasa screenshot na ito. Burahin ito sa gallery mo at sa lahat ng naka-sync na kopya, at magtago ng nakasulat na backup nang offline.</string>
     <string name="setup_screenshot_may_contain">Posibleng nasa screenshot ang recovery phrase mo o ilan sa mga salita nito. Burahin ito sa gallery mo at sa lahat ng naka-sync na kopya, at magtago ng nakasulat na backup nang offline.</string>
     <string name="setup_screen_lock_required">Kailangan ng screen lock</string>
-    <string name="setup_lost_key_message">Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero wala na ang device key ng wallet na iyon, kaya hindi ma-reset ang password nito. Buksan ang wallet na iyon, piliin ang “Burahin ang wallet”, tapos ang “Alisin ang wallet na ito”, at i-import muli ang phrase.</string>
+    <string name="setup_lost_key_message">Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero wala na ang device key ng wallet na iyon, kaya hindi ma-reset ang password nito. Buksan ang wallet na iyon, piliin ang “Alisin ang wallet na ito”, at i-import muli ang phrase.</string>
     <string name="setup_lost_key_open_wallet">Buksan ang wallet</string>
+    <string name="setup_repair_duplicate_title">Kailangang ayusin ang wallet na ito</string>
+    <string name="setup_repair_duplicate_message">Pag-aari ng isang wallet sa device na ito ang recovery phrase na ito, pero kailangang ayusin ang public data ng wallet na iyon. Buksan ang wallet na iyon at piliin ang “Ayusin ang data ng wallet” gamit ang password nito. Kapag in-import muli ang phrase, magdadagdag lang ito ng pangalawang wallet na may parehong mga key.</string>
 </resources>

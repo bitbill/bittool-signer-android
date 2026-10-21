@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -18,6 +17,7 @@ import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.StatusToastState
 import com.bittool.signer.core.designsystem.component.rememberStatusToastState
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.ui.password.PasswordField
@@ -73,14 +73,14 @@ internal fun ChangePasswordContent(
     onSubmit: () -> Unit,
     onCancel: () -> Unit,
 ) {
-    val focusManager = LocalFocusManager.current
+    val clearFocus = rememberClearFocus()
     val current = fields[0]
     val new = fields[1]
     val confirmation = fields[2]
     val valid = ChangePasswordViewModel.isValid(current.text, new.text, confirmation.text)
     val submit = {
         if (valid && !uiState.busy) {
-            focusManager.clearFocus()
+            clearFocus()
             onSubmit()
         }
     }

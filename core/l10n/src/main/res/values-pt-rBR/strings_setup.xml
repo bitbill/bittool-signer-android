@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">A frase está oculta de novo, mas a captura de tela talvez já a contenha. Exclua-a da galeria e de qualquer cópia sincronizada, e guarde um backup escrito offline.</string>
     <string name="setup_screenshot_may_contain">A captura de tela talvez contenha sua frase de recuperação ou algumas das palavras dela. Exclua-a da galeria e de qualquer cópia sincronizada, e guarde um backup escrito offline.</string>
     <string name="setup_screen_lock_required">Bloqueio de tela necessário</string>
-    <string name="setup_lost_key_message">Esta frase de recuperação pertence a uma carteira neste dispositivo cuja chave de dispositivo não existe mais, por isso a senha dela não pode ser redefinida. Abra essa carteira, escolha “Excluir a carteira” e depois “Remover esta carteira”, e importe a frase de novo.</string>
+    <string name="setup_lost_key_message">Esta frase de recuperação pertence a uma carteira neste dispositivo cuja chave de dispositivo não existe mais, por isso a senha dela não pode ser redefinida. Abra essa carteira, escolha “Remover esta carteira” e importe a frase de novo.</string>
     <string name="setup_lost_key_open_wallet">Abrir a carteira</string>
+    <string name="setup_repair_duplicate_title">Esta carteira precisa de reparo</string>
+    <string name="setup_repair_duplicate_message">Esta frase de recuperação pertence a uma carteira neste dispositivo cujos dados públicos precisam de reparo. Abra essa carteira e escolha “Reparar os dados da carteira” com a senha dela. Importar a frase de novo só adicionaria uma segunda carteira com as mesmas chaves.</string>
 </resources>

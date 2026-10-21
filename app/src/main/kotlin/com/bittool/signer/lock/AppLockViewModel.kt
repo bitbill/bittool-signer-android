@@ -3,6 +3,7 @@ package com.bittool.signer.lock
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
@@ -13,6 +14,7 @@ import com.bittool.signer.core.security.BiometricCancellationException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -47,6 +49,14 @@ data class AppLockUiState(
     val biometricsAvailable: Boolean = false,
     /** iOS `error ?? access.error`: this screen's last failure, else App Lock's. Shown verbatim (a warning callout). */
     val error: UiText? = null,
+    /**
+     * Android-only (QA L2): it is proven that no unlock path can succeed (no biometric can run and every wallet's device
+     * key was deleted with the screen lock): the screen explains why instead of the biometric actions or the password
+     * form, and offers "Continue Without App Lock".
+     */
+    val noUnlockPath: Boolean = false,
+    /** "Continue Without App Lock" is being checked (the proof is made again before App Lock turns off). */
+    val continuing: Boolean = false,
 ) {
     val selectedName: String? get() = wallets.firstOrNull { it.id == selectedWallet }?.name
 }
@@ -76,6 +86,13 @@ enum class AppLockEvent {
  *   therefore requires retyping"), checks it through `AppAccessController.authenticate` and wipes it; a failure of the
  *   current attempt shows its message and refocuses the field. Any wallet's password opens the app.
  * - A new security epoch (background, capture) invalidates the attempt in flight and clears the field.
+ *
+ * Android-only (QA L2, production-02): removing the device's screen lock deletes every wallet's device key and the
+ * enrolled fingerprints. While no biometric can run, the screen asks App Lock whether any unlock path is left
+ * (`AppAccessController.hasNoUnlockPath`, a Keystore proof) on every engagement, every return to the foreground and
+ * after a password that failed because its wallet's device key is unavailable — never after a wrong password, which
+ * proves nothing. When none is left it explains why and offers "Continue Without App Lock", which App Lock proves
+ * again before it turns itself off.
  */
 @HiltViewModel
 class AppLockViewModel @Inject constructor(
@@ -93,6 +110,8 @@ class AppLockViewModel @Inject constructor(
         val noWallet: Boolean = false,
         val busy: Boolean = false,
         val error: UiText? = null,
+        val noUnlockPath: Boolean = false,
+        val continuing: Boolean = false,
     )
 
     private val local = MutableStateFlow(Local())
@@ -110,6 +129,8 @@ class AppLockViewModel @Inject constructor(
             authenticating = accessState.isAuthenticating,
             biometricsAvailable = accessState.biometricsAvailable,
             error = local.error ?: accessState.error,
+            noUnlockPath = local.noUnlockPath && !accessState.biometricsAvailable,
+            continuing = local.continuing,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, AppLockUiState())
 
@@ -122,6 +143,7 @@ class AppLockViewModel @Inject constructor(
     private var operation = 0L
     private var resumed = false
     private var autoPromptPending = false
+    private var pathCheck: Job? = null
 
     init {
         viewModelScope.launch {
@@ -130,6 +152,10 @@ class AppLockViewModel @Inject constructor(
         viewModelScope.launch {
             // App Lock resolving (the preference read) or the lock engaging later may complete the conditions.
             access.state.collect { maybeAutoPrompt() }
+        }
+        viewModelScope.launch {
+            // QA L2: a biometric that becomes unavailable (or available again) changes which paths are left.
+            access.state.map { it.biometricsAvailable }.distinctUntilChanged().drop(1).collect { checkUnlockPaths() }
         }
         viewModelScope.launch {
             store.state.map { it.securityEpoch }.distinctUntilChanged().drop(1).collect {
@@ -146,11 +172,13 @@ class AppLockViewModel @Inject constructor(
         events.trySend(AppLockEvent.ClearPassword)
         autoPromptPending = true
         maybeAutoPrompt()
+        checkUnlockPaths()
     }
 
     private fun endEngagement() {
         operation++
         autoPromptPending = false
+        pathCheck?.cancel()
         local.value = Local()
         events.trySend(AppLockEvent.ClearPassword)
     }
@@ -168,7 +196,67 @@ class AppLockViewModel @Inject constructor(
     /** The lock screen's `LifecycleResumeEffect`: prompts are shown only while the activity is resumed. */
     fun onResumedChanged(resumed: Boolean) {
         this.resumed = resumed
-        if (resumed) maybeAutoPrompt()
+        if (resumed) {
+            // QA L2: back from Settings, where a screen lock or a fingerprint may have been set.
+            checkUnlockPaths()
+            maybeAutoPrompt()
+        }
+    }
+
+    /**
+     * QA L2: asks App Lock whether no unlock path is left, while it is shown and no biometric can run (otherwise the
+     * biometric is a way in and nothing is asked). The latest answer wins; an answer the person cannot act on any more
+     * (the lock went away, a biometric came back) is dropped by [uiState].
+     */
+    private fun checkUnlockPaths() {
+        val state = access.state.value
+        pathCheck?.cancel()
+        if (!state.showsLock || state.biometricsAvailable) {
+            if (local.value.noUnlockPath) local.update { it.copy(noUnlockPath = false) }
+            return
+        }
+        pathCheck = viewModelScope.launch {
+            val none = try {
+                access.hasNoUnlockPath()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                false
+            }
+            if (none) {
+                // The explanation replaces the failure that led here ("device key unavailable"): it says more.
+                access.clearError()
+                local.update { it.copy(noUnlockPath = true, error = null) }
+            } else {
+                local.update { it.copy(noUnlockPath = false) }
+            }
+        }
+    }
+
+    /**
+     * "Continue Without App Lock" (QA L2): App Lock proves again that nothing can open it and only then turns itself off
+     * and opens the app. It authorises nothing about any wallet. When the proof no longer holds, the screen goes back to
+     * the ordinary ways in.
+     */
+    fun continueWithoutAppLock() {
+        if (local.value.continuing || !local.value.noUnlockPath) return
+        val token = ++operation
+        local.update { it.copy(continuing = true, error = null) }
+        viewModelScope.launch {
+            try {
+                val opened = access.continueWithoutUnlockPath()
+                if (!opened && token == operation) local.update { it.copy(noUnlockPath = false) }
+            } catch (e: CancellationException) {
+                currentCoroutineContext().ensureActive()
+            } catch (e: Exception) {
+                if (token == operation) {
+                    val text = e.toUiText()
+                    local.update { it.copy(error = text) }
+                }
+            } finally {
+                local.update { it.copy(continuing = false) }
+            }
+        }
     }
 
     private fun maybeAutoPrompt() {
@@ -252,6 +340,8 @@ class AppLockViewModel @Inject constructor(
                     val text = e.toUiText()
                     local.update { it.copy(error = text) }
                     events.trySend(AppLockEvent.FocusPassword)
+                    // QA L2: this wallet's key is unavailable; maybe every wallet's is. A wrong password proves nothing.
+                    if (e is VaultError.DeviceKeyUnavailable) checkUnlockPaths()
                 }
             } finally {
                 password.wipe()

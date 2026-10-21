@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">Die Phrase ist wieder verborgen, der Screenshot kann sie aber schon enthalten. Löschen Sie ihn aus Ihrer Galerie und allen synchronisierten Kopien und bewahren Sie eine schriftliche Sicherung offline auf.</string>
     <string name="setup_screenshot_may_contain">Der Screenshot kann Ihre Wiederherstellungsphrase oder Teile davon enthalten. Löschen Sie ihn aus Ihrer Galerie und allen synchronisierten Kopien und bewahren Sie eine schriftliche Sicherung offline auf.</string>
     <string name="setup_screen_lock_required">Displaysperre erforderlich</string>
-    <string name="setup_lost_key_message">Diese Wiederherstellungsphrase gehört zu einer Wallet auf diesem Gerät, deren Geräteschlüssel nicht mehr vorhanden ist, daher lässt sich ihr Passwort nicht zurücksetzen. Öffnen Sie diese Wallet, wählen Sie „Wallet löschen“ und dann „Diese Wallet entfernen“ und importieren Sie die Phrase erneut.</string>
+    <string name="setup_lost_key_message">Diese Wiederherstellungsphrase gehört zu einer Wallet auf diesem Gerät, deren Geräteschlüssel nicht mehr vorhanden ist, daher lässt sich ihr Passwort nicht zurücksetzen. Öffnen Sie diese Wallet, wählen Sie „Diese Wallet entfernen“ und importieren Sie die Phrase erneut.</string>
     <string name="setup_lost_key_open_wallet">Wallet öffnen</string>
+    <string name="setup_repair_duplicate_title">Diese Wallet muss repariert werden</string>
+    <string name="setup_repair_duplicate_message">Diese Wiederherstellungsphrase gehört zu einer Wallet auf diesem Gerät, deren öffentliche Daten repariert werden müssen. Öffnen Sie diese Wallet und wählen Sie mit ihrem Passwort „Wallet-Daten reparieren“. Ein erneuter Import der Phrase würde nur eine zweite Wallet mit denselben Schlüsseln anlegen.</string>
 </resources>

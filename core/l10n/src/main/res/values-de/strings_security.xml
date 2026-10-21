@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">Die Biometrie ist nach zu vielen Versuchen gesperrt. Nutzen Sie ein Wallet-Passwort oder entsperren Sie das Smartphone zuerst mit der Displaysperre.</string>
     <string name="security_delete_footer_biometric">Zum Löschen werden eine biometrische Bestätigung und danach das Passwort dieser Wallet verlangt.</string>
     <string name="security_overlay_blocked">Eine andere App wird über BitTool Signer angezeigt. Schließen Sie sie und versuchen Sie es erneut.</string>
+    <string name="security_no_unlock_path_title">Entsperren nicht möglich</string>
+    <string name="security_no_unlock_path_message">Die Geräteschlüssel aller Wallets hier sind nicht mehr vorhanden (Android löscht sie, wenn die Displaysperre entfernt wird). Daher kann kein Wallet-Passwort BitTool Signer entsperren, und es ist keine Entsperrung per Fingerabdruck oder Gesichtserkennung verfügbar. Fahren Sie ohne App-Sperre fort, entfernen Sie dann diese Wallets und importieren Sie ihre Wiederherstellungsphrasen erneut. Die App-Sperre können Sie später in den Einstellungen wieder einschalten. Das Guthaben bleibt unberührt.</string>
+    <string name="security_no_unlock_path_continue">Ohne App-Sperre fortfahren</string>
     <string name="security_app_lock_save_failed">Die App-Sperre konnte nicht geändert werden. Versuchen Sie es erneut.</string>
 </resources>

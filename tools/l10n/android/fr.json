@@ -266,8 +266,8 @@
    "value": "Verrouillage de l’écran requis"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Cette phrase de récupération appartient à un portefeuille de cet appareil dont la clé d’appareil a disparu : son mot de passe ne peut donc pas être réinitialisé. Ouvrez ce portefeuille, choisissez « Supprimer le portefeuille », puis « Retirer ce portefeuille », et importez à nouveau la phrase."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Cette phrase de récupération appartient à un portefeuille de cet appareil dont la clé d’appareil a disparu : son mot de passe ne peut donc pas être réinitialisé. Ouvrez ce portefeuille, choisissez « Retirer ce portefeuille », puis importez à nouveau la phrase."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Retirer"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Ce portefeuille doit être réparé"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Cette phrase de récupération appartient à un portefeuille de cet appareil dont les données publiques doivent être réparées. Ouvrez ce portefeuille et choisissez « Réparer les données du portefeuille » avec son mot de passe. Importer à nouveau la phrase ne ferait qu’ajouter un second portefeuille avec les mêmes clés."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Historique recommencé"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "La clé qui protégeait l’historique précédent n’est plus sur cet appareil (Android la supprime lorsque le verrouillage de l’écran est retiré) : cet historique ne peut donc plus être lu. Un nouvel historique a commencé, et les nouvelles signatures s’affichent ici. Les signatures déjà créées ne sont pas affectées."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Déverrouillage impossible"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "Les clés d’appareil de tous les portefeuilles présents ici ont disparu (Android les supprime lorsque le verrouillage de l’écran est retiré) : aucun mot de passe de portefeuille ne peut donc déverrouiller BitTool Signer, et aucun déverrouillage par empreinte digitale ou par reconnaissance faciale n’est disponible. Continuez sans le verrouillage de l’app, puis retirez ces portefeuilles et importez à nouveau leurs phrases de récupération. Vous pourrez réactiver le verrouillage de l’app plus tard dans les Réglages. Les fonds ne sont pas affectés."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Continuer sans verrouillage de l’app"
   }
  }
 }

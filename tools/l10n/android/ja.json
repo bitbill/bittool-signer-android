@@ -266,8 +266,8 @@
    "value": "画面ロックが必要です"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "このリカバリーフレーズは、この端末にあるウォレットのものですが、そのウォレットのデバイス鍵が失われているため、パスワードを再設定できません。そのウォレットを開いて「ウォレットを削除」、続いて「このウォレットを削除」を選んでから、フレーズをもう一度インポートしてください。"
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "このリカバリーフレーズは、この端末にあるウォレットのものですが、そのウォレットのデバイス鍵が失われているため、パスワードを再設定できません。そのウォレットを開いて「このウォレットを削除」を選んでから、フレーズをもう一度インポートしてください。"
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "削除"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "このウォレットは修復が必要です"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "このリカバリーフレーズは、この端末にある、公開データの修復が必要なウォレットのものです。そのウォレットを開き、パスワードを使って「ウォレットデータを修復」を選んでください。フレーズをもう一度インポートしても、同じ鍵を持つ2つ目のウォレットが追加されるだけです。"
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "履歴を新しく始めました"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "以前の履歴を保護していた鍵がこの端末にもう存在しないため（Android は画面ロックが削除されるとこの鍵を削除します）、その履歴は読み込めません。新しい履歴を開始したので、新しい署名はここに表示されます。作成済みの署名には影響しません。"
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "ロックを解除する方法がありません"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "ここにあるすべてのウォレットのデバイス鍵が失われているため（Android は画面ロックが削除されるとこれらの鍵を削除します）、どのウォレットのパスワードでも BitTool Signer のロックを解除できません。また、指紋認証や顔認証も利用できません。App ロックなしで続行し、これらのウォレットを削除してから、それぞれのリカバリーフレーズをもう一度インポートしてください。App ロックは後で「設定」からもう一度オンにできます。資産には影響しません。"
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "App ロックなしで続行"
   }
  }
 }

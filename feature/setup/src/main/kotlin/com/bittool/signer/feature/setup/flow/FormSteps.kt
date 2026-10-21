@@ -49,7 +49,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -84,7 +83,9 @@ import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.designsystem.window.HideOverlayWindowsEffect
+import com.bittool.signer.core.designsystem.window.WindowFocusHoldEffect
 import com.bittool.signer.core.designsystem.window.appExposesTestTags
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.designsystem.window.rememberWindowGateReleased
 import com.bittool.signer.core.designsystem.window.windowTestTags
 import com.bittool.signer.core.model.UiText
@@ -102,6 +103,7 @@ import com.bittool.signer.feature.setup.phrase.RecoveryPhraseEditor
 import com.bittool.signer.feature.setup.phrase.RecoveryPhraseStatus
 import com.bittool.signer.feature.setup.phrase.RecoverySuggestionBar
 import com.bittool.signer.feature.setup.phrase.toKeyboardSuggestions
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.SetupNavigation
 import com.bittool.signer.feature.setup.ui.SetupScaffold
@@ -159,7 +161,7 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 enabled = !state.busy,
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = lengthLabel }.testTag("setup.wordCount"),
             )
-            Text(
+            BodyText(
                 stringResource(L10n.string.both_are_secure_24_words_is_common_for_long_term_storage),
                 style = SignerTheme.typography.footnote,
                 color = SignerTheme.colors.secondaryLabel,
@@ -192,7 +194,8 @@ internal fun CreateWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
 @Composable
 internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
-    val focusManager = LocalFocusManager.current
+    // Leaving the editor leaves nothing focused, also in keyboard mode (no ring on the back arrow).
+    val clearFocus = rememberClearFocus()
     val keyboardController = LocalSoftwareKeyboardController.current
     val view = LocalView.current
     val windowInfo = LocalWindowInfo.current
@@ -229,7 +232,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     PredictiveBackHandler(enabled = inAppKeyboardShown) { progress ->
         try {
             progress.collect { event -> if (!reduceMotion) backProgress.snapTo(event.progress) }
-            focusManager.clearFocus()
+            clearFocus()
         } catch (e: CancellationException) {
             scope.launch { backProgress.animateTo(0f, SignerMotion.quick()) }
             throw e
@@ -273,7 +276,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 suggestions = state.phrase.candidates.toKeyboardSuggestions(),
                 onSuggestion = model::insertCandidate,
                 onSwitchToSystemKeyboard = { confirmSwitch = true },
-                onDone = { focusManager.clearFocus() },
+                onDone = clearFocus,
                 // The predictive back gesture lets the keyboard sink a little before it goes.
                 modifier = Modifier.graphicsLayer { translationY = size.height * BACK_GESTURE_SINK * backProgress.value },
             )
@@ -297,7 +300,7 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
                 RecoverySuggestionBar(
                     candidates = state.phrase.candidates,
                     onInsert = model::insertCandidate,
-                    onDone = { focusManager.clearFocus() },
+                    onDone = clearFocus,
                     onInAppKeyboard = switchToInAppKeyboard,
                 )
             }
@@ -470,11 +473,13 @@ private fun FieldLabel(text: String, modifier: Modifier = Modifier) {
 /**
  * The recovery QR scanner (iOS `fullScreenCover` with `QRScannerView`, `WalletSetupFlow.swift:217-229`): the shared
  * full-screen scanner in a secure, edge-to-edge dialog of this activity (a separate activity would suspend the
- * session). It waits for the window gate like every window.
+ * session). It waits for the window gate like every window and, like the design system's windows, holds the page's
+ * keyboard focus while it is up, so closing it leaves no focus ring on the page's first control (backlog B30).
  */
 @Composable
 private fun RecoveryScannerDialog(error: UiText?, model: WalletSetupViewModel) {
     if (!rememberWindowGateReleased()) return
+    WindowFocusHoldEffect()
     Dialog(
         onDismissRequest = model::closeScanner,
         properties = DialogProperties(

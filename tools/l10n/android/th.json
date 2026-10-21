@@ -266,8 +266,8 @@
    "value": "ต้องตั้งค่าการล็อกหน้าจอ"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "วลีกู้คืนนี้เป็นของกระเป๋าบนอุปกรณ์นี้ที่คีย์ของอุปกรณ์หายไปแล้ว จึงตั้งรหัสผ่านใหม่ไม่ได้ เปิดกระเป๋านั้น เลือก “ลบกระเป๋า” แล้วเลือก “นำกระเป๋านี้ออก” จากนั้นนำเข้าวลีอีกครั้ง"
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "วลีกู้คืนนี้เป็นของกระเป๋าบนอุปกรณ์นี้ที่คีย์ของอุปกรณ์หายไปแล้ว จึงตั้งรหัสผ่านใหม่ไม่ได้ เปิดกระเป๋านั้น เลือก “นำกระเป๋านี้ออก” จากนั้นนำเข้าวลีอีกครั้ง"
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "นำออก"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "กระเป๋านี้ต้องซ่อมแซม"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "วลีกู้คืนนี้เป็นของกระเป๋าบนอุปกรณ์นี้ที่ข้อมูลสาธารณะต้องซ่อมแซม เปิดกระเป๋านั้นแล้วเลือก “ซ่อมแซมข้อมูลกระเป๋า” ด้วยรหัสผ่านของกระเป๋า การนำเข้าวลีอีกครั้งจะเพิ่มเพียงกระเป๋าใบที่สองที่มีคีย์เดียวกัน"
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "เริ่มบันทึกกิจกรรมใหม่แล้ว"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "คีย์ที่ปกป้องระเบียนกิจกรรมก่อนหน้าไม่อยู่บนอุปกรณ์นี้แล้ว (Android จะลบคีย์นี้เมื่อนำการล็อกหน้าจอออก) จึงอ่านระเบียนนั้นไม่ได้อีก ได้เริ่มระเบียนใหม่แล้ว และลายเซ็นใหม่จะแสดงที่นี่ ลายเซ็นที่สร้างไว้แล้วไม่ได้รับผลกระทบ"
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "ไม่มีวิธีปลดล็อก"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "คีย์ของอุปกรณ์สำหรับกระเป๋าทุกใบที่นี่ไม่มีอยู่แล้ว (Android จะลบคีย์เหล่านี้เมื่อนำการล็อกหน้าจอออก) จึงไม่มีรหัสผ่านกระเป๋าใดปลดล็อก BitTool Signer ได้ และใช้การปลดล็อกด้วยลายนิ้วมือหรือใบหน้าไม่ได้ ดำเนินการต่อโดยไม่ใช้ล็อกแอป แล้วนำกระเป๋าเหล่านี้ออกและนำเข้าวลีกู้คืนของกระเป๋าเหล่านั้นอีกครั้ง คุณเปิดล็อกแอปอีกครั้งได้ภายหลังในการตั้งค่า เงินของคุณไม่ได้รับผลกระทบ"
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "ดำเนินการต่อโดยไม่ใช้ล็อกแอป"
   }
  }
 }

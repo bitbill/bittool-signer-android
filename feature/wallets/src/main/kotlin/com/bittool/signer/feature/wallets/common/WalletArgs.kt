@@ -33,6 +33,11 @@ internal object WalletArgs {
 /**
  * Who a page is about (iOS `WalletIdentityHeader` inputs and the display helpers of `AppStore`, wallets-pairing.md
  * §1.7): the displayed name, the upper-case fingerprint (null → "Setup required") and the avatar seed. Public data only.
+ *
+ * Android-only (QA L4): a wallet without ready public data is not always one that Repair can fix. Removing the
+ * device's screen lock deletes its device key ([keyLost]: it can never be unlocked, only removed and imported again),
+ * and without a screen lock nothing can be unlocked at all ([screenLockRequired]). [needsRepair] is what is left: the
+ * iOS "Repair needed".
  */
 @Immutable
 data class WalletIdentity(
@@ -43,19 +48,32 @@ data class WalletIdentity(
     val createdAtMillis: Long,
     val ready: Boolean,
     val duplicate: Boolean,
+    /**
+     * QA L4: a provably lost device key (`SignerState.hasLostDeviceKey`). Usually without ready public data (the
+     * public-data key goes with the device keys); a wallet with a ready index counts once another proof found its loss.
+     */
+    val keyLost: Boolean = false,
+    /** QA L4: no ready public data and no secure lock screen (`SignerState.deviceSecure`): a lock comes first. */
+    val screenLockRequired: Boolean = false,
 ) {
+    /** The iOS "Repair needed" case: no ready public data, and a repair with the password can work. */
+    val needsRepair: Boolean get() = !ready && !keyLost && !screenLockRequired
+
     companion object {
         /** The identity of [id] in [state], or null when the wallet is not (or no longer) in the list. */
         fun of(state: SignerState, id: WalletId): WalletIdentity? {
             val wallet = state.wallet(id) ?: return null
+            val ready = state.metadataStatus(id) == PublicMetadataStatus.Ready
             return WalletIdentity(
                 id = id,
                 name = wallet.name,
                 fingerprint = state.fingerprint(id),
                 avatarIdentity = state.avatarIdentity(id),
                 createdAtMillis = wallet.createdAtMillis,
-                ready = state.metadataStatus(id) == PublicMetadataStatus.Ready,
+                ready = ready,
                 duplicate = state.isDuplicate(id),
+                keyLost = state.deviceSecure && state.hasLostDeviceKey(id),
+                screenLockRequired = !ready && !state.deviceSecure,
             )
         }
 

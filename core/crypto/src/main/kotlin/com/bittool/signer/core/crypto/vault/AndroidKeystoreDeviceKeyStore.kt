@@ -2,14 +2,12 @@ package com.bittool.signer.core.crypto.vault
 
 import android.content.Context
 import android.security.keystore.KeyInfo
-import android.security.keystore.KeyPermanentlyInvalidatedException
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.util.constantTimeEquals
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.InvalidKeyException
-import java.security.KeyStore
 import java.security.ProviderException
 import java.util.UUID
 import javax.crypto.AEADBadTagException
@@ -145,93 +143,15 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
     }
 
     /**
-     * Provably lost (QA backlog B9): [LOSS_CONFIRMATIONS] independent observations, each on a freshly loaded Keystore,
-     * all report the same loss:
-     * - **absent**: a probe key generated for this observation is listed before and after the wallet's alias reads as
-     *   absent from `containsAlias`, `getKey` and `aliases()` — a Keystore that failed to answer reports *every* alias as
-     *   missing (the API 26–30 binder pitfall), so it would lose the probe too; or
-     * - **invalidated**: the entry exists but Keystore refuses it with `KeyPermanentlyInvalidatedException`.
-     * A usable key, any other refusal (a locked device, a transient error) or a disagreement between observations is not
-     * a loss. The probe keys protect nothing and are deleted at once (leftovers of a killed process on the next call).
+     * Provably lost (QA backlog B9): the shared [KeystoreLossProof] — [LOSS_CONFIRMATIONS] independent observations, each
+     * on a freshly loaded Keystore, report the same loss: **absent** (a probe key generated for the observation is listed
+     * before and after the wallet's alias reads as absent everywhere: a Keystore that failed to answer would lose the probe
+     * too) or **invalidated** (`KeyPermanentlyInvalidatedException`). A usable key, any other refusal (a locked device, a
+     * transient error) or a disagreement between observations is not a loss.
      */
     override fun isKeyLost(id: WalletId): Boolean = synchronized(lock) {
         if (id == PUBLIC_DATA_KEY_ID) return false
-        provenLoss(alias(id)) != null
-    }
-
-    /**
-     * The proof of [isKeyLost] for [alias] (the caller holds [lock]): [Observation.Absent] or
-     * [Observation.Invalidated] when [LOSS_CONFIRMATIONS] observations agree on it, else null. Never throws.
-     */
-    private fun provenLoss(alias: String): Observation? = try {
-        deleteStaleProbes()
-        val first = observe(alias)
-        if (first != Observation.Absent && first != Observation.Invalidated) {
-            null
-        } else if ((2..LOSS_CONFIRMATIONS).all { observe(alias) == first }) {
-            first
-        } else {
-            null
-        }
-    } catch (_: Exception) {
-        // GeneralSecurityException, ProviderException, IOException or anything else Keystore throws: no proof.
-        null
-    }
-
-    private enum class Observation { Usable, Absent, Invalidated, Unsure }
-
-    /** One look at [alias] on a freshly loaded Keystore (see [isKeyLost]). */
-    private fun observe(alias: String): Observation {
-        val store = Keystore.open()
-        if (Keystore.contains(store, alias)) return entryState(store, alias)
-        val probe = PROBE_PREFIX + UUID.randomUUID()
-        try {
-            Keystore.generateProbe(probe)
-            if (Keystore.secretKey(store, probe) == null) return Observation.Unsure
-            val absent = !Keystore.contains(store, alias) && Keystore.secretKey(store, alias) == null &&
-                store.aliases().asSequence().none { it == alias }
-            return if (absent && Keystore.contains(store, probe)) Observation.Absent else Observation.Unsure
-        } finally {
-            try {
-                if (Keystore.contains(store, probe)) store.deleteEntry(probe)
-            } catch (_: Exception) {
-                // A leftover probe protects nothing; the next call removes it.
-            }
-        }
-    }
-
-    /** An existing entry: usable, permanently invalidated, or something we cannot judge. */
-    private fun entryState(store: KeyStore, alias: String): Observation {
-        val key = try {
-            Keystore.secretKey(store, alias)
-        } catch (e: GeneralSecurityException) {
-            return if (e.isPermanentInvalidation()) Observation.Invalidated else Observation.Unsure
-        } ?: return Observation.Unsure
-        if (key.algorithm != AES) return Observation.Unsure
-        return try {
-            Cipher.getInstance(TRANSFORMATION).run {
-                init(Cipher.ENCRYPT_MODE, key)
-                doFinal(ByteArray(0))
-            }
-            Observation.Usable
-        } catch (e: GeneralSecurityException) {
-            if (e.isPermanentInvalidation()) Observation.Invalidated else Observation.Unsure
-        } catch (_: ProviderException) {
-            Observation.Unsure
-        }
-    }
-
-    private fun Throwable.isPermanentInvalidation(): Boolean =
-        generateSequence(this) { it.cause }.take(8).any { it is KeyPermanentlyInvalidatedException }
-
-    /** Probe keys a killed process left behind (each protects nothing). */
-    private fun deleteStaleProbes() {
-        try {
-            val store = Keystore.open()
-            store.aliases().toList().filter { it.startsWith(PROBE_PREFIX) }.forEach { store.deleteEntry(it) }
-        } catch (_: Exception) {
-            // Best effort.
-        }
+        KeystoreLossProof.provenLoss(alias(id)) != null
     }
 
     override fun publicDataKey(createIfMissing: Boolean): PublicDataKey? = synchronized(lock) {
@@ -250,7 +170,9 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
             // after the lost-key removal could not save its public file until the next launch (QA backlog B9).
             if (Keystore.contains(store, alias)) throw VaultError.DeviceKeyUnavailable()
             if (!isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
-            if (publicKeySeen && provenLoss(alias) != Observation.Absent) throw VaultError.DeviceKeyUnavailable()
+            if (publicKeySeen && KeystoreLossProof.provenLoss(alias) != KeystoreLossProof.Loss.Absent) {
+                throw VaultError.DeviceKeyUnavailable()
+            }
             val key = Keystore.generateHmac(alias, policy)
             publicKeySeen = true
             KeystorePublicDataKey(key)
@@ -322,11 +244,11 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
 
         internal fun alias(id: WalletId): String = ALIAS_PREFIX + id
 
-        /** Throw-away keys of [isKeyLost]; never under [ALIAS_PREFIX], so no probe can pass for a wallet's key. */
-        internal const val PROBE_PREFIX = "com.bittool.signer.vault.keystore-probe.v1/"
+        /** Throw-away keys of [isKeyLost] ([KeystoreLossProof.PROBE_PREFIX]); never under [ALIAS_PREFIX]. */
+        internal const val PROBE_PREFIX = KeystoreLossProof.PROBE_PREFIX
 
-        /** Independent observations that must agree before a key counts as lost. */
-        internal const val LOSS_CONFIRMATIONS = 3
+        /** Independent observations that must agree before a key counts as lost ([KeystoreLossProof.LOSS_CONFIRMATIONS]). */
+        internal const val LOSS_CONFIRMATIONS = KeystoreLossProof.LOSS_CONFIRMATIONS
 
         private const val TRANSFORMATION = "AES/GCM/NoPadding"
         private const val HMAC = "HmacSHA256"

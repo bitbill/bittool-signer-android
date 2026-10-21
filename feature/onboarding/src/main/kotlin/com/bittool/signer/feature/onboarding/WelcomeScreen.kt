@@ -1,11 +1,5 @@
 package com.bittool.signer.feature.onboarding
 
-import android.app.Activity
-import android.app.admin.DevicePolicyManager
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
@@ -87,6 +81,7 @@ import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.ui.legal.LegalDocumentView
 import com.bittool.signer.core.ui.logo.NetworkLogoStack
+import com.bittool.signer.core.ui.security.openScreenLockSettings
 import kotlin.math.roundToInt
 
 /**
@@ -137,24 +132,6 @@ internal fun ScreenLockRequiredDialog(onOpenSettings: () -> Unit, onDismiss: () 
     )
 }
 
-/**
- * Opens the system page that sets a screen lock, or the security settings, or Settings, the first one this device has
- * (the same as the setup flow's; features share no code).
- */
-private fun openScreenLockSettings(context: Context) {
-    val actions = listOf(DevicePolicyManager.ACTION_SET_NEW_PASSWORD, Settings.ACTION_SECURITY_SETTINGS, Settings.ACTION_SETTINGS)
-    for (action in actions) {
-        val intent = Intent(action).apply { if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-        try {
-            context.startActivity(intent)
-            return
-        } catch (_: ActivityNotFoundException) {
-            // The next, more general page.
-        } catch (_: SecurityException) {
-            // A restricted profile can refuse the direct page; the next one is plain Settings navigation.
-        }
-    }
-}
 
 /**
  * Stateless Welcome (previews, screenshots): a scrolling column that fills at least the window, so on tall screens the

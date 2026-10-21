@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Avertissements affichés</string>
     <string name="activity_partial_signature_created">Signature partielle créée</string>
     <string name="activity_unreadable_title">Historique indisponible</string>
+    <string name="activity_restarted_title">Historique recommencé</string>
+    <string name="activity_restarted_message">La clé qui protégeait l’historique précédent n’est plus sur cet appareil (Android la supprime lorsque le verrouillage de l’écran est retiré) : cet historique ne peut donc plus être lu. Un nouvel historique a commencé, et les nouvelles signatures s’affichent ici. Les signatures déjà créées ne sont pas affectées.</string>
     <string name="activity_export_failed">Le fichier n’a pas pu être enregistré.</string>
 </resources>

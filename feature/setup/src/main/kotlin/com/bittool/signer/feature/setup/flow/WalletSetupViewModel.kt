@@ -23,6 +23,7 @@ import com.bittool.signer.core.model.SignerException
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.model.util.Graphemes
+import com.bittool.signer.core.model.util.trimWhitespacesAndNewlines
 import com.bittool.signer.core.navigation.ConnectRoute
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.navigation.WalletDetailRoute
@@ -133,8 +134,26 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** iOS `existingWallets`, captured when the presentation starts. */
     val existingWallets: Int = store.state.value.wallets.size
 
-    /** iOS `name` default, resolved by the UI in the current language and handed back with [seedName]. */
-    val defaultName: UiText = if (existingWallets == 0) UiText.Ios("My Wallet") else UiText.Ios("Wallet %lld", listOf(existingWallets + 1))
+    /** The names of those wallets (QA production-06), compared trimmed and case-insensitively. */
+    private val existingNames: Set<String> = store.state.value.wallets.mapTo(HashSet()) { nameKey(it.name) }
+
+    /**
+     * iOS `name` default (`WalletSetupModel.swift:42-43`): "My Wallet" for the first wallet, otherwise "Wallet n" with
+     * n = the wallet count + 1, resolved in the current language by [localize] and handed back with [seedName].
+     * Android (QA production-06): n moves up past every number whose name a wallet here already has, so the proposal
+     * never repeats an existing name (iOS proposes "Wallet 2" again once "My Wallet" was deleted next to a "Wallet 2").
+     * Among the count + 1 numbers from there one is always free; should the text not show the number at all, the iOS
+     * proposal stays.
+     */
+    fun defaultName(localize: (UiText) -> String): String {
+        if (existingWallets == 0) return localize(UiText.Ios("My Wallet"))
+        val first = existingWallets + 1
+        for (number in first..first + existingWallets) {
+            val name = localize(UiText.Ios("Wallet %lld", listOf(number)))
+            if (nameKey(name) !in existingNames) return name
+        }
+        return localize(UiText.Ios("Wallet %lld", listOf(first)))
+    }
 
     private val _state = MutableStateFlow(WalletSetupUiState(intent = intent, deviceSecure = deviceKeys.isDeviceSecure()))
 
@@ -309,7 +328,7 @@ class WalletSetupViewModel @AssistedInject constructor(
         mnemonic?.wipe()
         mnemonic = SecretText.of(reading.phrase)
         importedLanguage = reading.language
-        _state.update { it.copy(languageChoices = emptyList(), error = null, duplicateOf = null, duplicateKeyLost = false) }
+        _state.update { it.copy(languageChoices = emptyList(), error = null).withoutDuplicate() }
         setPath(listOf(SetupStep.Password))
     }
 
@@ -416,7 +435,7 @@ class WalletSetupViewModel @AssistedInject constructor(
 
     /** iOS `reviewPhraseAgain`: back to the same, concealed phrase. */
     fun reviewPhraseAgain() {
-        _state.update { it.copy(verification = null, error = null, duplicateOf = null, duplicateKeyLost = false) }
+        _state.update { it.copy(verification = null, error = null).withoutDuplicate() }
         setPath(listOf(SetupStep.Backup))
     }
 
@@ -454,7 +473,8 @@ class WalletSetupViewModel @AssistedInject constructor(
     /** iOS `resetPassword`: the entered phrase is the proof; the wallet keeps everything but its password. */
     fun resetPassword() {
         val walletId = _state.value.duplicateOf ?: return
-        if (_state.value.duplicateKeyLost) return
+        // QA B21, L3: a lost key cannot be re-encrypted, and an unauthenticated identity never authorises a reset.
+        if (_state.value.duplicateCannotReset) return
         val phrase = mnemonic
         if (!fields.passwordValid() || phrase == null || phrase.isEmpty()) return
         if (_state.value.busy) return
@@ -481,7 +501,10 @@ class WalletSetupViewModel @AssistedInject constructor(
      *
      * Android: [WalletSetupUiState.checkingExisting] holds the step's action until the answer (QA setup-08), and a
      * duplicate whose device key is provably gone is reported as such in the same update (QA backlog B21): Reset
-     * Password could only fail with "device key unavailable", so the step leads to that wallet's removal instead.
+     * Password could only fail with "device key unavailable", so the step leads to that wallet's removal instead. A
+     * wallet whose public index cannot be authenticated is found too, from the identity its sidecar claims (QA L3,
+     * `SignerStore.findExistingWallet`), so its phrase never becomes a second wallet; that claim only ever leads to
+     * the wallet's page, never to a reset.
      */
     private fun checkForExistingWallet() {
         val state = _state.value
@@ -496,11 +519,15 @@ class WalletSetupViewModel @AssistedInject constructor(
         _state.update { it.copy(checkingExisting = true) }
         checkJob = viewModelScope.launch {
             try {
-                val existing = store.existingWallet(mnemonicCopy, passphrase)
+                val existing = store.findExistingWallet(mnemonicCopy, passphrase)
                 val current = { operation == token && epoch == store.state.value.securityEpoch && _state.value.created == null }
                 if (existing != null && current()) {
-                    val lost = store.isDeviceKeyLost(existing)
-                    if (current()) _state.update { it.copy(duplicateOf = existing, duplicateKeyLost = lost) }
+                    val lost = store.isDeviceKeyLost(existing.walletId)
+                    if (current()) {
+                        _state.update {
+                            it.copy(duplicateOf = existing.walletId, duplicateKeyLost = lost, duplicateUnverified = !existing.verified)
+                        }
+                    }
                 }
             } catch (_: Exception) {
                 // The question stays unanswered (also when cancelled); nothing follows.
@@ -512,14 +539,14 @@ class WalletSetupViewModel @AssistedInject constructor(
     }
 
     /**
-     * "Open Wallet" of a phrase whose wallet here lost its device key (QA backlog B21): the draft is erased and setup
-     * closes onto that wallet's page, where Delete Wallet offers "Remove This Wallet" (B9). The phrase can be imported
-     * again afterwards.
+     * "Open Wallet" of a phrase whose wallet here cannot have its password reset (QA backlog B21, L3): the draft is
+     * erased and setup closes onto that wallet's page, which offers "Remove This Wallet" when its device key is gone
+     * (B9, L4), or Repair with its password. The phrase can be imported again after a removal.
      */
     fun openLostKeyWallet() {
         val state = _state.value
         val walletId = state.duplicateOf ?: return
-        if (!state.duplicateKeyLost || state.busy || ended) return
+        if (!state.duplicateCannotReset || state.busy || ended) return
         clearSecrets()
         end(SetupEvent.Finish(WalletDetailRoute(walletId)))
     }
@@ -574,7 +601,7 @@ class WalletSetupViewModel @AssistedInject constructor(
         }
         _state.update {
             if (leaving == SetupStep.Password) {
-                it.copy(path = it.path.dropLast(1), error = null, duplicateOf = null, duplicateKeyLost = false)
+                it.copy(path = it.path.dropLast(1), error = null).withoutDuplicate()
             } else {
                 it.copy(path = it.path.dropLast(1), error = null)
             }
@@ -637,11 +664,12 @@ class WalletSetupViewModel @AssistedInject constructor(
                 languageChoices = emptyList(),
                 verification = null,
                 hasRevealedBackup = false,
-                duplicateOf = null,
-                duplicateKeyLost = false,
-            )
+            ).withoutDuplicate()
         }
     }
+
+    /** Forgets the duplicate answer (the wallet, its lost key, an unverified identity). */
+    private fun WalletSetupUiState.withoutDuplicate() = copy(duplicateOf = null, duplicateKeyLost = false, duplicateUnverified = false)
 
     /**
      * Stops the duplicate check; its question is asked again when the password step reappears ([suspendDraft] asks it
@@ -745,5 +773,8 @@ class WalletSetupViewModel @AssistedInject constructor(
         fun wordsOf(secret: SecretText): List<String> = secret.view().split(' ').filter { it.isNotEmpty() }
 
         fun wipeAll(vararg secrets: SecretText) = secrets.forEach(SecretText::wipe)
+
+        /** How two wallet names are compared for the default name: trimmed, ignoring case (QA production-06). */
+        fun nameKey(name: String): String = name.trimWhitespacesAndNewlines().lowercase()
     }
 }

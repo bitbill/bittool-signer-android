@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">복구 구문을 다시 가렸지만, 스크린샷에는 이미 담겼을 수 있습니다. 갤러리와 동기화된 사본에서도 삭제하고, 손으로 적은 백업을 오프라인으로 보관하세요.</string>
     <string name="setup_screenshot_may_contain">스크린샷에 복구 구문이나 일부 단어가 담겼을 수 있습니다. 갤러리와 동기화된 사본에서도 삭제하고, 손으로 적은 백업을 오프라인으로 보관하세요.</string>
     <string name="setup_screen_lock_required">화면 잠금이 필요합니다</string>
-    <string name="setup_lost_key_message">이 복구 구문은 이 기기에 있는 지갑의 것이지만, 그 지갑의 기기 키가 사라져 비밀번호를 재설정할 수 없습니다. 그 지갑을 열어 ‘지갑 삭제’를 선택한 다음 ‘이 지갑 제거’를 선택하고, 복구 구문을 다시 가져오세요.</string>
+    <string name="setup_lost_key_message">이 복구 구문은 이 기기에 있는 지갑의 것이지만, 그 지갑의 기기 키가 사라져 비밀번호를 재설정할 수 없습니다. 그 지갑을 열어 ‘이 지갑 제거’를 선택하고, 복구 구문을 다시 가져오세요.</string>
     <string name="setup_lost_key_open_wallet">지갑 열기</string>
+    <string name="setup_repair_duplicate_title">이 지갑은 복구가 필요합니다</string>
+    <string name="setup_repair_duplicate_message">이 복구 구문은 이 기기에 있는, 공개 데이터 복구가 필요한 지갑의 것입니다. 그 지갑을 열어 지갑 암호로 ‘지갑 데이터 복구’를 선택하세요. 복구 구문을 다시 가져오면 같은 키를 가진 두 번째 지갑만 추가됩니다.</string>
 </resources>

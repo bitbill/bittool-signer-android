@@ -119,11 +119,24 @@ data class WalletSetupUiState(
      */
     val duplicateKeyLost: Boolean = false,
     /**
+     * Android-only (QA L3): [duplicateOf] was recognised only by the identity its **unauthenticated** sidecar claims (its
+     * public index can no longer be authenticated, e.g. the public-data key was lost with the screen lock). Never a
+     * reset: the password step leads to that wallet instead ("Remove This Wallet" when [duplicateKeyLost], else Repair),
+     * and the import stays refused, so the phrase never becomes a second wallet with the same keys.
+     */
+    val duplicateUnverified: Boolean = false,
+    /**
      * The device has a secure lock screen (`DeviceKeyStore.isDeviceSecure()`, QA wallets-04). Without one no wallet can
      * be saved: the first step says so before anything is typed and its action stays disabled.
      */
     val deviceSecure: Boolean = true,
 ) {
+    /**
+     * The phrase belongs to a wallet here whose password it cannot reset (QA B21, L3): its device key is gone, or only its
+     * unauthenticated sidecar names it. The password step then leads to that wallet ([WalletSetupViewModel.openLostKeyWallet]).
+     */
+    val duplicateCannotReset: Boolean get() = duplicateOf != null && (duplicateKeyLost || duplicateUnverified)
+
     /** The visible step; null is the root form. */
     val step: SetupStep? get() = path.lastOrNull()
 

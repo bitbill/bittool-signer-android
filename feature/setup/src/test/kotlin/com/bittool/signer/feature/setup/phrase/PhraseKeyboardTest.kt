@@ -165,6 +165,30 @@ class PhraseKeyboardTest {
         assertEquals("legal", phrase())
     }
 
+    /**
+     * Back from a hardware keyboard (keyboard mode) puts the in-app keyboard away with nothing focused, as iOS ends the
+     * editing (QA regression-02/03 class): a plain `clearFocus()` handed the focus to the step's first control, the
+     * Cancel cross, and left a focus ring on it.
+     */
+    @Test
+    fun backWithAHardwareKeyboardPutsTheKeyboardAwayWithNothingFocused() {
+        flow()
+        tapEditor()
+        keyboard.assertIsDisplayed()
+        compose.runOnUiThread {
+            val root = checkNotNull(view.rootView.parent)
+            root.javaClass.getDeclaredMethod("ensureTouchMode", Boolean::class.javaPrimitiveType)
+                .apply { isAccessible = true }
+                .invoke(root, false)
+        }
+        compose.waitForIdle()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        keyboard.assertDoesNotExist()
+        editor.assertIsNotFocused()
+        compose.runOnIdle { assertNull(view.rootView.findFocus(), "no focus ring on the step's first control") }
+    }
+
     /** The predictive back gesture: a cancelled one leaves the keyboard up, a committed one puts it away, nothing more. */
     @Test
     fun thePredictiveBackGestureClosesTheKeyboardOnlyWhenCommitted() {

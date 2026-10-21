@@ -1192,9 +1192,10 @@ above it:
   to right in every language (RTL interfaces keep QWERTY; hints keep the interface direction). a–z covers English,
   Spanish, French, Italian, Czech and Portuguese, which the editor matches without accents.
 - Paste inserts the clipboard text exactly as the editor's Paste menu does (`Bip39KeyboardEdits.paste`); backspace
-  deletes a grapheme on touch-down and repeats, faster, while held; Done hides the keyboard (clears the focus). Open
-  (`:core:ui`): a held backspace keeps repeating, with its haptic, once nothing is left to delete; the repeat should
-  stop at the first activation that changes nothing (`Key(repeating = true)` needs to know whether the edit applied).
+  deletes a grapheme on touch-down and repeats, faster, while held, until nothing is left to delete: the first
+  activation that changes nothing ends the repeat and its haptic (`Key(onRepeat)` reports whether the edit applied;
+  the touch-down press keeps its one haptic, like every key). Done hides the keyboard (clears the focus, leaving
+  nothing focused also with a hardware keyboard: `rememberClearFocus`).
 - Edits go straight into the editor's `TextFieldState` (`KeyboardEdit`, redacted `toString`), nowhere else.
 - Keys never take the focus; the whole cell is the touch target; pressed colour and a letter preview drawn in this
   window (no popup, so it stays under `FLAG_SECURE`); keyboard-tap haptic through the view (the system setting

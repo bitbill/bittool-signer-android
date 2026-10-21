@@ -30,6 +30,18 @@
    "formatted": true,
    "context": "Android-only: title of the Activity tab while the encrypted record cannot be read (SignerState.activityUnreadable)."
   },
+  "activity_restarted_title": {
+   "area": "activity",
+   "english": "Activity Started Again",
+   "formatted": true,
+   "context": "Android-only (QA L1): a notice at the top of Activity, shown once after the record's Keystore key was proven gone (Android deletes it when the device's screen lock is removed) and BitTool Signer started a new, empty record. Title."
+  },
+  "activity_restarted_message": {
+   "area": "activity",
+   "english": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "formatted": true,
+   "context": "Text of that notice (dismissed with the iOS \"OK\"). It must not say the wallets are unaffected: the same event usually deletes their device keys too (the wallet pages say so). \"Signatures you already created\" are the ones already handed to the wallet app, which stay valid."
+  },
   "activity_export_failed": {
    "area": "activity",
    "english": "The file could not be saved.",
@@ -282,6 +294,24 @@
    "formatted": true,
    "context": "A decisive control refused a touch because another app's window covers it (gaps.md G4.3)."
   },
+  "security_no_unlock_path_title": {
+   "area": "security",
+   "english": "No Way to Unlock",
+   "formatted": true,
+   "context": "Lock screen (QA L2): no unlock path can succeed. Every wallet's device key is proven gone (Android deletes these keys, and the enrolled fingerprints, when the device's screen lock is removed) and no strong biometric can run. Title of the explanation card."
+  },
+  "security_no_unlock_path_message": {
+   "area": "security",
+   "english": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "formatted": true,
+   "context": "Text of that card. \"Continue Without App Lock\" turns App Lock off; \"Settings\" is this app's Settings tab, where the App Lock switch is (security_app_lock). \"Funds are not affected.\" as in wallets_lost_key_message."
+  },
+  "security_no_unlock_path_continue": {
+   "area": "security",
+   "english": "Continue Without App Lock",
+   "formatted": true,
+   "context": "The card's button: turns App Lock off and opens the app."
+  },
   "security_app_lock_save_failed": {
    "area": "security",
    "english": "App Lock could not be changed. Try again.",
@@ -398,15 +428,27 @@
   },
   "setup_lost_key_message": {
    "area": "setup",
-   "english": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
+   "english": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
    "formatted": true,
-   "context": "Android only (QA backlog B21): the password step when the phrase belongs to a wallet here whose device key is provably gone (title: wallets_lost_key_title). \"Delete Wallet\" and \"Remove This Wallet\" name the controls of the wallet page (delete_wallet, wallets_lost_key_remove)."
+   "context": "Android only (QA backlog B21, L4): the password step when the phrase belongs to a wallet here whose device key is provably gone (title: wallets_lost_key_title). \"Remove This Wallet\" names the control of the wallet page (wallets_lost_key_remove): use the same words."
   },
   "setup_lost_key_open_wallet": {
    "area": "setup",
    "english": "Open Wallet",
    "formatted": true,
    "context": ""
+  },
+  "setup_repair_duplicate_title": {
+   "area": "setup",
+   "english": "This Wallet Needs Repair",
+   "formatted": true,
+   "context": "Android only (QA L3): the password step when the phrase belongs to a wallet here whose public data can no longer be verified (its key is fine), so it needs the wallet page's Repair (with its password) instead of a second import. Title of the step."
+  },
+  "setup_repair_duplicate_message": {
+   "area": "setup",
+   "english": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "formatted": true,
+   "context": "Text of that step; \"Repair Wallet Data\" names the control of the wallet page (iOS repair_wallet_data)."
   },
   "shell_scan_badge_description": {
    "area": "shell",

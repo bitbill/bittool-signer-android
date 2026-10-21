@@ -148,6 +148,16 @@ class DefaultSignerStore @Inject constructor(
     private var incrementalScan = false
     /** Serialises every read-modify-write of the Activity journal (iOS does them synchronously on the main actor). */
     private val journal = Mutex()
+    /**
+     * QA L4: wallets whose device key was proven gone. A proven loss is final (Keystore never brings a key back and no
+     * new key is ever created under an existing wallet's alias), so it is not proven again while the wallet is listed.
+     */
+    private val provenLostKeys = HashSet<WalletId>()
+    /**
+     * QA L3: the `walletKeyId` the sidecar of each wallet without an authenticated index claims. Unauthenticated:
+     * **duplicate detection only** ([findExistingWallet], [createWallet]); never published, matched or signed with.
+     */
+    private var unverifiedKeyIds: Map<WalletId, String> = emptyMap()
 
     /** iOS `WalletCollectionSnapshot` (`:49-52`): the wallet IDs and each index's exact canonical JSON. */
     private data class WalletCollectionSnapshot(val walletIds: Set<WalletId>, val indexes: Map<WalletId, String>)
@@ -185,7 +195,21 @@ class DefaultSignerStore @Inject constructor(
                 snapshot.metadata?.let { indexes[wallet.id] = it }
                 statuses[wallet.id] = snapshot.status
             }
+            // Android-only (QA L3, L4): what is known about the wallets without an authenticated index — the identity
+            // their sidecars claim (duplicate detection only), the lock screen, and whose device key is gone for good.
+            val unready = originals.map { it.id }.filter { statuses[it] != PublicMetadataStatus.Ready }
+            val claims = LinkedHashMap<WalletId, String>()
+            for (id in unready) {
+                runCatchingCancellable { publicRepository.unverifiedWalletKeyId(id) }.getOrNull()?.let { claims[id] = it }
+            }
+            val secure = originals.isEmpty() || deviceSecure(fallback = current.deviceSecure)
+            val listed = originals.map { it.id }
+            provenLostKeys.retainAll(listed.toSet())
+            proveLostDeviceKeys(unready, secure)
             if (loading != reloadEpoch) return@withContext
+            // Also a loss another proof found meanwhile (setup, the Delete page), even for a wallet with a ready index.
+            val lost = knownLostKeys(listed, secure)
+            unverifiedKeyIds = claims
             // AppStore.swift:140-141: every wallet whose ready index shares its walletKeyId with another.
             val duplicates = indexes.entries.groupBy({ it.value.walletKeyId }, { it.key }).values
                 .filter { it.size > 1 }.flatten().toSet()
@@ -197,6 +221,8 @@ class DefaultSignerStore @Inject constructor(
                     metadataStatuses = statuses,
                     duplicateWalletIds = duplicates,
                     walletLoadSucceeded = true,
+                    lostKeyWalletIds = lost,
+                    deviceSecure = secure,
                 )
             }
             scheduleConnectPrefetch()
@@ -212,6 +238,53 @@ class DefaultSignerStore @Inject constructor(
         }
         if (loading == reloadEpoch) _state.update { it.copy(isLoading = false) }
     }
+
+    override suspend fun refreshDeviceKeys() = withContext(main) {
+        // QA L4: the person may have removed or set the screen lock while the app was in the background.
+        val before = current
+        if (before.isLoading || !before.walletLoadSucceeded || before.wallets.isEmpty()) return@withContext
+        val loaded = reloadEpoch
+        val secure = deviceSecure(fallback = before.deviceSecure)
+        if (loaded != reloadEpoch) return@withContext // a reload ran meanwhile and looked itself
+        if (secure != current.deviceSecure) {
+            // Removing the lock deletes every device key and the public-data key: the whole list changes.
+            reload()
+            return@withContext
+        }
+        val listed = current.wallets.map { it.id }
+        val unready = listed.filterTo(HashSet()) { current.metadataStatus(it) != PublicMetadataStatus.Ready }
+        if (unready.isEmpty() && provenLostKeys.isEmpty()) return@withContext
+        proveLostDeviceKeys(unready, secure)
+        if (loaded != reloadEpoch) return@withContext
+        val lost = knownLostKeys(current.wallets.map { it.id }, secure)
+        if (lost != current.lostKeyWalletIds) _state.update { it.copy(lostKeyWalletIds = lost) }
+    }
+
+    /** `WalletVault.isDeviceSecure`, or [fallback] when the query fails (never throws except cancellation). */
+    private suspend fun deviceSecure(fallback: Boolean): Boolean =
+        runCatchingCancellable { withContext(default) { vault.isDeviceSecure() } }.getOrDefault(fallback)
+
+    /**
+     * QA L4: proves the loss of each of [ids] not yet proven (`WalletVault.isDeviceKeyLost`, false when unsure) and
+     * remembers the proven ones in [provenLostKeys]. Nothing without a secure lock screen: then every wallet first needs one.
+     */
+    private suspend fun proveLostDeviceKeys(ids: Collection<WalletId>, secure: Boolean) {
+        if (!secure) return
+        for (id in ids) {
+            if (id in provenLostKeys) continue
+            if (runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(id) } }.getOrDefault(false)) {
+                provenLostKeys += id
+            }
+        }
+    }
+
+    /**
+     * QA L4: the wallets of [listed] (in that order) whose loss was proven — by a load, or by any other proof this store
+     * made ([isDeviceKeyLost], asked by setup and the Delete page also for wallets with a ready index). None without a
+     * secure lock screen.
+     */
+    private fun knownLostKeys(listed: List<WalletId>, secure: Boolean): Set<WalletId> =
+        if (secure) listed.filterTo(LinkedHashSet()) { it in provenLostKeys } else emptySet()
 
     override fun suspendSession() {
         // AppStore.swift:86-94.
@@ -396,7 +469,11 @@ class DefaultSignerStore @Inject constructor(
                     if (!current.walletLoadSucceeded) {
                         throw AppIssue("The existing wallet collection could not be read. Retry before adding a wallet.")
                     }
-                    if (current.publicWallets.values.any { it.walletKeyId == index.walletKeyId }) {
+                    // Android (QA L3): also a wallet whose sidecar cannot be authenticated but claims this identity, or
+                    // a lost key's public-data key would let the same phrase become a second wallet with the same keys.
+                    if (current.publicWallets.values.any { it.walletKeyId == index.walletKeyId } ||
+                        unverifiedClaimant(index.walletKeyId) != null
+                    ) {
                         throw AppIssue("This recovery phrase and passphrase already belong to an existing wallet.")
                     }
                     // Prepare the public sidecar first. It is invisible without a committed vault, so a crash cannot leave
@@ -430,14 +507,29 @@ class DefaultSignerStore @Inject constructor(
             }
         }
 
-    override suspend fun existingWallet(mnemonic: SecretText, passphrase: SecretText): WalletId? = withContext(main) {
+    override suspend fun existingWallet(mnemonic: SecretText, passphrase: SecretText): WalletId? =
+        findExistingWallet(mnemonic, passphrase)?.takeIf { it.verified }?.walletId
+
+    override suspend fun findExistingWallet(mnemonic: SecretText, passphrase: SecretText): ExistingWalletMatch? = withContext(main) {
         // AppStore.swift:484-491. Public derivation only: no vault read, no password, no secret returned.
         val epoch = current.securityEpoch
         val raw = canonical(mnemonic).useAndWipe { derivePublicIndex(it, passphrase, epoch) }
         requireSession(epoch)
         val key = WalletPublicMetadata.parse(raw).walletKeyId
         val loaded = current
-        loaded.wallets.firstOrNull { loaded.publicWallets[it.id]?.walletKeyId == key }?.id
+        loaded.wallets.firstOrNull { loaded.publicWallets[it.id]?.walletKeyId == key }?.let {
+            return@withContext ExistingWalletMatch(it.id, verified = true)
+        }
+        // QA L3 (Android-only): a sidecar that cannot be authenticated but claims this identity. Duplicate detection only.
+        unverifiedClaimant(key)?.let { ExistingWalletMatch(it, verified = false) }
+    }
+
+    /**
+     * QA L3: the first listed wallet (vault order) without an authenticated index whose sidecar claims [walletKeyId].
+     * The claim is unauthenticated: it only ever refuses an import or names the wallet to open, never grants anything.
+     */
+    private fun unverifiedClaimant(walletKeyId: String): WalletId? = current.let { s ->
+        s.wallets.firstOrNull { s.publicWallets[it.id] == null && unverifiedKeyIds[it.id] == walletKeyId }?.id
     }
 
     override suspend fun resetPassword(walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText) =
@@ -517,7 +609,17 @@ class DefaultSignerStore @Inject constructor(
     override suspend fun isDeviceKeyLost(walletId: WalletId): Boolean = withContext(main) {
         // QA backlog B9. A query for the Delete page: no password, no counted attempt, false whenever unsure.
         if (current.wallet(walletId) == null) return@withContext false
-        runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(walletId) } }.getOrDefault(false)
+        val lost = runCatchingCancellable { withContext(default) { vault.isDeviceKeyLost(walletId) } }.getOrDefault(false)
+        if (lost && current.wallet(walletId) != null) {
+            // QA L4: a loss is final, so every page shows it from now on — also for a wallet with a ready index, which a
+            // load never probes (setup's "Open Wallet" then lands on "Remove This Wallet" directly). Display only: the
+            // removal proves it again in the vault.
+            provenLostKeys += walletId
+            if (current.deviceSecure && walletId !in current.lostKeyWalletIds) {
+                _state.update { it.copy(lostKeyWalletIds = knownLostKeys(it.wallets.map { w -> w.id }, secure = true)) }
+            }
+        }
+        lost
     }
 
     override suspend fun removeWalletWithLostDeviceKey(walletId: WalletId) = withContext(main) {
@@ -851,14 +953,47 @@ class DefaultSignerStore @Inject constructor(
 
     private suspend fun loadReceipts() = journal.withLock {
         try {
-            val records = receiptRepository.read()
-            _state.update { it.copy(receipts = records, activityUnreadable = false) }
+            val records = readJournal()
+            val notice = restartNoticePending()
+            _state.update { it.copy(receipts = records, activityUnreadable = false, activityRestarted = notice) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            val notice = restartNoticePending()
             _state.update {
-                it.copy(receipts = emptyList(), activityUnreadable = true, error = UiText.Resource(R.string.data_activity_unreadable))
+                it.copy(
+                    receipts = emptyList(),
+                    activityUnreadable = true,
+                    activityRestarted = notice,
+                    error = UiText.Resource(R.string.data_activity_unreadable),
+                )
             }
+        }
+    }
+
+    /**
+     * The journal's records (the caller holds [journal]). Android-only (QA L1): a journal whose Keystore key is provably
+     * gone — removing the screen lock deletes it — can never be read again, so the repository starts it again (empty,
+     * the notice recorded) instead of this failing on every load and every signature for good. Any other read failure
+     * (a damaged file, a flaky or locked Keystore) is thrown as before: the file is never replaced silently.
+     */
+    private suspend fun readJournal(): List<SigningReceipt> = try {
+        receiptRepository.read()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        if (!runCatchingCancellable { receiptRepository.startOverIfKeyLost() }.getOrDefault(false)) throw e
+        emptyList()
+    }
+
+    /** QA L1: whether the person still has to be told that the journal was started again (persisted marker). */
+    private suspend fun restartNoticePending(): Boolean =
+        runCatchingCancellable { receiptRepository.hasRestartNotice() }.getOrDefault(false)
+
+    override suspend fun acknowledgeActivityRestart() = withContext(NonCancellable + main) {
+        journal.withLock {
+            runCatchingCancellable { receiptRepository.acknowledgeRestartNotice() }
+            _state.update { it.copy(activityRestarted = false) }
         }
     }
 
@@ -868,10 +1003,11 @@ class DefaultSignerStore @Inject constructor(
      */
     private suspend fun appendReceipt(receipt: SigningReceipt) = journal.withLock {
         try {
-            val existing = receiptRepository.read()
+            val existing = readJournal()
             val updated = withContext(default) { ReceiptJournal.appended(receipt, existing) }
             receiptRepository.write(updated)
-            _state.update { it.copy(receipts = updated, activityUnreadable = false) }
+            val notice = restartNoticePending()
+            _state.update { it.copy(receipts = updated, activityUnreadable = false, activityRestarted = notice) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

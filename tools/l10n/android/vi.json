@@ -266,8 +266,8 @@
    "value": "Cần đặt khóa màn hình"
   },
   "setup_lost_key_message": {
-   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Delete Wallet, then Remove This Wallet, and import the phrase again.",
-   "value": "Cụm từ khôi phục này thuộc về một ví trên thiết bị này mà khóa thiết bị của ví đã mất, nên không thể đặt lại mật khẩu của ví. Hãy mở ví đó, chọn “Xóa ví”, rồi “Gỡ ví này”, sau đó nhập lại cụm từ."
+   "source": "This recovery phrase belongs to a wallet on this device whose device key is gone, so its password cannot be reset. Open that wallet, choose Remove This Wallet, and import the phrase again.",
+   "value": "Cụm từ khôi phục này thuộc về một ví trên thiết bị này mà khóa thiết bị của ví đã mất, nên không thể đặt lại mật khẩu của ví. Hãy mở ví đó, chọn “Gỡ ví này”, rồi nhập lại cụm từ."
   },
   "setup_lost_key_open_wallet": {
    "source": "Open Wallet",
@@ -428,6 +428,34 @@
   "wallets_lost_key_dialog_confirm": {
    "source": "Remove",
    "value": "Gỡ"
+  },
+  "setup_repair_duplicate_title": {
+   "source": "This Wallet Needs Repair",
+   "value": "Ví này cần được sửa"
+  },
+  "setup_repair_duplicate_message": {
+   "source": "This recovery phrase belongs to a wallet on this device whose public data needs repair. Open that wallet and choose Repair Wallet Data with its password. Importing the phrase again would only add a second wallet with the same keys.",
+   "value": "Cụm từ khôi phục này thuộc về một ví trên thiết bị này có dữ liệu công khai cần được sửa. Hãy mở ví đó và chọn “Sửa dữ liệu ví” bằng mật khẩu của ví. Nhập lại cụm từ chỉ tạo thêm một ví thứ hai với cùng các khóa."
+  },
+  "activity_restarted_title": {
+   "source": "Activity Started Again",
+   "value": "Hoạt động đã bắt đầu lại"
+  },
+  "activity_restarted_message": {
+   "source": "The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.",
+   "value": "Khóa bảo vệ bản ghi hoạt động trước đây không còn trên thiết bị này (Android xóa khóa này khi khóa màn hình bị gỡ), nên không thể đọc bản ghi đó nữa. Một bản ghi mới đã được bắt đầu, và chữ ký mới được liệt kê ở đây. Những chữ ký bạn đã tạo không bị ảnh hưởng."
+  },
+  "security_no_unlock_path_title": {
+   "source": "No Way to Unlock",
+   "value": "Không có cách mở khóa"
+  },
+  "security_no_unlock_path_message": {
+   "source": "The device keys of all wallets here are gone (Android deletes them when the screen lock is removed), so no wallet password can unlock BitTool Signer, and no fingerprint or face unlock is available. Continue without App Lock, then remove these wallets and import their recovery phrases again. You can turn App Lock on again later in Settings. Funds are not affected.",
+   "value": "Khóa thiết bị của mọi ví ở đây không còn nữa (Android xóa các khóa này khi khóa màn hình bị gỡ), nên không mật khẩu ví nào có thể mở khóa BitTool Signer, và không thể mở khóa bằng vân tay hoặc khuôn mặt. Hãy tiếp tục mà không dùng khóa ứng dụng, rồi gỡ các ví này và nhập lại cụm từ khôi phục của chúng. Bạn có thể bật lại khóa ứng dụng sau trong Cài đặt. Tiền không bị ảnh hưởng."
+  },
+  "security_no_unlock_path_continue": {
+   "source": "Continue Without App Lock",
+   "value": "Tiếp tục không dùng khóa ứng dụng"
   }
  }
 }

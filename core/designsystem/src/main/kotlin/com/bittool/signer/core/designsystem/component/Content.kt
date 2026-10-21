@@ -40,6 +40,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.contentDirection
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
+import com.bittool.signer.core.designsystem.theme.phraseLineBreaks
 import com.bittool.signer.core.designsystem.theme.semibold
 
 /** Meaning of a [Callout] (and of risk colours generally, design-system §2.5). */
@@ -64,7 +65,8 @@ fun Tone.icon(): ImageVector = when (this) {
 /**
  * A tinted inline message (iOS `Callout`, `Design/DesignSystem.swift:135-184`): the tone glyph aligned with the first
  * line, an optional [title] (subheadline semibold) and [text] (subheadline; primary without a title, secondary under
- * one), wrapping fully, on the tone at 12 % with radius 16 and padding 14. Read as one element; the glyph is
+ * one), wrapping fully (Japanese and Korean between phrases, also below API 33: [PhraseText]), on the tone at 12 % with
+ * radius 16 and padding 14. Read as one element, as written; the glyph is
  * decorative. Engine warnings and errors are passed in verbatim with [verbatim] true (iOS `Callout(verbatim:)`): that
  * text is not translated, so it is laid out in its own direction (`contentDirection`) in a right-to-left interface.
  */
@@ -85,8 +87,10 @@ fun Callout(text: String, modifier: Modifier = Modifier, title: String? = null, 
     ) {
         FirstLineIcon(tone.icon(), color, if (title != null) titleStyle else textStyle)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            if (title != null) Text(title, style = titleStyle, color = colors.label)
-            Text(text, style = textStyle, color = if (title == null) colors.label else colors.secondaryLabel)
+            // Running text of the page (setup's warnings and notes among them): Japanese and Korean lines break between
+            // phrases on every API level, read as written (PhraseText; QA regression-13).
+            if (title != null) PhraseText(title, style = titleStyle.phraseLineBreaks(), color = colors.label)
+            PhraseText(text, style = textStyle.phraseLineBreaks(), color = if (title == null) colors.label else colors.secondaryLabel)
         }
     }
 }

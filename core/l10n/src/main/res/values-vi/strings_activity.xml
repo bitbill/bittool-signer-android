@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Đã hiện cảnh báo</string>
     <string name="activity_partial_signature_created">Đã tạo chữ ký một phần</string>
     <string name="activity_unreadable_title">Hoạt động không khả dụng</string>
+    <string name="activity_restarted_title">Hoạt động đã bắt đầu lại</string>
+    <string name="activity_restarted_message">Khóa bảo vệ bản ghi hoạt động trước đây không còn trên thiết bị này (Android xóa khóa này khi khóa màn hình bị gỡ), nên không thể đọc bản ghi đó nữa. Một bản ghi mới đã được bắt đầu, và chữ ký mới được liệt kê ở đây. Những chữ ký bạn đã tạo không bị ảnh hưởng.</string>
     <string name="activity_export_failed">Không lưu được tệp.</string>
 </resources>

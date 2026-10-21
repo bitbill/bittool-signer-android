@@ -129,11 +129,15 @@ fun TextStyle.monospaced(): TextStyle = copy(fontFamily = SignerMonospace)
 /**
  * [text] with the monospaced family ([SignerMonospace]) as a span on [value] alone: its first occurrence, without the
  * bidi isolates or marks around it. For a translated sentence that embeds an identifier, drawn in a [monospaced] style
- * like iOS (`Text("Fingerprint \(value)").font(.caption.monospaced())`): left to right it looks the same, and in a
- * right-to-left language the identifier is meant to keep the monospaced face. With the family on the whole sentence
- * only, Android 12 drew the Latin value after an Arabic word and its isolate in a proportional face (QA
- * regression-10); the value therefore also carries the family as a typeface span of its own, as QA proposed. [text]
- * that does not contain [value] (or an empty [value]) comes back without a span. Pure.
+ * like iOS (`Text("Fingerprint \(value)").font(.caption.monospaced())`): the identifier keeps the monospaced face
+ * whatever the sentence around it is drawn in.
+ *
+ * QA regression-10 read the Arabic "Fingerprint" line as drawing the value in a proportional face. Measured on the QA
+ * emulator (API 31, `FingerprintFaceDeviceTest`), the value is drawn in the monospaced face with or without the span:
+ * its glyphs in the QA screenshot sit exactly on the monospaced cells. Only the capitals and digits of the system's
+ * monospaced face (Droid Sans Mono) look like an ordinary sans; in English the lower-case "Fingerprint" around them is
+ * what makes the line look typewritten. [text] that does not contain [value] (or an empty [value]) comes back without
+ * a span. Pure.
  */
 fun monospacedRun(text: String, value: String): AnnotatedString {
     val start = if (value.isEmpty()) -1 else text.indexOf(value)

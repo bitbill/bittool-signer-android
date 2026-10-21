@@ -43,9 +43,9 @@ class WalletIdentityHeaderTest {
     }
 
     /**
-     * QA regression-10: in Arabic the value drew in the Arabic font's proportional Latin letters while the monospaced
-     * family sat on the whole sentence only. The value is a monospaced run of its own (iOS `.caption.monospaced()`),
-     * left to right too, where the line looks as before.
+     * QA regression-10: the value is a monospaced run of its own (iOS `.caption.monospaced()`), whatever the sentence
+     * around it is drawn in, left to right too, where the line looks as before. (That the device draws it in the
+     * monospaced face after an Arabic word is `FingerprintFaceDeviceTest`.)
      */
     @Test
     fun theFingerprintValueIsAMonospacedRunOfItsOwn() {

@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Показаны предупреждения</string>
     <string name="activity_partial_signature_created">Частичная подпись создана</string>
     <string name="activity_unreadable_title">История недоступна</string>
+    <string name="activity_restarted_title">История начата заново</string>
+    <string name="activity_restarted_message">Ключа, защищавшего прежнюю историю, больше нет на этом устройстве (Android удаляет его, когда убирают блокировку экрана), поэтому прочитать эту историю больше нельзя. Начата новая история, и новые подписи появляются здесь. Уже созданные подписи это не затрагивает.</string>
     <string name="activity_export_failed">Не удалось сохранить файл.</string>
 </resources>

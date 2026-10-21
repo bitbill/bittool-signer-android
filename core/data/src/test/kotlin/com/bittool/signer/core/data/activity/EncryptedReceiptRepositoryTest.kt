@@ -128,6 +128,56 @@ class EncryptedReceiptRepositoryTest {
         assertTrue(sibling.isDirectory)
     }
 
+    // ---- QA L1: a journal whose key is provably gone ------------------------------------------------------------
+
+    /** The repository over [sealer] itself, whose `discardLostKey` answers like the Keystore proof. */
+    private fun provingRepository(test: TestScope) = EncryptedReceiptRepository(dir, sealer, StandardTestDispatcher(test.testScheduler))
+
+    @Test
+    fun aJournalWhoseKeyIsProvablyGoneIsRemovedAfterTheNoticeIsRecorded() = runTest {
+        val repository = provingRepository(this)
+        repository.write(listOf(receipt()))
+        assertFalse(repository.startOverIfKeyLost(), "a journal that opens is never started again")
+        assertTrue(repository.file.exists())
+
+        sealer.loseKeyForGood()
+        assertInvalid { repository.read() }
+        assertTrue(repository.startOverIfKeyLost())
+        assertFalse(repository.file.exists(), "nothing could ever open it again")
+        assertTrue(repository.hasRestartNotice())
+        assertTrue(repository.restartNoticeFile.exists())
+        assertEquals(0L, repository.restartNoticeFile.length(), "the marker holds no data")
+        assertEquals(emptyList(), repository.read())
+
+        repository.write(listOf(receipt("After")))
+        assertEquals("After", repository.read().single().title)
+        assertTrue(provingRepository(this).hasRestartNotice(), "persisted for the next launch")
+        repository.acknowledgeRestartNotice()
+        assertFalse(repository.hasRestartNotice())
+        assertFalse(repository.startOverIfKeyLost(), "the new journal is not lost")
+    }
+
+    @Test
+    fun aJournalWhoseKeyIsNotProvablyGoneIsNeverStartedAgain() = runTest {
+        val repository = provingRepository(this)
+        repository.write(listOf(receipt()))
+        sealer.loseKey()
+        val sealed = repository.file.readBytes()
+        assertInvalid { repository.read() }
+        assertFalse(repository.startOverIfKeyLost())
+        assertTrue(repository.file.readBytes().contentEquals(sealed), "left exactly as it is")
+        assertFalse(repository.hasRestartNotice())
+    }
+
+    @Test
+    fun withoutAJournalThereIsNothingToStartAgain() = runTest {
+        val repository = provingRepository(this)
+        sealer.loseKeyForGood()
+        assertFalse(repository.startOverIfKeyLost())
+        assertEquals(0, sealer.lossChecks.get(), "the key is not even looked at")
+        assertFalse(repository.hasRestartNotice())
+    }
+
     @Test
     fun aSymlinkIsNotFollowed() = runTest {
         val repository = repository(this)

@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">Biometria została zablokowana po zbyt wielu próbach. Użyj hasła portfela albo najpierw odblokuj telefon blokadą ekranu.</string>
     <string name="security_delete_footer_biometric">Przy usuwaniu zostanie poproszone o potwierdzenie biometryczne, a potem o hasło tego portfela.</string>
     <string name="security_overlay_blocked">Inna aplikacja wyświetla się nad BitTool Signer. Zamknij ją i spróbuj ponownie.</string>
+    <string name="security_no_unlock_path_title">Nie da się odblokować</string>
+    <string name="security_no_unlock_path_message">Kluczy urządzenia wszystkich portfeli nie ma już na tym urządzeniu (Android usuwa je po usunięciu blokady ekranu), więc żadne hasło portfela nie odblokuje BitTool Signer, a odblokowywanie odciskiem palca lub twarzą jest niedostępne. Kontynuuj bez blokady aplikacji, a potem usuń te portfele i ponownie zaimportuj ich frazy odzyskiwania. Blokadę aplikacji możesz później ponownie włączyć w Ustawieniach. Środki nie są naruszone.</string>
+    <string name="security_no_unlock_path_continue">Kontynuuj bez blokady aplikacji</string>
     <string name="security_app_lock_save_failed">Nie udało się zmienić blokady aplikacji. Spróbuj ponownie.</string>
 </resources>

@@ -83,6 +83,31 @@ interface AppAccessController {
      */
     suspend fun confirmSensitiveAction(reason: UiText)
 
+    /**
+     * Android-only (QA L2): whether no way of unlocking can succeed, proven afresh — removing the device's screen lock
+     * deletes every wallet's device key and the enrolled fingerprints, and setting a new lock brings neither back.
+     * True only while App Lock is on and locked, strong biometrics cannot run (`BiometricAuthenticator.isAvailable()`
+     * now), and the vault lists at least one wallet and proves every one's device key gone (`WalletVault.isDeviceKeyLost`,
+     * the multi-look Keystore proof; false without a secure lock screen). A wrong password, a damaged file, a flaky or
+     * locked Keystore, an unreadable wallet list: false. No prompt, no counted attempt, nothing changes.
+     *
+     * The default is false.
+     */
+    suspend fun hasNoUnlockPath(): Boolean = false
+
+    /**
+     * Android-only (QA L2): "Continue" on the lock screen's explanation that no unlock path can succeed. Proves
+     * [hasNoUnlockPath] again (never trusting an earlier answer) and only then turns App Lock off (persisted, like
+     * [setEnabled] with `false`) and opens the app; returns false, changing nothing, when the proof fails. It authorises
+     * nothing about a wallet: App Lock guards public pages only, and every wallet operation keeps its own checks (the
+     * lost-key removal re-proves the loss in the vault). Same refusals as [authenticate] (background, another
+     * authentication running: "App authentication is unavailable right now."); a failed preference write leaves App
+     * Lock on and locked ("App Lock could not be changed. Try again."). True at once when App Lock is not locked.
+     *
+     * The default changes nothing and returns false.
+     */
+    suspend fun continueWithoutUnlockPath(): Boolean = false
+
     /** `onStop` without a configuration change: records the monotonic time and cancels any prompt. Idempotent. */
     fun didEnterBackground()
 

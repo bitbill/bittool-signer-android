@@ -36,7 +36,6 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -57,6 +56,7 @@ import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.window.rememberClearFocus
 import com.bittool.signer.core.navigation.SetupIntent
 import com.bittool.signer.core.ui.password.PasswordField
 import com.bittool.signer.core.ui.password.PasswordKind
@@ -68,6 +68,7 @@ import com.bittool.signer.feature.setup.backup.RecoveryBackupPanel
 import com.bittool.signer.feature.setup.backup.RecoveryScreenshotWarning
 import com.bittool.signer.feature.setup.backup.SecurityTipsButton
 import com.bittool.signer.feature.setup.backup.SecurityTipsSheet
+import com.bittool.signer.feature.setup.ui.BodyText
 import com.bittool.signer.feature.setup.ui.CancelAction
 import com.bittool.signer.feature.setup.ui.ErrorCallout
 import com.bittool.signer.feature.setup.ui.LinkButton
@@ -121,7 +122,7 @@ internal fun BackupPhraseStep(state: WalletSetupUiState, model: WalletSetupViewM
                 modifier = Modifier.testTag("backup.continue"),
             )
             if (!state.hasRevealedBackup) {
-                Text(
+                BodyText(
                     stringResource(L10n.string.reveal_the_words_first),
                     style = SignerTheme.typography.footnote,
                     color = SignerTheme.colors.secondaryLabel,
@@ -235,15 +236,19 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
  * Password, and a quick tap reached the duplicate refusal); the back arrow stays in place while saving, disabled, so
  * the title does not jump (setup-09; iOS hides it in a centred bar); the password pair stays in view with its checklist
  * while typing (setup-02); and a phrase whose wallet here can no longer be unlocked (lost device key, QA backlog B21)
- * explains that instead of offering a reset that cannot work, with the way to that wallet's page, where Delete Wallet
- * offers "Remove This Wallet" (B9).
+ * explains that instead of offering a reset that cannot work, with the way to that wallet's page, which offers
+ * "Remove This Wallet" (B9, L4). A phrase whose wallet here only an unauthenticated sidecar names (QA L3: its public
+ * index cannot be authenticated, but its key is fine) leads to that wallet's Repair the same way: importing it would
+ * make a second wallet with the same keys, and the unauthenticated identity never authorises a reset.
  */
 @Composable
 internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewModel) {
     val fields = model.fields
-    val focusManager = LocalFocusManager.current
+    val clearFocus = rememberClearFocus()
     val lostKey = state.duplicateKeyLost && state.duplicateOf != null
-    val resetting = state.duplicateOf != null && !lostKey
+    val needsRepair = !lostKey && state.duplicateUnverified && state.duplicateOf != null
+    val cannotReset = lostKey || needsRepair
+    val resetting = state.duplicateOf != null && !cannotReset
     val create = state.intent == SetupIntent.Create
     val valid by remember { derivedStateOf { fields.passwordValid() } }
     SetupScaffold(
@@ -251,7 +256,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
             SetupTopBar(
                 title = stringResource(
                     when {
-                        lostKey -> if (create) L10n.string.new_wallet else L10n.string.import_wallet
+                        cannotReset -> if (create) L10n.string.new_wallet else L10n.string.import_wallet
                         resetting -> L10n.string.reset_password
                         else -> L10n.string.password
                     },
@@ -268,6 +273,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         title = stringResource(
             when {
                 lostKey -> L10n.string.wallets_lost_key_title
+                needsRepair -> L10n.string.setup_repair_duplicate_title
                 resetting -> L10n.string.reset_password
                 else -> L10n.string.set_a_password
             },
@@ -275,13 +281,14 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
         message = stringResource(
             when {
                 lostKey -> L10n.string.setup_lost_key_message
+                needsRepair -> L10n.string.setup_repair_duplicate_message
                 resetting -> L10n.string.this_recovery_phrase_already_belongs_to_a_wallet_on
                 else -> L10n.string.the_password_encrypts_this_wallet_on_this_device_and
             },
         ),
         footer = {
             ErrorCallout(state.error)
-            if (lostKey) {
+            if (cannotReset) {
                 PrimaryButton(
                     text = stringResource(L10n.string.setup_lost_key_open_wallet),
                     onClick = model::openLostKeyWallet,
@@ -297,7 +304,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
                         },
                     ),
                     onClick = {
-                        focusManager.clearFocus()
+                        clearFocus()
                         if (resetting) model.resetPassword() else model.createWallet()
                     },
                     // Passwords typed before the duplicate check answered: the action shows it is still being decided.
@@ -308,7 +315,7 @@ internal fun SetPasswordStep(state: WalletSetupUiState, model: WalletSetupViewMo
             }
         },
     ) {
-        if (lostKey) {
+        if (cannotReset) {
             state.identity?.let { identity ->
                 SignerCard {
                     WalletIdentityHeader(name = identity.name, fingerprint = identity.fingerprint, avatarIdentity = identity.avatarIdentity)
@@ -422,7 +429,7 @@ internal fun SetupCompleteStep(state: WalletSetupUiState, model: WalletSetupView
                 SymbolHero(SignerIcons.VerifiedFilled, color = colors.success, size = 64.dp, bounce = true, modifier = Modifier.padding(top = 24.dp))
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     LargeTitle(stringResource(title), textAlign = TextAlign.Center, modifier = Modifier.testTag("setup.doneTitle"))
-                    Text(stringResource(message), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.Center)
+                    BodyText(stringResource(message), style = typography.body, color = colors.secondaryLabel, textAlign = TextAlign.Center)
                 }
                 state.identity?.let { identity ->
                     SignerCard {

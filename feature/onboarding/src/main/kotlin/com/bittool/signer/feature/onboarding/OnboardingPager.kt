@@ -50,13 +50,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.FirstLineIcon
+import com.bittool.signer.core.designsystem.component.PhraseText
 import com.bittool.signer.core.designsystem.component.PrimaryButton
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.component.SymbolHero
@@ -65,6 +65,7 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.bold
+import com.bittool.signer.core.designsystem.theme.headingLineBreaks
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.navigation.SetupIntent
 import kotlin.math.abs
@@ -191,10 +192,11 @@ private fun OnboardingPageView(page: OnboardingPage, scrollState: ScrollState) {
                 modifier = Modifier.padding(top = if (compact) 4.dp else 16.dp),
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
+                PhraseText(
                     text = stringResource(page.title),
-                    // Balanced lines, broken at phrase boundaries in Japanese and Korean on API 33+ (QA setup-15).
-                    style = typography.largeTitle.bold().copy(lineBreak = LineBreak.Heading),
+                    // Balanced lines, broken at phrase boundaries in Japanese and Korean, also below API 33 (QA setup-15,
+                    // regression-13); TalkBack reads the title as written.
+                    style = typography.largeTitle.bold().headingLineBreaks(),
                     color = colors.label,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.semantics { heading() },

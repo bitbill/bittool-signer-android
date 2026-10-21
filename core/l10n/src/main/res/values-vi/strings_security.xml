@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">Sinh trắc học đã bị khóa sau quá nhiều lần thử. Hãy dùng mật khẩu ví, hoặc mở khóa điện thoại bằng khóa màn hình của máy trước.</string>
     <string name="security_delete_footer_biometric">Khi xóa, ứng dụng sẽ hỏi xác nhận bằng sinh trắc học, rồi hỏi mật khẩu của ví này.</string>
     <string name="security_overlay_blocked">Một ứng dụng khác đang hiển thị đè lên BitTool Signer. Hãy đóng ứng dụng đó rồi thử lại.</string>
+    <string name="security_no_unlock_path_title">Không có cách mở khóa</string>
+    <string name="security_no_unlock_path_message">Khóa thiết bị của mọi ví ở đây không còn nữa (Android xóa các khóa này khi khóa màn hình bị gỡ), nên không mật khẩu ví nào có thể mở khóa BitTool Signer, và không thể mở khóa bằng vân tay hoặc khuôn mặt. Hãy tiếp tục mà không dùng khóa ứng dụng, rồi gỡ các ví này và nhập lại cụm từ khôi phục của chúng. Bạn có thể bật lại khóa ứng dụng sau trong Cài đặt. Tiền không bị ảnh hưởng.</string>
+    <string name="security_no_unlock_path_continue">Tiếp tục không dùng khóa ứng dụng</string>
     <string name="security_app_lock_save_failed">Không thay đổi được khóa ứng dụng. Hãy thử lại.</string>
 </resources>

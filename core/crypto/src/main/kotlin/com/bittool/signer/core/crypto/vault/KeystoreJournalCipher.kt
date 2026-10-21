@@ -21,6 +21,11 @@ import javax.inject.Singleton
  * [VaultError.DeviceKeyUnavailable] instead of silently orphaning the existing journal. [open] reports a bad tag,
  * an unknown magic or version, a truncated file and a lost key as [VaultError.AuthenticationFailed]; the store then
  * shows "The local activity record could not be read." and never overwrites the file silently.
+ *
+ * A lost key (QA L1, Android-only: removing the screen lock deletes every `setUnlockedDeviceRequired` key) is told apart
+ * from a damaged file only by [KeystoreLossProof], the proof the wallets' device keys use: [discardLostKey] removes an
+ * invalidated remnant and lets the next [seal] create a new key, and a key this process used that the same proof shows
+ * absent is created again by [seal] too.
  */
 @Singleton
 class KeystoreJournalCipher internal constructor(private val policy: KeystoreKeyPolicy) : JournalCipher {
@@ -74,10 +79,36 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
         }
     }
 
+    override fun discardLostKey(): Boolean = synchronized(lock) {
+        when (KeystoreLossProof.provenLoss(ALIAS)) {
+            null -> false
+            KeystoreLossProof.Loss.Absent -> {
+                keyWorked = false
+                true
+            }
+            KeystoreLossProof.Loss.Invalidated -> try {
+                // The remnant protects nothing any more, and an entry under the alias would block the new key.
+                Keystore.open().deleteEntry(ALIAS)
+                keyWorked = false
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+
+    /**
+     * The key to seal with (the caller holds [lock]): the existing one, else a new one when the alias is absent and no
+     * key worked in this process — or one did, but [KeystoreLossProof] shows it gone for good rather than merely reading
+     * as missing (QA L1: nothing could ever open what it sealed anyway).
+     */
     private fun keyForSealing(): SecretKey = try {
         val store = Keystore.open()
         Keystore.secretKey(store, ALIAS)?.takeIf { it.algorithm == AES } ?: run {
-            if (keyWorked || Keystore.contains(store, ALIAS)) throw VaultError.DeviceKeyUnavailable()
+            if (Keystore.contains(store, ALIAS)) throw VaultError.DeviceKeyUnavailable()
+            if (keyWorked && KeystoreLossProof.provenLoss(ALIAS) != KeystoreLossProof.Loss.Absent) {
+                throw VaultError.DeviceKeyUnavailable()
+            }
             Keystore.generateAes(store, ALIAS, policy, allowStrongBox = false)
         }
     } catch (e: VaultError) {

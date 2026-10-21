@@ -139,7 +139,15 @@ object WindowFocusReturn {
  * takes the keyboard focus, unless something there already had it ([WindowFocusReturn.holdIfUnfocused]). So confirming
  * the dialog or choosing a menu item with the Enter key does not leave a focus ring on the page's first control (QA
  * wallets-12).
+ *
+ * No longer used: `SignerAlertDialog`, `SignerBottomSheet` and `SignerDropdownMenu` hold the page themselves, and a
+ * feature-owned `Dialog` / `Popup` calls `:core:designsystem`'s `WindowFocusHoldEffect` (backlog B30). A second hold
+ * next to a design-system window is harmless but redundant.
  */
+@Deprecated(
+    "The design system's windows hold the page's focus themselves; a feature-owned Dialog or Popup calls WindowFocusHoldEffect.",
+    ReplaceWith("WindowFocusHoldEffect()", "com.bittool.signer.core.designsystem.window.WindowFocusHoldEffect"),
+)
 @Composable
 fun WindowFocusReturnEffect() {
     val view = LocalView.current

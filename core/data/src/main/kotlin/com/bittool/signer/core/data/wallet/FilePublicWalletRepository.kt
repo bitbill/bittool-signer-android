@@ -104,6 +104,23 @@ class FilePublicWalletRepository @Inject constructor(
         write(JsonObject(body), walletId, key)
     }
 
+    override suspend fun unverifiedWalletKeyId(walletId: WalletId): String? = locked {
+        // The envelope and body checks of `read`, except the MAC: the claim is used only to refuse a duplicate import.
+        try {
+            val bytes = AtomicFiles.readBounded(file(walletId), MAX_FILE_BYTES) ?: return@locked null
+            val envelope = parseJsonObject(bytes) ?: return@locked null
+            if (envelope.int("schemaVersion") != SCHEMA_VERSION) return@locked null
+            val body = envelope.str("body")?.let(::decodeBase64)?.takeIf { it.size <= MAX_BODY_BYTES } ?: return@locked null
+            val raw = parseJsonObject(body) ?: return@locked null
+            if (WalletId.parse(raw.str("localWalletId")) != walletId) return@locked null
+            raw.obj("publicIndex")?.let(WalletPublicMetadata::parse)?.walletKeyId
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     override suspend fun remove(walletId: WalletId) = locked {
         val target = file(walletId)
         if (target.exists() && !target.delete() && target.exists()) throw IOException("The public wallet file could not be removed.")

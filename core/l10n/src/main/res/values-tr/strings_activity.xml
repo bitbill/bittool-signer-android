@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">Uyarılar gösterildi</string>
     <string name="activity_partial_signature_created">Kısmi imza oluşturuldu</string>
     <string name="activity_unreadable_title">Etkinlik kullanılamıyor</string>
+    <string name="activity_restarted_title">Etkinlik yeniden başladı</string>
+    <string name="activity_restarted_message">Önceki etkinlik kaydını koruyan anahtar artık bu cihazda değil (Android, ekran kilidi kaldırıldığında bu anahtarı siler); bu yüzden o kayıt artık okunamıyor. Yeni bir kayıt başlatıldı ve yeni imzalar burada listelenir. Zaten oluşturduğunuz imzalar bundan etkilenmez.</string>
     <string name="activity_export_failed">Dosya kaydedilemedi.</string>
 </resources>

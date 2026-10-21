@@ -15,6 +15,14 @@
     <string name="activity_partial_signature_created">Partial signature created</string>
     <!-- Android-only: title of the Activity tab while the encrypted record cannot be read (SignerState.activityUnreadable). -->
     <string name="activity_unreadable_title">Activity Unavailable</string>
+    <!-- Android-only (QA L1): a notice at the top of Activity, shown once after the record's Keystore key was proven gone
+         (Android deletes it when the device's screen lock is removed) and BitTool Signer started a new, empty record.
+         Title. -->
+    <string name="activity_restarted_title">Activity Started Again</string>
+    <!-- Text of that notice (dismissed with the iOS "OK"). It must not say the wallets are unaffected: the same event
+         usually deletes their device keys too (the wallet pages say so). "Signatures you already created" are the ones
+         already handed to the wallet app, which stay valid. -->
+    <string name="activity_restarted_message">The key that protected the earlier activity record is no longer on this device (Android deletes it when the screen lock is removed), so that record can no longer be read. A new record was started, and new signatures are listed here. Signatures you already created are not affected.</string>
     <!-- Android-only: export failure when the chosen document provider gives no reason of its own. -->
     <string name="activity_export_failed">The file could not be saved.</string>
     <!-- Suggested file name of "Export as File" (iOS default file name bittool-signer-signature + .txt). -->

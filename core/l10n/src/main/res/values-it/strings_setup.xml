@@ -9,6 +9,8 @@
     <string name="setup_screenshot_phrase_hidden">La frase è di nuovo nascosta, ma lo screenshot potrebbe già contenerla. Eliminalo dalla galleria e da ogni copia sincronizzata, e conserva una copia scritta offline.</string>
     <string name="setup_screenshot_may_contain">Lo screenshot potrebbe contenere la frase di recupero o alcune delle sue parole. Eliminalo dalla galleria e da ogni copia sincronizzata, e conserva una copia scritta offline.</string>
     <string name="setup_screen_lock_required">Blocco schermo necessario</string>
-    <string name="setup_lost_key_message">Questa frase di recupero appartiene a un wallet su questo dispositivo la cui chiave di dispositivo non esiste più, quindi la sua password non si può reimpostare. Apri quel wallet, scegli «Elimina il wallet», poi «Rimuovi questo wallet», e importa di nuovo la frase.</string>
+    <string name="setup_lost_key_message">Questa frase di recupero appartiene a un wallet su questo dispositivo la cui chiave di dispositivo non esiste più, quindi la sua password non si può reimpostare. Apri quel wallet, scegli «Rimuovi questo wallet» e importa di nuovo la frase.</string>
     <string name="setup_lost_key_open_wallet">Apri il wallet</string>
+    <string name="setup_repair_duplicate_title">Questo wallet va riparato</string>
+    <string name="setup_repair_duplicate_message">Questa frase di recupero appartiene a un wallet su questo dispositivo i cui dati pubblici vanno riparati. Apri quel wallet e scegli «Ripara i dati del wallet» con la sua password. Importare di nuovo la frase aggiungerebbe solo un secondo wallet con le stesse chiavi.</string>
 </resources>

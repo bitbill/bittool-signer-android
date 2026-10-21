@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">ชีวมิติถูกล็อกหลังพยายามหลายครั้งเกินไป ใช้รหัสผ่านกระเป๋า หรือปลดล็อกโทรศัพท์ด้วยการล็อกหน้าจอก่อน</string>
     <string name="security_delete_footer_biometric">การลบจะขอการยืนยันด้วยชีวมิติ แล้วตามด้วยรหัสผ่านของกระเป๋านี้</string>
     <string name="security_overlay_blocked">มีแอปอื่นแสดงทับ BitTool Signer อยู่ ปิดแอปนั้นแล้วลองใหม่</string>
+    <string name="security_no_unlock_path_title">ไม่มีวิธีปลดล็อก</string>
+    <string name="security_no_unlock_path_message">คีย์ของอุปกรณ์สำหรับกระเป๋าทุกใบที่นี่ไม่มีอยู่แล้ว (Android จะลบคีย์เหล่านี้เมื่อนำการล็อกหน้าจอออก) จึงไม่มีรหัสผ่านกระเป๋าใดปลดล็อก BitTool Signer ได้ และใช้การปลดล็อกด้วยลายนิ้วมือหรือใบหน้าไม่ได้ ดำเนินการต่อโดยไม่ใช้ล็อกแอป แล้วนำกระเป๋าเหล่านี้ออกและนำเข้าวลีกู้คืนของกระเป๋าเหล่านั้นอีกครั้ง คุณเปิดล็อกแอปอีกครั้งได้ภายหลังในการตั้งค่า เงินของคุณไม่ได้รับผลกระทบ</string>
+    <string name="security_no_unlock_path_continue">ดำเนินการต่อโดยไม่ใช้ล็อกแอป</string>
     <string name="security_app_lock_save_failed">ไม่สามารถเปลี่ยนการล็อกแอปได้ ลองอีกครั้ง</string>
 </resources>

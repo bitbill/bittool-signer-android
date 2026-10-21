@@ -13,5 +13,8 @@
     <string name="security_biometric_lockout">Çok fazla denemeden sonra biyometri kilitlendi. Bir cüzdan parolası kullanın veya önce telefonunuzun kilidini ekran kilidiyle açın.</string>
     <string name="security_delete_footer_biometric">Silme işlemi önce biyometrik onay, sonra bu cüzdanın parolasını ister.</string>
     <string name="security_overlay_blocked">Başka bir uygulama BitTool Signer’ın üzerinde görüntüleniyor. Onu kapatıp tekrar deneyin.</string>
+    <string name="security_no_unlock_path_title">Kilidi açmanın yolu yok</string>
+    <string name="security_no_unlock_path_message">Buradaki tüm cüzdanların cihaz anahtarları artık yok (Android, ekran kilidi kaldırıldığında bunları siler); bu yüzden hiçbir cüzdan parolası BitTool Signer’ın kilidini açamaz ve parmak izi ya da yüzle kilit açma da kullanılamıyor. Uygulama kilidi olmadan devam edin, ardından bu cüzdanları kaldırın ve kurtarma ifadelerini yeniden içe aktarın. Uygulama kilidini daha sonra Ayarlar’dan yeniden açabilirsiniz. Paranız etkilenmez.</string>
+    <string name="security_no_unlock_path_continue">Uygulama kilidi olmadan devam et</string>
     <string name="security_app_lock_save_failed">Uygulama kilidi değiştirilemedi. Tekrar deneyin.</string>
 </resources>

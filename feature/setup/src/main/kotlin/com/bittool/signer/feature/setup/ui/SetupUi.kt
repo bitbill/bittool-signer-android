@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -71,10 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.text
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
@@ -82,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.BottomActionBar
 import com.bittool.signer.core.designsystem.component.NavIcon
 import com.bittool.signer.core.designsystem.component.NavIconTags
+import com.bittool.signer.core.designsystem.component.PhraseText
 import com.bittool.signer.core.designsystem.component.SignerTopAppBar
 import com.bittool.signer.core.designsystem.component.StatusToastHost
 import com.bittool.signer.core.designsystem.component.TextAction
@@ -94,6 +93,8 @@ import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.headingLineBreaks
+import com.bittool.signer.core.designsystem.theme.phraseLineBreaks
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.security.RecoverySessionFactory
@@ -389,7 +390,7 @@ private fun StepHeader(step: Int, total: Int, title: String, message: String) {
         StepProgress(step, total, Modifier.padding(bottom = 6.dp))
         Text(stringResource(L10n.string.step_x_of_x, step, total), style = typography.footnote.semibold(), color = colors.accent)
         LargeTitle(title)
-        Text(message, style = typography.body, color = colors.secondaryLabel)
+        BodyText(message, style = typography.body, color = colors.secondaryLabel)
     }
 }
 
@@ -409,35 +410,35 @@ private fun StepProgress(step: Int, total: Int, modifier: Modifier = Modifier) {
 // Small building blocks
 
 /**
- * Line breaking for titles (QA setup-15): balanced lines, and on API 33+ breaks at phrase boundaries in Japanese and
- * Korean ("ウォレットを作成しました" no longer leaves "した" alone on the second line). Below API 33 only the balancing
- * applies; [LargeTitle] adds the phrase boundaries there.
- */
-internal fun TextStyle.headingLineBreaks(): TextStyle = copy(lineBreak = LineBreak.Heading)
-
-/**
- * A setup large title (iOS `.font(.largeTitle.weight(.bold))`): [headingLineBreaks], a heading for TalkBack, and the
- * phrase boundaries where the platform does not keep them (Japanese below API 33, Korean below API 35:
- * [HeadingPhrases], QA regression-13), so a Japanese or Korean title never breaks inside a phrase. The joiners are for
- * the line breaker only: TalkBack and the accessibility tree read [text] exactly as written.
+ * A setup large title (iOS `.font(.largeTitle.weight(.bold))`), a heading for TalkBack. Balanced lines that break
+ * between phrases in Japanese and Korean, also where the platform cannot (Japanese below API 33, Korean below API 35;
+ * QA setup-15, regression-13): the design system's [PhraseText] in a `headingLineBreaks` style, which TalkBack and the
+ * accessibility tree read exactly as written.
  */
 @Composable
 internal fun LargeTitle(text: String, modifier: Modifier = Modifier, textAlign: TextAlign? = null) {
-    val style = SignerTheme.typography.largeTitle.headingLineBreaks()
-    val color = SignerTheme.colors.label
-    val drawn = remember(text) { HeadingPhrases.keepTogether(text) }
-    if (drawn == text) {
-        Text(text, style = style, color = color, textAlign = textAlign, modifier = modifier.semantics { heading() })
-    } else {
-        Box(
-            modifier.clearAndSetSemantics {
-                this.text = AnnotatedString(text)
-                heading()
-            },
-        ) {
-            Text(drawn, style = style, color = color, textAlign = textAlign)
-        }
-    }
+    PhraseText(
+        text = text,
+        style = SignerTheme.typography.largeTitle.headingLineBreaks(),
+        color = SignerTheme.colors.label,
+        textAlign = textAlign,
+        modifier = modifier.semantics { heading() },
+    )
+}
+
+/**
+ * Setup's running text (a step's message, a note under a control, a tip): [PhraseText] in [style] with
+ * `phraseLineBreaks`, so Japanese and Korean lines break between phrases on every Android version.
+ */
+@Composable
+internal fun BodyText(
+    text: String,
+    style: TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier,
+    textAlign: TextAlign? = null,
+) {
+    PhraseText(text = text, style = style.phraseLineBreaks(), color = color, textAlign = textAlign, modifier = modifier)
 }
 
 /**

@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.style.LineBreak
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
+import com.bittool.signer.core.data.ExistingWalletMatch
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.VaultMetadata
@@ -137,6 +138,28 @@ class PasswordStepTest {
         compose.onNodeWithTag(OPEN_LOST_KEY_WALLET_TAG).performClick()
         compose.runOnIdle {
             assertEquals(listOf<WalletRoute?>(WalletDetailRoute(existing.id)), finished)
+            assertTrue(store.calls<Call.ResetPassword>().isEmpty())
+        }
+    }
+
+    /**
+     * QA L3: a phrase whose wallet here only an unauthenticated sidecar names (its public data needs repair, its key is
+     * fine) is led to that wallet's Repair: no password form, no "Import Wallet" that would add a second wallet.
+     */
+    @Test
+    fun aPhraseWhoseWalletNeedsRepairLeadsToThatWalletInsteadOfASecondOne() {
+        store.setState { it.copy(wallets = listOf(existing)) }
+        store.onFindExistingWallet = { _, _ -> ExistingWalletMatch(existing.id, verified = false) }
+        passwordStep()
+        compose.onNodeWithText("This Wallet Needs Repair", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("choose Repair Wallet Data with its password", substring = true, useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag(PasswordKind.WalletPassword.english).assertDoesNotExist()
+        compose.onNodeWithTag("setup.finish").assertDoesNotExist()
+
+        compose.onNodeWithTag(OPEN_LOST_KEY_WALLET_TAG).performClick()
+        compose.runOnIdle {
+            assertEquals(listOf<WalletRoute?>(WalletDetailRoute(existing.id)), finished)
+            assertTrue(store.calls<Call.CreateWallet>().isEmpty())
             assertTrue(store.calls<Call.ResetPassword>().isEmpty())
         }
     }

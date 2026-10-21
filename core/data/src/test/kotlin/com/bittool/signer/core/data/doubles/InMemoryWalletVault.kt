@@ -56,6 +56,16 @@ class InMemoryWalletVault : WalletVault {
     @Volatile
     private var unlockGate: EngineGate? = null
 
+    /**
+     * The lock screen (`isDeviceSecure`, QA L4). Like the real vault, without one [isDeviceKeyLost] is false and every
+     * password operation refuses with `DevicePasscodeRequired`.
+     */
+    @Volatile
+    var deviceSecure: Boolean = true
+
+    /** How many times [isDeviceKeyLost] was asked, per wallet (a proven loss is not proven again). */
+    val lossChecks = java.util.concurrent.ConcurrentHashMap<WalletId, Int>()
+
     /** Every secret [unlock] handed out, so tests can check that the store wiped the ones it did not return. */
     val issuedSecrets = java.util.concurrent.CopyOnWriteArrayList<VaultSecret>()
 
@@ -153,8 +163,11 @@ class InMemoryWalletVault : WalletVault {
 
     override suspend fun isDeviceKeyLost(id: WalletId): Boolean = mutex.withLock {
         if (id !in records) throw VaultError.WalletNotFound()
-        id in lostKeys
+        lossChecks.merge(id, 1, Int::plus)
+        deviceSecure && id in lostKeys
     }
+
+    override suspend fun isDeviceSecure(): Boolean = deviceSecure
 
     override suspend fun removeWithLostDeviceKey(id: WalletId) = mutex.withLock {
         if (id !in records) throw VaultError.WalletNotFound()
@@ -171,6 +184,7 @@ class InMemoryWalletVault : WalletVault {
 
     private fun unlockLocked(id: WalletId, password: SecretText): VaultSecret {
         val record = records[id] ?: throw VaultError.WalletNotFound()
+        if (!deviceSecure) throw VaultError.DevicePasscodeRequired()
         // The real vault cannot seal the attempt without the key: refused before anything is counted.
         if (id in lostKeys) throw VaultError.DeviceKeyUnavailable()
         attempts[id] = (attempts[id] ?: 0) + 1

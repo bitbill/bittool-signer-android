@@ -6,5 +6,7 @@
     <string name="activity_risk_warnings_shown">عُرضت تحذيرات</string>
     <string name="activity_partial_signature_created">أُنشئ توقيع جزئي</string>
     <string name="activity_unreadable_title">النشاط غير متاح</string>
+    <string name="activity_restarted_title">بدأ سجل النشاط من جديد</string>
+    <string name="activity_restarted_message">لم يعد المفتاح الذي كان يحمي سجل النشاط السابق موجودًا على هذا الجهاز (يحذفه Android عند إزالة قفل الشاشة)، لذا لم تعد قراءة ذلك السجل ممكنة. بدأ سجل جديد، وتظهر التوقيعات الجديدة هنا. لا تتأثر التوقيعات التي أنشأتها من قبل.</string>
     <string name="activity_export_failed">تعذّر حفظ الملف.</string>
 </resources>
