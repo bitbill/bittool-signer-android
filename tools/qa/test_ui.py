@@ -2,8 +2,10 @@
 """Tests of tools/qa/ui.py against a fake adb (no device): python3 -m unittest discover -s tools/qa -p 'test_*.py'"""
 import pathlib
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -18,6 +20,15 @@ DUMP = b'''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy ro
 WINDOWS_DUMP = b'''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><displays><display id="0">
 <window index="0"><hierarchy rotation="0"><node text="Settings" resource-id="" class="android.widget.TextView" bounds="[0,0][100,50]" /></hierarchy></window>
 <window index="1"><hierarchy rotation="0"><node text="OK" resource-id="root.error.ok" class="android.widget.Button" clickable="true" bounds="[600,1200][800,1300]" /></hierarchy></window>
+</display></displays>'''
+
+# `--windows` lists the windows top-most first: the navigation bar and the keyboard lie above the app's dialog and
+# activity, and their nodes share names with the app's ("Back", "Done").
+SYSTEM_ABOVE_APP_DUMP = b'''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><displays><display id="0">
+<window index="0"><hierarchy rotation="0"><node text="" content-desc="Back" resource-id="com.android.systemui:id/back" package="com.android.systemui" class="android.widget.ImageView" clickable="true" bounds="[100,2100][300,2220]" /></hierarchy></window>
+<window index="1"><hierarchy rotation="0"><node text="" content-desc="Done" resource-id="" package="com.google.android.inputmethod.latin" class="android.view.View" clickable="true" bounds="[900,1900][1080,2000]" /></hierarchy></window>
+<window index="2"><hierarchy rotation="0"><node text="Done" content-desc="" resource-id="signing.done" package="com.bittool.signer.debug" class="android.widget.Button" clickable="true" bounds="[600,1200][800,1300]" /></hierarchy></window>
+<window index="3"><hierarchy rotation="0"><node text="" content-desc="Back" resource-id="" package="com.bittool.signer.debug" class="android.view.View" clickable="true" bounds="[0,100][150,250]" /></hierarchy></window>
 </display></displays>'''
 
 
@@ -99,6 +110,31 @@ class UiToolTest(unittest.TestCase):
         ok = ui.find('root.error.ok')
         self.assertEqual((700, 1250), ok['center'])
         self.assertTrue(ok['clickable'])
+
+    def test_the_apps_windows_are_matched_before_the_systems(self):
+        self.fake(['UI hierchary dumped to: /sdcard/qa-ui.xml'] * 3, file_bytes=SYSTEM_ABOVE_APP_DUMP)
+        self.assertEqual((75, 175), ui.find('Back')['center'], "the navigation bar's Back was found")
+        self.assertEqual('signing.done', ui.find('Done')['id'], "a keyboard key was found")
+        # Top-most first within each group: the app's dialog, its activity, then the system bar and the keyboard.
+        order = [n['bounds'] for n in ui.nodes()]
+        self.assertEqual([(600, 1200, 800, 1300), (0, 100, 150, 250), (100, 2100, 300, 2220), (900, 1900, 1080, 2000)],
+                         order)
+
+    def test_lose_keys_relaunches_the_previous_run_without_a_reset(self):
+        shots = pathlib.Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, shots, True)
+        (shots / '.run-id').write_text('11111111-2222-3333-4444-555555555555\n', encoding='utf-8')
+        for patch in (mock.patch.object(ui, 'SHOTS', str(shots)),
+                      mock.patch.object(sys, 'argv', ['ui.py', 'launch', '--lose-keys'])):
+            patch.start()
+            self.addCleanup(patch.stop)
+        fake = self.fake([])
+        with mock.patch('builtins.print'):
+            ui.command('launch')
+        start = next(call for call in fake.calls if call[:3] == ['shell', 'am', 'start'])
+        self.assertEqual('11111111-2222-3333-4444-555555555555', start[start.index('bts.uitest.run') + 1])
+        self.assertEqual('true', start[start.index('bts.uitest.loseDeviceKeys') + 1])
+        self.assertNotIn('bts.uitest.reset', start)
 
     def test_long_text_is_typed_in_short_quoted_chunks(self):
         fake = self.fake([])

@@ -19,12 +19,13 @@ keeps FLAG_SECURE off for the run (`bts.uitest.allowCapture`), otherwise screens
 
 `launch --keep` reuses the run id of the previous launch (stored in $QA_SHOTS/.run-id) unless `--run` names one, so a
 cold relaunch opens the same wallets. `--lose-keys` (`bts.uitest.loseDeviceKeys`) deletes the run's fixture wallet keys
-before anything is injected: every existing wallet then has a provably lost device key (backlog B9/B24), use it with
-`--keep`.
+before anything is injected: every existing wallet then has a provably lost device key (backlog B9/B24). It implies
+`--keep` (a reset run has no wallets whose keys could be lost).
 
 `dump` (and everything that finds nodes) deletes the previous dump first, asks uiautomator for every window
 (`--windows`: dialogs, sheets and the keyboard too, where the device supports it) and fails loudly when uiautomator
-does not produce a fresh dump (e.g. "could not get idle state" under load) instead of reading a stale file. `type`
+does not produce a fresh dump (e.g. "could not get idle state" under load) instead of reading a stale file. The app's
+windows are listed (and matched) before the system's, so `tap Back` is the app's Back, not the navigation bar's. `type`
 sends the text in short chunks: `input text` drops characters of long strings on a loaded emulator.
 """
 import os
@@ -85,11 +86,24 @@ def dump_xml():
     raise AdbError(f'uiautomator dump failed: {last}')
 
 
-def parse_nodes(xml):
-    """The nodes of a uiautomator dump (one window or `--windows`), in document order."""
+def window_trees(root, package=PKG):
+    """The `hierarchy` trees of a dump: one for a plain dump; with `--windows` one per window, the app's own windows
+    (activity, dialogs, sheets, menus) first and then the system's (status and navigation bars, keyboard, permission
+    dialog), each group top-most first as uiautomator lists them. A query that also matches a system node (the
+    navigation bar's "Back" or "Home", a keyboard key such as "Done") therefore finds the app's node."""
+    trees = [root] if root.tag == 'hierarchy' else list(root.iter('hierarchy'))
+
+    def foreign(tree):
+        first = tree.find('.//node')
+        return first is None or first.get('package', package) != package
+    return sorted(trees, key=foreign)
+
+
+def parse_nodes(xml, package=PKG):
+    """The nodes of a uiautomator dump (one window or `--windows`): the app's windows first (window_trees)."""
     root = ET.fromstring(xml)
     out = []
-    for n in root.iter('node'):
+    for n in (node for tree in window_trees(root, package) for node in tree.iter('node')):
         b = re.findall(r'\d+', n.get('bounds', ''))
         if len(b) != 4:
             continue
@@ -149,7 +163,8 @@ def run_id(keep):
     if not isinstance(chosen, str):
         chosen = None
         if keep and os.path.exists(stored):
-            chosen = open(stored, encoding='utf-8').read().strip() or None
+            with open(stored, encoding='utf-8') as f:
+                chosen = f.read().strip() or None
     chosen = chosen or str(uuid.uuid4())
     os.makedirs(SHOTS, exist_ok=True)
     with open(stored, 'w', encoding='utf-8') as f:
@@ -175,7 +190,8 @@ def main():
 def command(cmd):
     if cmd == 'launch':
         adb('shell', 'am', 'force-stop', PKG)
-        keep = bool(arg('--keep'))
+        # Losing the keys of a reset (empty) run would do nothing: --lose-keys relaunches the previous run.
+        keep = bool(arg('--keep')) or bool(arg('--lose-keys'))
         extras = ['--es', 'bts.uitest.run', run_id(keep), '--ez', 'bts.uitest.allowCapture', 'true',
                   '--ei', 'bts.uitest.fixtures', str(arg('--fixtures', 0, int)),
                   '--es', 'bts.uitest.appearance', 'dark' if arg('--dark') else 'light']
