@@ -1,5 +1,6 @@
 package com.bittool.signer
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.res.Configuration
 import android.graphics.Color
@@ -29,6 +30,7 @@ import com.bittool.signer.lock.LockWindowRoot
 import com.bittool.signer.root.LaunchGate
 import com.bittool.signer.root.RootViewModel
 import com.bittool.signer.root.SignerRoot
+import com.bittool.signer.shell.AppCompatLocaleSync
 import com.bittool.signer.shell.ShellLaunch
 import com.bittool.signer.shell.ShellLaunchHooks
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,11 +47,16 @@ import kotlinx.coroutines.launch
  * The single activity (app-shell.md §15; ARCHITECTURE §2.1). An `AppCompatActivity`: per-app languages below API 33 and
  * the `FragmentActivity` that `BiometricPrompt` needs.
  *
+ * `attachBaseContext` first keeps a language chosen in Android's Settings through AppCompat's one-time locale sync
+ * ([AppCompatLocaleSync], API 33+).
+ *
  * `onCreate`, in this order: the debug UI-test harness reads its launch extras (before Hilt injects anything, gaps.md
  * G3) → the system splash is installed → `FLAG_SECURE`, no Recents screenshot, hidden foreign overlays, autofill and
  * content capture excluded (`SecureWindowPolicy`, never toggled) → the lifecycle monitor attaches (it sees every edge)
- * → Arabic keeps Latin digits → the Theme preference is followed → `super.onCreate` → edge to edge → the splash is kept
- * until App Lock and the first wallet load are known ([LaunchGate]) → the lock window follows App Lock → content.
+ * → the Theme preference is followed → Arabic keeps Latin digits (below API 33) → `super.onCreate` → Arabic keeps
+ * Latin digits (API 33+: it needs the AppCompat delegate that `super.onCreate` registers) → edge to edge → the splash
+ * is kept until App Lock and the first wallet load are known ([LaunchGate]) → the lock window follows App Lock →
+ * content.
  *
  * Lifecycle (iOS scene phases, app-shell.md §10, §15.4): `onStart` runs App Lock's grace decision and shows the lock
  * window in the same callback, so a relock is in the very first frame; `onStop` that is not a configuration change
@@ -78,15 +85,28 @@ class MainActivity : AppCompatActivity() {
         access.state.map { it.resolving }.stateIn(lifecycleScope, SharingStarted.Eagerly, access.state.value.resolving)
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        // Before AppCompat's attachBaseContext2 starts its one-time locale sync, which would erase a language chosen in
+        // Android's Settings before the first launch (API 33+).
+        AppCompatLocaleSync.keepSystemChoice(newBase)
+        super.attachBaseContext(newBase)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         launch = ShellLaunchHooks.configure(this, intent)
         val splash = installSplashScreen()
         val shell = EntryPointAccessors.fromApplication(applicationContext, ShellEntryPoint::class.java)
         shell.secureWindowPolicy().apply(this, allowCapture = launch.allowCapture)
         shell.lifecycleMonitor().attach(this)
-        AppLocales.ensureLatinDigits()
         shell.appearance().start()
+        // Plain `ar` (Android's own App languages setting, or the harness' `bts.uitest.locale=ar`) → `ar-u-nu-latn`.
+        // Below API 33 AppCompat keeps the list itself: re-applied before super.onCreate, the delegate's onCreate applies
+        // it to this activity in place. On API 33+ AppCompat reads and writes the framework list only through a live
+        // activity delegate, which super.onCreate registers: before it the list read as empty (audit A11). There the
+        // re-apply makes the system relaunch the activity once; the list then holds `ar-u-nu-latn`, so it cannot loop.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) AppLocales.ensureLatinDigits()
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AppLocales.ensureLatinDigits()
         // After AppCompat installed its decor (reading the decor any earlier would install it first).
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),

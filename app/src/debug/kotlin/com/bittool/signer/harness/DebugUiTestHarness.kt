@@ -1,9 +1,11 @@
 package com.bittool.signer.harness
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.LocaleList
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
@@ -45,7 +47,7 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.fixtures=N` | 0…8 wallets "Public fixture 1…N" created through `SignerStore.createWallet` after the first load when none exist (onboarding marked done); a failure shows "UI fixture setup failed: …" |
  * | `bts.uitest.appLock=true` | App Lock preference on |
  * | `bts.uitest.appearance=dark\|light` | the Theme preference |
- * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition |
+ * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition (API 33+: through `LocaleManager`; a change relaunches the activity once) |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
  * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
  * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); later launches of the run keep it, only a reset run starts a new journal |
@@ -121,7 +123,7 @@ object DebugUiTestHarness : UiTestEnvironment {
             }
         }
         run = parsed
-        applyLocale(parsed.localeTag)
+        applyLocale(context, parsed.localeTag)
         if (createsFixtures && parsed.fixtures > 0) startFixtures(context, parsed)
         Log.i(TAG) { "UI-test run configured (${parsed.fixtures} fixtures)" }
         return parsed
@@ -161,12 +163,29 @@ object DebugUiTestHarness : UiTestEnvironment {
         createsFixtures = true
     }
 
-    private fun applyLocale(tag: String) {
+    /**
+     * The run's per-app language, before `super.onCreate`. On API 33+ AppCompat reaches Android's own list only through
+     * a live activity delegate, which `super.onCreate` registers (final audit A11): it would read an empty list and
+     * set nothing, so the framework `LocaleManager` is used directly there (a change makes the system relaunch the
+     * activity once). Below API 33 AppCompat keeps the list itself and the delegate's onCreate applies it in place.
+     * Already applied means the same locales apart from Unicode extensions: `MainActivity` turns `ar` into
+     * `ar-u-nu-latn`, and asking for `ar` again on every launch would only relaunch the activity again.
+     */
+    private fun applyLocale(context: Context, tag: String) {
         val wanted = LocaleListCompat.forLanguageTags(tag)
-        if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != wanted.toLanguageTags()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val manager = context.getSystemService(LocaleManager::class.java) ?: return
+            if (!sameLocales(LocaleListCompat.wrap(manager.applicationLocales), wanted)) {
+                manager.applicationLocales = LocaleList.forLanguageTags(wanted.toLanguageTags())
+            }
+        } else if (!sameLocales(AppCompatDelegate.getApplicationLocales(), wanted)) {
             AppCompatDelegate.setApplicationLocales(wanted)
         }
     }
+
+    private fun sameLocales(current: LocaleListCompat, wanted: LocaleListCompat): Boolean =
+        current.size() == wanted.size() &&
+            (0 until wanted.size()).all { current[it]?.stripExtensions() == wanted[it]?.stripExtensions() }
 
     /**
      * iOS fixtures (:29-43): once the first load finished and only if no wallet exists, "Public fixture 1…N" from the
