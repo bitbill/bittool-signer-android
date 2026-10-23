@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Bình thường</string>
     <string name="wallets_qr_brightness_bright">Sáng</string>
     <string name="wallets_lost_key_title">Không thể mở khóa ví này</string>
+    <string name="wallets_keys_locked_title">Mở khóa bằng phương thức khóa màn hình</string>
     <string name="wallets_lost_key_message">Khóa thiết bị của ví này không còn trên thiết bị này, nên không thể mở khóa ví, kể cả với mật khẩu đúng. Hãy gỡ ví ở đây, rồi nhập lại cụm từ khôi phục và mật khẩu bổ sung BIP39 (nếu có) để khôi phục ví. Tiền không bị ảnh hưởng.</string>
     <string name="wallets_lost_key_confirm">Tôi hiểu rằng chỉ cụm từ khôi phục mới khôi phục được ví này</string>
     <string name="wallets_lost_key_footer">Khi gỡ ví này, ứng dụng không hỏi mật khẩu của ví: khóa thiết bị mà mật khẩu cần đã mất.</string>

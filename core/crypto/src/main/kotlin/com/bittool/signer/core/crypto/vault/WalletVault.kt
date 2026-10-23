@@ -173,7 +173,11 @@ interface PublicDataKey {
     /** HMAC-SHA256 of [message] (32 bytes). Throws [VaultError.DeviceKeyUnavailable] when Keystore refuses. */
     fun mac(message: ByteArray): ByteArray
 
-    /** Constant-time check of [tag] against `mac(message)`; false on any mismatch or Keystore failure. */
+    /**
+     * Constant-time check of [tag] against `mac(message)`; false on any mismatch or Keystore failure, except a refusal
+     * because the phone counts as locked: that throws [VaultError.DeviceKeyUnavailable] with `deviceLocked`, since it
+     * says nothing about the data.
+     */
     fun verify(message: ByteArray, tag: ByteArray): Boolean
 }
 

@@ -36,8 +36,9 @@ internal object WalletArgs {
  *
  * Android-only (QA L4): a wallet without ready public data is not always one that Repair can fix. Removing the
  * device's screen lock deletes its device key ([keyLost]: it can never be unlocked, only removed and imported again),
- * and without a screen lock nothing can be unlocked at all ([screenLockRequired]). [needsRepair] is what is left: the
- * iOS "Repair needed".
+ * and without a screen lock nothing can be unlocked at all ([screenLockRequired]). A phone unlocked by face or Smart Lock
+ * can count as locked for Keystore ([keysLocked]): nothing is wrong with the wallet until it is unlocked with its screen
+ * lock. [needsRepair] is what is left: the iOS "Repair needed".
  */
 @Immutable
 data class WalletIdentity(
@@ -55,9 +56,11 @@ data class WalletIdentity(
     val keyLost: Boolean = false,
     /** QA L4: no ready public data and no secure lock screen (`SignerState.deviceSecure`): a lock comes first. */
     val screenLockRequired: Boolean = false,
+    /** No ready public data because Keystore refused its key while the phone counts as locked (`SignerState.keysLocked`). */
+    val keysLocked: Boolean = false,
 ) {
     /** The iOS "Repair needed" case: no ready public data, and a repair with the password can work. */
-    val needsRepair: Boolean get() = !ready && !keyLost && !screenLockRequired
+    val needsRepair: Boolean get() = !ready && !keyLost && !screenLockRequired && !keysLocked
 
     companion object {
         /** The identity of [id] in [state], or null when the wallet is not (or no longer) in the list. */
@@ -74,6 +77,7 @@ data class WalletIdentity(
                 duplicate = state.isDuplicate(id),
                 keyLost = state.deviceSecure && state.hasLostDeviceKey(id),
                 screenLockRequired = !ready && !state.deviceSecure,
+                keysLocked = !ready && state.deviceSecure && state.keysLocked,
             )
         }
 

@@ -21,6 +21,9 @@
     -->
     <!-- Callout title on the Delete Wallet page. -->
     <string name="wallets_lost_key_title">This Wallet Can’t Be Unlocked</string>
+    <!-- Android only: card status and wallet-page callout title while Keystore keeps the keys locked (shown with
+         crypto_device_locked): the phone must be unlocked once with its screen lock. -->
+    <string name="wallets_keys_locked_title">Unlock with Your Screen Lock</string>
     <!-- Callout text: why the password cannot help and how the wallet is restored. -->
     <string name="wallets_lost_key_message">Its device key is no longer on this device, so the wallet cannot be unlocked, even with the right password. Remove it here, then import its recovery phrase and any BIP39 passphrase again to restore it. Funds are not affected.</string>
     <!-- The confirmation switch the person must turn on first. -->

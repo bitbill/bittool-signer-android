@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">標準</string>
     <string name="wallets_qr_brightness_bright">最大</string>
     <string name="wallets_lost_key_title">このウォレットはロック解除できません</string>
+    <string name="wallets_keys_locked_title">画面ロックで解除してください</string>
     <string name="wallets_lost_key_message">デバイス鍵がこの端末にもう存在しないため、正しいパスワードでもこのウォレットのロックを解除できません。ここで削除してから、リカバリーフレーズと（設定していれば）BIP39 パスフレーズをもう一度インポートして復元してください。資産には影響しません。</string>
     <string name="wallets_lost_key_confirm">このウォレットを復元できるのはリカバリーフレーズだけであることを理解しました</string>
     <string name="wallets_lost_key_footer">このウォレットの削除にパスワードは不要です。パスワードに必要なデバイス鍵が失われているためです。</string>

@@ -73,6 +73,13 @@ data class SignerState(
      * Without one no wallet can be unlocked or repaired ("Set a screen lock…").
      */
     val deviceSecure: Boolean = true,
+    /**
+     * Android-only: the last load could not check the public data because Keystore refused its key while the phone
+     * counts as locked (Android 12–13 and some manufacturers' builds after face unlock or Smart Lock; see
+     * `VaultError.DeviceKeyUnavailable.deviceLocked`). The wallets without ready public data are then not damaged: the
+     * phone must be unlocked once with its PIN, pattern or password, and the next foreground loads them again.
+     */
+    val keysLocked: Boolean = false,
     /** A signature is in flight (Sign buttons show a spinner, the authorize sheet cannot be dismissed). */
     val busy: Boolean = false,
     /**

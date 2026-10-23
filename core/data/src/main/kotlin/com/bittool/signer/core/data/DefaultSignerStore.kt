@@ -190,11 +190,13 @@ class DefaultSignerStore @Inject constructor(
             val displayed = ArrayList<VaultMetadata>(originals.size)
             val indexes = LinkedHashMap<WalletId, WalletPublicMetadata>()
             val statuses = LinkedHashMap<WalletId, PublicMetadataStatus>()
+            var keysLocked = false
             for (wallet in originals) {
                 val snapshot = publicRepository.snapshot(wallet.id, key)
                 displayed += wallet.copy(name = snapshot.displayName ?: wallet.name)
                 snapshot.metadata?.let { indexes[wallet.id] = it }
                 statuses[wallet.id] = snapshot.status
+                keysLocked = keysLocked || snapshot.keyLocked
             }
             // Android-only (QA L3, L4): what is known about the wallets without an authenticated index — the identity
             // their sidecars claim (duplicate detection only), the lock screen, and whose device key is gone for good.
@@ -224,6 +226,7 @@ class DefaultSignerStore @Inject constructor(
                     walletLoadSucceeded = true,
                     lostKeyWalletIds = lost,
                     deviceSecure = secure,
+                    keysLocked = keysLocked,
                 )
             }
             scheduleConnectPrefetch()
@@ -244,6 +247,11 @@ class DefaultSignerStore @Inject constructor(
         // QA L4: the person may have removed or set the screen lock while the app was in the background.
         val before = current
         if (before.isLoading || !before.walletLoadSucceeded || before.wallets.isEmpty()) return@withContext
+        if (before.keysLocked) {
+            // The phone may have been unlocked with its screen lock since: the public data is read again.
+            reload()
+            return@withContext
+        }
         val loaded = reloadEpoch
         val secure = deviceSecure(fallback = before.deviceSecure)
         if (loaded != reloadEpoch) return@withContext // a reload ran meanwhile and looked itself
@@ -779,6 +787,16 @@ class DefaultSignerStore @Inject constructor(
         if (result.bool("canSign") != true) {
             _state.update { it.copy(matchingIssue = MatchingIssue.Unsupported) }
             return@withContext
+        }
+        if (current.keysLocked) {
+            // Android-only: wallets whose public data Keystore would not let us check are not damaged ("needs
+            // repair"); the phone must be unlocked with its screen lock. Unlocked since, they load now.
+            reload()
+            requireSession(epoch, preparing)
+            if (current.keysLocked) {
+                _state.update { it.copy(matchingIssue = MatchingIssue.KeysLocked) }
+                return@withContext
+            }
         }
         val collection = walletCollectionSnapshot()
         val candidates = current.let { s -> s.wallets.map { PlanCandidate(it.id, s.publicWallets[it.id], s.metadataStatus(it.id)) } }

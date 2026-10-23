@@ -1,5 +1,6 @@
 package com.bittool.signer.core.data.doubles
 
+import android.security.keystore.UserNotAuthenticatedException
 import com.bittool.signer.core.crypto.Bip39Seed
 import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.bip39.Bip39
@@ -192,8 +193,17 @@ class EnglishBip39 : Bip39 {
 
 /** A `PublicDataKey` over a JCA `HmacSHA256` key (the Keystore key is non-exportable; the MAC is the same function). */
 class HmacPublicDataKey(private val key: ByteArray = ByteArray(32).also(SecureRandom()::nextBytes)) : PublicDataKey {
-    override fun mac(message: ByteArray): ByteArray =
-        Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(key, "HmacSHA256")) }.doFinal(message)
+    /**
+     * The phone counts as locked for Keystore (face unlock or Smart Lock on Android 12–13): every use throws what the
+     * Keystore key does, `DeviceKeyUnavailable` caused by `UserNotAuthenticatedException` (Robolectric tests only).
+     */
+    @Volatile
+    var locked: Boolean = false
+
+    override fun mac(message: ByteArray): ByteArray {
+        if (locked) throw VaultError.DeviceKeyUnavailable(UserNotAuthenticatedException())
+        return Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(key, "HmacSHA256")) }.doFinal(message)
+    }
 
     override fun verify(message: ByteArray, tag: ByteArray): Boolean = constantTimeEquals(mac(message), tag)
 }

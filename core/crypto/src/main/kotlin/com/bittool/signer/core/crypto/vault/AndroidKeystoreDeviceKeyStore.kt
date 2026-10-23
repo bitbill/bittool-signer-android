@@ -226,7 +226,10 @@ class AndroidKeystoreDeviceKeyStore internal constructor(
 
         override fun verify(message: ByteArray, tag: ByteArray): Boolean = try {
             constantTimeEquals(mac(message), tag)
-        } catch (_: VaultError) {
+        } catch (e: VaultError.DeviceKeyUnavailable) {
+            // A phone that counts as locked (see DeviceKeyUnavailable) says nothing about the file: the caller must not
+            // read it as damaged. Any other refusal still fails the check.
+            if (e.deviceLocked) throw e
             false
         }
 

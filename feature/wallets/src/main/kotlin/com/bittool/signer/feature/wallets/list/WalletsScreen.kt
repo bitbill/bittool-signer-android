@@ -309,6 +309,7 @@ internal fun WalletCard(
                 when {
                     wallet.keyLost -> CardStatus(stringResource(R.string.wallets_lost_key_title), colors.danger)
                     wallet.screenLockRequired -> CardStatus(stringResource(R.string.setup_screen_lock_required), colors.warning)
+                    wallet.keysLocked -> CardStatus(stringResource(R.string.wallets_keys_locked_title), colors.warning)
                     // "Fingerprint 73C5DA0A", the value in the monospaced face and, right to left, isolated (core:ui).
                     else -> Text(
                         text = fingerprintLine(wallet.fingerprint ?: stringResource(R.string.ui_setup_required)),
@@ -327,6 +328,8 @@ internal fun WalletCard(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
             )
         }
+        // Nothing to do on the card while the keys are locked: the phone is unlocked with its screen lock (detail page).
+        if (wallet.keysLocked) return@Column
         Box(
             Modifier
                 .padding(start = 16.dp)

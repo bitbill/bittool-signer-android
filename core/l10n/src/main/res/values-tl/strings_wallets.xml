@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <string name="wallets_qr_brightness_bright">Maliwanag</string>
     <string name="wallets_lost_key_title">Hindi ma-unlock ang wallet na ito</string>
+    <string name="wallets_keys_locked_title">I-unlock gamit ang Screen Lock</string>
     <string name="wallets_lost_key_message">Wala na sa device na ito ang device key nito, kaya hindi ma-unlock ang wallet, kahit tama ang password. Alisin ito rito, tapos i-import muli ang recovery phrase nito at ang anumang BIP39 passphrase para maibalik ito. Hindi apektado ang pondo.</string>
     <string name="wallets_lost_key_confirm">Nauunawaan kong ang recovery phrase lang ang makapagbabalik ng wallet na ito</string>
     <string name="wallets_lost_key_footer">Hindi hihingin ang password sa pag-alis ng wallet na ito: wala na ang device key na kailangan ng password.</string>

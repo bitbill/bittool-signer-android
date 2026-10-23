@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">ปกติ</string>
     <string name="wallets_qr_brightness_bright">สว่าง</string>
     <string name="wallets_lost_key_title">ปลดล็อกกระเป๋านี้ไม่ได้</string>
+    <string name="wallets_keys_locked_title">ปลดล็อกด้วยการล็อกหน้าจอ</string>
     <string name="wallets_lost_key_message">คีย์ของอุปกรณ์สำหรับกระเป๋านี้ไม่อยู่บนอุปกรณ์นี้แล้ว จึงปลดล็อกกระเป๋าไม่ได้แม้จะใช้รหัสผ่านที่ถูกต้อง ให้นำกระเป๋าออกที่นี่ แล้วนำเข้าวลีกู้คืนและรหัสผ่านวลี BIP39 (ถ้ามี) อีกครั้งเพื่อกู้คืน เงินของคุณไม่ได้รับผลกระทบ</string>
     <string name="wallets_lost_key_confirm">ฉันเข้าใจว่ามีเพียงวลีกู้คืนเท่านั้นที่กู้กระเป๋านี้ได้</string>
     <string name="wallets_lost_key_footer">การนำกระเป๋านี้ออกจะไม่ขอรหัสผ่าน เพราะคีย์ของอุปกรณ์ที่รหัสผ่านต้องใช้หายไปแล้ว</string>

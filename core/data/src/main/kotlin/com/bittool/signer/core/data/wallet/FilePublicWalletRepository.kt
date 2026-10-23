@@ -74,6 +74,8 @@ class FilePublicWalletRepository @Inject constructor(
             PublicWalletSnapshot(name, WalletPublicMetadata.parse(index), PublicMetadataStatus.Ready)
         } catch (e: CancellationException) {
             throw e
+        } catch (e: VaultError.DeviceKeyUnavailable) {
+            if (e.deviceLocked) KEY_LOCKED else INVALID
         } catch (e: Exception) {
             INVALID
         }
@@ -191,6 +193,7 @@ class FilePublicWalletRepository @Inject constructor(
         private const val DOMAIN = "com.bittool.signer.public-wallet.v2"
 
         private val INVALID = PublicWalletSnapshot(null, null, PublicMetadataStatus.Invalid)
+        private val KEY_LOCKED = PublicWalletSnapshot(null, null, PublicMetadataStatus.Invalid, keyLocked = true)
 
         /** `DOMAIN ‖ 0x00 ‖ lowercase uuid ‖ 0x00 ‖ body` (PublicWalletRepository.swift:71-77). */
         internal fun macInput(walletId: WalletId, body: ByteArray): ByteArray {

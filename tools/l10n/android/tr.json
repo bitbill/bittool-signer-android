@@ -432,6 +432,14 @@
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",
    "value": "Uygulama kilidi olmadan devam et"
+  },
+  "crypto_device_locked": {
+   "source": "Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.",
+   "value": "Bu telefonu kilitleyin, ardından PIN'i, deseni veya şifresiyle kilidini açın. Bu telefonda yüz tanıma ile kilit açma ve Smart Lock, BitTool Signer'ın anahtarlarının kilidini açmaz."
+  },
+  "wallets_keys_locked_title": {
+   "source": "Unlock with Your Screen Lock",
+   "value": "Ekran kilidiyle kilidi açın"
   }
  }
 }

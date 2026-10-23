@@ -26,6 +26,7 @@ internal fun MatchingIssue.message(): String = when (this) {
     MatchingIssue.Unsupported -> stringResource(R.string.sign_unsupported_signing_protocol)
     MatchingIssue.Interrupted -> stringResource(R.string.sign_matching_interrupted)
     MatchingIssue.WalletsChanged -> stringResource(R.string.wallet_information_changed_match_this_request_again)
+    MatchingIssue.KeysLocked -> stringResource(R.string.crypto_device_locked)
     is MatchingIssue.Engine -> enginePhrase(message)
     is MatchingIssue.Failure -> (text as? UiText.Verbatim)?.let { enginePhrase(it.text) } ?: text.asString()
 }

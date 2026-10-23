@@ -432,6 +432,14 @@
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",
    "value": "不使用 App 鎖繼續"
+  },
+  "crypto_device_locked": {
+   "source": "Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.",
+   "value": "請先鎖定手機，再用 PIN 碼、圖形或密碼解鎖。在這支手機上，臉部解鎖和 Smart Lock 無法解鎖 BitTool Signer 的金鑰。"
+  },
+  "wallets_keys_locked_title": {
+   "source": "Unlock with Your Screen Lock",
+   "value": "請用螢幕鎖定解鎖"
   }
  }
 }

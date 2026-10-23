@@ -1,5 +1,6 @@
 package com.bittool.signer.core.crypto.vault
 
+import android.security.keystore.UserNotAuthenticatedException
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.SignerException
 import com.bittool.signer.core.model.UiText
@@ -31,9 +32,24 @@ sealed class VaultError(text: UiText, cause: Throwable? = null) : SignerExceptio
     /** "The password is incorrect." — also for any tampering, a wrong device key or a flipped byte (same wording on purpose). */
     class AuthenticationFailed : VaultError(UiText.Ios("The password is incorrect."))
 
-    /** "This wallet’s device key is unavailable. Restore your recovery phrase on this device." (Keystore key missing/invalidated). */
-    class DeviceKeyUnavailable(cause: Throwable? = null) :
-        VaultError(UiText.Ios("This wallet’s device key is unavailable. Restore your recovery phrase on this device."), cause)
+    /**
+     * "This wallet’s device key is unavailable. Restore your recovery phrase on this device." (Keystore key missing or
+     * invalidated). Android-only: a key Keystore refuses because the phone counts as locked ([deviceLocked]) is not
+     * gone. Android 12–13, and some manufacturers' builds after them, treat a phone unlocked by face recognition (or
+     * another non-strong biometric) or Smart Lock as still locked for `setUnlockedDeviceRequired` keys until it is
+     * unlocked with its PIN, pattern or password: that case says so instead.
+     */
+    class DeviceKeyUnavailable(cause: Throwable? = null) : VaultError(
+        if (isDeviceLocked(cause)) {
+            UiText.Resource(R.string.crypto_device_locked)
+        } else {
+            UiText.Ios("This wallet’s device key is unavailable. Restore your recovery phrase on this device.")
+        },
+        cause,
+    ) {
+        /** Keystore refused the key only because the phone counts as locked: unlocking it with its screen lock helps. */
+        val deviceLocked: Boolean get() = isDeviceLocked(cause)
+    }
 
     /** No secure lock screen (`KeyguardManager.isDeviceSecure() == false`): Android wording of the iOS passcode error. */
     class DevicePasscodeRequired : VaultError(UiText.Resource(R.string.crypto_device_lock_required))
@@ -60,4 +76,9 @@ sealed class VaultError(text: UiText, cause: Throwable? = null) : SignerExceptio
     /** Throttled after repeated failures: "Too many unsuccessful attempts. Try again in %lld seconds." ([seconds] ≥ 1). */
     class TemporarilyLocked(val seconds: Long) :
         VaultError(UiText.Ios("Too many unsuccessful attempts. Try again in %lld seconds.", listOf(seconds)))
+
+    private companion object {
+        fun isDeviceLocked(cause: Throwable?): Boolean =
+            generateSequence(cause) { it.cause.takeIf { next -> next !== it } }.take(8).any { it is UserNotAuthenticatedException }
+    }
 }

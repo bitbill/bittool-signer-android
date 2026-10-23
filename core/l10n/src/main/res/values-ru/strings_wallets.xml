@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Обычная</string>
     <string name="wallets_qr_brightness_bright">Максимальная</string>
     <string name="wallets_lost_key_title">Этот кошелёк нельзя разблокировать</string>
+    <string name="wallets_keys_locked_title">Разблокируйте с помощью блокировки экрана</string>
     <string name="wallets_lost_key_message">Ключа устройства для этого кошелька больше нет на этом устройстве, поэтому кошелёк нельзя разблокировать даже правильным паролем. Чтобы восстановить его, уберите кошелёк здесь, а затем снова импортируйте фразу восстановления и парольную фразу BIP39, если она была. На средства это не влияет.</string>
     <string name="wallets_lost_key_confirm">Я понимаю, что восстановить этот кошелёк можно только по фразе восстановления</string>
     <string name="wallets_lost_key_footer">Чтобы убрать этот кошелёк, пароль не нужен: ключа устройства, без которого пароль не работает, больше нет.</string>

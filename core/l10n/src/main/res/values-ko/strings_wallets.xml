@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">보통</string>
     <string name="wallets_qr_brightness_bright">밝게</string>
     <string name="wallets_lost_key_title">이 지갑은 잠금 해제할 수 없습니다</string>
+    <string name="wallets_keys_locked_title">화면 잠금으로 잠금 해제하세요</string>
     <string name="wallets_lost_key_message">기기 키가 더 이상 이 기기에 없어, 올바른 암호로도 이 지갑의 잠금을 해제할 수 없습니다. 여기서 제거한 뒤, 복구 구문과 (설정했다면) BIP39 패스프레이즈를 다시 가져와 되살리세요. 자산에는 영향이 없습니다.</string>
     <string name="wallets_lost_key_confirm">이 지갑은 복구 구문으로만 되살릴 수 있음을 이해했습니다</string>
     <string name="wallets_lost_key_footer">이 지갑을 제거할 때는 암호를 묻지 않습니다. 암호에 필요한 기기 키가 사라졌기 때문입니다.</string>

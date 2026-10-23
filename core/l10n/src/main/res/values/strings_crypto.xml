@@ -5,6 +5,11 @@
          Unlike iOS (creation only) Android refuses every create *and* secret operation without a screen lock: shown for
          create, unlock, sign, reveal, change/reset password and delete, so it names no single operation. -->
     <string name="crypto_device_lock_required">Set a screen lock (PIN, pattern or password) to create or use a wallet. The device key requires screen lock protection.</string>
+    <!-- Android only: Keystore refused the device keys because the phone counts as locked. Android 12–13, and some
+         manufacturers' builds after them, keep such keys locked after an unlock by face recognition (or another weaker
+         biometric) or Smart Lock, until the PIN, pattern or password is used. Shown for any operation (sign, reveal,
+         repair), on the wallet page and in place of a wallet match; the wallet itself is fine. -->
+    <string name="crypto_device_locked">Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.</string>
     <!-- VaultError.DeviceKeyLossUnconfirmed: removing a wallet without its password was refused because Keystore did not
          prove that the wallet's device key is gone (it may still be there). Nothing was removed. -->
     <string name="crypto_device_key_loss_unconfirmed">BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.</string>

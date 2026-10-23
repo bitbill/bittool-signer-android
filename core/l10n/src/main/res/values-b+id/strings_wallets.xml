@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <string name="wallets_qr_brightness_bright">Terang</string>
     <string name="wallets_lost_key_title">Dompet ini tidak bisa dibuka kuncinya</string>
+    <string name="wallets_keys_locked_title">Buka dengan Kunci Layar</string>
     <string name="wallets_lost_key_message">Kunci perangkat dompet ini sudah tidak ada di perangkat ini, jadi dompet tidak bisa dibuka kuncinya, bahkan dengan kata sandi yang benar. Keluarkan dompet di sini, lalu impor lagi frasa pemulihan dan frasa sandi BIP39 (jika ada) untuk memulihkannya. Dana tidak terpengaruh.</string>
     <string name="wallets_lost_key_confirm">Saya memahami bahwa hanya frasa pemulihan yang bisa memulihkan dompet ini</string>
     <string name="wallets_lost_key_footer">Mengeluarkan dompet ini tidak meminta kata sandinya: kunci perangkat yang diperlukan kata sandi itu sudah hilang.</string>

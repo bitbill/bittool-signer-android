@@ -432,6 +432,14 @@
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",
    "value": "Ohne App-Sperre fortfahren"
+  },
+  "crypto_device_locked": {
+   "source": "Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.",
+   "value": "Sperre dieses Telefon und entsperre es dann mit seiner PIN, seinem Muster oder seinem Passwort. Auf diesem Telefon entsperren Gesichtserkennung und Smart Lock die Schlüssel von BitTool Signer nicht."
+  },
+  "wallets_keys_locked_title": {
+   "source": "Unlock with Your Screen Lock",
+   "value": "Mit der Displaysperre entsperren"
   }
  }
 }

@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <string name="wallets_qr_brightness_bright">Máximo</string>
     <string name="wallets_lost_key_title">Esta carteira não pode ser desbloqueada</string>
+    <string name="wallets_keys_locked_title">Desbloqueie com o bloqueio de tela</string>
     <string name="wallets_lost_key_message">A chave de dispositivo dela não está mais neste dispositivo, então a carteira não pode ser desbloqueada, nem com a senha correta. Remova-a aqui e depois importe de novo a frase de recuperação e a senha BIP39, se houver, para restaurá-la. Os fundos não são afetados.</string>
     <string name="wallets_lost_key_confirm">Entendo que só a frase de recuperação pode restaurar esta carteira</string>
     <string name="wallets_lost_key_footer">Para remover esta carteira, a senha dela não será pedida: a chave de dispositivo de que a senha precisa não existe mais.</string>

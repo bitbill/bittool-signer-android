@@ -58,6 +58,12 @@ data class PublicWalletSnapshot(
     val displayName: String?,
     val metadata: WalletPublicMetadata?,
     val status: PublicMetadataStatus,
+    /**
+     * Android-only: the file could not be checked because Keystore refused the public-data key while the phone counts
+     * as locked (`VaultError.DeviceKeyUnavailable.deviceLocked`). [status] stays [PublicMetadataStatus.Invalid] for the
+     * engine, but nothing is known to be wrong with the file: unlocking the phone with its screen lock reads it again.
+     */
+    val keyLocked: Boolean = false,
 )
 
 /**

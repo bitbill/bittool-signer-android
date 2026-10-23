@@ -432,6 +432,14 @@
   "security_no_unlock_path_continue": {
    "source": "Continue Without App Lock",
    "value": "Magpatuloy nang walang App Lock"
+  },
+  "crypto_device_locked": {
+   "source": "Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.",
+   "value": "I-lock ang teleponong ito, pagkatapos ay i-unlock gamit ang PIN, pattern, o password nito. Sa teleponong ito, hindi naa-unlock ng face unlock at Smart Lock ang mga key ng BitTool Signer."
+  },
+  "wallets_keys_locked_title": {
+   "source": "Unlock with Your Screen Lock",
+   "value": "I-unlock gamit ang Screen Lock"
   }
  }
 }

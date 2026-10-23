@@ -159,6 +159,16 @@ sealed interface MatchingIssue {
             }
     }
 
+    /**
+     * Android-only: Keystore would not let the wallets' public data be checked because the phone counts as locked
+     * (`SignerState.keysLocked`: face unlock or Smart Lock on Android 12–13 and some builds after). Not "needs repair":
+     * unlocking the phone with its screen lock, then Match Again, matches the request.
+     */
+    data object KeysLocked : MatchingIssue {
+        override val english = ""
+        override val canRetry = true
+    }
+
     /** An error thrown while matching (plan validation, engine/vault failure); [english] is its English text. */
     data class Failure(val text: UiText) : MatchingIssue {
         override val english: String

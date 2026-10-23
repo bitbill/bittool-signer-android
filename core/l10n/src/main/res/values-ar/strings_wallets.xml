@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">عادي</string>
     <string name="wallets_qr_brightness_bright">ساطع</string>
     <string name="wallets_lost_key_title">لا يمكن إلغاء قفل هذه المحفظة</string>
+    <string name="wallets_keys_locked_title">افتح القفل باستخدام قفل الشاشة</string>
     <string name="wallets_lost_key_message">لم يعد مفتاح جهازها موجودًا على هذا الجهاز، لذا لا يمكن إلغاء قفل المحفظة حتى بكلمة المرور الصحيحة. لاستعادتها، أزِلها من هنا ثم استورد من جديد عبارتها الاحتياطية وعبارة مرور BIP39 إن وُجدت. لا تتأثر الأموال.</string>
     <string name="wallets_lost_key_confirm">أفهم أن العبارة الاحتياطية وحدها يمكنها استعادة هذه المحفظة</string>
     <string name="wallets_lost_key_footer">لا تطلب إزالة هذه المحفظة كلمة مرورها: فمفتاح الجهاز الذي تحتاجه كلمة المرور لم يعد موجودًا.</string>

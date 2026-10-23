@@ -54,6 +54,12 @@
    "formatted": true,
    "context": "VaultError.DevicePasscodeRequired: Android wording of the iOS \"Set an iPhone passcode…\" (vault-crypto.md §17.12). Unlike iOS (creation only) Android refuses every create *and* secret operation without a screen lock: shown for create, unlock, sign, reveal, change/reset password and delete, so it names no single operation."
   },
+  "crypto_device_locked": {
+   "area": "crypto",
+   "english": "Lock this phone, then unlock it with its PIN, pattern or password. On this phone, face unlock and Smart Lock don’t unlock BitTool Signer’s keys.",
+   "formatted": true,
+   "context": "Android only: Keystore refused the device keys because the phone counts as locked. Android 12–13, and some manufacturers' builds after them, keep such keys locked after an unlock by face recognition (or another weaker biometric) or Smart Lock, until the PIN, pattern or password is used. Shown for any operation (sign, reveal, repair), on the wallet page and in place of a wallet match; the wallet itself is fine."
+  },
   "crypto_device_key_loss_unconfirmed": {
    "area": "crypto",
    "english": "BitTool Signer could not confirm that this wallet’s device key is gone. Try again, or delete the wallet with its password.",
@@ -599,6 +605,12 @@
    "english": "This Wallet Can’t Be Unlocked",
    "formatted": true,
    "context": "Callout title on the Delete Wallet page."
+  },
+  "wallets_keys_locked_title": {
+   "area": "wallets",
+   "english": "Unlock with Your Screen Lock",
+   "formatted": true,
+   "context": "Android only: card status and wallet-page callout title while Keystore keeps the keys locked (shown with crypto_device_locked): the phone must be unlocked once with its screen lock."
   },
   "wallets_lost_key_message": {
    "area": "wallets",

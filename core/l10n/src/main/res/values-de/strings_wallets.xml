@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <string name="wallets_qr_brightness_bright">Hell</string>
     <string name="wallets_lost_key_title">Diese Wallet lässt sich nicht entsperren</string>
+    <string name="wallets_keys_locked_title">Mit der Displaysperre entsperren</string>
     <string name="wallets_lost_key_message">Der Geräteschlüssel dieser Wallet ist nicht mehr auf diesem Gerät, daher lässt sie sich nicht entsperren, auch nicht mit dem richtigen Passwort. Entfernen Sie sie hier und importieren Sie dann ihre Wiederherstellungsphrase und eine etwaige BIP39-Passphrase erneut, um sie wiederherzustellen. Das Guthaben bleibt unberührt.</string>
     <string name="wallets_lost_key_confirm">Ich verstehe, dass nur die Wiederherstellungsphrase diese Wallet wiederherstellen kann</string>
     <string name="wallets_lost_key_footer">Zum Entfernen dieser Wallet wird ihr Passwort nicht verlangt: Der Geräteschlüssel, den das Passwort braucht, ist nicht mehr vorhanden.</string>

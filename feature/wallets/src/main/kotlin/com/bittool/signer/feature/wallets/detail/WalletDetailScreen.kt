@@ -203,6 +203,15 @@ fun WalletDetailContent(
                     item(key = "lostKey") { LostKeySection(actions.onDelete, Modifier.readableWidth()) }
                 } else if (identity?.screenLockRequired == true) {
                     item(key = "screenLock") { ScreenLockSection(onOpenLockSettings, Modifier.readableWidth()) }
+                } else if (identity?.keysLocked == true) {
+                    item(key = "keysLocked") {
+                        Callout(
+                            text = stringResource(R.string.crypto_device_locked),
+                            title = stringResource(R.string.wallets_keys_locked_title),
+                            tone = Tone.Warning,
+                            modifier = Modifier.readableWidth().testTag("detail.keysLocked"),
+                        )
+                    }
                 } else if (identity != null && !identity.ready) {
                     item(key = "repair") { RepairSection(actions.onRepair, Modifier.readableWidth()) }
                 } else if (identity != null) {

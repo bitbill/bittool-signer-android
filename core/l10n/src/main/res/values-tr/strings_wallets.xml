@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normal</string>
     <string name="wallets_qr_brightness_bright">Parlak</string>
     <string name="wallets_lost_key_title">Bu cüzdanın kilidi açılamıyor</string>
+    <string name="wallets_keys_locked_title">Ekran kilidiyle kilidi açın</string>
     <string name="wallets_lost_key_message">Cihaz anahtarı artık bu cihazda değil; bu yüzden cüzdanın kilidi doğru parolayla bile açılamaz. Geri getirmek için cüzdanı burada kaldırın, ardından kurtarma ifadesini ve varsa BIP39 parolasını yeniden içe aktarın. Paranız etkilenmez.</string>
     <string name="wallets_lost_key_confirm">Bu cüzdanı yalnızca kurtarma ifadesinin geri getirebileceğini anlıyorum</string>
     <string name="wallets_lost_key_footer">Bu cüzdan kaldırılırken parolası istenmez: parolanın ihtiyaç duyduğu cihaz anahtarı artık yok.</string>

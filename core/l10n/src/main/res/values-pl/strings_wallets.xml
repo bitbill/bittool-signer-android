@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normalna</string>
     <string name="wallets_qr_brightness_bright">Wysoka</string>
     <string name="wallets_lost_key_title">Tego portfela nie można odblokować</string>
+    <string name="wallets_keys_locked_title">Odblokuj blokadą ekranu</string>
     <string name="wallets_lost_key_message">Klucza urządzenia tego portfela nie ma już na tym urządzeniu, więc portfela nie można odblokować nawet właściwym hasłem. Usuń go tutaj, a potem ponownie zaimportuj jego frazę odzyskiwania i ewentualne hasło BIP39, aby go odtworzyć. Środki nie są naruszone.</string>
     <string name="wallets_lost_key_confirm">Rozumiem, że tylko fraza odzyskiwania może odtworzyć ten portfel</string>
     <string name="wallets_lost_key_footer">Usunięcie tego portfela nie wymaga jego hasła: klucza urządzenia, którego potrzebuje hasło, już nie ma.</string>

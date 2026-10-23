@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">Normale</string>
     <string name="wallets_qr_brightness_bright">Alta</string>
     <string name="wallets_lost_key_title">Questo wallet non può essere sbloccato</string>
+    <string name="wallets_keys_locked_title">Sblocca con il blocco schermo</string>
     <string name="wallets_lost_key_message">La sua chiave di dispositivo non è più su questo dispositivo, quindi il wallet non può essere sbloccato, nemmeno con la password giusta. Rimuovilo qui, poi importa di nuovo la sua frase di recupero e l’eventuale passphrase BIP39 per ripristinarlo. I fondi non ne risentono.</string>
     <string name="wallets_lost_key_confirm">Comprendo che solo la frase di recupero può ripristinare questo wallet</string>
     <string name="wallets_lost_key_footer">Per rimuovere questo wallet non viene chiesta la sua password: la chiave di dispositivo che serve alla password non esiste più.</string>

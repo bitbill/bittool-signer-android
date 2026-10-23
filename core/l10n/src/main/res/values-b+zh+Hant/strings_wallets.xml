@@ -5,6 +5,7 @@
     <string name="wallets_qr_brightness_normal">正常</string>
     <string name="wallets_qr_brightness_bright">調亮</string>
     <string name="wallets_lost_key_title">這個錢包無法解鎖</string>
+    <string name="wallets_keys_locked_title">請用螢幕鎖定解鎖</string>
     <string name="wallets_lost_key_message">它的裝置金鑰已不在這台裝置上，因此即使密碼正確也無法解鎖這個錢包。請在這裡移除它，然後重新匯入它的助記詞與相應的 BIP39 passphrase 來恢復。資產不受影響。</string>
     <string name="wallets_lost_key_confirm">我明白只有助記詞能恢復這個錢包</string>
     <string name="wallets_lost_key_footer">移除這個錢包不需要輸入密碼：密碼所依賴的裝置金鑰已不存在。</string>
