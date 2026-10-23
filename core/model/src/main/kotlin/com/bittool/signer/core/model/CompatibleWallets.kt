@@ -120,8 +120,8 @@ object CompatibleWallets {
         watching("OneKey", "wallet_onekey", "iOS · Android"),
     )
 
-    /** Wallet level (`bittool-signer-wallet` v1). Product question: "iOS" vs "iOS · Android" (models-state.md §10.3). */
-    val walletLevel: List<CompatibleWallet> = listOf(signing("BitTool Wallet", "wallet_bittool", "iOS"))
+    /** Wallet level (`bittool-signer-wallet` v1). BitTool Wallet ships on iOS and Android (owner, 2026-10-24). */
+    val walletLevel: List<CompatibleWallet> = listOf(signing("BitTool Wallet", "wallet_bittool", "iOS · Android"))
 
     /** Every bundled logo asset name (each must have a drawable in `:core:ui`). */
     val allAssets: Set<String>

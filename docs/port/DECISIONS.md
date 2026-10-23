@@ -170,7 +170,8 @@ progress for create/import/repair/sign and never call the engine from the main t
 - Default build number is **1**, so Settings shows "1.0.0 (1)" like iOS (`-Psigner.buildNumber` overrides).
 - Activity hides "Clear Activity" when the record file cannot be read (iOS parity); `activityUnreadable` drives the
   explanatory state.
-- "BitTool Wallet" platforms and every other compatible-wallet entry stay exactly as the iOS data.
+- Every compatible-wallet entry stays exactly as the iOS data, except "BitTool Wallet": "iOS · Android" (it ships on
+  both; owner, 2026-10-24).
 - Product and protocol names the iOS catalogue leaves untranslated (Taproot, Account XPUB, …) stay untranslated.
 - No Android-only "Allow camera" label: the camera-permission UI uses the iOS strings plus the system dialog.
 
