@@ -500,6 +500,29 @@ class DefaultSignerStoreTest {
         assertEquals(UiText.Ios("No interrupted or unmatched request to retry."), assertFailsWith<AppIssue> { store.retryMatching() }.text)
     }
 
+    /**
+     * The caller goes away while the wallets are matched (the camera closed onto the review it had just read): the
+     * review it leaves behind is Interrupted, with Retry, never "Finding the matching wallet…" forever.
+     */
+    @Test
+    fun aCallerCancelledWhileMatchingLeavesTheReviewInterrupted() = JvmStore.run {
+        store.reload()
+        create()
+        val gate = EngineGate()
+        engine.on(EngineOperation.ResolveSigningPlan) { gate.pause(); FakeEngine.resolve(it) }
+        val matching = test.async { store.prepare(request()) }
+        gate.waitUntilStarted()
+        matching.cancel()
+        gate.release()
+        assertIs<CancellationException>(runCatching { matching.await() }.exceptionOrNull())
+        assertNotNull(state.review)
+        assertNull(state.plan)
+        assertEquals(MatchingIssue.Interrupted, state.matchingIssue)
+        engine.on(EngineOperation.ResolveSigningPlan) { FakeEngine.resolve(it) }
+        store.retryMatching()
+        assertNotNull(state.plan)
+    }
+
     @Test
     fun theBatchAndPasteLimitsAreEnforced() = JvmStore.run {
         store.reload()

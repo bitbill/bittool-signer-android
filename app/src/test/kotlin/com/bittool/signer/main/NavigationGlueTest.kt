@@ -343,6 +343,26 @@ class NavigationGlueTest {
         assertEquals(listOf<KClass<*>>(WalletsRoute::class, ScanRoute::class), stack())
     }
 
+    /**
+     * The Wallets toolbar opens the camera right over Wallets, and a request it reads selects Scan (RootViewModel) while
+     * the camera is still matching it. Closing the camera then cleared the scanner and cancelled the matching ("Finding
+     * the matching wallet…" forever), so Scan waits until the camera has closed itself.
+     */
+    @Test
+    fun aTabSelectedWhileTheCameraIsUpWaitsUntilItCloses() {
+        show()
+        onUi { router.startScanning() }
+        compose.onNodeWithTag("scanner").assertExists()
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, ScannerRoute::class), stack())
+        onUi { router.selectTab(Tab.Scan) }
+        compose.onNodeWithTag("scanner").assertExists()
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, ScannerRoute::class), stack())
+        onUi { nav.popBackStack() }
+        compose.onNodeWithTag("scan-root").assertExists()
+        assertEquals(listOf<KClass<*>>(WalletsRoute::class, ScanRoute::class), stack())
+        assertEquals(Tab.Scan, router.tab.value)
+    }
+
     @Test
     fun theScanBadgeSaysARequestIsWaiting() {
         show(badge = true)

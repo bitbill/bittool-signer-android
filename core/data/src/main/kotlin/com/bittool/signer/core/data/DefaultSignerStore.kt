@@ -806,6 +806,11 @@ class DefaultSignerStore @Inject constructor(
             }
             _state.update { it.copy(plan = fixed, matchingIssue = null, review = refined ?: it.review) }
         } catch (e: CancellationException) {
+            // The review is already shown: a caller that went away (the camera closed) must not leave it matching
+            // forever. A changed session or a newer request settled it already (Interrupted, or cleared).
+            if (preparing == requestEpoch && current.review != null && current.plan == null && current.matchingIssue == null) {
+                _state.update { it.copy(matchingIssue = MatchingIssue.Interrupted) }
+            }
             throw e
         } catch (e: Exception) {
             requireSession(epoch, preparing)

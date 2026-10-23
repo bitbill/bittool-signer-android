@@ -76,6 +76,13 @@ class ShellNavigator(val navController: NavHostController) {
      */
     private var walletsResetPending = false
 
+    /**
+     * A tab asked for while the camera is up ([showTab]): shown once the camera has closed ([showPendingTab]). The camera
+     * closes itself, after the store has finished with the frame it is handling: closing it earlier would clear the
+     * scanner and cancel the wallet matching of a request it has just read.
+     */
+    private var pendingTab: Tab? = null
+
     /** The tab whose page is on screen, or null on a root-level page. */
     val shownTab: Tab? get() = navController.currentBackStackEntry?.destination?.tab()
 
@@ -113,11 +120,15 @@ class ShellNavigator(val navController: NavHostController) {
         }
 
     /**
-     * Shows [tab] with its own stack; nothing when it already shows. The camera closes first: it is never saved into the
-     * stack left behind (a request scanned from the Wallets toolbar selects Scan while the camera is over Wallets).
+     * Shows [tab] with its own stack; nothing when it already shows. While the camera is up the tab waits until it has
+     * closed ([pendingTab]): a request scanned from the Wallets toolbar selects Scan while the camera is still matching
+     * it over Wallets, and the camera is never saved into the stack left behind.
      */
     fun showTab(tab: Tab) {
-        if (navController.currentDestination?.hasRoute<ScannerRoute>() == true) navController.popBackStack()
+        if (navController.currentDestination?.hasRoute<ScannerRoute>() == true) {
+            pendingTab = tab
+            return
+        }
         if (shownTab != tab) {
             navController.navigate(tab.graph) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -129,6 +140,14 @@ class ShellNavigator(val navController: NavHostController) {
             walletsResetPending = false
             navController.popBackStack(WalletsRoute, inclusive = false)
         }
+    }
+
+    /** The camera has closed: shows the tab asked for meanwhile, if any. */
+    fun showPendingTab() {
+        if (navController.currentDestination?.hasRoute<ScannerRoute>() == true) return
+        val tab = pendingTab ?: return
+        pendingTab = null
+        showTab(tab)
     }
 
     /**
@@ -203,6 +222,9 @@ fun RouterGlue(navigator: ShellNavigator, router: AppRouter, canOpenCamera: () -
     }
     LaunchedEffect(navigator, router) {
         router.tab.collect(navigator::showTab)
+    }
+    LaunchedEffect(navigator) {
+        navController.currentBackStackEntryFlow.collect { navigator.showPendingTab() }
     }
     LaunchedEffect(navigator, router) {
         router.reselections.collect(navigator::popToRoot)
