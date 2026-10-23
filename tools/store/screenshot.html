@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BitTool Signer screenshot</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { width: 1080px; height: 1920px; }
+  .backdrop {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(900px 760px at 50% 78%, rgba(107, 227, 164, 0.15), transparent 70%),
+      radial-gradient(760px 620px at 6% 0%, rgba(15, 123, 85, 0.30), transparent 70%),
+      linear-gradient(180deg, #0B0C0F 0%, #08120E 100%);
+  }
+  /* The brand ring, very faint, behind the phone. */
+  .ring {
+    position: absolute; left: 50%; top: 1240px;
+    width: 1320px; height: 1320px; margin: -660px 0 0 -660px;
+    border-radius: 50%;
+    border: 150px solid rgba(255, 255, 255, 0.028);
+  }
+  .ring::after {
+    content: ''; position: absolute;
+    width: 340px; height: 340px; border-radius: 50%;
+    right: -295px; top: 50%; margin-top: -170px;
+    background: rgba(255, 255, 255, 0.028);
+  }
+  header { position: absolute; left: 92px; right: 92px; top: 118px; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 29px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--mint);
+  }
+  .eyebrow::before { content: ''; width: 34px; height: 4px; border-radius: 2px; background: var(--mint); }
+  h1 {
+    margin-top: 30px;
+    font-size: 86px; font-weight: 800; line-height: 1.04; letter-spacing: -0.028em;
+  }
+  h1 .accent {
+    background: linear-gradient(90deg, #8BF0BC 0%, #6BE3A4 45%, #34C98A 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  p { margin-top: 30px; font-size: 35px; font-weight: 450; line-height: 1.4; color: var(--muted); max-width: 880px; }
+</style>
+<script src="phone.js"></script>
+<script src="shots.js"></script>
+</head>
+<body>
+<div class="backdrop"></div>
+<div class="ring"></div>
+<header>
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p id="body"></p>
+</header>
+<script>
+(async () => {
+  const n = Number(new URLSearchParams(location.search).get('n') || 1);
+  const shot = SHOTS[n - 1];
+  document.getElementById('eyebrow').textContent = shot.eyebrow;
+  document.getElementById('title').innerHTML = shot.title
+    .map((line, i) => `<span class="${i === shot.accent ? 'accent' : ''}">${line}</span>`).join('<br>');
+  document.getElementById('body').textContent = shot.body;
+  const width = 628;
+  const phone = await buildPhone({ screen: shot.screen, width, pill: shot.pill !== false });
+  phone.style.left = ((1080 - width - 28) / 2) + 'px';
+  phone.style.top = '612px';
+  document.body.appendChild(phone);
+})();
+</script>
+</body>
+</html>

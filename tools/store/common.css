@@ -1,0 +1,81 @@
+/* Shared look of the Play listing images: the Signer's dark brand (ink #0A0A0C, mint #6BE3A4, design/Brand.md). */
+@font-face {
+  font-family: 'Inter';
+  src: url('fonts/Inter-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: block;
+}
+:root {
+  --ink: #0A0A0C;
+  --mint: #6BE3A4;
+  --emerald: #0F7B55;
+  --text: #FFFFFF;
+  --muted: #A3A8B0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--ink); }
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  overflow: hidden;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A phone: thin bezel, punch-hole camera, our own status bar over the capture (time, airplane mode, battery). */
+.phone {
+  position: absolute;
+  padding: var(--bezel);
+  border-radius: calc(var(--radius) + var(--bezel));
+  background: linear-gradient(160deg, #2A2C31 0%, #141518 40%, #0E0F11 100%);
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+    0 50px 120px rgba(0, 0, 0, 0.65),
+    0 0 160px rgba(107, 227, 164, 0.10);
+}
+.screen {
+  position: relative;
+  width: var(--w);
+  height: calc(var(--w) * 2094 / 1080);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: var(--w) auto;
+  background-position: 0 0;
+}
+.statusbar {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: calc(var(--w) * 70 / 1080);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 calc(var(--w) * 0.075);
+  font-weight: 600;
+  font-size: calc(var(--w) * 0.034);
+  letter-spacing: 0.01em;
+}
+.statusbar .icons { display: flex; gap: calc(var(--w) * 0.018); align-items: center; }
+.statusbar svg { height: calc(var(--w) * 0.032); width: auto; fill: currentColor; }
+.camera {
+  position: absolute;
+  top: calc(var(--w) * 0.018);
+  left: 50%;
+  width: calc(var(--w) * 0.036);
+  height: calc(var(--w) * 0.036);
+  margin-left: calc(var(--w) * -0.018);
+  border-radius: 50%;
+  background: #050506;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+.pill {
+  position: absolute;
+  bottom: calc(var(--w) * 0.016);
+  left: 50%;
+  width: calc(var(--w) * 0.30);
+  height: calc(var(--w) * 0.009);
+  margin-left: calc(var(--w) * -0.15);
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
+}

@@ -1,0 +1,58 @@
+BitTool Signer — Air-gapped signing. For everyone.
+
+BitTool Signer turns an Android phone into an offline signing device for Bitcoin, Ethereum and other EVM networks, TRON and Solana. Your recovery phrase is created, stored and used only on this phone. Requests come in as QR codes and signatures go out as QR codes. Nothing else ever leaves the device.
+
+Use it with BitTool Wallet or any watch-only wallet that supports open QR standards.
+
+NO INTERNET, BY DESIGN
+• BitTool Signer does not request Android's Internet permission, so the system will not let it connect to any network. You can check this yourself in Android's App info.
+• No account, cloud, analytics, ads or update checks. The engine, token list and icons are all built in.
+• For the strongest setup, keep a spare phone in airplane mode just for signing.
+
+SEE EXACTLY WHAT YOU SIGN
+• Every request is decoded on the device: amounts, recipients, contracts, fees and full calldata.
+• Risk warnings come first: unlimited token approvals, approval for all NFTs, blind message signatures, unusual Bitcoin fees and other common phishing patterns.
+• Spenders and operators are checked offline against 1,720 known public contracts. A recognised one is named; an address that is not on the list raises the risk level.
+• The signing wallet is matched to the request by its keys, never chosen by hand.
+
+EVERY SIGNATURE NEEDS ITS PASSWORD
+• Each wallet is encrypted on its own with PBKDF2-HMAC-SHA256 (600,000 iterations) and AES-256-GCM, then sealed with a key held in Android Keystore that never leaves this phone.
+• There is no global unlock and no password-free signing: every signature asks for that wallet's password.
+
+BITCOIN, EVM, TRON AND SOLANA
+• Bitcoin: PSBT v0 and v2, single-sig and multisig, Legacy to Taproot.
+• Ethereum, BNB Chain, Arbitrum, Base and other EVM networks: transactions, messages and typed data.
+• TRON and Solana, including tokens, with an offline registry of 3,350 tokens.
+
+PAIR ONCE WITH YOUR WATCH-ONLY WALLET
+• Wallet Level: one animated QR code carries account keys for four Bitcoin address types, EVM, TRON and three Solana addresses.
+• Coin Level: each chain's own standard format.
+• Open QR standards: BC-UR, crypto-psbt, BBQR and Base64 PSBT. The Compatibility page lists the wallets that support them.
+
+BACK UP YOUR WAY
+• Words, a QR code for moving to your own other device, or Recovery Cards: any two of three restore the phrase.
+• Everything stays hidden until you tap it, and is hidden again as soon as you leave the app.
+• A short check makes sure your backup is right before the wallet is saved.
+
+IMPORT SAFELY
+• All 10 BIP39 wordlist languages, detected automatically, with the checksum validated as you type.
+• The recovery phrase is typed on BitTool Signer's own keyboard, so no keyboard app ever sees it.
+• Recovery phrase QR codes and SeedQR are accepted.
+
+PRIVATE BY DEFAULT
+• Screenshots and screen recordings are blocked throughout the app. Other apps' overlays are hidden, and touches they cover are refused.
+• Optional App Lock with your fingerprint or face after two minutes in the background. App Lock only opens the app; signing still needs the password.
+• Leaving the app clears typed passwords, risk confirmations and any revealed phrase.
+
+ON-DEVICE ACTIVITY
+• Every signature is recorded on the phone, request and result, so you can show its QR code again later.
+• BitTool Signer never broadcasts transactions; your online wallet does.
+
+OPEN SOURCE
+• MIT licensed. Every parser and risk rule lives in one engine file whose SHA-256 is shown in the app: rebuild it from source and compare.
+• Available in 21 languages.
+
+Please note: BitTool Signer is a self-custody tool. It does not hold, send or exchange funds on your behalf. Nobody, including BITTOOL PTE. LTD., can restore your wallet if you lose your recovery phrase, so write it down and keep it safe.
+
+Website: https://bittool.com/signer
+Source code: https://github.com/bitbill/bittool-signer-android

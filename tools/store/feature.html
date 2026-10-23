@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BitTool Signer feature graphic</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  body { width: 1024px; height: 500px; }
+  .backdrop {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(520px 420px at 82% 58%, rgba(107, 227, 164, 0.22), transparent 70%),
+      radial-gradient(420px 300px at 0% 0%, rgba(15, 123, 85, 0.30), transparent 70%),
+      linear-gradient(115deg, #0B0C0F 0%, #0A1411 58%, #0C2219 100%);
+  }
+  .ring {
+    position: absolute; left: 792px; top: 250px;
+    width: 640px; height: 640px; margin: -320px 0 0 -320px;
+    border-radius: 50%; border: 72px solid rgba(255, 255, 255, 0.035);
+  }
+  .brand { position: absolute; left: 64px; top: 58px; display: flex; align-items: center; gap: 16px; }
+  .brand svg { width: 54px; height: 54px; border-radius: 13px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12); }
+  .brand span { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+  h1 {
+    position: absolute; left: 64px; top: 158px;
+    font-size: 60px; font-weight: 800; line-height: 1.05; letter-spacing: -0.03em;
+  }
+  h1 .accent {
+    background: linear-gradient(90deg, #8BF0BC 0%, #6BE3A4 45%, #34C98A 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .line {
+    position: absolute; left: 64px; top: 330px;
+    padding-left: 16px; border-left: 3px solid var(--mint);
+    font-size: 21px; font-weight: 500; line-height: 1.45; color: var(--muted);
+  }
+  .tags { position: absolute; left: 64px; top: 412px; display: flex; gap: 10px; }
+  .tags span {
+    font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: #D7F7E6;
+    padding: 7px 14px; border-radius: 99px;
+    background: rgba(107, 227, 164, 0.10); box-shadow: inset 0 0 0 1px rgba(107, 227, 164, 0.28);
+  }
+  .tilt { position: absolute; left: 700px; top: 26px; transform: rotate(9deg); transform-origin: 50% 50%; }
+  .tilt .phone { position: relative; }
+</style>
+<script src="phone.js"></script>
+</head>
+<body>
+<div class="backdrop"></div>
+<div class="ring"></div>
+<div class="brand">
+  <svg viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#0A0A0C"/><path fill="#FFFFFF" fill-rule="evenodd" d="M140.0,511.5 a372.0,372.0 0 1,0 744.0,0 a372.0,372.0 0 1,0 -744.0,0 Z M224.0,511.5 a288.0,288.0 0 1,0 576.0,0 a288.0,288.0 0 1,0 -576.0,0 Z"/><circle fill="#FFFFFF" cx="828.5" cy="511.5" r="94.8"/></svg>
+  <span>BitTool Signer</span>
+</div>
+<h1>Air-gapped signing.<br><span class="accent">For everyone.</span></h1>
+<div class="line">Offline signer for Bitcoin, Ethereum,<br>TRON and Solana</div>
+<div class="tags"><span>No Internet permission</span><span>Open source</span></div>
+<div class="tilt" id="tilt"></div>
+<script>
+(async () => {
+  const phone = await buildPhone({ screen: 'review-transfer', width: 236, bezel: 8 });
+  document.getElementById('tilt').appendChild(phone);
+})();
+</script>
+</body>
+</html>

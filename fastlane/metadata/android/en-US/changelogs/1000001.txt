@@ -1,0 +1,1 @@
+The first Android release of BitTool Signer: offline, air-gapped signing for Bitcoin, Ethereum and other EVM networks, TRON and Solana. No Internet permission, a password for every signature, on-device review with risk warnings, Recovery Cards, a private keyboard for importing, and 21 languages.
