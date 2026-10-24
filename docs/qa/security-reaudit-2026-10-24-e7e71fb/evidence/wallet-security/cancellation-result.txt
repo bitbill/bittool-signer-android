@@ -1,0 +1,4 @@
+PASS publicIndex: cancelled=true seedProduced=true seedLength=128 seedWiped=true engineCalls=0
+PASS signing: cancelled=true seedProduced=true seedLength=128 seedWiped=true engineCalls=0 mnemonicClosed=true busy=false completedTasks=0
+PASS canonical: cancelled=true wordsProduced=true originalCharsWiped=true secretClosed=true engineCalls=0
+RESULT: 3/3 deterministic cancellation paths pass

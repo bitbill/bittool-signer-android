@@ -1,0 +1,323 @@
+diff --git a/core/data/src/main/kotlin/com/bittool/signer/core/data/DefaultSignerStore.kt b/core/data/src/main/kotlin/com/bittool/signer/core/data/DefaultSignerStore.kt
+index 1fe8a66..5f33b50 100644
+--- a/core/data/src/main/kotlin/com/bittool/signer/core/data/DefaultSignerStore.kt
++++ b/core/data/src/main/kotlin/com/bittool/signer/core/data/DefaultSignerStore.kt
+@@ -942,14 +942,18 @@ class DefaultSignerStore @Inject constructor(
+         riskAcknowledged: Boolean,
+     ): JsonObject = withSecret(task.walletId, password) { secret ->
+         requireSession(epoch, requestId)
+-        val seed = withContext(default) { bip39Seed.hex(secret.mnemonic, secret.passphrase) }
++        // Owned out here before the dispatcher switch returns: a caller cancelled right then would lose the result of
++        // withContext, and with it the wipe (audit BTS-03).
++        var seed: CharArray? = null
+         try {
++            withContext(default) { seed = bip39Seed.hex(secret.mnemonic, secret.passphrase) }
+             // Deriving the seed suspends (iOS derives it synchronously right after this check): a session that ended
+             // meanwhile never sends the seed to the engine.
+             requireSession(epoch, requestId)
+-            engineCall { engine.signPlanTask(request, plan.raw, task.id, seed, riskAcknowledged, previousResult) }
++            val derived = checkNotNull(seed)
++            engineCall { engine.signPlanTask(request, plan.raw, task.id, derived, riskAcknowledged, previousResult) }
+         } finally {
+-            seed.wipe()
++            seed?.wipe()
+         }
+     }
+ 
+@@ -1060,7 +1064,15 @@ class DefaultSignerStore @Inject constructor(
+     /** iOS `validateMnemonic` (`:171-175`): exact spellings, checksum verified, any of the ten languages. */
+     private suspend fun canonical(mnemonic: SecretText): SecretText {
+         currentCoroutineContext().ensureActive()
+-        return withContext(default) { SecretText.of(bip39.validatedCanonical(mnemonic.view()).phrase) }
++        // As in derivePublicIndex: a caller cancelled while the result returns from withContext still gets it wiped.
++        var words: SecretText? = null
++        try {
++            withContext(default) { words = SecretText.of(bip39.validatedCanonical(mnemonic.view()).phrase) }
++            return checkNotNull(words)
++        } catch (e: Throwable) {
++            words?.wipe()
++            throw e
++        }
+     }
+ 
+     /**
+@@ -1069,12 +1081,16 @@ class DefaultSignerStore @Inject constructor(
+      * sent: after a suspend it never reaches the engine. Callers still check after the engine call.
+      */
+     private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText, epoch: Long): JsonObject {
+-        val seed = withContext(default) { bip39Seed.hex(mnemonic, passphrase) }
++        // Owned out here before the dispatcher switch returns: a caller cancelled right then would lose the result of
++        // withContext, and with it the wipe (audit BTS-03).
++        var seed: CharArray? = null
+         return try {
++            withContext(default) { seed = bip39Seed.hex(mnemonic, passphrase) }
+             requireSession(epoch)
+-            engineCall { engine.derivePublicIndex(seed) }
++            val derived = checkNotNull(seed)
++            engineCall { engine.derivePublicIndex(derived) }
+         } finally {
+-            seed.wipe()
++            seed?.wipe()
+         }
+     }
+ 
+diff --git a/core/data/src/test/kotlin/com/bittool/signer/core/data/DefaultSignerStoreTest.kt b/core/data/src/test/kotlin/com/bittool/signer/core/data/DefaultSignerStoreTest.kt
+index 80dce76..4a2f312 100644
+--- a/core/data/src/test/kotlin/com/bittool/signer/core/data/DefaultSignerStoreTest.kt
++++ b/core/data/src/test/kotlin/com/bittool/signer/core/data/DefaultSignerStoreTest.kt
+@@ -4,6 +4,7 @@ import com.bittool.signer.core.crypto.vault.VaultError
+ import com.bittool.signer.core.data.JvmStore.Companion.PASSWORD
+ import com.bittool.signer.core.data.doubles.AesGcmJournalCipher
+ import com.bittool.signer.core.data.doubles.EngineGate
++import com.bittool.signer.core.data.doubles.HmacBip39Seed
+ import com.bittool.signer.core.data.doubles.asSecret
+ import com.bittool.signer.core.engine.EngineException
+ import com.bittool.signer.core.engine.EngineOperation
+@@ -28,6 +29,7 @@ import kotlin.test.assertNotEquals
+ import kotlin.test.assertNotNull
+ import kotlin.test.assertNull
+ import kotlin.test.assertTrue
++import kotlinx.coroutines.CoroutineStart
+ import kotlinx.coroutines.async
+ import kotlinx.coroutines.launch
+ import kotlinx.coroutines.test.advanceTimeBy
+@@ -500,6 +502,30 @@ class DefaultSignerStoreTest {
+         assertEquals(UiText.Ios("No interrupted or unmatched request to retry."), assertFailsWith<AppIssue> { store.retryMatching() }.text)
+     }
+ 
++    /**
++     * Audit BTS-03: a caller cancelled while the derived seed returns from the dispatcher switch loses withContext's
++     * result; the seed is still wiped and never reaches the engine.
++     */
++    @Test
++    fun aSeedDerivedForACancelledCallerIsStillWiped() = JvmStore.run {
++        store.reload()
++        val produced = ArrayList<CharArray>()
++        val lookup = test.async(start = CoroutineStart.LAZY) {
++            FakeEngine.PHRASE.asSecret { words -> "".asSecret { store.existingWallet(words, it) } }
++        }
++        (fixture.seed as HmacBip39Seed).onProduced = { seed ->
++            produced += seed
++            lookup.cancel() // after production, before the result is back on the caller's dispatcher
++        }
++        var indexCalls = 0
++        engine.on(EngineOperation.DerivePublicIndex) { indexCalls++; FakeEngine.publicIndex(it.str("seed")!!) }
++        lookup.start()
++        assertIs<CancellationException>(runCatching { lookup.await() }.exceptionOrNull())
++        assertEquals(1, produced.size)
++        assertTrue(produced.single().all { it == '\u0000' }, "the seed is wiped")
++        assertEquals(0, indexCalls)
++    }
++
+     /**
+      * The caller goes away while the wallets are matched (the camera closed onto the review it had just read): the
+      * review it leaves behind is Interrupted, with Retry, never "Finding the matching wallet…" forever.
+diff --git a/core/data/src/test/kotlin/com/bittool/signer/core/data/doubles/CryptoDoubles.kt b/core/data/src/test/kotlin/com/bittool/signer/core/data/doubles/CryptoDoubles.kt
+index a2d409b..f141185 100644
+--- a/core/data/src/test/kotlin/com/bittool/signer/core/data/doubles/CryptoDoubles.kt
++++ b/core/data/src/test/kotlin/com/bittool/signer/core/data/doubles/CryptoDoubles.kt
+@@ -70,7 +70,13 @@ class JvmSecureRandomSource : SecureRandomSource {
+  * phrase = whitespace-collapsed lowercase NFKD, salt = NFKD("mnemonic" + passphrase). Reproduces the published vectors.
+  */
+ class HmacBip39Seed : Bip39Seed {
+-    override fun hex(mnemonic: SecretText, passphrase: SecretText): CharArray {
++    /** Sees every seed handed out, before it is returned (tests check it is wiped, never its contents). */
++    @Volatile
++    var onProduced: ((CharArray) -> Unit)? = null
++
++    override fun hex(mnemonic: SecretText, passphrase: SecretText): CharArray = produce(mnemonic, passphrase).also { onProduced?.invoke(it) }
++
++    private fun produce(mnemonic: SecretText, passphrase: SecretText): CharArray {
+         val normalized = Normalizer.normalize(mnemonic.view(), Normalizer.Form.NFKD).lowercase(Locale.ROOT)
+         val phrase = normalized.split(WHITESPACE).filter { it.isNotEmpty() }.joinToString(" ")
+         if (phrase.isEmpty() || phrase.utf8Size() > 1_024 || passphrase.utf8Size() > 1_024) throw VaultError.InvalidSecret()
+diff --git a/core/designsystem/src/main/kotlin/com/bittool/signer/core/designsystem/security/Hardening.kt b/core/designsystem/src/main/kotlin/com/bittool/signer/core/designsystem/security/Hardening.kt
+index ace42ea..0bd99b0 100644
+--- a/core/designsystem/src/main/kotlin/com/bittool/signer/core/designsystem/security/Hardening.kt
++++ b/core/designsystem/src/main/kotlin/com/bittool/signer/core/designsystem/security/Hardening.kt
+@@ -40,22 +40,35 @@ import java.util.WeakHashMap
+  * root: screen-dimmer apps would otherwise make the whole app unresponsive. On API 31+ `:app` and every dialog / sheet
+  * also hide foreign overlays (`HideOverlayWindowsEffect`); this guard covers API 26–30 and anything that slips through.
+  * Accessibility actions (TalkBack double tap) are not touches and are not affected.
++ *
++ * Keyboard-free consent controls use [strictObscuredTouchGuard].
++ */
++fun Modifier.obscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(false, onBlocked)
++
++/**
++ * [obscuredTouchGuard] for keyboard-free consent controls (the review's Sign button and risk acknowledgement): it also
++ * refuses a touch while another app's window covers any part of the app (`FLAG_WINDOW_IS_PARTIALLY_OBSCURED`, API
++ * 29+), since an overlay could replace the amount or recipient and leave the button itself visible (audit BTS-01). Not
++ * for controls used with the keyboard up: an input method sets that flag whenever it is shown.
+  */
+-fun Modifier.obscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(onBlocked)
++fun Modifier.strictObscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(true, onBlocked)
+ 
+ /**
+- * Whether `MotionEvent.flags` say another app's window covered the touched point (pure, unit-tested).
+- * `FLAG_WINDOW_IS_PARTIALLY_OBSCURED` is deliberately not refused: every input method (e.g. Huawei's secure keyboard)
+- * is another app's window and sets it whenever it is shown, which made decisive buttons untappable with the keyboard
+- * up. Foreign overlays are hidden on API 31+ anyway (`HideOverlayWindowsEffect`).
++ * Whether `MotionEvent.flags` say another app's window covered the touched point (pure, unit-tested). Unless
++ * [strict], `FLAG_WINDOW_IS_PARTIALLY_OBSCURED` is deliberately not refused: every input method (e.g. Huawei's secure
++ * keyboard) is another app's window and sets it whenever it is shown, which made decisive buttons untappable with the
++ * keyboard up. Foreign overlays are hidden on API 31+ anyway (`HideOverlayWindowsEffect`). The partial flag exists
++ * from API 29.
+  */
+-@Suppress("UNUSED_PARAMETER")
+-fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT): Boolean =
+-    flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
++fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT, strict: Boolean = false): Boolean =
++    flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0 ||
++        (strict && sdk >= Build.VERSION_CODES.Q && flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0)
+ 
+-private data class ObscuredTouchGuardElement(val onBlocked: () -> Unit) : ModifierNodeElement<ObscuredTouchGuardNode>() {
+-    override fun create() = ObscuredTouchGuardNode(onBlocked)
++private data class ObscuredTouchGuardElement(val strict: Boolean, val onBlocked: () -> Unit) :
++    ModifierNodeElement<ObscuredTouchGuardNode>() {
++    override fun create() = ObscuredTouchGuardNode(strict, onBlocked)
+     override fun update(node: ObscuredTouchGuardNode) {
++        node.strict = strict
+         node.onBlocked = onBlocked
+     }
+ 
+@@ -64,14 +77,14 @@ private data class ObscuredTouchGuardElement(val onBlocked: () -> Unit) : Modifi
+     }
+ }
+ 
+-private class ObscuredTouchGuardNode(var onBlocked: () -> Unit) : Modifier.Node(), PointerInputModifierNode {
++private class ObscuredTouchGuardNode(var strict: Boolean, var onBlocked: () -> Unit) : Modifier.Node(), PointerInputModifierNode {
+     /** True from a refused `ACTION_DOWN` until every pointer of that gesture is up. */
+     private var blocking = false
+ 
+     override fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize) {
+         if (pass != PointerEventPass.Initial) return
+         val motion = pointerEvent.motionEvent
+-        if (!blocking && motion != null && motion.actionMasked == MotionEvent.ACTION_DOWN && isObscuredTouch(motion.flags)) {
++        if (!blocking && motion != null && motion.actionMasked == MotionEvent.ACTION_DOWN && isObscuredTouch(motion.flags, strict = strict)) {
+             blocking = true
+             onBlocked()
+         }
+diff --git a/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/LogicTest.kt b/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/LogicTest.kt
+index e756e13..873c38a 100644
+--- a/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/LogicTest.kt
++++ b/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/LogicTest.kt
+@@ -41,6 +41,11 @@ class LogicTest {
+         assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q))
+         assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.P))
+         assertFalse(isObscuredTouch(0, Build.VERSION_CODES.BAKLAVA))
++        // Strict (keyboard-free consent controls, audit BTS-01): any foreign window over the app, where Android says so.
++        assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q, strict = true))
++        assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.R, strict = true))
++        assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.P, strict = true))
++        assertFalse(isObscuredTouch(0, Build.VERSION_CODES.Q, strict = true))
+     }
+ 
+     @Test
+diff --git a/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/security/HardeningTest.kt b/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/security/HardeningTest.kt
+index 4349e55..40c9b1d 100644
+--- a/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/security/HardeningTest.kt
++++ b/core/designsystem/src/test/kotlin/com/bittool/signer/core/designsystem/security/HardeningTest.kt
+@@ -70,6 +70,23 @@ class HardeningTest {
+         assertEquals(1, blocked)
+     }
+ 
++    /** Audit BTS-01: a strict guard (the review's Sign button) refuses a partly covered window too. */
++    @Test
++    fun aStrictGuardAlsoRefusesAPartiallyObscuredTouch() {
++        var clicks = 0
++        var blocked = 0
++        lateinit var view: View
++        compose.setContent {
++            view = LocalView.current
++            Box(Modifier.size(120.dp).strictObscuredTouchGuard { blocked++ }.clickable { clicks++ })
++        }
++        tap(view, MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED)
++        assertEquals(0, clicks, "an overlay over the amount must not let Sign through")
++        assertEquals(1, blocked)
++        tap(view, 0)
++        assertEquals(1, clicks)
++    }
++
+     @Test
+     fun revealedSecretsMarkTheViewSensitiveWhileShown() {
+         var revealed by mutableStateOf(false)
+diff --git a/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/review/SignBar.kt b/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/review/SignBar.kt
+index baece6c..f66da97 100644
+--- a/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/review/SignBar.kt
++++ b/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/review/SignBar.kt
+@@ -48,6 +48,7 @@ import com.bittool.signer.core.designsystem.component.SecondaryButton
+ import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
+ import com.bittool.signer.core.designsystem.icon.SignerIcons
+ import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
++import com.bittool.signer.core.designsystem.security.strictObscuredTouchGuard
+ import com.bittool.signer.core.designsystem.theme.SignerMetrics
+ import com.bittool.signer.core.designsystem.theme.SignerMotion
+ import com.bittool.signer.core.designsystem.theme.SignerShapes
+@@ -143,7 +144,7 @@ internal fun SignActions(
+             icon = SignerIcons.Signature,
+             busy = interactive && state.busy,
+             enabled = interactive && !state.blocked && !state.busy,
+-            modifier = if (interactive) Modifier.obscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE) else Modifier,
++            modifier = if (interactive) Modifier.strictObscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE) else Modifier,
+         )
+     }
+ }
+@@ -218,7 +219,7 @@ internal fun RiskAcknowledgement(
+         fullyDecoded = fullyDecoded,
+         modifier = modifier
+             .clip(SignerShapes.callout)
+-            .obscuredTouchGuard(onObscuredTouch)
++            .strictObscuredTouchGuard(onObscuredTouch)
+             .toggleable(value = checked, role = Role.Checkbox) {
+                 haptics.selection()
+                 onToggle()
+diff --git a/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModel.kt b/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModel.kt
+index 7c432e2..38f2f1c 100644
+--- a/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModel.kt
++++ b/feature/sign/src/main/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModel.kt
+@@ -159,7 +159,14 @@ class ScannerViewModel @Inject constructor(
+ 
+     /** iOS `receive(_:store:completed:)`: one accepted QR text, exactly as scanned. */
+     fun receive(frame: String) {
+-        if (stopped || _uiState.value.error != null || store.state.value.review != null || !seen.add(frame)) return
++        if (stopped || _uiState.value.error != null || store.state.value.review != null) return
++        // A part waiting for a retry (interrupted by backgrounding) comes back as the same text, which a static QR code
++        // only ever shows: it resumes the queue instead of being dropped as a duplicate (audit BTS-05).
++        if (frame in queue) {
++            drain()
++            return
++        }
++        if (!seen.add(frame)) return
+         hasFrames = true
+         _uiState.update { it.copy(received = it.received + 1) }
+         queue.addLast(frame)
+diff --git a/feature/sign/src/test/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModelTest.kt b/feature/sign/src/test/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModelTest.kt
+index e1b0c6f..7bdfbad 100644
+--- a/feature/sign/src/test/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModelTest.kt
++++ b/feature/sign/src/test/kotlin/com/bittool/signer/feature/sign/scanner/ScannerViewModelTest.kt
+@@ -303,6 +303,24 @@ class ScannerViewModelTest {
+         assertEquals(listOf("A", "A", "B"), received(), "the interrupted part goes first, then the new one")
+     }
+ 
++    /** Audit BTS-05: a static QR code shows one text only, so the interrupted frame itself must resume the queue. */
++    @Test
++    fun anInterruptedStaticQrCodeIsRetriedWhenItIsSeenAgain() = runTest {
++        val first = CompletableDeferred<Double>()
++        store.onReceiveFrame = { frame -> if (received().size == 1) first.await() else 0.4 }
++        val vm = scanner()
++        runCurrent()
++        vm.receive("STATIC")
++        runCurrent()
++        store.suspendSession()
++        first.completeExceptionally(CancellationException("The session changed; the late result is discarded."))
++        runCurrent()
++        repeat(3) { vm.receive("STATIC") }
++        runCurrent()
++        assertEquals(listOf("STATIC", "STATIC"), received(), "retried once, not once per callback")
++        assertNull(vm.uiState.value.error)
++    }
++
+     @Test
+     fun aResultForAnEarlierSessionIsDropped() = runTest {
+         val first = CompletableDeferred<Double>()

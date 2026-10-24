@@ -1,0 +1,24 @@
+Re-audit: e7e71fbc4b5614b68e993e1eec5dc986b4536a86 versus bb1e656
+Scope: BTS-01 partial-overlay fix; BTS-05 static-QR retry; critical consent callers and queue/lifecycle regression checks.
+No production edits. No Gradle executed by this reviewer. Parent confirmed e7e71fb feature:sign compilation/runtime JAR/tests current before the direct harness was executed.
+
+BTS-01: FIXED for the original API 29-30 signing-review touch scenario.
+- Hardening.kt:54 constructs the strict guard; :63-65 checks both obscuration flags for strict API29+ callers; :84-93 initial-pass node consumes the entire blocked gesture.
+- SignBar.kt:147 attaches strict guard to actual interactive Sign primary button (the noninteractive measurement copy intentionally has no guard); :222 guards risk toggle.
+- RequestReviewScreen.kt:94,96 bind these to toggleRisk/openAuthorize. Both pinned and scrollable risk rows use RiskAcknowledgement (scrollable branch :268-275).
+- PrimaryButton passes modifier into SignerButton and onto the clickable Surface (Buttons.kt:77,152), so guard is operational in the real pointer path.
+- Existing changed LogicTest and HardeningTest exercise strict partial obscuration and a clean tap. No independent real-device malicious-overlay execution performed here.
+Residual scope: API26-28 cannot report partial-obscuration via this flag. AuthorizeSheet's password/IME Sign (:119) retains the ordinary guard; recovery reveal and delete controls also retain ordinary guard. Do not state that all sensitive controls now reject partial overlays. No new confirmed exploit/regression identified from these unchanged residuals.
+
+BTS-05: FIXED, directly reproduced with the current compiled ScannerViewModel and FakeSignerStore.
+- ScannerViewModel.kt:165-168 resumes a queued frame before the seen-set check; :177 preserves single in-flight work; :192 retains old-token rejection; :201-204 requeues interrupted work.
+- Upstream QrScanFrameGate reoffers a static code once each second and QrScannerScreen.kt:130-132 restarts the frame gate on resume, so identical text can reach the new code naturally.
+Direct harness results:
+PASS static-QR retry through camera gate: calls=[STATIC-QR, STATIC-QR], received=1
+PASS duplicate queued/in-flight frame not replayed: calls=[A, B]
+PASS queued duplicate resumes interrupted first frame in FIFO order: calls=[A, A, B]
+PASS late result cannot restart stopped scanner: calls=[A]
+These checks verify no duplicate insertion/count inflation, no parallel retry while work is in flight, FIFO order after interruption, and no late restart after stop.
+
+Artifacts: ScannerReaudit.kt, run-poc.py, poc.jar, classpath.txt, scanner-reaudit-output.txt (all adjacent to this note).
+Tracked working tree remained unchanged; existing untracked audit artifacts were preserved.

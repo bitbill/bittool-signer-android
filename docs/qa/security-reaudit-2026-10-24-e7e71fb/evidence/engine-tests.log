@@ -1,0 +1,1078 @@
+
+> bittool-signer-offline-engine@1.0.0 test
+> node --test test/*.test.mjs test/*.test.js
+
+TAP version 13
+# Subtest: BTS-01: a burn is never summarised as a consolidation
+ok 1 - BTS-01: a burn is never summarised as a consolidation
+  ---
+  duration_ms: 1.115333
+  ...
+# Subtest: BTS-01: a burn leads even when the transaction also pays someone
+ok 2 - BTS-01: a burn leads even when the transaction also pays someone
+  ---
+  duration_ms: 0.10875
+  ...
+# Subtest: BTS-02: the batch amount is what the wallet pays, not the inner total
+ok 3 - BTS-02: the batch amount is what the wallet pays, not the inner total
+  ---
+  duration_ms: 18.422625
+  ...
+# Subtest: BTS-02: a batch that pays nothing still reports what it forwards
+ok 4 - BTS-02: a batch that pays nothing still reports what it forwards
+  ---
+  duration_ms: 8.619417
+  ...
+# Subtest: BTS-02: outer equal to inner leaves nothing stranded
+ok 5 - BTS-02: outer equal to inner leaves nothing stranded
+  ---
+  duration_ms: 1.4485
+  ...
+# Subtest: BTS-03: no fee limit never reads as a zero fee
+ok 6 - BTS-03: no fee limit never reads as a zero fee
+  ---
+  duration_ms: 5.817292
+  ...
+# Subtest: BTS-03: a fee limit is labelled as the energy budget it is
+ok 7 - BTS-03: a fee limit is labelled as the energy budget it is
+  ---
+  duration_ms: 2.061459
+  ...
+# Subtest: R2-01 A: native currency a nested delegate branch spends is part of the amount
+ok 8 - R2-01 A: native currency a nested delegate branch spends is part of the amount
+  ---
+  duration_ms: 16.13925
+  ...
+# Subtest: R2-01 A: a later delegate branch that spends is never what truncation hides
+ok 9 - R2-01 A: a later delegate branch that spends is never what truncation hides
+  ---
+  duration_ms: 20.948625
+  ...
+# Subtest: R2-01 A: a delegate branch nobody can decode makes the amount incomplete, out loud
+ok 10 - R2-01 A: a delegate branch nobody can decode makes the amount incomplete, out loud
+  ---
+  duration_ms: 1.517833
+  ...
+# Subtest: R2-01 A: a CALL’s own descendants stay the target’s money, not ours
+ok 11 - R2-01 A: a CALL’s own descendants stay the target’s money, not ours
+  ---
+  duration_ms: 1.344875
+  ...
+# Subtest: R2-01 B: execTransaction never shows a delegatecall value as paid
+ok 12 - R2-01 B: execTransaction never shows a delegatecall value as paid
+  ---
+  duration_ms: 13.051791
+  ...
+# Subtest: R2-01: the original direct-value behaviour is untouched
+ok 13 - R2-01: the original direct-value behaviour is untouched
+  ---
+  duration_ms: 6.707333
+  ...
+# Subtest: R2-01: the propagated amount never reaches the review as an unhashable value
+ok 14 - R2-01: the propagated amount never reaches the review as an unhashable value
+  ---
+  duration_ms: 2.676458
+  ...
+# Subtest: R2-02: change cannot buy silence for a fee worth more than the payment
+ok 15 - R2-02: change cannot buy silence for a fee worth more than the payment
+  ---
+  duration_ms: 21.611792
+  ...
+# Subtest: R2-02: the figure the history keeps is what was sent, not what came back
+ok 16 - R2-02: the figure the history keeps is what was sent, not what came back
+  ---
+  duration_ms: 10.562708
+  ...
+# Subtest: R2-02: a consolidation that sends nothing out reports the fee as its whole cost
+ok 17 - R2-02: a consolidation that sends nothing out reports the fee as its whole cost
+  ---
+  duration_ms: 10.200875
+  ...
+# Subtest: R2-02: the floor and the absolute branch behave the same with change present
+ok 18 - R2-02: the floor and the absolute branch behave the same with change present
+  ---
+  duration_ms: 87.680417
+  ...
+# Subtest: R2-03: burns of one mint are totalled, not represented by the first
+ok 19 - R2-03: burns of one mint are totalled, not represented by the first
+  ---
+  duration_ms: 1.643708
+  ...
+# Subtest: R2-03: burns of different mints are listed, never added together
+ok 20 - R2-03: burns of different mints are listed, never added together
+  ---
+  duration_ms: 0.470458
+  ...
+# Subtest: R2-03: a burn beside a transfer does not let either stand for the whole
+ok 21 - R2-03: a burn beside a transfer does not let either stand for the whole
+  ---
+  duration_ms: 0.435542
+  ...
+# Subtest: R2-03: one burn on its own still shows its amount, and transfers are untouched
+ok 22 - R2-03: one burn on its own still shows its amount, and transfers are untouched
+  ---
+  duration_ms: 0.629083
+  ...
+# Subtest: R2-03: a zero-quantity burn instruction is not an effect at all
+ok 23 - R2-03: a zero-quantity burn instruction is not an effect at all
+  ---
+  duration_ms: 0.368083
+  ...
+# Subtest: F-01: a value encoded on a Safe DELEGATECALL is never shown as an amount paid
+ok 24 - F-01: a value encoded on a Safe DELEGATECALL is never shown as an amount paid
+  ---
+  duration_ms: 21.242208
+  ...
+# Subtest: F-01: a batch call that spends native value is always described in the headline
+ok 25 - F-01: a batch call that spends native value is always described in the headline
+  ---
+  duration_ms: 43.642542
+  ...
+# Subtest: F-02: a token burn leads the summary and demands acknowledgement
+ok 26 - F-02: a token burn leads the summary and demands acknowledgement
+  ---
+  duration_ms: 4.36675
+  ...
+# Subtest: F-02: a burn on its own is still the headline, and transfers are untouched
+ok 27 - F-02: a burn on its own is still the headline, and transfers are untouched
+  ---
+  duration_ms: 0.882916
+  ...
+# Subtest: F-04: a Bitcoin burn produces a plan that can actually be hashed and signed
+ok 28 - F-04: a Bitcoin burn produces a plan that can actually be hashed and signed
+  ---
+  duration_ms: 412.2545
+  ...
+# Subtest: A high fee is one that is large outright, or over half of what is sent
+ok 29 - A high fee is one that is large outright, or over half of what is sent
+  ---
+  duration_ms: 142.6815
+  ...
+# Subtest: Small fees stay quiet, which is the point of the floor
+ok 30 - Small fees stay quiet, which is the point of the floor
+  ---
+  duration_ms: 87.119042
+  ...
+# Subtest: A fee that is a small share of the payment never warns on size alone
+ok 31 - A fee that is a small share of the payment never warns on size alone
+  ---
+  duration_ms: 19.882459
+  ...
+# Subtest: Bitcoin seven mainstream script forms sign v0/v2 and independently finalize
+ok 32 - Bitcoin seven mainstream script forms sign v0/v2 and independently finalize
+  ---
+  duration_ms: 942.012167
+  ...
+# Subtest: Bitcoin CHECKSIGADD and CHECKSIGVERIFY leaves produce verifiable script-path signatures
+ok 33 - Bitcoin CHECKSIGADD and CHECKSIGVERIFY leaves produce verifiable script-path signatures
+  ---
+  duration_ms: 140.272458
+  ...
+# Subtest: Bitcoin task signs only selected input/key and preserves all unknown PSBT maps
+ok 34 - Bitcoin task signs only selected input/key and preserves all unknown PSBT maps
+  ---
+  duration_ms: 41.525792
+  ...
+# Subtest: Bitcoin rejects wrong script selector, altered control block and forged existing cosignature
+ok 35 - Bitcoin rejects wrong script selector, altered control block and forged existing cosignature
+  ---
+  duration_ms: 23.098708
+  ...
+# Subtest: EVM exact local registry formats integers without losing precision and unknown calls remain high risk
+ok 36 - EVM exact local registry formats integers without losing precision and unknown calls remain high risk
+  ---
+  duration_ms: 13.383458
+  ...
+# Subtest: EIP712 Permit2 fields and absent signed chain context are explicit; task identity is rechecked
+ok 37 - EIP712 Permit2 fields and absent signed chain context are explicit; task identity is rechecked
+  ---
+  duration_ms: 52.744458
+  ...
+# Subtest: Safe MultiSend decodes inner calls and surfaces delegatecall/ownership risk
+ok 38 - Safe MultiSend decodes inner calls and surfaces delegatecall/ownership risk
+  ---
+  duration_ms: 3.20575
+  ...
+# Subtest: TRON personal message uses TronWeb prefix and byte length, independently verified
+ok 39 - TRON personal message uses TronWeb prefix and byte length, independently verified
+  ---
+  duration_ms: 19.001125
+  ...
+# Subtest: Solana signs read-only non-feepayer slot; selected slot mismatch is refused
+ok 40 - Solana signs read-only non-feepayer slot; selected slot mismatch is refused
+  ---
+  duration_ms: 34.143458
+  ...
+# Subtest: Solana unchecked token transfer never infers mint from token-account address
+ok 41 - Solana unchecked token transfer never infers mint from token-account address
+  ---
+  duration_ms: 2.611375
+  ...
+# Subtest: Squads proposal-only approvals explicitly disclose unavailable proposal contents
+ok 42 - Squads proposal-only approvals explicitly disclose unavailable proposal contents
+  ---
+  duration_ms: 3.078958
+  ...
+# Subtest: Offline registry has unique exact identities, on-chain decimals and packed icons that match their hashes
+not ok 43 - Offline registry has unique exact identities, on-chain decimals and packed icons that match their hashes
+  ---
+  duration_ms: 15.954209
+  location: '/Users/tanguopeng/Documents/bitool-signer-android/engine/test/chain-expansion.test.mjs:109:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/Users/tanguopeng/Documents/bitool-signer-android/BitToolSigner/Resources/token-registry.json'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:448:20)
+    read (file:///Users/tanguopeng/Documents/bitool-signer-android/engine/test/chain-expansion.test.mjs:110:19)
+    TestContext.<anonymous> (file:///Users/tanguopeng/Documents/bitool-signer-android/engine/test/chain-expansion.test.mjs:117:23)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: TRON Stake2 resource delegation parses signed protobuf units, recipient and lock
+ok 44 - TRON Stake2 resource delegation parses signed protobuf units, recipient and lock
+  ---
+  duration_ms: 28.606041
+  ...
+# Subtest: TRON owner member can use verified task identity without optional request address
+ok 45 - TRON owner member can use verified task identity without optional request address
+  ---
+  duration_ms: 25.256958
+  ...
+# Subtest: All chain review entry points reject explicit unsupported networks
+ok 46 - All chain review entry points reject explicit unsupported networks
+  ---
+  duration_ms: 1.505042
+  ...
+# Subtest: Custom Permit schemas stay partial and never invent token allowance interpretations
+ok 47 - Custom Permit schemas stay partial and never invent token allowance interpretations
+  ---
+  duration_ms: 0.552458
+  ...
+# Subtest: Reviewed EVM networks beyond token registry remain usable with accurate native tickers
+ok 48 - Reviewed EVM networks beyond token registry remain usable with accurate native tickers
+  ---
+  duration_ms: 55.115167
+  ...
+# Subtest: Solana recognizes Unicode messages without permitting transaction header reinterpretation
+ok 49 - Solana recognizes Unicode messages without permitting transaction header reinterpretation
+  ---
+  duration_ms: 12.333042
+  ...
+# Subtest: EVM conflicting unsigned network hints cannot override missing signed domain context
+ok 50 - EVM conflicting unsigned network hints cannot override missing signed domain context
+  ---
+  duration_ms: 0.19725
+  ...
+# Subtest: BIP39 entropy/checksum and four chain known address vectors
+ok 51 - BIP39 entropy/checksum and four chain known address vectors
+  ---
+  duration_ms: 71.742833
+  ...
+# Subtest: BIP39 official NFKD passphrase handling
+ok 52 - BIP39 official NFKD passphrase handling
+  ---
+  duration_ms: 76.391959
+  ...
+# Subtest: EVM EIP1559 signs and independently verifies curve signature
+ok 53 - EVM EIP1559 signs and independently verifies curve signature
+  ---
+  duration_ms: 154.874583
+  ...
+# Subtest: EVM legacy signature preserves large EIP155 v
+ok 54 - EVM legacy signature preserves large EIP155 v
+  ---
+  duration_ms: 17.106708
+  ...
+# Subtest: EVM personal and EIP712 known Mail hash
+ok 55 - EVM personal and EIP712 known Mail hash
+  ---
+  duration_ms: 47.656084
+  ...
+# Subtest: EVM raw token/NFT units are decoded without trusting symbols
+ok 56 - EVM raw token/NFT units are decoded without trusting symbols
+  ---
+  duration_ms: 70.465875
+  ...
+# Subtest: EVM rejects chain confusion, wrong signer and tampering; opaque calldata has explicit risk
+ok 57 - EVM rejects chain confusion, wrong signer and tampering; opaque calldata has explicit risk
+  ---
+  duration_ms: 67.433291
+  ...
+# Subtest: Bitcoin PSBT v0/v2 preserve unsigned transaction and verify ECDSA
+ok 58 - Bitcoin PSBT v0/v2 preserve unsigned transaction and verify ECDSA
+  ---
+  duration_ms: 167.748208
+  ...
+# Subtest: Bitcoin multisig incrementally preserves other cosigner signature
+ok 59 - Bitcoin multisig incrementally preserves other cosigner signature
+  ---
+  duration_ms: 204.246166
+  ...
+# Subtest: Bitcoin Taproot key path signs and finalizes
+ok 60 - Bitcoin Taproot key path signs and finalizes
+  ---
+  duration_ms: 67.003834
+  ...
+# Subtest: Bitcoin refuses forged fee context and weak sighash
+ok 61 - Bitcoin refuses forged fee context and weak sighash
+  ---
+  duration_ms: 80.027417
+  ...
+# Subtest: TRON txID and signature are bound to protobuf bytes
+ok 62 - TRON txID and signature are bound to protobuf bytes
+  ---
+  duration_ms: 38.296
+  ...
+# Subtest: TRON refuses txID/JSON mismatch and preserves multisig
+ok 63 - TRON refuses txID/JSON mismatch and preserves multisig
+  ---
+  duration_ms: 75.266541
+  ...
+# Subtest: TRON AccountPermissionUpdate displays threshold and keys from bytes
+ok 64 - TRON AccountPermissionUpdate displays threshold and keys from bytes
+  ---
+  duration_ms: 14.527167
+  ...
+# Subtest: Solana legacy/v0 signatures verify and preserve exact message
+ok 65 - Solana legacy/v0 signatures verify and preserve exact message
+  ---
+  duration_ms: 34.405542
+  ...
+# Subtest: Solana multisig adds correct slot and preserves other signer
+ok 66 - Solana multisig adds correct slot and preserves other signer
+  ---
+  duration_ms: 12.771709
+  ...
+# Subtest: Solana refuses ALT, bad signatures and wrong signer; unknown programs are marked high risk
+ok 67 - Solana refuses ALT, bad signatures and wrong signer; unknown programs are marked high risk
+  ---
+  duration_ms: 11.580042
+  ...
+# Subtest: dispatch rejects oversized/malformed input without reflecting secrets
+ok 68 - dispatch rejects oversized/malformed input without reflecting secrets
+  ---
+  duration_ms: 0.554791
+  ...
+# Subtest: browser bundle operates in a JavaScriptCore-like isolated environment
+ok 69 - browser bundle operates in a JavaScriptCore-like isolated environment
+  ---
+  duration_ms: 0.305042
+  ...
+# Subtest: EIP712 Safe owner signature binds CALL fields, marks delegatecall high risk and rejects unsigned extras
+ok 70 - EIP712 Safe owner signature binds CALL fields, marks delegatecall high risk and rejects unsigned extras
+  ---
+  duration_ms: 32.967291
+  ...
+# Subtest: all-Taproot witness-only PSBT is accepted because its signature commits every amount
+ok 71 - all-Taproot witness-only PSBT is accepted because its signature commits every amount
+  ---
+  duration_ms: 48.523125
+  ...
+# Subtest: Solana message signing rejects legacy header bytes and requires recognizable text
+ok 72 - Solana message signing rejects legacy header bytes and requires recognizable text
+  ---
+  duration_ms: 52.997625
+  ...
+# Subtest: strict dispatch rejects duplicate keys and unsafe numeric payloads before signing
+ok 73 - strict dispatch rejects duplicate keys and unsafe numeric payloads before signing
+  ---
+  duration_ms: 0.326125
+  ...
+# Subtest: BIP380 checksum known vector and BIP48 complete multisig policy derivation
+ok 74 - BIP380 checksum known vector and BIP48 complete multisig policy derivation
+  ---
+  duration_ms: 45.248666
+  ...
+# Subtest: TRON TRC20 transfer decodes protobuf contract address, recipient and raw units
+ok 75 - TRON TRC20 transfer decodes protobuf contract address, recipient and raw units
+  ---
+  duration_ms: 16.125625
+  ...
+# Subtest: Solana SPL checked token and NFT transfers decode mint and raw amount
+ok 76 - Solana SPL checked token and NFT transfers decode mint and raw amount
+  ---
+  duration_ms: 24.962667
+  ...
+# Subtest: TRON owner permission signs explicit member identities and preserves independently verified cosignatures
+ok 77 - TRON owner permission signs explicit member identities and preserves independently verified cosignatures
+  ---
+  duration_ms: 107.093334
+  ...
+# Subtest: F1: EIP-712 values must match their declared type; truthy strings are never signed as bool
+ok 78 - F1: EIP-712 values must match their declared type; truthy strings are never signed as bool
+  ---
+  duration_ms: 297.21125
+  ...
+# Subtest: F7: ambiguous integer and address spellings are rejected before hashing
+ok 79 - F7: ambiguous integer and address spellings are rejected before hashing
+  ---
+  duration_ms: 2.36875
+  ...
+# Subtest: F14: declared EIP712Domain order defines the separator; unused types are ignored like wallets do
+ok 80 - F14: declared EIP712Domain order defines the separator; unused types are ignored like wallets do
+  ---
+  duration_ms: 204.254416
+  ...
+# Subtest: F2: eth-signature v is EIP-155 for legacy transactions and y-parity for typed transactions
+ok 81 - F2: eth-signature v is EIP-155 for legacy transactions and y-parity for typed transactions
+  ---
+  duration_ms: 480.489625
+  ...
+# Subtest: F3: Safe gas refunds are decoded, shown and raise the risk level
+ok 82 - F3: Safe gas refunds are decoded, shown and raise the risk level
+  ---
+  duration_ms: 5.759708
+  ...
+# Subtest: F4: a Solana summary never pairs one transfer amount with another transfer destination
+ok 83 - F4: a Solana summary never pairs one transfer amount with another transfer destination
+  ---
+  duration_ms: 3.436208
+  ...
+# Subtest: F5: native value attached to calls and transfers leads the summary on every chain
+ok 84 - F5: native value attached to calls and transfers leads the summary on every chain
+  ---
+  duration_ms: 2.487958
+  ...
+# Subtest: F5/F6: TRON call value and high fee limits are surfaced
+ok 85 - F5/F6: TRON call value and high fee limits are surfaced
+  ---
+  duration_ms: 3.343292
+  ...
+# Subtest: F6/F11/F12: EVM and Solana fees, durable nonces and unknown token transfers are flagged
+ok 86 - F6/F11/F12: EVM and Solana fees, durable nonces and unknown token transfers are flagged
+  ---
+  duration_ms: 1.753875
+  ...
+# Subtest: BTC: only outputs re-derived from the signing wallet are treated as change
+ok 87 - BTC: only outputs re-derived from the signing wallet are treated as change
+  ---
+  duration_ms: 59.2165
+  ...
+# Subtest: F13: incremental QR collection equals batch decoding and rejects mixed sessions
+ok 88 - F13: incremental QR collection equals batch decoding and rejects mixed sessions
+  ---
+  duration_ms: 24.23925
+  ...
+# Subtest: F15: ur:psbt requests are accepted and answered in the same type; wrapped Base64 files decode
+ok 89 - F15: ur:psbt requests are accepted and answered in the same type; wrapped Base64 files decode
+  ---
+  duration_ms: 123.49825
+  ...
+# Subtest: Native seed input derives the same public index and signatures as the phrase
+ok 90 - Native seed input derives the same public index and signatures as the phrase
+  ---
+  duration_ms: 316.218792
+  ...
+# Subtest: every record is usable: shape, chain-correct addresses, no duplicates
+ok 91 - every record is usable: shape, chain-correct addresses, no duplicates
+  ---
+  duration_ms: 2.495875
+  ...
+# Subtest: lookup is case-insensitive on EVM and falls back to the every-chain entries
+ok 92 - lookup is case-insensitive on EVM and falls back to the every-chain entries
+  ---
+  duration_ms: 7.697792
+  ...
+# Subtest: approving a known spender names it; approving an unlisted one warns and raises the risk
+ok 93 - approving a known spender names it; approving an unlisted one warns and raises the risk
+  ---
+  duration_ms: 28.053042
+  ...
+# Subtest: a transfer to a recognized token is not called an unknown contract
+ok 94 - a transfer to a recognized token is not called an unknown contract
+  ---
+  duration_ms: 1.94875
+  ...
+# Subtest: TRON contract calls carry the same notice
+ok 95 - TRON contract calls carry the same notice
+  ---
+  duration_ms: 12.302541
+  ...
+# Subtest: Solana instructions name a program the library knows, and say nothing extra about one it does not
+ok 96 - Solana instructions name a program the library knows, and say nothing extra about one it does not
+  ---
+  duration_ms: 109.145333
+  ...
+# Subtest: approve on a non-registry contract is ambiguous and never shown as a revoke
+ok 97 - approve on a non-registry contract is ambiguous and never shown as a revoke
+  ---
+  duration_ms: 18.843833
+  ...
+# Subtest: registry ERC-20 approvals keep the fungible display, including revoke for 0
+ok 98 - registry ERC-20 approvals keep the fungible display, including revoke for 0
+  ---
+  duration_ms: 1.769833
+  ...
+# Subtest: approve(0x0, id) is shown as clearing an NFT approval, without claiming an ERC-20 rule
+ok 99 - approve(0x0, id) is shown as clearing an NFT approval, without claiming an ERC-20 rule
+  ---
+  duration_ms: 1.040708
+  ...
+# Subtest: transferFrom on a non-registry contract is "NFT or token"; registry tokens stay fungible
+ok 100 - transferFrom on a non-registry contract is "NFT or token"; registry tokens stay fungible
+  ---
+  duration_ms: 2.078959
+  ...
+# Subtest: ERC-721 safeTransferFrom is an NFT with full token ID fields and an NFT summary
+ok 101 - ERC-721 safeTransferFrom is an NFT with full token ID fields and an NFT summary
+  ---
+  duration_ms: 28.363917
+  ...
+# Subtest: long ENS token IDs are abbreviated in the headline with full decimal and hex fields; ENS is a mainnet detail only
+ok 102 - long ENS token IDs are abbreviated in the headline with full decimal and hex fields; ENS is a mainnet detail only
+  ---
+  duration_ms: 25.891375
+  ...
+# Subtest: setApprovalForAll(true) is a red HIGH RISK warning naming the contract; revoke stays a warning
+ok 103 - setApprovalForAll(true) is a red HIGH RISK warning naming the contract; revoke stays a warning
+  ---
+  duration_ms: 2.970417
+  ...
+# Subtest: ERC-1155 single transfer shows quantity × ID without raw-unit wording
+ok 104 - ERC-1155 single transfer shows quantity × ID without raw-unit wording
+  ---
+  duration_ms: 0.965333
+  ...
+# Subtest: ERC-1155 batch uses one Items field, flags duplicates and zero quantities, and keeps the 32-item cap
+ok 105 - ERC-1155 batch uses one Items field, flags duplicates and zero quantities, and keeps the 32-item cap
+  ---
+  duration_ms: 16.278208
+  ...
+# Subtest: MultiSend headline lists inner NFT calls by risk and indexes their warnings once
+ok 106 - MultiSend headline lists inner NFT calls by risk and indexes their warnings once
+  ---
+  duration_ms: 7.461125
+  ...
+# Subtest: Safe execTransaction keeps the inner NFT display without duplicated generic warnings
+ok 107 - Safe execTransaction keeps the inner NFT display without duplicated generic warnings
+  ---
+  duration_ms: 2.57975
+  ...
+# Subtest: JSON EVM transactions may carry from: it is shown, excluded from hashing and checked at signing
+ok 108 - JSON EVM transactions may carry from: it is shown, excluded from hashing and checked at signing
+  ---
+  duration_ms: 162.673625
+  ...
+# Subtest: TRON TRC-721 transfers and approvals use Base58 contracts in the NFT display and summary
+ok 109 - TRON TRC-721 transfers and approvals use Base58 contracts in the NFT display and summary
+  ---
+  duration_ms: 17.390875
+  ...
+# Subtest: TRON NFT calls with TRX attached keep the recipient; only address fields become Base58
+ok 110 - TRON NFT calls with TRX attached keep the recipient; only address fields become Base58
+  ---
+  duration_ms: 15.993666
+  ...
+# Subtest: Seaport phishing listing (1 wei, criteria 0, never expires) is decoded with red warnings
+ok 111 - Seaport phishing listing (1 wei, criteria 0, never expires) is decoded with red warnings
+  ---
+  duration_ms: 42.833084
+  ...
+# Subtest: legitimate Seaport listing shows proceeds, fees and chain-scoped OpenSea labels only as text
+ok 112 - legitimate Seaport listing shows proceeds, fees and chain-scoped OpenSea labels only as text
+  ---
+  duration_ms: 36.697083
+  ...
+# Subtest: Seaport offer (bid) receives the NFT, so there is no false "receive nothing" or share warning
+ok 113 - Seaport offer (bid) receives the NFT, so there is no false "receive nothing" or share warning
+  ---
+  duration_ms: 19.374458
+  ...
+# Subtest: Seaport listing rules: payment share, Dutch auction lower bound, criteria roots, zones and offerer
+ok 114 - Seaport listing rules: payment share, Dutch auction lower bound, criteria roots, zones and offerer
+  ---
+  duration_ms: 13.899125
+  ...
+# Subtest: Seaport BulkOrder with padding lists the real orders and signs the same digest
+ok 115 - Seaport BulkOrder with padding lists the real orders and signs the same digest
+  ---
+  duration_ms: 33.368167
+  ...
+# Subtest: Seaport-shaped orders for an unrecognised contract carry a HIGH RISK warning
+ok 116 - Seaport-shaped orders for an unrecognised contract carry a HIGH RISK warning
+  ---
+  duration_ms: 3.45025
+  ...
+# Subtest: marketplace requests have undeclared keys stripped (count-only warning); digests and signatures are unchanged
+ok 117 - marketplace requests have undeclared keys stripped (count-only warning); digests and signatures are unchanged
+  ---
+  duration_ms: 33.209
+  ...
+# Subtest: undeclared keys are still refused outside recognised marketplace requests
+ok 118 - undeclared keys are still refused outside recognised marketplace requests
+  ---
+  duration_ms: 0.478292
+  ...
+# Subtest: Blur v1 Root and V2 Order are blind Merkle-root signatures; other roots hit the generic net
+ok 119 - Blur v1 Root and V2 Order are blind Merkle-root signatures; other roots hit the generic net
+  ---
+  duration_ms: 63.337167
+  ...
+# Subtest: LooksRare v2 maker asks and bids are decoded; price-0 asks and signer mismatches are red
+ok 120 - LooksRare v2 maker asks and bids are decoded; price-0 asks and signer mismatches are red
+  ---
+  duration_ms: 44.209833
+  ...
+# Subtest: LooksRare BatchOrder skips SDK padding leaves and signs the same digest
+ok 121 - LooksRare BatchOrder skips SDK padding leaves and signs the same digest
+  ---
+  duration_ms: 22.464541
+  ...
+# Subtest: NFT-typed Seaport items on a registry ERC-20 are never shown as NFTs
+ok 122 - NFT-typed Seaport items on a registry ERC-20 are never shown as NFTs
+  ---
+  duration_ms: 62.289125
+  ...
+# Subtest: LooksRare and Blur orders on a registry ERC-20 "collection" are red and not shown as NFTs
+ok 123 - LooksRare and Blur orders on a registry ERC-20 "collection" are red and not shown as NFTs
+  ---
+  duration_ms: 13.452041
+  ...
+# Subtest: Seaport proceeds that decay to 0 are red; dust prices get a notice; normal prices do not
+ok 124 - Seaport proceeds that decay to 0 are red; dust prices get a notice; normal prices do not
+  ---
+  duration_ms: 15.527166
+  ...
+# Subtest: bulk listing totals are summed only for one known currency
+ok 125 - bulk listing totals are summed only for one known currency
+  ---
+  duration_ms: 10.275292
+  ...
+# Subtest: expiry policy: after year 9999 or over 10 years is red; over a year is a notice
+ok 126 - expiry policy: after year 9999 or over 10 years is red; over a year is a notice
+  ---
+  duration_ms: 14.742792
+  ...
+# Subtest: bulk order warnings are merged across orders and capped with red ones first
+ok 127 - bulk order warnings are merged across orders and capped with red ones first
+  ---
+  duration_ms: 66.928
+  ...
+# Subtest: Blur V2 maker fees above 50% are red
+ok 128 - Blur V2 maker fees above 50% are red
+  ---
+  duration_ms: 1.339958
+  ...
+# Subtest: mis-shaped marketplace types fall back to the generic typed-data review
+ok 129 - mis-shaped marketplace types fall back to the generic typed-data review
+  ---
+  duration_ms: 6.06475
+  ...
+# Subtest: the opaque-root net does not fire on ordinary typed data
+ok 130 - the opaque-root net does not fire on ordinary typed data
+  ---
+  duration_ms: 0.629917
+  ...
+# Subtest: SOL-NFT-1: ATA create + transferChecked(1, 0 decimals) shows the recipient wallet with hedged NFT wording (legacy and v0)
+ok 131 - SOL-NFT-1: ATA create + transferChecked(1, 0 decimals) shows the recipient wallet with hedged NFT wording (legacy and v0)
+  ---
+  duration_ms: 44.045791
+  ...
+# Subtest: SOL-NFT-1: without the ATA instruction the counterparty stays the token account with a warning
+ok 132 - SOL-NFT-1: without the ATA instruction the counterparty stays the token account with a warning
+  ---
+  duration_ms: 1.19625
+  ...
+# Subtest: SOL-NFT-1: recipient resolution fails closed on mint, order, program, re-owning and opaque instructions
+ok 133 - SOL-NFT-1: recipient resolution fails closed on mint, order, program, re-owning and opaque instructions
+  ---
+  duration_ms: 18.483417
+  ...
+# Subtest: SOL-NFT-1: ordinary token transfers keep plain wording, fixed pluralisation and registry assets
+ok 134 - SOL-NFT-1: ordinary token transfers keep plain wording, fixed pluralisation and registry assets
+  ---
+  duration_ms: 9.356792
+  ...
+# Subtest: SOL-NFT-2: Token Metadata TransferV1 with the edition PDA is a proven NFT send (legacy and v0) and signs
+ok 135 - SOL-NFT-2: Token Metadata TransferV1 with the edition PDA is a proven NFT send (legacy and v0) and signs
+  ---
+  duration_ms: 136.213
+  ...
+# Subtest: SOL-NFT-2: without a matching edition the transfer is hedged as a Metaplex token in raw units
+ok 136 - SOL-NFT-2: without a matching edition the transfer is hedged as a Metaplex token in raw units
+  ---
+  duration_ms: 5.880208
+  ...
+# Subtest: SOL-NFT-2: delegate authority, Token-2022, authorization data and wrong PDAs
+ok 137 - SOL-NFT-2: delegate authority, Token-2022, authorization data and wrong PDAs
+  ---
+  duration_ms: 30.346042
+  ...
+# Subtest: SOL-NFT-2: TransferV1 shapes that are not exact stay opaque
+ok 138 - SOL-NFT-2: TransferV1 shapes that are not exact stay opaque
+  ---
+  duration_ms: 33.296708
+  ...
+# Subtest: SOL-NFT-3: Bubblegum transfer V1 derives the asset ID and names the new owner (legacy and v0)
+ok 139 - SOL-NFT-3: Bubblegum transfer V1 derives the asset ID and names the new owner (legacy and v0)
+  ---
+  duration_ms: 3.43175
+  ...
+# Subtest: SOL-NFT-3: Bubblegum V1 signer rules and fail-closed shapes
+ok 140 - SOL-NFT-3: Bubblegum V1 signer rules and fail-closed shapes
+  ---
+  duration_ms: 7.781083
+  ...
+# Subtest: SOL-NFT-3: Bubblegum transfer_v2 resolves placeholders and shows the fee as a detail, not a movement
+ok 141 - SOL-NFT-3: Bubblegum transfer_v2 resolves placeholders and shows the fee as a detail, not a movement
+  ---
+  duration_ms: 6.271791
+  ...
+# Subtest: SOL-NFT-6: Bubblegum delegate and delegate_v2 name the new delegate and the derived asset
+ok 142 - SOL-NFT-6: Bubblegum delegate and delegate_v2 name the new delegate and the derived asset
+  ---
+  duration_ms: 5.704375
+  ...
+# Subtest: SOL-NFT-4: Core TransferV1 hides placeholders and shows Not supplied for the collection (legacy and v0)
+ok 143 - SOL-NFT-4: Core TransferV1 hides placeholders and shows Not supplied for the collection (legacy and v0)
+  ---
+  duration_ms: 1.1125
+  ...
+# Subtest: SOL-NFT-4: Core shapes that are not exact, and other Core instructions, stay opaque
+ok 144 - SOL-NFT-4: Core shapes that are not exact, and other Core instructions, stay opaque
+  ---
+  duration_ms: 47.812625
+  ...
+# Subtest: SOL-NFT-5: Token-2022 transfer-hook accounts are listed and the hook is hedged
+ok 145 - SOL-NFT-5: Token-2022 transfer-hook accounts are listed and the hook is hedged
+  ---
+  duration_ms: 5.968458
+  ...
+# Subtest: SOL-NFT-5: multisig signers are separated by the required-signer set; hook extras lift the 11-account cap
+ok 146 - SOL-NFT-5: multisig signers are separated by the required-signer set; hook extras lift the 11-account cap
+  ---
+  duration_ms: 7.265875
+  ...
+# Subtest: SOL-NFT-6: known NFT marketplaces are named but never decoded
+ok 147 - SOL-NFT-6: known NFT marketplaces are named but never decoded
+  ---
+  duration_ms: 1.316167
+  ...
+# Subtest: SOL-NFT-6: Token Metadata Delegate uses verifier-corrected powers and derives NFT status from the role
+ok 148 - SOL-NFT-6: Token Metadata Delegate uses verifier-corrected powers and derives NFT status from the role
+  ---
+  duration_ms: 57.05225
+  ...
+# Subtest: SOL-NFT-6: Token Metadata Revoke uses its own RevokeArgs table and the role decides NFT status
+ok 149 - SOL-NFT-6: Token Metadata Revoke uses its own RevokeArgs table and the role decides NFT status
+  ---
+  duration_ms: 41.905583
+  ...
+# Subtest: SOL-NFT-6: Token Metadata Lock, Unlock, Burn and BurnNft use their own account layouts
+ok 150 - SOL-NFT-6: Token Metadata Lock, Unlock, Burn and BurnNft use their own account layouts
+  ---
+  duration_ms: 13.607625
+  ...
+# Subtest: SOL-NFT-6: other Token Metadata instructions are named and stay opaque
+ok 151 - SOL-NFT-6: other Token Metadata instructions are named and stay opaque
+  ---
+  duration_ms: 0.222542
+  ...
+# Subtest: every coin-level export carries the payload read back from its own frames
+ok 152 - every coin-level export carries the payload read back from its own frames
+  ---
+  duration_ms: 196.682583
+  ...
+# Subtest: payload names match the registries and an independent parser
+ok 153 - payload names match the registries and an independent parser
+  ---
+  duration_ms: 21.173625
+  ...
+# Subtest: the same helper describes signing responses
+ok 154 - the same helper describes signing responses
+  ---
+  duration_ms: 0.6705
+  ...
+# Subtest: the payload crosses the JSON dispatch boundary unchanged
+ok 155 - the payload crosses the JSON dispatch boundary unchanged
+  ---
+  duration_ms: 11.795208
+  ...
+# Subtest: native dispatch preserves controlled protocol diagnostics without reflecting payload content
+ok 156 - native dispatch preserves controlled protocol diagnostics without reflecting payload content
+  ---
+  duration_ms: 2.080709
+  ...
+# Subtest: native dispatch keeps upstream exceptions generic
+ok 157 - native dispatch keeps upstream exceptions generic
+  ---
+  duration_ms: 1.191708
+  ...
+# Subtest: imToken-style opaque request ID survives typed-transaction signing and independent response decoding
+ok 158 - imToken-style opaque request ID survives typed-transaction signing and independent response decoding
+  ---
+  duration_ms: 296.017667
+  ...
+# Subtest: Ethereum opaque IDs are bounded bytes while Solana remains UUID-only
+ok 159 - Ethereum opaque IDs are bounded bytes while Solana remains UUID-only
+  ---
+  duration_ms: 5.952875
+  ...
+# Subtest: MetaMask registry personal request retains UUID, path, fingerprint, and exact message bytes
+ok 160 - MetaMask registry personal request retains UUID, path, fingerprint, and exact message bytes
+  ---
+  duration_ms: 0.94775
+  ...
+# Subtest: Ethereum legacy response preserves variable length EIP155 v
+ok 161 - Ethereum legacy response preserves variable length EIP155 v
+  ---
+  duration_ms: 0.218
+  ...
+# Subtest: Solflare message request/response uses raw Ed25519 key and detached 64-byte signature
+ok 162 - Solflare message request/response uses raw Ed25519 key and detached 64-byte signature
+  ---
+  duration_ms: 1.638833
+  ...
+# Subtest: UR fountain recovers from unordered redundant frames without original first fragments
+ok 163 - UR fountain recovers from unordered redundant frames without original first fragments
+  ---
+  duration_ms: 88.750875
+  ...
+# Subtest: scanner rejects mixed fountain sessions and corrupted bytewords
+ok 164 - scanner rejects mixed fountain sessions and corrupted bytewords
+  ---
+  duration_ms: 0.606875
+  ...
+# Subtest: unsafe CBOR, duplicate labels, and unknown signing types are rejected
+ok 165 - unsafe CBOR, duplicate labels, and unknown signing types are rejected
+  ---
+  duration_ms: 0.483375
+  ...
+# Subtest: strict JSON rejects duplicate keys, rounded amounts, bad encoding, and trailing data
+ok 166 - strict JSON rejects duplicate keys, rounded amounts, bad encoding, and trailing data
+  ---
+  duration_ms: 0.266
+  ...
+# Subtest: plain PSBT returns the matching static representation
+ok 167 - plain PSBT returns the matching static representation
+  ---
+  duration_ms: 1.475792
+  ...
+# Subtest: MetaMask UR completes decode, review, real signing, response and independent signer recovery
+ok 168 - MetaMask UR completes decode, review, real signing, response and independent signer recovery
+  ---
+  duration_ms: 54.219
+  ...
+# Subtest: EIP712 JSON inside the public UR preserves nested fields and verifiable signing
+ok 169 - EIP712 JSON inside the public UR preserves nested fields and verifiable signing
+  ---
+  duration_ms: 55.481
+  ...
+# Subtest: file import accepts full-size public PSBT and rejects private JSON transports
+ok 170 - file import accepts full-size public PSBT and rejects private JSON transports
+  ---
+  duration_ms: 2.136875
+  ...
+# Subtest: BBQR hex and base32 reconstruct PSBT in reverse order and return matching protocol
+ok 171 - BBQR hex and base32 reconstruct PSBT in reverse order and return matching protocol
+  ---
+  duration_ms: 2.0545
+  ...
+# Subtest: BBQR Z raw-DEFLATE uses the specified 10-bit zlib window and rejects decompression bombs
+ok 172 - BBQR Z raw-DEFLATE uses the specified 10-bit zlib window and rejects decompression bombs
+  ---
+  duration_ms: 30.973875
+  ...
+# Subtest: BBQR rejects mixed headers, conflicting indexes, invalid alphabet and unequal blocks
+ok 173 - BBQR rejects mixed headers, conflicting indexes, invalid alphabet and unequal blocks
+  ---
+  duration_ms: 0.383458
+  ...
+# Subtest: public index contains precisely registered public trees and stable seed/passphrase identity
+ok 174 - public index contains precisely registered public trees and stable seed/passphrase identity
+  ---
+  duration_ms: 217.199166
+  ...
+# Subtest: public address derivation matches published BIP86 vector and independent ethers HD derivation
+ok 175 - public address derivation matches published BIP86 vector and independent ethers HD derivation
+  ---
+  duration_ms: 97.996667
+  ...
+# Subtest: all three Solana presets match independent Node crypto SLIP0010 implementation
+ok 176 - all three Solana presets match independent Node crypto SLIP0010 implementation
+  ---
+  duration_ms: 10.736458
+  ...
+# Subtest: Bitcoin exports the account xpub (the only crypto-account form wallets import) or the first address
+ok 177 - Bitcoin exports the account xpub (the only crypto-account form wallets import) or the first address
+  ---
+  duration_ms: 43.914584
+  ...
+# Subtest: EVM exports only its account, SOL only the selected preset, TRON only one raw address
+ok 178 - EVM exports only its account, SOL only the selected preset, TRON only one raw address
+  ---
+  duration_ms: 14.174833
+  ...
+# Subtest: public EVM resolver supports paths, limited fallback, collisions, missing metadata and duplicate identities
+ok 179 - public EVM resolver supports paths, limited fallback, collisions, missing metadata and duplicate identities
+  ---
+  duration_ms: 32.933667
+  ...
+# Subtest: signing plan binds immutable QR bytes, key identity, task contents and exact nonzero EVM path
+ok 180 - signing plan binds immutable QR bytes, key identity, task contents and exact nonzero EVM path
+  ---
+  duration_ms: 215.093708
+  ...
+# Subtest: PSBT public matching fixes two wallet tasks, preserves partial signatures, and never scans beyond zero fallback
+ok 181 - PSBT public matching fixes two wallet tasks, preserves partial signatures, and never scans beyond zero fallback
+  ---
+  duration_ms: 613.113833
+  ...
+# Subtest: TRON public reference request and response match the pinned upstream wire fixture
+ok 182 - TRON public reference request and response match the pinned upstream wire fixture
+  ---
+  duration_ms: 1.427333
+  ...
+# Subtest: Solana message matching handles optional address and exact presets; transaction signer slots are required
+ok 183 - Solana message matching handles optional address and exact presets; transaction signer slots are required
+  ---
+  duration_ms: 594.289125
+  ...
+# Subtest: TRON matches the 100 cached addresses without a path, any index with a path, and signs with TIP191 bytes
+ok 184 - TRON matches the 100 cached addresses without a path, any index with a path, and signs with TIP191 bytes
+  ---
+  duration_ms: 436.731417
+  ...
+# Subtest: PSBT plan rejects tampered accumulation and limits absent derivation cosigners to explicit scripts
+ok 185 - PSBT plan rejects tampered accumulation and limits absent derivation cosigners to explicit scripts
+  ---
+  duration_ms: 118.469584
+  ...
+# Subtest: signed response payload: evm/eip1559-transaction
+ok 186 - signed response payload: evm/eip1559-transaction
+  ---
+  duration_ms: 137.042166
+  ...
+# Subtest: signed response payload: evm/legacy-transaction-eip155
+ok 187 - signed response payload: evm/legacy-transaction-eip155
+  ---
+  duration_ms: 123.022666
+  ...
+# Subtest: signed response payload: evm/personal-message
+ok 188 - signed response payload: evm/personal-message
+  ---
+  duration_ms: 108.233208
+  ...
+# Subtest: signed response payload: evm/typed-data
+ok 189 - signed response payload: evm/typed-data
+  ---
+  duration_ms: 119.369083
+  ...
+# Subtest: signed response payload: evm/personal-message-without-request-id
+ok 190 - signed response payload: evm/personal-message-without-request-id
+  ---
+  duration_ms: 106.3415
+  ...
+# Subtest: signed response payload: solana/transaction
+ok 191 - signed response payload: solana/transaction
+  ---
+  duration_ms: 152.058791
+  ...
+# Subtest: signed response payload: solana/message
+ok 192 - signed response payload: solana/message
+  ---
+  duration_ms: 98.981666
+  ...
+# Subtest: signed response payload: tron/transaction
+ok 193 - signed response payload: tron/transaction
+  ---
+  duration_ms: 128.617416
+  ...
+# Subtest: signed response payload: tron/message
+ok 194 - signed response payload: tron/message
+  ---
+  duration_ms: 116.9505
+  ...
+# Subtest: signed response payload: bitcoin/crypto-psbt
+ok 195 - signed response payload: bitcoin/crypto-psbt
+  ---
+  duration_ms: 129.840625
+  ...
+# Subtest: signed response payload: bitcoin/psbt
+ok 196 - signed response payload: bitcoin/psbt
+  ---
+  duration_ms: 137.578125
+  ...
+# Subtest: signed response payload: bitcoin/crypto-psbt-taproot
+ok 197 - signed response payload: bitcoin/crypto-psbt-taproot
+  ---
+  duration_ms: 138.957708
+  ...
+# Subtest: signed response payload: bitcoin/bbqr-base32
+ok 198 - signed response payload: bitcoin/bbqr-base32
+  ---
+  duration_ms: 124.158584
+  ...
+# Subtest: signed response payload: bitcoin/bbqr-hex
+ok 199 - signed response payload: bitcoin/bbqr-hex
+  ---
+  duration_ms: 116.443792
+  ...
+# Subtest: signed response payload: bitcoin/psbt-base64-text
+ok 200 - signed response payload: bitcoin/psbt-base64-text
+  ---
+  duration_ms: 103.426875
+  ...
+# Subtest: signed response payload: bitcoin/psbt-hex-text
+ok 201 - signed response payload: bitcoin/psbt-hex-text
+  ---
+  duration_ms: 103.237625
+  ...
+# Subtest: signed response payload: bitcoin/psbt-base64-text-too-large
+ok 202 - signed response payload: bitcoin/psbt-base64-text-too-large
+  ---
+  duration_ms: 154.466542
+  ...
+# Subtest: PSBT-framed bytes that are not a transaction still show the exact bytes, without a summary
+ok 203 - PSBT-framed bytes that are not a transaction still show the exact bytes, without a summary
+  ---
+  duration_ms: 0.913958
+  ...
+# Subtest: a response whose frames do not decode to their own type is refused before display
+ok 204 - a response whose frames do not decode to their own type is refused before display
+  ---
+  duration_ms: 0.38225
+  ...
+# Subtest: BitTool Signer exports one wallet-level form: the account-level payload
+ok 205 - BitTool Signer exports one wallet-level form: the account-level payload
+  ---
+  duration_ms: 25.071583
+  ...
+# Subtest: The payload holds four BTC xpubs, EVM, TRON and the three Solana addresses
+ok 206 - The payload holds four BTC xpubs, EVM, TRON and the three Solana addresses
+  ---
+  duration_ms: 63.705
+  ...
+# Subtest: Payload is canonical CBOR inside a ur:bytes byte string
+ok 207 - Payload is canonical CBOR inside a ur:bytes byte string
+  ---
+  duration_ms: 21.171125
+  ...
+# Subtest: Decoder ignores unknown fields but refuses other versions, protocols and non-canonical bytes
+ok 208 - Decoder ignores unknown fields but refuses other versions, protocols and non-canonical bytes
+  ---
+  duration_ms: 19.654666
+  ...
+# Subtest: The public index keeps only the three Solana presets and rejects forged ones
+ok 209 - The public index keeps only the three Solana presets and rejects forged ones
+  ---
+  duration_ms: 3.230625
+  ...
+# Subtest: Engine dispatch exposes createWalletPairing over the public index only
+ok 210 - Engine dispatch exposes createWalletPairing over the public index only
+  ---
+  duration_ms: 12.150542
+  ...
+1..210
+# tests 210
+# suites 0
+# pass 209
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3901.139917

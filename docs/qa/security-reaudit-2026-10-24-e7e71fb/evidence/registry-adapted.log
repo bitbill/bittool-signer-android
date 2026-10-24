@@ -1,0 +1,108 @@
+Current source repository: /Users/tanguopeng/Documents/bitool-signer-android
+Temporary test copy: /var/folders/8h/q6z5qhxx48b0k3m1c1k0pqj00000gn/T/bittool-registry-audit-gkps5h/engine/test/chain-expansion.test.mjs
+Only replacement: ../../BitToolSigner/Resources/ -> ../../core/data/src/main/assets/registry/ (3 occurrences)
+TAP version 13
+# Subtest: Bitcoin seven mainstream script forms sign v0/v2 and independently finalize
+ok 1 - Bitcoin seven mainstream script forms sign v0/v2 and independently finalize # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.747542
+  ...
+# Subtest: Bitcoin CHECKSIGADD and CHECKSIGVERIFY leaves produce verifiable script-path signatures
+ok 2 - Bitcoin CHECKSIGADD and CHECKSIGVERIFY leaves produce verifiable script-path signatures # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.064834
+  ...
+# Subtest: Bitcoin task signs only selected input/key and preserves all unknown PSBT maps
+ok 3 - Bitcoin task signs only selected input/key and preserves all unknown PSBT maps # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.045875
+  ...
+# Subtest: Bitcoin rejects wrong script selector, altered control block and forged existing cosignature
+ok 4 - Bitcoin rejects wrong script selector, altered control block and forged existing cosignature # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.048458
+  ...
+# Subtest: EVM exact local registry formats integers without losing precision and unknown calls remain high risk
+ok 5 - EVM exact local registry formats integers without losing precision and unknown calls remain high risk # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.061042
+  ...
+# Subtest: EIP712 Permit2 fields and absent signed chain context are explicit; task identity is rechecked
+ok 6 - EIP712 Permit2 fields and absent signed chain context are explicit; task identity is rechecked # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.039125
+  ...
+# Subtest: Safe MultiSend decodes inner calls and surfaces delegatecall/ownership risk
+ok 7 - Safe MultiSend decodes inner calls and surfaces delegatecall/ownership risk # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.12
+  ...
+# Subtest: TRON personal message uses TronWeb prefix and byte length, independently verified
+ok 8 - TRON personal message uses TronWeb prefix and byte length, independently verified # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.044667
+  ...
+# Subtest: Solana signs read-only non-feepayer slot; selected slot mismatch is refused
+ok 9 - Solana signs read-only non-feepayer slot; selected slot mismatch is refused # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.180583
+  ...
+# Subtest: Solana unchecked token transfer never infers mint from token-account address
+ok 10 - Solana unchecked token transfer never infers mint from token-account address # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.127833
+  ...
+# Subtest: Squads proposal-only approvals explicitly disclose unavailable proposal contents
+ok 11 - Squads proposal-only approvals explicitly disclose unavailable proposal contents # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.058125
+  ...
+# Subtest: Offline registry has unique exact identities, on-chain decimals and packed icons that match their hashes
+ok 12 - Offline registry has unique exact identities, on-chain decimals and packed icons that match their hashes
+  ---
+  duration_ms: 204.566625
+  ...
+# Subtest: TRON Stake2 resource delegation parses signed protobuf units, recipient and lock
+ok 13 - TRON Stake2 resource delegation parses signed protobuf units, recipient and lock # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.085792
+  ...
+# Subtest: TRON owner member can use verified task identity without optional request address
+ok 14 - TRON owner member can use verified task identity without optional request address # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.152166
+  ...
+# Subtest: All chain review entry points reject explicit unsupported networks
+ok 15 - All chain review entry points reject explicit unsupported networks # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.046834
+  ...
+# Subtest: Custom Permit schemas stay partial and never invent token allowance interpretations
+ok 16 - Custom Permit schemas stay partial and never invent token allowance interpretations # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.149875
+  ...
+# Subtest: Reviewed EVM networks beyond token registry remain usable with accurate native tickers
+ok 17 - Reviewed EVM networks beyond token registry remain usable with accurate native tickers # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.055625
+  ...
+# Subtest: Solana recognizes Unicode messages without permitting transaction header reinterpretation
+ok 18 - Solana recognizes Unicode messages without permitting transaction header reinterpretation # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.7305
+  ...
+# Subtest: EVM conflicting unsigned network hints cannot override missing signed domain context
+ok 19 - EVM conflicting unsigned network hints cannot override missing signed domain context # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.489625
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 18
+# todo 0
+# duration_ms 622.410458

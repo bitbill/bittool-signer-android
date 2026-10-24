@@ -11,9 +11,8 @@ import com.bittool.signer.core.crypto.vault.KeystoreKeyPolicy
  * key policy of the instrumented tests, for other modules' instrumented tests (`:core:data` androidTest) on a device
  * **without a secure lock screen** — the shared test emulator, whose security settings tests must not change.
  *
- * The production configuration (`KeystoreKeyPolicy.forDevice`) marks every key `setUnlockedDeviceRequired(true)`, which
- * API 31 Keystore refuses to generate while no lock screen exists, and the device-key store refuses to create keys
- * without one (vault-crypto.md §17.3). The test policy is `KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired =
+ * The device-key store refuses to create keys without a lock screen (vault-crypto.md §17.3); keys made before
+ * 2026-10-24 were also `setUnlockedDeviceRequired(true)`, which API 31 Keystore refuses to generate without one. The test policy is `KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired =
  * false)`, the one `:core:crypto`'s own Keystore tests use; every cryptographic operation is still the production code
  * under real non-exportable Keystore keys. On a device with a lock screen use the `@Inject` constructors instead.
  *

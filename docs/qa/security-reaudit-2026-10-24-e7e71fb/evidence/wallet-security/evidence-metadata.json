@@ -1,0 +1,11 @@
+{
+  "head": "e7e71fbc4b5614b68e993e1eec5dc986b4536a86",
+  "tracked_diff": "",
+  "sha256": {
+    "core/data/src/main/kotlin/com/bittool/signer/core/data/DefaultSignerStore.kt": "f6da1e1d56f97551a9f211b2b1ffe44b16713cd08af92011457218bd9f75b27c",
+    "core/data/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar": "2e78040772e3be223c824beb4562b2a015a202ccfe454f7ee56e91a04bc825c4",
+    "core/data/src/test/kotlin/com/bittool/signer/core/data/DefaultSignerStoreTest.kt": "8c2a7841ce736282cf0afa03277eafdae05f6116265d4d3bcfcbcb3388a33808",
+    "SecretCancellationReaudit.kt": "cfe51ef2b25f50955a7ca2c41d3c489d2abe1d357d8e23c827bdf326c6e771d9",
+    "BaselineDefaultSignerStore.kt": "fdce8141dd003960511cf54e44b0b97b262ec6256a1dba9729da746c6985e165"
+  }
+}

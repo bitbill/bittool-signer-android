@@ -1,0 +1,861 @@
+{
+  "baseline": "bb1e6567fb2a8cc30dd6e8e9447e69b0f330fa1b",
+  "date": "2026-10-24",
+  "timezone": "Australia/Sydney",
+  "androidJvm": {
+    "testTasks": 19,
+    "tests": 1613,
+    "failed": 0,
+    "skipped": 0,
+    "tasks": [
+      {
+        "task": "core/ui/build/test-results/testDebugUnitTest",
+        "tests": 121,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/crypto/build/test-results/testDebugUnitTest",
+        "tests": 101,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/designsystem/build/test-results/testDebugUnitTest",
+        "tests": 108,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/l10n/build/test-results/testDebugUnitTest",
+        "tests": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/security/build/test-results/testDebugUnitTest",
+        "tests": 133,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/navigation/build/test-results/testDebugUnitTest",
+        "tests": 10,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/common/build/test-results/testDebugUnitTest",
+        "tests": 8,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/data/build/test-results/testDebugUnitTest",
+        "tests": 120,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/scanner/build/test-results/testDebugUnitTest",
+        "tests": 94,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/engine/build/test-results/testDebugUnitTest",
+        "tests": 9,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/settings/build/test-results/testDebugUnitTest",
+        "tests": 64,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/activity/build/test-results/testDebugUnitTest",
+        "tests": 48,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/setup/build/test-results/testDebugUnitTest",
+        "tests": 153,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/wallets/build/test-results/testDebugUnitTest",
+        "tests": 133,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/sign/build/test-results/testDebugUnitTest",
+        "tests": 105,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "feature/onboarding/build/test-results/testDebugUnitTest",
+        "tests": 23,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "core/model/build/test-results/test",
+        "tests": 109,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "app/build/test-results/testApkDebugUnitTest",
+        "tests": 131,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "task": "app/build/test-results/testPlayDebugUnitTest",
+        "tests": 131,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "incrementalResultsReused": true
+  },
+  "lint": [
+    {
+      "variant": "apkRelease",
+      "issues": [
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.View#ACCESSIBILITY_DATA_SENSITIVE_AUTO`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.View#ACCESSIBILITY_DATA_SENSITIVE_YES`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 30 (current min is 26): `android.view.HapticFeedbackConstants#CONFIRM`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.HapticFeedbackConstants#SEGMENT_TICK`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 30 (current min is 26): `android.view.HapticFeedbackConstants#REJECT`"
+        },
+        {
+          "id": "VectorRaster",
+          "severity": "Warning",
+          "message": "Limit vector icons sizes to 200\u00d7200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        },
+        {
+          "id": "AndroidGradlePluginVersion",
+          "severity": "Warning",
+          "message": "A newer version of Gradle than 9.7.1 is available: 9.8.2"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "ModifierFactoryExtensionFunction",
+          "severity": "Warning",
+          "message": "Modifier factory functions should be extensions on Modifier"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"Contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"Tokens\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contract\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"decimals\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"tokens\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"wallets\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"parts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"most\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"seconds\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"more\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "ObsoleteSdkInt",
+          "severity": "Warning",
+          "message": "This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`."
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.brand_mark` appears to be unused"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.brand_tile` appears to be unused"
+        },
+        {
+          "id": "UseKtx",
+          "severity": "Warning",
+          "message": "Use the KTX extension function `SharedPreferences.edit` instead?"
+        },
+        {
+          "id": "UseKtx",
+          "severity": "Warning",
+          "message": "Use the KTX extension function `Int.toDrawable` instead?"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        }
+      ],
+      "errors": 0,
+      "warnings": 70
+    },
+    {
+      "variant": "playRelease",
+      "issues": [
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.View#ACCESSIBILITY_DATA_SENSITIVE_AUTO`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.View#ACCESSIBILITY_DATA_SENSITIVE_YES`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 30 (current min is 26): `android.view.HapticFeedbackConstants#CONFIRM`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 34 (current min is 26): `android.view.HapticFeedbackConstants#SEGMENT_TICK`"
+        },
+        {
+          "id": "InlinedApi",
+          "severity": "Warning",
+          "message": "Field requires API level 30 (current min is 26): `android.view.HapticFeedbackConstants#REJECT`"
+        },
+        {
+          "id": "VectorRaster",
+          "severity": "Warning",
+          "message": "Limit vector icons sizes to 200\u00d7200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        },
+        {
+          "id": "AndroidGradlePluginVersion",
+          "severity": "Warning",
+          "message": "A newer version of Gradle than 9.7.1 is available: 9.8.2"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "NewerVersionAvailable",
+          "severity": "Warning",
+          "message": "A newer version of io.github.takahirom.roborazzi:roborazzi-compose than 1.32.2 is available: 1.76.0"
+        },
+        {
+          "id": "ModifierFactoryExtensionFunction",
+          "severity": "Warning",
+          "message": "Modifier factory functions should be extensions on Modifier"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "ModifierParameter",
+          "severity": "Warning",
+          "message": "Modifier parameter should be the first optional parameter"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"Contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"Tokens\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contract\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"contracts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"decimals\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"tokens\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"wallets\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"parts\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"most\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"seconds\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"words\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "PluralsCandidate",
+          "severity": "Warning",
+          "message": "Formatting %d followed by words (\"more\"): This should probably be a plural rather than a string"
+        },
+        {
+          "id": "ObsoleteSdkInt",
+          "severity": "Warning",
+          "message": "This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`."
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.brand_mark` appears to be unused"
+        },
+        {
+          "id": "UnusedResources",
+          "severity": "Warning",
+          "message": "The resource `R.drawable.brand_tile` appears to be unused"
+        },
+        {
+          "id": "UseKtx",
+          "severity": "Warning",
+          "message": "Use the KTX extension function `SharedPreferences.edit` instead?"
+        },
+        {
+          "id": "UseKtx",
+          "severity": "Warning",
+          "message": "Use the KTX extension function `Int.toDrawable` instead?"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        },
+        {
+          "id": "UseTomlInstead",
+          "severity": "Warning",
+          "message": "Use version catalog instead"
+        }
+      ],
+      "errors": 0,
+      "warnings": 70
+    }
+  ],
+  "engine": {
+    "tests": 210,
+    "passed": 209,
+    "failed": 1,
+    "failure": "BTS-06 missing iOS paths"
+  },
+  "registryAdapted": {
+    "passed": 1,
+    "filteredSkipped": 18,
+    "failed": 0
+  },
+  "nativePbkdf2": {
+    "passed": 46,
+    "total": 46,
+    "path": "portable C only"
+  },
+  "deviceInstrumentation": "not performed"
+}

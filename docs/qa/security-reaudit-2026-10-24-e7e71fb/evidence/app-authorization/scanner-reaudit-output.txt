@@ -1,0 +1,4 @@
+PASS static-QR retry through camera gate: calls=[STATIC-QR, STATIC-QR], received=1
+PASS duplicate queued/in-flight frame not replayed: calls=[A, B]
+PASS queued duplicate resumes interrupted first frame in FIFO order: calls=[A, A, B]
+PASS late result cannot restart stopped scanner: calls=[A]

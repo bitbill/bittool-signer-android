@@ -26,22 +26,27 @@ internal fun interface DeviceLockScreen {
 }
 
 /**
- * How Keystore keys are generated (vault-crypto.md §17.3–§17.4). Production: [forDevice]. Tests on an emulator
- * without a lock screen pass [unlockedDeviceRequired] = false, because API 31 Keystore refuses to generate an
- * unlocked-device-required key while no lock screen exists (measured: "Keystore key generation failed / System
- * error"); production never reaches key generation without one ([DeviceLockScreen]).
+ * How Keystore keys are generated (vault-crypto.md §17.3–§17.4). Production: [forDevice].
+ *
+ * Production keys are **not** `setUnlockedDeviceRequired` (owner decision 2026-10-24, DECISIONS.md §6): Android 12–13,
+ * and some manufacturers' builds after them, keep such keys locked after the phone is unlocked by face recognition (or
+ * another non-strong biometric) or Smart Lock, until the PIN, pattern or password is used, so every wallet, the
+ * public data and Activity were unusable after an ordinary face unlock. The app only runs while the phone is unlocked;
+ * the wallet password (PBKDF2, 600,000 iterations) still protects every phrase and every signature, and a secure lock
+ * screen is still required before any key is created or used ([DeviceLockScreen], `DevicePasscodeRequired`). Keys made
+ * before this change keep the flag; their refusal reads as `VaultError.DeviceKeyUnavailable.deviceLocked`.
  */
 internal data class KeystoreKeyPolicy(
     /** Try StrongBox first for the per-wallet AES keys (falls back to the TEE on `StrongBoxUnavailableException`). */
     val strongBox: Boolean,
-    /** `setUnlockedDeviceRequired(true)` (API 28+): keys are unusable while the device is locked. */
+    /** `setUnlockedDeviceRequired(true)` (API 28+): keys are unusable while the device is locked. False in production. */
     val unlockedDeviceRequired: Boolean,
 ) {
     companion object {
         fun forDevice(context: Context) = KeystoreKeyPolicy(
             strongBox = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
                 context.packageManager.hasSystemFeature(PackageManager.FEATURE_STRONGBOX_KEYSTORE),
-            unlockedDeviceRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P,
+            unlockedDeviceRequired = false,
         )
     }
 }

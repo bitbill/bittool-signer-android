@@ -1,0 +1,1405 @@
+Starting a Gradle Daemon, 1 stopped Daemon could not be reused, use --status for details
+Calculating task graph as no cached configuration is available for tasks: testDebugUnitTest :core:model:test :app:testApkDebugUnitTest :app:testPlayDebugUnitTest :app:checkApkReleasePermissions :app:checkPlayReleasePermissions :app:checkApkReleaseComponents :app:checkPlayReleaseComponents :app:lintApkRelease :app:lintPlayRelease
+Type-safe project accessors is an incubating feature.
+> Task :build-logic:convention:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :build-logic:convention:compileKotlin UP-TO-DATE
+> Task :build-logic:convention:compileJava NO-SOURCE
+> Task :build-logic:convention:pluginDescriptors UP-TO-DATE
+> Task :build-logic:convention:processResources UP-TO-DATE
+> Task :build-logic:convention:classes UP-TO-DATE
+> Task :build-logic:convention:jar UP-TO-DATE
+> Task :core:common:preBuild UP-TO-DATE
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:common:generateDebugAssets UP-TO-DATE
+> Task :core:common:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:common:preDebugBuild UP-TO-DATE
+> Task :core:common:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:model:processResources NO-SOURCE
+> Task :core:common:generateDebugResources UP-TO-DATE
+> Task :core:common:processDebugNavigationResources UP-TO-DATE
+> Task :core:common:mergeDebugAssets UP-TO-DATE
+> Task :core:common:writeDebugAarMetadata UP-TO-DATE
+> Task :core:common:javaPreCompileDebug UP-TO-DATE
+> Task :core:common:packageDebugResources UP-TO-DATE
+> Task :core:common:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:common:compileDebugLibraryResources UP-TO-DATE
+> Task :core:common:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:common:parseDebugLocalResources UP-TO-DATE
+> Task :core:common:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:common:generateDebugRFile UP-TO-DATE
+> Task :core:common:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:common:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:common:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:common:kspDebugKotlin UP-TO-DATE
+> Task :core:common:extractDeepLinksDebug UP-TO-DATE
+> Task :core:common:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:crypto:preBuild UP-TO-DATE
+> Task :core:crypto:preDebugBuild UP-TO-DATE
+> Task :core:common:processDebugManifest UP-TO-DATE
+> Task :core:crypto:generateDebugResources UP-TO-DATE
+> Task :core:crypto:packageDebugResources UP-TO-DATE
+> Task :core:crypto:processDebugNavigationResources UP-TO-DATE
+> Task :core:crypto:parseDebugLocalResources UP-TO-DATE
+> Task :core:crypto:generateDebugRFile UP-TO-DATE
+> Task :core:l10n:preBuild UP-TO-DATE
+> Task :core:l10n:preDebugBuild UP-TO-DATE
+> Task :core:model:compileKotlin UP-TO-DATE
+> Task :core:model:compileJava NO-SOURCE
+> Task :core:model:classes UP-TO-DATE
+> Task :core:l10n:generateDebugResources UP-TO-DATE
+> Task :core:model:jar UP-TO-DATE
+> Task :core:l10n:generateEnglishLocale UP-TO-DATE
+> Task :core:l10n:processDebugNavigationResources UP-TO-DATE
+> Task :core:l10n:javaPreCompileDebug UP-TO-DATE
+> Task :core:common:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:crypto:javaPreCompileDebug UP-TO-DATE
+> Task :core:crypto:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:crypto:generateDebugAssets UP-TO-DATE
+> Task :core:common:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:crypto:mergeDebugAssets UP-TO-DATE
+> Task :core:crypto:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:l10n:generateDebugAssets UP-TO-DATE
+> Task :core:l10n:mergeDebugAssets UP-TO-DATE
+> Task :core:l10n:packageDebugResources UP-TO-DATE
+> Task :core:l10n:parseDebugLocalResources UP-TO-DATE
+> Task :core:common:compileDebugKotlin UP-TO-DATE
+> Task :core:l10n:generateDebugRFile UP-TO-DATE
+> Task :core:common:processDebugJavaRes UP-TO-DATE
+> Task :core:common:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:common:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:common:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:common:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:crypto:writeDebugAarMetadata UP-TO-DATE
+> Task :core:l10n:writeDebugAarMetadata UP-TO-DATE
+> Task :core:l10n:compileDebugKotlin UP-TO-DATE
+> Task :core:l10n:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:l10n:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:common:processDebugUnitTestResources UP-TO-DATE
+> Task :core:common:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:common:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:crypto:kspDebugKotlin UP-TO-DATE
+> Task :core:crypto:compileDebugKotlin UP-TO-DATE
+> Task :core:crypto:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:l10n:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:crypto:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:crypto:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:crypto:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:crypto:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:crypto:compileDebugLibraryResources UP-TO-DATE
+> Task :core:crypto:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:crypto:extractDeepLinksDebug UP-TO-DATE
+> Task :core:common:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:crypto:processDebugManifest UP-TO-DATE
+> Task :core:l10n:extractDeepLinksDebug UP-TO-DATE
+> Task :core:l10n:processDebugManifest UP-TO-DATE
+> Task :core:crypto:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:crypto:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:l10n:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:l10n:compileDebugLibraryResources UP-TO-DATE
+> Task :core:crypto:processDebugJavaRes UP-TO-DATE
+> Task :core:crypto:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:crypto:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:l10n:processDebugJavaRes UP-TO-DATE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:data:generateDebugResources UP-TO-DATE
+> Task :core:data:packageDebugResources UP-TO-DATE
+> Task :core:data:processDebugNavigationResources UP-TO-DATE
+> Task :core:data:parseDebugLocalResources UP-TO-DATE
+> Task :core:data:generateDebugRFile UP-TO-DATE
+> Task :core:engine:preBuild UP-TO-DATE
+> Task :core:engine:preDebugBuild UP-TO-DATE
+> Task :core:engine:generateDebugResources UP-TO-DATE
+> Task :core:engine:packageDebugResources UP-TO-DATE
+> Task :core:common:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:common:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:common:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:common:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:crypto:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:processDebugNavigationResources UP-TO-DATE
+> Task :core:crypto:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:engine:javaPreCompileDebug UP-TO-DATE
+> Task :core:engine:parseDebugLocalResources UP-TO-DATE
+> Task :core:crypto:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:data:javaPreCompileDebug UP-TO-DATE
+> Task :core:data:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:engine:generateDebugRFile UP-TO-DATE
+> Task :core:data:mergeDebugAssets UP-TO-DATE
+> Task :core:data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:engine:generateDebugAssets UP-TO-DATE
+> Task :core:engine:mergeDebugAssets UP-TO-DATE
+> Task :core:engine:kspDebugKotlin UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:writeDebugAarMetadata UP-TO-DATE
+> Task :core:engine:writeDebugAarMetadata UP-TO-DATE
+> Task :core:engine:compileDebugKotlin UP-TO-DATE
+> Task :core:data:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:engine:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:data:compileDebugLibraryResources UP-TO-DATE
+> Task :core:data:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:data:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:engine:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:data:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:processDebugManifest UP-TO-DATE
+> Task :core:engine:extractDeepLinksDebug UP-TO-DATE
+> Task :core:engine:processDebugManifest UP-TO-DATE
+> Task :core:data:kspDebugKotlin UP-TO-DATE
+> Task :core:crypto:processDebugUnitTestResources UP-TO-DATE
+> Task :core:crypto:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:crypto:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:data:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:engine:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:engine:compileDebugLibraryResources UP-TO-DATE
+> Task :core:crypto:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:data:processDebugUnitTestResources UP-TO-DATE
+> Task :core:data:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:data:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:common:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:common:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:common:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core:engine:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:generateDebugResources UP-TO-DATE
+> Task :core:designsystem:packageDebugResources UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources UP-TO-DATE
+> Task :core:designsystem:parseDebugLocalResources UP-TO-DATE
+> Task :core:crypto:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:crypto:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:designsystem:generateDebugRFile UP-TO-DATE
+> Task :core:crypto:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:crypto:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:data:compileDebugKotlin UP-TO-DATE
+> Task :core:data:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:common:testDebugUnitTest UP-TO-DATE
+> Task :core:data:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebug UP-TO-DATE
+> Task :core:designsystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:writeDebugAarMetadata UP-TO-DATE
+> Task :core:data:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:crypto:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:crypto:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:data:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:crypto:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core:data:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:crypto:testDebugUnitTest UP-TO-DATE
+> Task :core:data:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:designsystem:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:compileDebugLibraryResources UP-TO-DATE
+> Task :core:designsystem:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:designsystem:compileDebugKotlin UP-TO-DATE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:designsystem:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksDebug UP-TO-DATE
+> Task :core:designsystem:processDebugManifest UP-TO-DATE
+> Task :core:data:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:data:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:data:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core:data:testDebugUnitTest UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:designsystem:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:designsystem:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:engine:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:engine:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:designsystem:processDebugJavaRes UP-TO-DATE
+> Task :core:engine:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:engine:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:engine:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:engine:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:l10n:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:engine:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:engine:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:l10n:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:l10n:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:l10n:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:l10n:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:l10n:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:l10n:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:l10n:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:l10n:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:navigation:preBuild UP-TO-DATE
+> Task :core:navigation:preDebugBuild UP-TO-DATE
+> Task :core:navigation:generateDebugResources UP-TO-DATE
+> Task :core:navigation:packageDebugResources UP-TO-DATE
+> Task :core:navigation:processDebugNavigationResources UP-TO-DATE
+> Task :core:navigation:parseDebugLocalResources UP-TO-DATE
+> Task :core:navigation:generateDebugRFile UP-TO-DATE
+> Task :core:engine:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:processDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:engine:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:designsystem:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:l10n:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:designsystem:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:engine:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:l10n:processDebugUnitTestResources UP-TO-DATE
+> Task :core:engine:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:engine:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:engine:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:l10n:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:engine:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:l10n:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:l10n:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:l10n:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:l10n:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:engine:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:engine:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:l10n:testDebugUnitTest UP-TO-DATE
+> Task :core:navigation:javaPreCompileDebug UP-TO-DATE
+> Task :core:navigation:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:navigation:generateDebugAssets UP-TO-DATE
+> Task :core:navigation:mergeDebugAssets UP-TO-DATE
+> Task :core:navigation:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:engine:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core:engine:testDebugUnitTest UP-TO-DATE
+> Task :core:navigation:writeDebugAarMetadata UP-TO-DATE
+> Task :core:navigation:kspDebugKotlin UP-TO-DATE
+> Task :core:navigation:compileDebugKotlin UP-TO-DATE
+> Task :core:designsystem:processDebugUnitTestResources UP-TO-DATE
+> Task :core:navigation:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:designsystem:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:designsystem:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:navigation:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:navigation:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:navigation:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:navigation:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:navigation:compileDebugLibraryResources UP-TO-DATE
+> Task :core:navigation:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:navigation:extractDeepLinksDebug UP-TO-DATE
+> Task :core:navigation:processDebugManifest UP-TO-DATE
+> Task :core:designsystem:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:designsystem:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:designsystem:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:navigation:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:navigation:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:navigation:processDebugJavaRes UP-TO-DATE
+> Task :core:navigation:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:navigation:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:scanner:preBuild UP-TO-DATE
+> Task :core:scanner:preDebugBuild UP-TO-DATE
+> Task :core:scanner:generateDebugResources UP-TO-DATE
+> Task :core:scanner:packageDebugResources UP-TO-DATE
+> Task :core:scanner:processDebugNavigationResources UP-TO-DATE
+> Task :core:scanner:parseDebugLocalResources UP-TO-DATE
+> Task :core:scanner:generateDebugRFile UP-TO-DATE
+> Task :core:navigation:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:scanner:javaPreCompileDebug UP-TO-DATE
+> Task :core:scanner:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:scanner:generateDebugAssets UP-TO-DATE
+> Task :core:scanner:mergeDebugAssets UP-TO-DATE
+> Task :core:scanner:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:navigation:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:navigation:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:scanner:kspDebugKotlin UP-TO-DATE
+> Task :core:scanner:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:scanner:writeDebugAarMetadata UP-TO-DATE
+> Task :core:designsystem:testDebugUnitTest UP-TO-DATE
+> Task :core:scanner:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:scanner:compileDebugLibraryResources UP-TO-DATE
+> Task :core:scanner:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:navigation:processDebugUnitTestResources UP-TO-DATE
+> Task :core:scanner:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:navigation:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:scanner:compileDebugKotlin UP-TO-DATE
+> Task :core:navigation:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:scanner:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:navigation:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :core:scanner:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:scanner:extractDeepLinksDebug UP-TO-DATE
+> Task :core:scanner:processDebugManifest UP-TO-DATE
+> Task :core:navigation:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :core:navigation:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:navigation:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:navigation:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :core:scanner:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:scanner:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:scanner:processDebugJavaRes UP-TO-DATE
+> Task :core:scanner:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:scanner:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:scanner:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:security:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:security:preBuild UP-TO-DATE
+> Task :core:security:generateDebugAssets UP-TO-DATE
+> Task :core:security:preDebugBuild UP-TO-DATE
+> Task :core:security:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:security:processDebugNavigationResources UP-TO-DATE
+> Task :core:security:generateDebugResources UP-TO-DATE
+> Task :core:security:javaPreCompileDebug UP-TO-DATE
+> Task :core:security:mergeDebugAssets UP-TO-DATE
+> Task :core:security:packageDebugResources UP-TO-DATE
+> Task :core:security:parseDebugLocalResources UP-TO-DATE
+> Task :core:security:generateDebugRFile UP-TO-DATE
+> Task :core:scanner:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:scanner:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:security:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:security:writeDebugAarMetadata UP-TO-DATE
+> Task :core:security:kspDebugKotlin UP-TO-DATE
+> Task :core:security:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:security:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:security:compileDebugLibraryResources UP-TO-DATE
+> Task :core:security:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:security:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:scanner:processDebugUnitTestResources UP-TO-DATE
+> Task :core:scanner:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:scanner:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:security:compileDebugKotlin UP-TO-DATE
+> Task :core:security:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:security:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:security:extractDeepLinksDebug UP-TO-DATE
+> Task :core:security:processDebugManifest UP-TO-DATE
+> Task :core:security:transformDebugClassesWithAsm UP-TO-DATE
+> Task :core:navigation:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:security:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:security:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:security:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:navigation:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:security:processDebugJavaRes UP-TO-DATE
+> Task :core:security:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:security:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:navigation:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :core:ui:preBuild UP-TO-DATE
+> Task :core:ui:preDebugBuild UP-TO-DATE
+> Task :core:ui:generateDebugResources UP-TO-DATE
+> Task :core:ui:packageDebugResources UP-TO-DATE
+> Task :core:ui:processDebugNavigationResources UP-TO-DATE
+> Task :core:ui:parseDebugLocalResources UP-TO-DATE
+> Task :core:security:processDebugUnitTestResources UP-TO-DATE
+> Task :core:security:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:ui:generateDebugRFile UP-TO-DATE
+> Task :core:security:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:navigation:testDebugUnitTest UP-TO-DATE
+> Task :core:ui:javaPreCompileDebug UP-TO-DATE
+> Task :core:ui:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:ui:writeDebugAarMetadata UP-TO-DATE
+> Task :core:ui:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:ui:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:ui:compileDebugLibraryResources UP-TO-DATE
+> Task :core:ui:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:ui:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:ui:compileDebugKotlin UP-TO-DATE
+> Task :core:ui:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:ui:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:ui:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:ui:extractDeepLinksDebug UP-TO-DATE
+> Task :core:ui:processDebugManifest UP-TO-DATE
+> Task :core:security:kspDebugUnitTestKotlin
+> Task :core:scanner:kspDebugUnitTestKotlin
+> Task :core:ui:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:ui:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:ui:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:ui:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:ui:generateDebugAssets UP-TO-DATE
+> Task :core:ui:mergeDebugAssets UP-TO-DATE
+> Task :core:ui:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:ui:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:ui:processDebugJavaRes UP-TO-DATE
+> Task :feature:activity:preBuild UP-TO-DATE
+> Task :feature:activity:preDebugBuild UP-TO-DATE
+> Task :feature:activity:generateDebugResources UP-TO-DATE
+> Task :feature:activity:packageDebugResources UP-TO-DATE
+> Task :feature:activity:processDebugNavigationResources UP-TO-DATE
+> Task :feature:activity:parseDebugLocalResources UP-TO-DATE
+> Task :feature:activity:generateDebugRFile UP-TO-DATE
+> Task :core:ui:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:activity:kspDebugKotlin UP-TO-DATE
+> Task :core:ui:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:ui:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:activity:compileDebugKotlin UP-TO-DATE
+> Task :feature:activity:javaPreCompileDebug UP-TO-DATE
+> Task :feature:activity:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:activity:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:activity:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:activity:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:activity:generateDebugAssets UP-TO-DATE
+> Task :feature:activity:mergeDebugAssets UP-TO-DATE
+> Task :feature:activity:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:activity:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:activity:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:activity:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:activity:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:activity:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:activity:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:activity:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:activity:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:activity:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:activity:processDebugManifest UP-TO-DATE
+> Task :feature:activity:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:activity:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:activity:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:activity:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:activity:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:activity:processDebugJavaRes UP-TO-DATE
+> Task :feature:activity:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:activity:kspDebugUnitTestKotlin
+> Task :core:scanner:compileDebugUnitTestKotlin
+> Task :core:scanner:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:scanner:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:scanner:hiltCollectClassesDebugUnitTest
+> Task :feature:activity:compileDebugUnitTestKotlin
+> Task :feature:activity:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:activity:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:activity:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:activity:hiltCollectClassesDebugUnitTest
+> Task :core:security:compileDebugUnitTestKotlin
+> Task :core:ui:compileDebugUnitTestKotlin
+> Task :core:security:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:security:hiltCollectClassesDebugUnitTest
+> Task :core:security:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:ui:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:ui:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:scanner:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:security:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :core:scanner:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:security:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:activity:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:activity:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:scanner:transformDebugUnitTestClassesWithAsm
+> Task :feature:activity:transformDebugUnitTestClassesWithAsm
+> Task :core:security:transformDebugUnitTestClassesWithAsm
+10-24 11:12:27.088  2698 27895226 I HWUI    : Using FreeType backend (prop=Auto)
+10-24 11:12:30.529  2698 27895476 I HWUI    : Davey! duration=1791816541513ms; Flags=1, FrameTimelineVsyncId=-1, IntendedVsync=984209016393833, Vsync=984209016393833, InputEventId=0, HandleInputStart=984209016393833, AnimationStart=984209016393833, PerformTraversalsStart=984209016393833, DrawStart=984209016393833, FrameDeadline=984209026393833, FrameStartTime=984209016393833, FrameInterval=16000000, WorkloadTarget=10000000, AnimationTime=100000000, SyncQueued=1792800750524672000, SyncStart=1792800750524704000, IssueDrawCommandsStart=1792800750524834000, SwapBuffers=0, FrameCompleted=1792800750529674000, DequeueBufferDuration=0, QueueBufferDuration=0, GpuCompleted=1792800750529674000, SwapBuffersCompleted=1792800750528319000, DisplayPresentTime=0, CommandSubmissionCompleted=0, 
+10-24 11:12:31.055  2698 27895476 I HWUI    : Davey! duration=1791816541522ms; Flags=0, FrameTimelineVsyncId=-1, IntendedVsync=984209533303416, Vsync=984209533303416, InputEventId=0, HandleInputStart=984209533303416, AnimationStart=984209533303416, PerformTraversalsStart=984209533303416, DrawStart=984209548303416, FrameDeadline=1792800750546393833, FrameStartTime=984209533303416, FrameInterval=16000000, WorkloadTarget=10000000, AnimationTime=115000000, SyncQueued=1792800751054818000, SyncStart=1792800751054834000, IssueDrawCommandsStart=1792800751054850000, SwapBuffers=0, FrameCompleted=1792800751055933000, DequeueBufferDuration=0, QueueBufferDuration=0, GpuCompleted=1792800751055933000, SwapBuffersCompleted=1792800751055933000, DisplayPresentTime=0, CommandSubmissionCompleted=0, 
+10-24 11:12:45.691  2698 27895476 I HWUI    : Davey! duration=1791816541509ms; Flags=1, FrameTimelineVsyncId=-1, IntendedVsync=984224175382416, Vsync=984224175382416, InputEventId=0, HandleInputStart=984224175382416, AnimationStart=984224175382416, PerformTraversalsStart=984224175382416, DrawStart=984224175382416, FrameDeadline=984224185382416, FrameStartTime=984224175382416, FrameInterval=16000000, WorkloadTarget=10000000, AnimationTime=100000000, SyncQueued=1792800765681937000, SyncStart=1792800765684742000, IssueDrawCommandsStart=1792800765684915000, SwapBuffers=0, FrameCompleted=1792800765687497000, DequeueBufferDuration=0, QueueBufferDuration=0, GpuCompleted=1792800765687497000, SwapBuffersCompleted=1792800765686917000, DisplayPresentTime=0, CommandSubmissionCompleted=0, 
+10-24 11:12:46.112  2698 27895476 I HWUI    : Davey! duration=1791816541523ms; Flags=0, FrameTimelineVsyncId=-1, IntendedVsync=984224588738208, Vsync=984224588738208, InputEventId=0, HandleInputStart=984224588738208, AnimationStart=984224588738208, PerformTraversalsStart=984224588738208, DrawStart=984224603738208, FrameDeadline=1792800765705382416, FrameStartTime=984224588738208, FrameInterval=16000000, WorkloadTarget=10000000, AnimationTime=115000000, SyncQueued=1792800766110301000, SyncStart=1792800766110320000, IssueDrawCommandsStart=1792800766110341000, SwapBuffers=0, FrameCompleted=1792800766112321000, DequeueBufferDuration=0, QueueBufferDuration=0, GpuCompleted=1792800766112321000, SwapBuffersCompleted=1792800766112321000, DisplayPresentTime=0, CommandSubmissionCompleted=0, 
+> Task :feature:activity:testDebugUnitTest
+> Task :core:scanner:testDebugUnitTest
+> Task :feature:onboarding:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:onboarding:preBuild UP-TO-DATE
+> Task :feature:onboarding:generateDebugAssets UP-TO-DATE
+> Task :feature:onboarding:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:onboarding:preDebugBuild UP-TO-DATE
+> Task :feature:onboarding:generateDebugResources UP-TO-DATE
+> Task :feature:onboarding:processDebugNavigationResources UP-TO-DATE
+> Task :feature:onboarding:javaPreCompileDebug UP-TO-DATE
+> Task :feature:onboarding:packageDebugResources UP-TO-DATE
+> Task :feature:onboarding:mergeDebugAssets UP-TO-DATE
+> Task :feature:onboarding:parseDebugLocalResources UP-TO-DATE
+> Task :feature:onboarding:generateDebugRFile UP-TO-DATE
+> Task :feature:onboarding:kspDebugKotlin UP-TO-DATE
+> Task :feature:onboarding:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:onboarding:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:onboarding:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:onboarding:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:onboarding:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:onboarding:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:onboarding:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:onboarding:compileDebugKotlin UP-TO-DATE
+> Task :feature:onboarding:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:onboarding:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:onboarding:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:onboarding:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:onboarding:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:onboarding:processDebugJavaRes UP-TO-DATE
+> Task :feature:onboarding:processDebugManifest UP-TO-DATE
+> Task :feature:onboarding:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:onboarding:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:settings:preBuild UP-TO-DATE
+> Task :feature:settings:preDebugBuild UP-TO-DATE
+> Task :feature:onboarding:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:settings:generateDebugResources UP-TO-DATE
+> Task :feature:onboarding:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:settings:packageDebugResources UP-TO-DATE
+> Task :feature:settings:processDebugNavigationResources UP-TO-DATE
+> Task :feature:settings:parseDebugLocalResources UP-TO-DATE
+> Task :feature:settings:generateDebugRFile UP-TO-DATE
+> Task :feature:onboarding:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:onboarding:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:onboarding:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:settings:kspDebugKotlin UP-TO-DATE
+> Task :feature:onboarding:kspDebugUnitTestKotlin
+> Task :feature:settings:compileDebugKotlin UP-TO-DATE
+> Task :feature:settings:javaPreCompileDebug UP-TO-DATE
+> Task :feature:settings:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:settings:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:settings:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:settings:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:settings:generateDebugAssets UP-TO-DATE
+> Task :feature:settings:mergeDebugAssets UP-TO-DATE
+> Task :feature:settings:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:settings:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:settings:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:settings:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:settings:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:settings:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:settings:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:settings:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:settings:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:settings:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:settings:processDebugManifest UP-TO-DATE
+> Task :feature:settings:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:settings:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:settings:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:settings:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:settings:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:settings:processDebugJavaRes UP-TO-DATE
+> Task :feature:settings:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:settings:kspDebugUnitTestKotlin
+> Task :feature:onboarding:compileDebugUnitTestKotlin
+> Task :feature:onboarding:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:onboarding:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:onboarding:hiltCollectClassesDebugUnitTest
+> Task :feature:onboarding:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:onboarding:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:settings:compileDebugUnitTestKotlin
+> Task :feature:settings:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:settings:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:settings:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:settings:hiltCollectClassesDebugUnitTest
+> Task :feature:settings:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:settings:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :core:ui:testDebugUnitTest
+> Task :core:security:testDebugUnitTest
+> Task :feature:onboarding:transformDebugUnitTestClassesWithAsm
+> Task :feature:settings:transformDebugUnitTestClassesWithAsm
+> Task :feature:setup:preBuild UP-TO-DATE
+> Task :feature:setup:preDebugBuild UP-TO-DATE
+> Task :feature:setup:generateDebugResources UP-TO-DATE
+> Task :feature:setup:packageDebugResources UP-TO-DATE
+> Task :feature:setup:processDebugNavigationResources UP-TO-DATE
+> Task :feature:setup:parseDebugLocalResources UP-TO-DATE
+> Task :feature:setup:generateDebugRFile UP-TO-DATE
+> Task :feature:setup:kspDebugKotlin UP-TO-DATE
+> Task :feature:setup:compileDebugKotlin UP-TO-DATE
+> Task :feature:setup:javaPreCompileDebug UP-TO-DATE
+> Task :feature:setup:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:setup:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:setup:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:setup:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:setup:generateDebugAssets UP-TO-DATE
+> Task :feature:setup:mergeDebugAssets UP-TO-DATE
+> Task :feature:setup:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:setup:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:setup:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:setup:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:setup:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:setup:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:setup:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:setup:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:setup:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:setup:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:setup:processDebugManifest UP-TO-DATE
+> Task :feature:setup:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:setup:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:setup:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:setup:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:setup:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:setup:processDebugJavaRes UP-TO-DATE
+> Task :feature:setup:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:setup:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:setup:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:setup:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:setup:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:setup:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:setup:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:setup:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:setup:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:setup:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :feature:setup:testDebugUnitTest UP-TO-DATE
+> Task :feature:sign:preBuild UP-TO-DATE
+> Task :feature:sign:preDebugBuild UP-TO-DATE
+> Task :feature:sign:generateDebugResources UP-TO-DATE
+> Task :feature:sign:packageDebugResources UP-TO-DATE
+> Task :feature:sign:processDebugNavigationResources UP-TO-DATE
+> Task :feature:sign:parseDebugLocalResources UP-TO-DATE
+> Task :feature:sign:generateDebugRFile UP-TO-DATE
+> Task :feature:sign:kspDebugKotlin UP-TO-DATE
+> Task :feature:sign:compileDebugKotlin UP-TO-DATE
+> Task :feature:sign:javaPreCompileDebug UP-TO-DATE
+> Task :feature:sign:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:sign:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:sign:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:sign:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:sign:generateDebugAssets UP-TO-DATE
+> Task :feature:sign:mergeDebugAssets UP-TO-DATE
+> Task :feature:sign:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:sign:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:sign:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:sign:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:sign:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:sign:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:sign:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:sign:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:sign:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:sign:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:sign:processDebugManifest UP-TO-DATE
+> Task :feature:sign:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:sign:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:sign:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:sign:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:sign:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:sign:processDebugJavaRes UP-TO-DATE
+> Task :feature:sign:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:sign:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:sign:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:sign:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:sign:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:sign:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:sign:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:sign:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:sign:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:sign:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :feature:sign:testDebugUnitTest UP-TO-DATE
+> Task :feature:wallets:preBuild UP-TO-DATE
+> Task :feature:wallets:preDebugBuild UP-TO-DATE
+> Task :feature:wallets:generateDebugResources UP-TO-DATE
+> Task :feature:wallets:packageDebugResources UP-TO-DATE
+> Task :feature:wallets:processDebugNavigationResources UP-TO-DATE
+> Task :feature:wallets:parseDebugLocalResources UP-TO-DATE
+> Task :feature:wallets:generateDebugRFile UP-TO-DATE
+> Task :feature:wallets:kspDebugKotlin UP-TO-DATE
+> Task :feature:wallets:compileDebugKotlin UP-TO-DATE
+> Task :feature:wallets:javaPreCompileDebug UP-TO-DATE
+> Task :feature:wallets:compileDebugJavaWithJavac UP-TO-DATE
+> Task :feature:wallets:transformDebugClassesWithAsm UP-TO-DATE
+> Task :feature:wallets:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :feature:wallets:generateDebugUnitTestAssets UP-TO-DATE
+> Task :feature:wallets:generateDebugAssets UP-TO-DATE
+> Task :feature:wallets:mergeDebugAssets UP-TO-DATE
+> Task :feature:wallets:preDebugUnitTestBuild UP-TO-DATE
+> Task :feature:wallets:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :feature:wallets:writeDebugAarMetadata UP-TO-DATE
+> Task :feature:wallets:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :feature:wallets:mapDebugSourceSetPaths UP-TO-DATE
+> Task :feature:wallets:compileDebugLibraryResources UP-TO-DATE
+> Task :feature:wallets:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :feature:wallets:generateDebugUnitTestResources UP-TO-DATE
+> Task :feature:wallets:mergeDebugUnitTestResources UP-TO-DATE
+> Task :feature:wallets:extractDeepLinksDebug UP-TO-DATE
+> Task :feature:wallets:processDebugManifest UP-TO-DATE
+> Task :feature:wallets:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :feature:wallets:processDebugUnitTestManifest UP-TO-DATE
+> Task :feature:wallets:processDebugUnitTestResources UP-TO-DATE
+> Task :feature:wallets:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :feature:wallets:generateDebugUnitTestConfig UP-TO-DATE
+> Task :feature:wallets:processDebugJavaRes UP-TO-DATE
+> Task :feature:wallets:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :feature:wallets:kspDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:wallets:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :feature:wallets:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :feature:wallets:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :feature:wallets:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :feature:wallets:hiltCollectClassesDebugUnitTest UP-TO-DATE
+> Task :feature:wallets:hiltAggregateDepsDebugUnitTest UP-TO-DATE
+> Task :feature:wallets:hiltJavaCompileDebugUnitTest NO-SOURCE
+> Task :feature:wallets:transformDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :feature:wallets:testDebugUnitTest UP-TO-DATE
+> Task :core:model:compileTestKotlin UP-TO-DATE
+> Task :core:model:compileTestJava NO-SOURCE
+> Task :core:model:processTestResources NO-SOURCE
+> Task :core:model:testClasses UP-TO-DATE
+> Task :core:model:test UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preApkDebugBuild UP-TO-DATE
+> Task :app:generateApkDebugBuildConfig UP-TO-DATE
+> Task :app:generateApkDebugResources UP-TO-DATE
+> Task :app:packageApkDebugResources UP-TO-DATE
+> Task :app:processApkDebugNavigationResources UP-TO-DATE
+> Task :app:parseApkDebugLocalResources UP-TO-DATE
+> Task :app:generateApkDebugRFile UP-TO-DATE
+> Task :app:kspApkDebugKotlin UP-TO-DATE
+> Task :app:compileApkDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileApkDebug UP-TO-DATE
+> Task :app:compileApkDebugJavaWithJavac UP-TO-DATE
+> Task :app:hiltCollectClassesApkDebug UP-TO-DATE
+> Task :app:hiltAggregateDepsApkDebug UP-TO-DATE
+> Task :app:hiltJavaCompileApkDebug UP-TO-DATE
+> Task :app:checkApkDebugAarMetadata UP-TO-DATE
+> Task :app:mapApkDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileApkDebugNavigationResources UP-TO-DATE
+> Task :app:createApkDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksApkDebug UP-TO-DATE
+> Task :app:mergeApkDebugResources UP-TO-DATE
+> Task :app:generateApkDebugAssets UP-TO-DATE
+> Task :app:mergeApkDebugAssets UP-TO-DATE
+> Task :app:preApkDebugUnitTestBuild UP-TO-DATE
+> Task :app:processApkDebugMainManifest UP-TO-DATE
+> Task :app:processApkDebugManifest UP-TO-DATE
+> Task :app:processApkDebugManifestForPackage UP-TO-DATE
+> Task :app:processApkDebugJavaRes UP-TO-DATE
+> Task :app:mergeApkDebugUnitTestManifest UP-TO-DATE
+> Task :app:processApkDebugUnitTestManifest UP-TO-DATE
+> Task :app:javaPreCompileApkDebugUnitTest UP-TO-DATE
+> Task :app:prePlayDebugBuild UP-TO-DATE
+> Task :app:generatePlayDebugBuildConfig UP-TO-DATE
+> Task :app:generatePlayDebugResources UP-TO-DATE
+> Task :app:packagePlayDebugResources UP-TO-DATE
+> Task :app:processApkDebugResources UP-TO-DATE
+> Task :app:processPlayDebugNavigationResources UP-TO-DATE
+> Task :app:packageApkDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateApkDebugUnitTestConfig UP-TO-DATE
+> Task :app:bundleApkDebugClassesToCompileJar UP-TO-DATE
+> Task :app:transformApkDebugClassesWithAsm UP-TO-DATE
+> Task :app:bundleApkDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:parsePlayDebugLocalResources UP-TO-DATE
+> Task :app:generatePlayDebugRFile UP-TO-DATE
+> Task :app:kspApkDebugUnitTestKotlin UP-TO-DATE
+> Task :app:compileApkDebugUnitTestKotlin UP-TO-DATE
+> Task :app:processApkDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:compileApkDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:hiltCollectClassesApkDebugUnitTest UP-TO-DATE
+> Task :app:hiltAggregateDepsApkDebugUnitTest UP-TO-DATE
+> Task :app:hiltJavaCompileApkDebugUnitTest NO-SOURCE
+> Task :app:transformApkDebugUnitTestClassesWithAsm UP-TO-DATE
+> Task :app:testApkDebugUnitTest UP-TO-DATE
+> Task :app:javaPreCompilePlayDebug UP-TO-DATE
+> Task :app:checkPlayDebugAarMetadata UP-TO-DATE
+> Task :app:mapPlayDebugSourceSetPaths UP-TO-DATE
+> Task :app:compilePlayDebugNavigationResources UP-TO-DATE
+> Task :app:mergePlayDebugResources UP-TO-DATE
+> Task :app:createPlayDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksPlayDebug UP-TO-DATE
+> Task :app:processPlayDebugMainManifest UP-TO-DATE
+> Task :app:processPlayDebugManifest UP-TO-DATE
+> Task :app:processPlayDebugManifestForPackage UP-TO-DATE
+> Task :app:processPlayDebugResources UP-TO-DATE
+> Task :app:generatePlayDebugAssets UP-TO-DATE
+> Task :app:mergePlayDebugAssets UP-TO-DATE
+> Task :app:prePlayDebugUnitTestBuild UP-TO-DATE
+> Task :app:packagePlayDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:mergePlayDebugUnitTestManifest UP-TO-DATE
+> Task :app:processPlayDebugUnitTestManifest UP-TO-DATE
+> Task :app:generatePlayDebugUnitTestConfig UP-TO-DATE
+> Task :app:javaPreCompilePlayDebugUnitTest UP-TO-DATE
+
+> Task :app:preApkReleaseBuild
+BitTool Signer release: signed with the release key.
+
+> Task :app:extractDeepLinksApkRelease UP-TO-DATE
+> Task :core:common:preReleaseBuild UP-TO-DATE
+> Task :core:common:extractDeepLinksRelease UP-TO-DATE
+> Task :core:common:processReleaseManifest UP-TO-DATE
+> Task :core:crypto:preReleaseBuild UP-TO-DATE
+> Task :core:crypto:extractDeepLinksRelease UP-TO-DATE
+> Task :core:crypto:processReleaseManifest UP-TO-DATE
+> Task :core:data:preReleaseBuild UP-TO-DATE
+> Task :core:data:extractDeepLinksRelease UP-TO-DATE
+> Task :core:data:processReleaseManifest UP-TO-DATE
+> Task :core:designsystem:preReleaseBuild UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksRelease UP-TO-DATE
+> Task :core:designsystem:processReleaseManifest UP-TO-DATE
+> Task :core:engine:preReleaseBuild UP-TO-DATE
+> Task :core:engine:extractDeepLinksRelease UP-TO-DATE
+> Task :core:engine:processReleaseManifest UP-TO-DATE
+> Task :core:l10n:preReleaseBuild UP-TO-DATE
+> Task :core:l10n:extractDeepLinksRelease UP-TO-DATE
+> Task :core:l10n:processReleaseManifest UP-TO-DATE
+> Task :core:navigation:preReleaseBuild UP-TO-DATE
+> Task :core:navigation:extractDeepLinksRelease UP-TO-DATE
+> Task :core:navigation:processReleaseManifest UP-TO-DATE
+> Task :core:scanner:preReleaseBuild UP-TO-DATE
+> Task :core:scanner:extractDeepLinksRelease UP-TO-DATE
+> Task :core:scanner:processReleaseManifest UP-TO-DATE
+> Task :core:security:preReleaseBuild UP-TO-DATE
+> Task :core:security:extractDeepLinksRelease UP-TO-DATE
+> Task :core:security:processReleaseManifest UP-TO-DATE
+> Task :core:ui:preReleaseBuild UP-TO-DATE
+> Task :core:ui:extractDeepLinksRelease UP-TO-DATE
+> Task :core:ui:processReleaseManifest UP-TO-DATE
+> Task :feature:activity:preReleaseBuild UP-TO-DATE
+> Task :feature:activity:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:activity:processReleaseManifest UP-TO-DATE
+> Task :feature:onboarding:preReleaseBuild UP-TO-DATE
+> Task :feature:onboarding:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:onboarding:processReleaseManifest UP-TO-DATE
+> Task :feature:settings:preReleaseBuild UP-TO-DATE
+> Task :feature:settings:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:settings:processReleaseManifest UP-TO-DATE
+> Task :feature:setup:preReleaseBuild UP-TO-DATE
+> Task :feature:setup:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:setup:processReleaseManifest UP-TO-DATE
+> Task :feature:sign:preReleaseBuild UP-TO-DATE
+> Task :feature:sign:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:sign:processReleaseManifest UP-TO-DATE
+> Task :feature:wallets:preReleaseBuild UP-TO-DATE
+> Task :feature:wallets:extractDeepLinksRelease UP-TO-DATE
+> Task :feature:wallets:processReleaseManifest UP-TO-DATE
+> Task :app:processApkReleaseMainManifest UP-TO-DATE
+> Task :app:checkApkReleasePermissions UP-TO-DATE
+
+> Task :app:prePlayReleaseBuild
+BitTool Signer release: signed with the release key.
+
+> Task :app:extractDeepLinksPlayRelease UP-TO-DATE
+> Task :app:processPlayReleaseMainManifest UP-TO-DATE
+> Task :app:checkPlayReleasePermissions UP-TO-DATE
+> Task :app:checkApkReleaseComponents UP-TO-DATE
+> Task :app:checkPlayReleaseComponents UP-TO-DATE
+> Task :app:generateApkReleaseBuildConfig UP-TO-DATE
+> Task :app:generateApkReleaseResources UP-TO-DATE
+> Task :app:packageApkReleaseResources UP-TO-DATE
+> Task :core:common:processReleaseNavigationResources UP-TO-DATE
+> Task :core:crypto:processReleaseNavigationResources UP-TO-DATE
+> Task :core:data:processReleaseNavigationResources UP-TO-DATE
+> Task :core:designsystem:processReleaseNavigationResources UP-TO-DATE
+> Task :core:engine:processReleaseNavigationResources UP-TO-DATE
+> Task :core:l10n:processReleaseNavigationResources UP-TO-DATE
+> Task :core:navigation:processReleaseNavigationResources UP-TO-DATE
+> Task :core:scanner:processReleaseNavigationResources UP-TO-DATE
+> Task :core:security:processReleaseNavigationResources UP-TO-DATE
+> Task :core:ui:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:activity:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:onboarding:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:settings:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:setup:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:sign:processReleaseNavigationResources UP-TO-DATE
+> Task :feature:wallets:processReleaseNavigationResources UP-TO-DATE
+> Task :app:processApkReleaseNavigationResources UP-TO-DATE
+> Task :app:parseApkReleaseLocalResources UP-TO-DATE
+> Task :app:generateApkReleaseRFile UP-TO-DATE
+> Task :core:common:generateReleaseResources UP-TO-DATE
+> Task :core:common:packageReleaseResources UP-TO-DATE
+> Task :core:common:parseReleaseLocalResources UP-TO-DATE
+> Task :core:common:generateReleaseRFile UP-TO-DATE
+> Task :core:common:kspReleaseKotlin UP-TO-DATE
+> Task :core:common:compileReleaseKotlin UP-TO-DATE
+> Task :core:common:javaPreCompileRelease UP-TO-DATE
+> Task :core:common:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:common:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core:common:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:crypto:generateReleaseResources UP-TO-DATE
+> Task :core:crypto:packageReleaseResources UP-TO-DATE
+> Task :core:crypto:parseReleaseLocalResources UP-TO-DATE
+> Task :core:crypto:generateReleaseRFile UP-TO-DATE
+> Task :core:common:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:l10n:generateReleaseResources UP-TO-DATE
+> Task :core:l10n:packageReleaseResources UP-TO-DATE
+> Task :core:l10n:parseReleaseLocalResources UP-TO-DATE
+> Task :core:l10n:generateReleaseRFile UP-TO-DATE
+> Task :core:l10n:compileReleaseKotlin UP-TO-DATE
+> Task :core:l10n:javaPreCompileRelease UP-TO-DATE
+> Task :core:l10n:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:l10n:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:crypto:kspReleaseKotlin UP-TO-DATE
+> Task :core:crypto:compileReleaseKotlin UP-TO-DATE
+> Task :core:crypto:javaPreCompileRelease UP-TO-DATE
+> Task :core:crypto:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:l10n:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:crypto:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core:crypto:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:data:generateReleaseResources UP-TO-DATE
+> Task :core:data:packageReleaseResources UP-TO-DATE
+> Task :core:data:parseReleaseLocalResources UP-TO-DATE
+> Task :core:data:generateReleaseRFile UP-TO-DATE
+> Task :core:crypto:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:engine:generateReleaseResources UP-TO-DATE
+> Task :core:engine:packageReleaseResources UP-TO-DATE
+> Task :core:engine:parseReleaseLocalResources UP-TO-DATE
+> Task :core:engine:generateReleaseRFile UP-TO-DATE
+> Task :core:engine:kspReleaseKotlin UP-TO-DATE
+> Task :core:engine:compileReleaseKotlin UP-TO-DATE
+> Task :core:engine:javaPreCompileRelease UP-TO-DATE
+> Task :core:engine:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:engine:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core:engine:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:data:kspReleaseKotlin FROM-CACHE
+> Task :app:kspPlayDebugKotlin
+> Task :app:compilePlayDebugKotlin
+> Task :app:compilePlayDebugJavaWithJavac UP-TO-DATE
+> Task :app:hiltCollectClassesPlayDebug
+> Task :app:hiltAggregateDepsPlayDebug UP-TO-DATE
+> Task :app:hiltJavaCompilePlayDebug
+> Task :app:transformPlayDebugClassesWithAsm
+> Task :app:bundlePlayDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:processPlayDebugJavaRes UP-TO-DATE
+> Task :app:bundlePlayDebugClassesToCompileJar UP-TO-DATE
+> Task :app:kspPlayDebugUnitTestKotlin
+> Task :core:data:compileReleaseKotlin
+> Task :core:data:javaPreCompileRelease UP-TO-DATE
+> Task :app:compilePlayDebugUnitTestKotlin
+> Task :app:processPlayDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:compilePlayDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:hiltCollectClassesPlayDebugUnitTest
+> Task :core:data:compileReleaseJavaWithJavac FROM-CACHE
+> Task :core:engine:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:hiltAggregateDepsPlayDebugUnitTest UP-TO-DATE
+> Task :app:hiltJavaCompilePlayDebugUnitTest NO-SOURCE
+> Task :app:transformPlayDebugUnitTestClassesWithAsm
+> Task :core:data:transformReleaseClassesWithAsm FROM-CACHE
+> Task :core:data:bundleLibCompileToJarRelease
+> Task :core:designsystem:generateReleaseResources UP-TO-DATE
+> Task :core:designsystem:packageReleaseResources UP-TO-DATE
+> Task :core:designsystem:parseReleaseLocalResources UP-TO-DATE
+> Task :core:designsystem:generateReleaseRFile UP-TO-DATE
+> Task :feature:onboarding:testDebugUnitTest
+> Task :feature:settings:testDebugUnitTest
+> Task :core:designsystem:compileReleaseKotlin
+> Task :core:designsystem:javaPreCompileRelease UP-TO-DATE
+> Task :core:designsystem:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarRelease
+> Task :core:navigation:generateReleaseResources UP-TO-DATE
+> Task :core:navigation:packageReleaseResources UP-TO-DATE
+> Task :core:navigation:parseReleaseLocalResources UP-TO-DATE
+> Task :core:navigation:generateReleaseRFile UP-TO-DATE
+> Task :core:navigation:kspReleaseKotlin UP-TO-DATE
+> Task :core:navigation:compileReleaseKotlin UP-TO-DATE
+> Task :core:navigation:javaPreCompileRelease UP-TO-DATE
+> Task :core:navigation:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:navigation:transformReleaseClassesWithAsm UP-TO-DATE
+> Task :core:navigation:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:scanner:generateReleaseResources UP-TO-DATE
+> Task :core:scanner:packageReleaseResources UP-TO-DATE
+> Task :core:scanner:parseReleaseLocalResources UP-TO-DATE
+> Task :core:scanner:generateReleaseRFile UP-TO-DATE
+> Task :core:designsystem:bundleLibRuntimeToJarRelease
+> Task :core:scanner:javaPreCompileRelease UP-TO-DATE
+> Task :core:security:generateReleaseResources UP-TO-DATE
+> Task :core:security:packageReleaseResources UP-TO-DATE
+> Task :core:security:parseReleaseLocalResources UP-TO-DATE
+> Task :core:security:generateReleaseRFile UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarRelease
+> Task :core:scanner:kspReleaseKotlin
+> Task :core:scanner:compileReleaseKotlin
+> Task :core:scanner:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:security:kspReleaseKotlin
+> Task :core:scanner:transformReleaseClassesWithAsm
+> Task :core:scanner:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:security:javaPreCompileRelease UP-TO-DATE
+> Task :core:ui:generateReleaseResources UP-TO-DATE
+> Task :core:ui:packageReleaseResources UP-TO-DATE
+> Task :core:ui:parseReleaseLocalResources UP-TO-DATE
+> Task :core:ui:generateReleaseRFile UP-TO-DATE
+> Task :core:security:compileReleaseKotlin
+> Task :core:security:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:ui:compileReleaseKotlin
+> Task :core:ui:javaPreCompileRelease UP-TO-DATE
+> Task :core:ui:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:ui:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:activity:generateReleaseResources UP-TO-DATE
+> Task :feature:activity:packageReleaseResources UP-TO-DATE
+> Task :feature:activity:parseReleaseLocalResources UP-TO-DATE
+> Task :feature:activity:generateReleaseRFile UP-TO-DATE
+> Task :core:navigation:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:scanner:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:ui:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:activity:javaPreCompileRelease UP-TO-DATE
+> Task :feature:onboarding:generateReleaseResources UP-TO-DATE
+> Task :feature:onboarding:packageReleaseResources UP-TO-DATE
+> Task :core:security:transformReleaseClassesWithAsm
+> Task :feature:onboarding:parseReleaseLocalResources UP-TO-DATE
+> Task :core:security:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:security:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:onboarding:generateReleaseRFile UP-TO-DATE
+> Task :feature:onboarding:kspReleaseKotlin
+> Task :feature:activity:kspReleaseKotlin
+> Task :feature:onboarding:compileReleaseKotlin
+> Task :feature:onboarding:javaPreCompileRelease UP-TO-DATE
+> Task :feature:onboarding:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :feature:activity:compileReleaseKotlin
+> Task :feature:onboarding:transformReleaseClassesWithAsm
+> Task :feature:onboarding:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:settings:generateReleaseResources UP-TO-DATE
+> Task :feature:settings:packageReleaseResources UP-TO-DATE
+> Task :feature:settings:parseReleaseLocalResources UP-TO-DATE
+> Task :feature:settings:generateReleaseRFile UP-TO-DATE
+> Task :feature:activity:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :feature:activity:transformReleaseClassesWithAsm
+> Task :feature:activity:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:settings:javaPreCompileRelease UP-TO-DATE
+> Task :feature:setup:generateReleaseResources UP-TO-DATE
+> Task :feature:setup:packageReleaseResources UP-TO-DATE
+> Task :feature:setup:parseReleaseLocalResources UP-TO-DATE
+> Task :feature:setup:generateReleaseRFile UP-TO-DATE
+> Task :feature:settings:kspReleaseKotlin
+> Task :feature:setup:kspReleaseKotlin
+> Task :feature:settings:compileReleaseKotlin
+> Task :feature:settings:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :feature:setup:compileReleaseKotlin
+> Task :feature:setup:javaPreCompileRelease UP-TO-DATE
+> Task :feature:setup:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :feature:sign:generateReleaseResources UP-TO-DATE
+> Task :feature:sign:packageReleaseResources UP-TO-DATE
+> Task :feature:sign:parseReleaseLocalResources UP-TO-DATE
+> Task :feature:sign:generateReleaseRFile UP-TO-DATE
+> Task :feature:settings:transformReleaseClassesWithAsm
+> Task :feature:settings:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:sign:javaPreCompileRelease UP-TO-DATE
+> Task :feature:wallets:generateReleaseResources UP-TO-DATE
+> Task :feature:wallets:packageReleaseResources UP-TO-DATE
+> Task :feature:wallets:parseReleaseLocalResources UP-TO-DATE
+> Task :feature:wallets:generateReleaseRFile UP-TO-DATE
+> Task :feature:setup:transformReleaseClassesWithAsm
+> Task :feature:setup:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:wallets:javaPreCompileRelease UP-TO-DATE
+> Task :app:javaPreCompileApkRelease UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :core:common:processReleaseJavaRes UP-TO-DATE
+> Task :core:common:createFullJarRelease UP-TO-DATE
+> Task :core:common:extractProguardFiles UP-TO-DATE
+> Task :core:common:generateReleaseLintModel UP-TO-DATE
+> Task :core:common:prepareLintJarForPublish UP-TO-DATE
+> Task :core:crypto:processReleaseJavaRes UP-TO-DATE
+> Task :core:crypto:createFullJarRelease UP-TO-DATE
+> Task :core:crypto:extractProguardFiles UP-TO-DATE
+> Task :core:l10n:processReleaseJavaRes UP-TO-DATE
+> Task :core:l10n:createFullJarRelease UP-TO-DATE
+> Task :core:l10n:extractProguardFiles UP-TO-DATE
+> Task :core:l10n:generateReleaseLintModel UP-TO-DATE
+> Task :core:l10n:prepareLintJarForPublish UP-TO-DATE
+> Task :core:crypto:generateReleaseLintModel UP-TO-DATE
+> Task :core:crypto:prepareLintJarForPublish UP-TO-DATE
+> Task :core:data:processReleaseJavaRes UP-TO-DATE
+> Task :core:data:createFullJarRelease
+> Task :core:data:extractProguardFiles UP-TO-DATE
+> Task :core:engine:processReleaseJavaRes UP-TO-DATE
+> Task :core:engine:createFullJarRelease UP-TO-DATE
+> Task :core:engine:extractProguardFiles UP-TO-DATE
+> Task :core:engine:generateReleaseLintModel UP-TO-DATE
+> Task :core:engine:prepareLintJarForPublish UP-TO-DATE
+> Task :core:data:generateReleaseLintModel
+> Task :core:data:prepareLintJarForPublish UP-TO-DATE
+> Task :core:designsystem:processReleaseJavaRes UP-TO-DATE
+> Task :core:designsystem:createFullJarRelease
+> Task :core:designsystem:extractProguardFiles UP-TO-DATE
+> Task :feature:wallets:kspReleaseKotlin
+> Task :core:designsystem:generateReleaseLintModel
+> Task :core:designsystem:prepareLintJarForPublish UP-TO-DATE
+> Task :core:navigation:processReleaseJavaRes UP-TO-DATE
+> Task :core:navigation:createFullJarRelease UP-TO-DATE
+> Task :core:navigation:extractProguardFiles UP-TO-DATE
+> Task :feature:wallets:compileReleaseKotlin
+> Task :feature:wallets:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:navigation:generateReleaseLintModel UP-TO-DATE
+> Task :core:navigation:prepareLintJarForPublish UP-TO-DATE
+> Task :core:scanner:processReleaseJavaRes UP-TO-DATE
+> Task :core:scanner:createFullJarRelease UP-TO-DATE
+> Task :core:scanner:extractProguardFiles UP-TO-DATE
+> Task :core:scanner:generateReleaseLintModel
+> Task :core:scanner:prepareLintJarForPublish UP-TO-DATE
+> Task :core:security:processReleaseJavaRes UP-TO-DATE
+> Task :core:security:createFullJarRelease UP-TO-DATE
+> Task :core:security:extractProguardFiles UP-TO-DATE
+> Task :core:security:generateReleaseLintModel
+> Task :core:security:prepareLintJarForPublish UP-TO-DATE
+> Task :core:ui:processReleaseJavaRes UP-TO-DATE
+> Task :core:ui:createFullJarRelease UP-TO-DATE
+> Task :core:ui:extractProguardFiles UP-TO-DATE
+> Task :core:ui:generateReleaseLintModel
+> Task :core:ui:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:activity:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:activity:processReleaseJavaRes UP-TO-DATE
+> Task :feature:activity:createFullJarRelease UP-TO-DATE
+> Task :feature:activity:extractProguardFiles UP-TO-DATE
+> Task :feature:activity:generateReleaseLintModel
+> Task :feature:activity:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:wallets:transformReleaseClassesWithAsm
+> Task :feature:onboarding:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:wallets:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :feature:onboarding:extractProguardFiles UP-TO-DATE
+> Task :feature:onboarding:processReleaseJavaRes UP-TO-DATE
+> Task :feature:onboarding:createFullJarRelease UP-TO-DATE
+> Task :feature:onboarding:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:settings:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:settings:processReleaseJavaRes UP-TO-DATE
+> Task :feature:settings:createFullJarRelease UP-TO-DATE
+> Task :feature:settings:extractProguardFiles UP-TO-DATE
+> Task :feature:onboarding:generateReleaseLintModel
+> Task :feature:settings:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:setup:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:setup:processReleaseJavaRes UP-TO-DATE
+> Task :feature:setup:createFullJarRelease UP-TO-DATE
+> Task :feature:setup:extractProguardFiles UP-TO-DATE
+> Task :feature:settings:generateReleaseLintModel
+> Task :feature:setup:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:sign:extractProguardFiles UP-TO-DATE
+> Task :feature:sign:prepareLintJarForPublish UP-TO-DATE
+> Task :feature:wallets:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :feature:wallets:processReleaseJavaRes UP-TO-DATE
+> Task :feature:wallets:createFullJarRelease UP-TO-DATE
+> Task :feature:wallets:extractProguardFiles UP-TO-DATE
+> Task :feature:setup:generateReleaseLintModel
+> Task :feature:wallets:prepareLintJarForPublish UP-TO-DATE
+> Task :core:common:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:crypto:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:data:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:designsystem:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:engine:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:l10n:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:navigation:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:scanner:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:security:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:ui:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:onboarding:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:wallets:generateReleaseLintModel
+> Task :feature:onboarding:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:onboarding:generateReleaseAssets UP-TO-DATE
+> Task :feature:onboarding:mergeReleaseAssets UP-TO-DATE
+> Task :feature:onboarding:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:onboarding:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:onboarding:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:onboarding:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:onboarding:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:setup:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:setup:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:onboarding:extractReleaseAnnotations
+> Task :feature:setup:extractReleaseAnnotations
+> Task :feature:setup:generateReleaseAssets UP-TO-DATE
+> Task :feature:onboarding:syncReleaseLibJars UP-TO-DATE
+> Task :feature:setup:mergeReleaseAssets UP-TO-DATE
+> Task :feature:onboarding:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :feature:setup:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:setup:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:setup:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:setup:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:setup:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:setup:syncReleaseLibJars UP-TO-DATE
+> Task :feature:setup:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :feature:wallets:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:wallets:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:wallets:generateReleaseAssets UP-TO-DATE
+> Task :feature:wallets:mergeReleaseAssets UP-TO-DATE
+> Task :feature:wallets:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:wallets:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:wallets:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:wallets:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:wallets:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:sign:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:sign:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:sign:generateReleaseAssets UP-TO-DATE
+> Task :feature:sign:mergeReleaseAssets UP-TO-DATE
+> Task :feature:sign:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:sign:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:wallets:extractReleaseAnnotations
+> Task :feature:activity:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:activity:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:wallets:syncReleaseLibJars UP-TO-DATE
+> Task :feature:wallets:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :feature:activity:generateReleaseAssets UP-TO-DATE
+> Task :feature:activity:mergeReleaseAssets UP-TO-DATE
+> Task :feature:activity:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:activity:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:activity:extractReleaseAnnotations
+> Task :feature:activity:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:activity:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:activity:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:activity:syncReleaseLibJars UP-TO-DATE
+> Task :feature:settings:checkReleaseAarMetadata UP-TO-DATE
+> Task :feature:settings:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:activity:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :feature:settings:generateReleaseAssets UP-TO-DATE
+> Task :feature:settings:mergeReleaseAssets UP-TO-DATE
+> Task :feature:settings:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:settings:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:settings:prepareReleaseArtProfile UP-TO-DATE
+> Task :feature:settings:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:settings:writeReleaseAarMetadata UP-TO-DATE
+> Task :feature:settings:extractReleaseAnnotations
+> Task :core:security:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:security:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :feature:settings:syncReleaseLibJars UP-TO-DATE
+> Task :feature:settings:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:security:generateReleaseAssets UP-TO-DATE
+> Task :core:security:mergeReleaseAssets UP-TO-DATE
+> Task :core:security:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:security:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:security:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:security:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:security:extractReleaseAnnotations
+> Task :core:ui:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:security:syncReleaseLibJars UP-TO-DATE
+> Task :core:ui:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:security:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:ui:generateReleaseAssets UP-TO-DATE
+> Task :core:ui:mergeReleaseAssets UP-TO-DATE
+> Task :core:ui:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:ui:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:ui:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:ui:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:scanner:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:scanner:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:ui:extractReleaseAnnotations
+> Task :core:ui:syncReleaseLibJars UP-TO-DATE
+> Task :core:ui:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:scanner:extractReleaseAnnotations
+> Task :core:scanner:generateReleaseAssets UP-TO-DATE
+> Task :core:scanner:mergeReleaseAssets UP-TO-DATE
+> Task :core:scanner:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:scanner:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:scanner:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:scanner:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:scanner:syncReleaseLibJars UP-TO-DATE
+> Task :core:designsystem:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:scanner:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:designsystem:generateReleaseAssets UP-TO-DATE
+> Task :core:designsystem:mergeReleaseAssets UP-TO-DATE
+> Task :core:designsystem:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:designsystem:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:designsystem:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:designsystem:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:data:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:data:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:designsystem:extractReleaseAnnotations
+> Task :core:data:extractReleaseAnnotations
+> Task :core:data:generateReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:data:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:data:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:data:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:designsystem:syncReleaseLibJars
+> Task :core:data:syncReleaseLibJars
+> Task :core:designsystem:bundleReleaseLocalLintAar
+> Task :core:data:bundleReleaseLocalLintAar
+> Task :core:engine:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:engine:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:engine:extractReleaseAnnotations UP-TO-DATE
+> Task :core:engine:generateReleaseAssets UP-TO-DATE
+> Task :core:engine:mergeReleaseAssets UP-TO-DATE
+> Task :core:engine:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:engine:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:engine:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:engine:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:engine:syncReleaseLibJars UP-TO-DATE
+> Task :core:engine:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:crypto:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:crypto:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:crypto:extractReleaseAnnotations UP-TO-DATE
+> Task :core:crypto:generateReleaseAssets UP-TO-DATE
+> Task :core:crypto:mergeReleaseAssets UP-TO-DATE
+> Task :core:crypto:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:crypto:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:crypto:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:crypto:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:crypto:syncReleaseLibJars UP-TO-DATE
+> Task :core:crypto:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:common:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:common:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:common:extractReleaseAnnotations UP-TO-DATE
+> Task :core:common:generateReleaseAssets UP-TO-DATE
+> Task :core:common:mergeReleaseAssets UP-TO-DATE
+> Task :core:common:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:common:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:common:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:common:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:common:syncReleaseLibJars UP-TO-DATE
+> Task :core:common:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:l10n:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:l10n:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:l10n:generateReleaseAssets UP-TO-DATE
+> Task :core:l10n:mergeReleaseAssets UP-TO-DATE
+> Task :core:l10n:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:l10n:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:l10n:extractReleaseAnnotations UP-TO-DATE
+> Task :core:l10n:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:l10n:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:l10n:syncReleaseLibJars UP-TO-DATE
+> Task :core:navigation:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:navigation:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:l10n:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:navigation:extractReleaseAnnotations UP-TO-DATE
+> Task :core:navigation:generateReleaseAssets UP-TO-DATE
+> Task :core:navigation:mergeReleaseAssets UP-TO-DATE
+> Task :core:navigation:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:navigation:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:navigation:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:navigation:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:navigation:syncReleaseLibJars UP-TO-DATE
+> Task :core:navigation:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:common:lintAnalyzeRelease UP-TO-DATE
+> Task :core:common:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:l10n:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:crypto:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:l10n:lintAnalyzeRelease UP-TO-DATE
+> Task :core:engine:lintAnalyzeRelease UP-TO-DATE
+> Task :core:engine:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:data:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:crypto:lintAnalyzeRelease UP-TO-DATE
+> Task :feature:sign:kspReleaseKotlin
+> Task :feature:sign:compileReleaseKotlin
+> Task :feature:sign:compileReleaseJavaWithJavac
+> Task :feature:sign:transformReleaseClassesWithAsm
+> Task :feature:sign:bundleLibCompileToJarRelease
+> Task :app:kspApkReleaseKotlin
+> Task :app:compileApkReleaseKotlin
+> Task :app:compileApkReleaseJavaWithJavac UP-TO-DATE
+> Task :feature:sign:bundleLibRuntimeToJarRelease
+> Task :feature:sign:processReleaseJavaRes UP-TO-DATE
+> Task :feature:sign:createFullJarRelease
+> Task :feature:sign:generateReleaseLintModel
+
+> Task :app:generateApkReleaseLintReportModel
+Warning: Lint will treat :core:model as an external dependency and not analyze it.
+ * Recommended Action: Apply the 'com.android.lint' plugin to java library project :core:model. to enable lint to analyze those sources.
+
+
+> Task :feature:sign:extractReleaseAnnotations
+> Task :feature:sign:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :feature:sign:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :feature:sign:mergeReleaseJavaResource UP-TO-DATE
+> Task :feature:sign:syncReleaseLibJars
+> Task :feature:sign:bundleReleaseLocalLintAar
+> Task :core:designsystem:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:navigation:lintAnalyzeRelease UP-TO-DATE
+> Task :core:navigation:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:scanner:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:security:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:ui:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:activity:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:onboarding:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:settings:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:setup:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:sign:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :feature:wallets:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :app:generatePlayReleaseBuildConfig UP-TO-DATE
+> Task :app:generatePlayReleaseResources UP-TO-DATE
+> Task :app:packagePlayReleaseResources UP-TO-DATE
+> Task :app:processPlayReleaseNavigationResources UP-TO-DATE
+> Task :app:parsePlayReleaseLocalResources UP-TO-DATE
+> Task :app:generatePlayReleaseRFile UP-TO-DATE
+> Task :app:testPlayDebugUnitTest
+> Task :app:kspPlayReleaseKotlin
+> Task :app:compilePlayReleaseKotlin
+> Task :app:javaPreCompilePlayRelease UP-TO-DATE
+> Task :app:compilePlayReleaseJavaWithJavac UP-TO-DATE
+
+> Task :app:generatePlayReleaseLintReportModel
+Warning: Lint will treat :core:model as an external dependency and not analyze it.
+ * Recommended Action: Apply the 'com.android.lint' plugin to java library project :core:model. to enable lint to analyze those sources.
+
+
+> Task :core:data:lintAnalyzeRelease
+> Task :core:designsystem:lintAnalyzeRelease
+> Task :core:security:lintAnalyzeRelease
+> Task :core:scanner:lintAnalyzeRelease
+> Task :core:ui:lintAnalyzeRelease
+> Task :feature:onboarding:lintAnalyzeRelease
+> Task :feature:activity:lintAnalyzeRelease
+> Task :feature:settings:lintAnalyzeRelease
+> Task :feature:setup:lintAnalyzeRelease
+> Task :feature:sign:lintAnalyzeRelease
+> Task :feature:wallets:lintAnalyzeRelease
+> Task :app:lintAnalyzePlayRelease
+> Task :app:lintAnalyzeApkRelease
+
+> Task :app:lintReportPlayRelease
+Wrote HTML report to file:///Users/tanguopeng/Documents/bitool-signer-android/app/build/reports/lint-results-playRelease.html
+Wrote SARIF report to file:///Users/tanguopeng/Documents/bitool-signer-android/app/build/reports/lint-results-playRelease.sarif
+
+> Task :app:lintReportApkRelease
+Wrote HTML report to file:///Users/tanguopeng/Documents/bitool-signer-android/app/build/reports/lint-results-apkRelease.html
+Wrote SARIF report to file:///Users/tanguopeng/Documents/bitool-signer-android/app/build/reports/lint-results-apkRelease.sarif
+
+> Task :app:lintApkRelease
+> Task :app:lintPlayRelease
+
+BUILD SUCCESSFUL in 3m 9s
+1185 actionable tasks: 120 executed, 3 from cache, 1062 up-to-date
+Configuration cache entry stored.

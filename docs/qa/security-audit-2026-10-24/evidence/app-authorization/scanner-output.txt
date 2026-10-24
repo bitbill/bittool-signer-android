@@ -1,0 +1,2 @@
+STALL CONFIRMED: repeated static frames=5, store calls=[STATIC-QR], state=ScannerUiState(progress=0.0, received=1, processing=false, error=null)
+CONTROL: different frame drains queue, store calls=[STATIC-QR, STATIC-QR, DIFFERENT-FRAME]

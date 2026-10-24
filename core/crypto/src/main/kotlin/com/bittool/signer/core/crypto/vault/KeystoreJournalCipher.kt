@@ -1,6 +1,5 @@
 package com.bittool.signer.core.crypto.vault
 
-import android.os.Build
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.ProviderException
@@ -29,7 +28,8 @@ import javax.inject.Singleton
  */
 @Singleton
 class KeystoreJournalCipher internal constructor(private val policy: KeystoreKeyPolicy) : JournalCipher {
-    @Inject constructor() : this(KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P))
+    /** Production: no `setUnlockedDeviceRequired`, like every key ([KeystoreKeyPolicy]). */
+    @Inject constructor() : this(KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = false))
 
     private val lock = Any()
 

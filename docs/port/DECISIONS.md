@@ -106,6 +106,12 @@ progress for create/import/repair/sign and never call the engine from the main t
 - Vault: PBKDF2-HMAC-SHA256 600,000 iterations → AES-256-GCM, then an outer AES-GCM layer under a non-exportable Android
   Keystore key (StrongBox when available); public index authenticated with a Keystore HMAC-SHA256 key; files in
   `noBackupFilesDir`, written atomically; `allowBackup=false` + data extraction rules exclude everything.
+- Keystore keys (wallet device keys, public-data key, Activity journal key) are **not** `setUnlockedDeviceRequired`
+  (owner decision 2026-10-24, before release, so no migration): Android 12–13 and some manufacturers' builds keep such
+  keys locked after a face or Smart Lock unlock until the PIN is used, which left wallets, public data and Activity
+  unusable on a face-unlocked Huawei. The app runs only while the phone is unlocked, every secret operation still needs
+  the wallet password, and a secure lock screen is still required before a key is created or used. Keys made by earlier
+  builds keep the flag; their refusal reads as "unlock with your screen lock" (`isKeystoreLockedRefusal`), never as damage.
 - Secrets in `ByteArray`/`CharArray`, zeroed after use; never in logs, `toString`, saved state, navigation arguments or
   `SavedStateHandle`. Background (`onStop`, not during configuration changes) clears passwords, risk acknowledgements and
   revealed phrases immediately.

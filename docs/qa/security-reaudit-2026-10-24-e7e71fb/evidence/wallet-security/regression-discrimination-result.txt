@@ -1,0 +1,16 @@
+bb1e656 baseline: exit=1, expected_success=False
+Exception in thread "main" java.lang.AssertionError: the seed is wiped
+	at org.junit.Assert.fail(Assert.java:89)
+	at kotlin.test.junit.JUnitAsserter.fail(JUnitSupport.kt:56)
+	at kotlin.test.Asserter.assertTrue(Assertions.kt:1545)
+	at kotlin.test.junit.JUnitAsserter.assertTrue(JUnitSupport.kt:30)
+	at kotlin.test.Asserter.assertTrue(Assertions.kt:1555)
+	at kotlin.test.junit.JUnitAsserter.assertTrue(JUnitSupport.kt:30)
+	at kotlin.test.AssertionsKt__AssertionsKt.assertTrue(Assertions.kt:44)
+	at kotlin.test.AssertionsKt.assertTrue(Unknown Source)
+	at com.bittool.signer.core.data.DefaultSignerStoreTest$aSeedDerivedForACancelledCallerIsStillWiped$1.invokeSuspend(DefaultSignerStoreTest.kt:525)
+	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:34)
+	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:98)
+e7e71fb fixed: exit=0, expected_success=True
+Repository regression test PASSED
+RESULT: regression test discriminates correctly; baseline FAILS and fixed code PASSES

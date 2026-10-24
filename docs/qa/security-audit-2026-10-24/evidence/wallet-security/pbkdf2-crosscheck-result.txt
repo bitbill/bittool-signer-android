@@ -1,0 +1,57 @@
+Repository HEAD: bb1e6567fb2a8cc30dd6e8e9447e69b0f330fa1b
+Host: Darwin arm64
+Compiler: Apple clang version 21.0.0 (clang-2100.1.1.101)
+Hashlib backend: OpenSSL 3.6.4 25 Aug 2026
+Target: production portable PBKDF2-HMAC-SHA256 implementation (not ARMv8 or JNI runtime)
+Source SHA-256 pbkdf2_jni.c: 59938c80b2ec85d56d8e6ed1bbfe1500be7fda1ae3b271fc33c75c798ae52f75
+Source SHA-256 sha256.c: 5305fd20a0b95b5875bf45b3da04fe46113cadf34f058f68f092d167b4e5c7e5
+Source SHA-256 sha256.h: 00b0301d93d07337368de464a7fee087a04e03e6c1c1aa6b6d5ca7ea669c4011
+Deterministic test generation seed: 10024
+PASS case=01 password_bytes=0 salt_bytes=0 iterations=1 output_bytes=32
+PASS case=02 password_bytes=1 salt_bytes=1 iterations=1 output_bytes=1
+PASS case=03 password_bytes=64 salt_bytes=64 iterations=2 output_bytes=32
+PASS case=04 password_bytes=65 salt_bytes=65 iterations=3 output_bytes=33
+PASS case=05 password_bytes=1024 salt_bytes=32 iterations=600000 output_bytes=32
+PASS case=06 password_bytes=4096 salt_bytes=1024 iterations=10 output_bytes=1024
+PASS case=07 password_bytes=78 salt_bytes=191 iterations=19 output_bytes=262
+PASS case=08 password_bytes=25 salt_bytes=118 iterations=784 output_bytes=188
+PASS case=09 password_bytes=148 salt_bytes=22 iterations=603 output_bytes=138
+PASS case=10 password_bytes=150 salt_bytes=48 iterations=627 output_bytes=195
+PASS case=11 password_bytes=192 salt_bytes=164 iterations=931 output_bytes=158
+PASS case=12 password_bytes=68 salt_bytes=78 iterations=504 output_bytes=285
+PASS case=13 password_bytes=85 salt_bytes=192 iterations=604 output_bytes=158
+PASS case=14 password_bytes=204 salt_bytes=132 iterations=783 output_bytes=192
+PASS case=15 password_bytes=227 salt_bytes=156 iterations=130 output_bytes=300
+PASS case=16 password_bytes=247 salt_bytes=188 iterations=214 output_bytes=194
+PASS case=17 password_bytes=262 salt_bytes=33 iterations=487 output_bytes=239
+PASS case=18 password_bytes=68 salt_bytes=48 iterations=210 output_bytes=11
+PASS case=19 password_bytes=69 salt_bytes=167 iterations=859 output_bytes=17
+PASS case=20 password_bytes=184 salt_bytes=59 iterations=294 output_bytes=106
+PASS case=21 password_bytes=43 salt_bytes=75 iterations=121 output_bytes=149
+PASS case=22 password_bytes=217 salt_bytes=116 iterations=302 output_bytes=60
+PASS case=23 password_bytes=263 salt_bytes=37 iterations=599 output_bytes=221
+PASS case=24 password_bytes=198 salt_bytes=139 iterations=736 output_bytes=141
+PASS case=25 password_bytes=191 salt_bytes=11 iterations=783 output_bytes=69
+PASS case=26 password_bytes=262 salt_bytes=18 iterations=388 output_bytes=251
+PASS case=27 password_bytes=55 salt_bytes=64 iterations=786 output_bytes=131
+PASS case=28 password_bytes=282 salt_bytes=179 iterations=444 output_bytes=109
+PASS case=29 password_bytes=225 salt_bytes=74 iterations=225 output_bytes=207
+PASS case=30 password_bytes=263 salt_bytes=193 iterations=538 output_bytes=51
+PASS case=31 password_bytes=61 salt_bytes=18 iterations=519 output_bytes=124
+PASS case=32 password_bytes=177 salt_bytes=95 iterations=685 output_bytes=229
+PASS case=33 password_bytes=35 salt_bytes=91 iterations=364 output_bytes=298
+PASS case=34 password_bytes=255 salt_bytes=162 iterations=604 output_bytes=261
+PASS case=35 password_bytes=265 salt_bytes=52 iterations=1 output_bytes=82
+PASS case=36 password_bytes=181 salt_bytes=50 iterations=450 output_bytes=262
+PASS case=37 password_bytes=239 salt_bytes=112 iterations=889 output_bytes=291
+PASS case=38 password_bytes=298 salt_bytes=140 iterations=711 output_bytes=99
+PASS case=39 password_bytes=42 salt_bytes=82 iterations=920 output_bytes=262
+PASS case=40 password_bytes=289 salt_bytes=78 iterations=601 output_bytes=64
+PASS case=41 password_bytes=259 salt_bytes=129 iterations=892 output_bytes=208
+PASS case=42 password_bytes=174 salt_bytes=177 iterations=152 output_bytes=264
+PASS case=43 password_bytes=50 salt_bytes=26 iterations=676 output_bytes=59
+PASS case=44 password_bytes=270 salt_bytes=172 iterations=681 output_bytes=292
+PASS case=45 password_bytes=150 salt_bytes=33 iterations=677 output_bytes=124
+PASS case=46 password_bytes=70 salt_bytes=39 iterations=969 output_bytes=151
+RESULT: 46/46 cases passed
+Temporary build artifacts removed; no production files modified.

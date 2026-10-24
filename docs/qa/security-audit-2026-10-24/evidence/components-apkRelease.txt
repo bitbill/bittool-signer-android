@@ -1,0 +1,5 @@
+components: [activity:com.bittool.signer.MainActivity, provider:androidx.startup.InitializationProvider, service:androidx.appcompat.app.AppLocalesMetadataHolderService, service:androidx.camera.core.impl.MetadataHolderService]
+exported: [activity:com.bittool.signer.MainActivity]
+startup initializers: [androidx.lifecycle.ProcessLifecycleInitializer, androidx.profileinstaller.ProfileInstallerInitializer]
+queries elements: 0
+Play services / Firebase / Play Store modules: []

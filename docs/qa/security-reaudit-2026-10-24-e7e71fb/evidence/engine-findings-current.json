@@ -1,0 +1,54 @@
+{
+  "commit": "e7e71fbc4b5614b68e993e1eec5dc986b4536a86",
+  "baseline": "bb1e656",
+  "engineDiffAgainstBaseline": [],
+  "shippedBundleSha256": "6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077",
+  "runtime": "Node VM of actual committed Android JavaScript asset; not Android/QuickJS runtime testing",
+  "BTS-02": {
+    "status": "confirmed current",
+    "source": true,
+    "shippedBundle": true,
+    "cases": [
+      "Metaplex BurnV1 + 1 lamport",
+      "Metaplex BurnNft + 1 lamport"
+    ],
+    "signaturesVerified": true,
+    "expandedCases": [
+      "SPL SetAuthority AccountOwner + 1 lamport",
+      "SPL revoke MintAuthority + 1 lamport",
+      "System Assign + 1 lamport",
+      "SPL Approve delegate + 1 lamport"
+    ],
+    "expandedRootCause": "Material authority/destruction effects omitted from movement-based summary; recommend extending existing finding rather than duplicate counting",
+    "mitigations": "All cases retain high risk plus relevant warnings/details. Metaplex cases remain partially decoded. Android high-risk consent must still be acknowledged."
+  },
+  "BTS-04": {
+    "status": "confirmed current",
+    "source": true,
+    "shippedBundle": true,
+    "summary": "Every output returns to your wallet",
+    "burnBTC": "0.5",
+    "signaturesVerified": true,
+    "mitigations": "Main Burn display and warning remain correct."
+  },
+  "BTS-06": {
+    "status": "confirmed current",
+    "registryAdaptedPass": 1,
+    "registryNameFilterSkips": 18,
+    "registryAdaptedFailures": 0,
+    "additionalGap": {
+      "file": "engine/test/engine.test.mjs",
+      "line": 131,
+      "missingLegacyBundle": true,
+      "actualAndroidBundleExists": true,
+      "missingFileCatchReturnsSuccess": true,
+      "reportedTestResult": "pass despite not loading any bundle"
+    },
+    "remediation": "Change legacy iOS paths to Android assets and fail loudly on missing required bundle/registry files."
+  },
+  "limitations": [
+    "Synthetic transactions only; no on-chain execution/broadcast",
+    "No production source modifications",
+    "Parent owns full npm suite and reproducible bundle comparison"
+  ]
+}

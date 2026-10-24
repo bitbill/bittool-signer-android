@@ -1,0 +1,22 @@
+--- engine/test/chain-expansion.test.mjs
++++ temporary Android-path-adapted test
+@@ -114,7 +114,7 @@
+  assert.ok(registry.coinmarketcap.note.includes('Decimals are never taken from here'));
+  // The app copy drops build provenance; the engine copy is columnar. Both must say exactly what the merged file says.
+  const APP=['chainFamily','chainId','assetAddress','name','symbol','decimals','icon','tokenProgram','rank','cmcId','metadataSource'];
+- const app=JSON.parse(read('../../BitToolSigner/Resources/token-registry.json'));
++ const app=JSON.parse(read('../../core/data/src/main/assets/registry/token-registry.json'));
+  assert.deepEqual(app.assets,registry.assets.map(a=>Object.fromEntries(APP.filter(k=>k in a).map(k=>[k,a[k]]))),'bundled registry must be the exact projection of the merged registry');
+  assert.deepEqual({...app,assets:0},{...registry,assets:0},'bundled registry must keep the merged header');
+  const compact=JSON.parse(read('../data/token-registry.engine.json'));
+@@ -123,8 +123,8 @@
+  assert.deepEqual(compact.assets.split('\n'),registry.assets.map(a=>[compact.networks.findIndex(([f,c])=>f===a.chainFamily&&(c??undefined)===a.chainId),
+   a.assetAddress,a.name,a.symbol,a.decimals,a.icon,a.tokenProgram?compact.programs.indexOf(a.tokenProgram):-1].join('\t')),'engine registry must be the exact projection of the merged registry');
+  // Icons: one packed file, addressed by content hash, so shared artwork is stored once.
+- const index=JSON.parse(read('../../BitToolSigner/Resources/TokenIcons.index.json'));
+- const pack=readFileSync(new URL('../../BitToolSigner/Resources/TokenIcons.pack',import.meta.url));
++ const index=JSON.parse(read('../../core/data/src/main/assets/registry/TokenIcons.index.json'));
++ const pack=readFileSync(new URL('../../core/data/src/main/assets/registry/TokenIcons.pack',import.meta.url));
+  let cursor=0;
+  for(const [name,[offset,length]] of Object.entries(index).sort((x,y)=>x[1][0]-y[1][0])){
+   assert.equal(offset,cursor,'icon pack must have no gaps or overlaps at '+name);cursor+=length;

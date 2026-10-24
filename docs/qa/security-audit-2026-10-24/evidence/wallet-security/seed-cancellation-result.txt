@@ -1,0 +1,20 @@
+/private/tmp/bittool-audit-20261024/wallet-security/SeedCancellationPoC.kt:31:10: warning: this declaration needs opt-in. Its usage should be marked with '@kotlinx.coroutines.ExperimentalCoroutinesApi' or '@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)'
+    test.runCurrent()
+         ^^^^^^^^^^
+/private/tmp/bittool-audit-20261024/wallet-security/SeedCancellationPoC.kt:35:36: warning: unnecessary non-null assertion (!!) on a non-null receiver of type 'CharArray'.
+    println("seedWiped=" + retained!!.all { it == '\u0000' })
+                                   ^^
+/private/tmp/bittool-audit-20261024/wallet-security/SeedCancellationPoC.kt:37:30: warning: condition is always 'true'.
+    check(job.isCancelled && retained != null && retained!!.any { it != '\u0000' })
+                             ^^^^^^^^^^^^^^^^
+/private/tmp/bittool-audit-20261024/wallet-security/SeedCancellationPoC.kt:37:58: warning: unnecessary non-null assertion (!!) on a non-null receiver of type 'CharArray'.
+    check(job.isCancelled && retained != null && retained!!.any { it != '\u0000' })
+                                                         ^^
+/private/tmp/bittool-audit-20261024/wallet-security/SeedCancellationPoC.kt:38:13: warning: unnecessary non-null assertion (!!) on a non-null receiver of type 'CharArray'.
+    retained!!.fill('\u0000')
+            ^^
+operationCancelled=true
+seedProduced=true
+seedLength=128
+seedWiped=false
+derivePublicIndexCalls=0
