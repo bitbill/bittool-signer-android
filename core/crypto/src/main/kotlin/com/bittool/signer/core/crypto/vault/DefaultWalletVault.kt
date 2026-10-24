@@ -126,6 +126,8 @@ class DefaultWalletVault @Inject constructor(
                     // The key was generated a moment ago, so this is not a lost device key ("Restore your recovery
                     // phrase…"): iOS reports a failed device-layer seal as `encryptionFailure`
                     // (`Core/VaultCrypto.swift:163-173`); key generation failures stay `deviceKeyUnavailable` (`:28-34`).
+                    // Android-only: a phone that counts as locked says so ("unlock it with its PIN…").
+                    if (e.deviceLocked) throw e
                     throw VaultError.EncryptionFailure(e)
                 }
                 writeVault(id, VaultFormat.encodeContainer(headerBytes, outer))

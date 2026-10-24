@@ -244,12 +244,17 @@ class AesGcmJournalCipher : JournalCipher {
         keyProvablyGone = true
     }
 
+    /** The phone counts as locked for Keystore (face unlock, Smart Lock): what the real cipher throws (Robolectric only). */
+    @Volatile
+    var locked: Boolean = false
+
     override fun discardLostKey(): Boolean {
         lossChecks.incrementAndGet()
         return keyProvablyGone
     }
 
     override fun seal(plaintext: ByteArray): ByteArray {
+        if (locked) throw VaultError.DeviceKeyUnavailable(UserNotAuthenticatedException())
         seals.incrementAndGet()
         keyProvablyGone = false
         val iv = ByteArray(12).also(random::nextBytes)
@@ -264,6 +269,7 @@ class AesGcmJournalCipher : JournalCipher {
         if (sealed.size < HEADER.size + 12 + 16 || !sealed.copyOfRange(0, HEADER.size).contentEquals(HEADER)) {
             throw VaultError.AuthenticationFailed()
         }
+        if (locked) throw VaultError.DeviceKeyUnavailable(UserNotAuthenticatedException())
         val iv = sealed.copyOfRange(HEADER.size, HEADER.size + 12)
         return try {
             Cipher.getInstance("AES/GCM/NoPadding").apply {

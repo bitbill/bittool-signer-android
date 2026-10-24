@@ -80,6 +80,11 @@ data class SignerState(
      * phone must be unlocked once with its PIN, pattern or password, and the next foreground loads them again.
      */
     val keysLocked: Boolean = false,
+    /**
+     * Android-only, like [keysLocked]: the Activity journal could not be read because Keystore refused its key while the
+     * phone counts as locked. Not unreadable (no alert): the next foreground reads it again.
+     */
+    val activityLocked: Boolean = false,
     /** A signature is in flight (Sign buttons show a spinner, the authorize sheet cannot be dismissed). */
     val busy: Boolean = false,
     /**

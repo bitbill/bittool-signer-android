@@ -78,7 +78,14 @@ sealed class VaultError(text: UiText, cause: Throwable? = null) : SignerExceptio
         VaultError(UiText.Ios("Too many unsuccessful attempts. Try again in %lld seconds.", listOf(seconds)))
 
     private companion object {
-        fun isDeviceLocked(cause: Throwable?): Boolean =
-            generateSequence(cause) { it.cause.takeIf { next -> next !== it } }.take(8).any { it is UserNotAuthenticatedException }
+        fun isDeviceLocked(cause: Throwable?): Boolean = cause.isKeystoreLockedRefusal()
     }
 }
+
+/**
+ * Whether this failure (or one of its causes) is Keystore refusing a `setUnlockedDeviceRequired` key only because the
+ * phone counts as locked (`UserNotAuthenticatedException`; see [VaultError.DeviceKeyUnavailable]): nothing is wrong
+ * with the key or the data, and unlocking the phone with its PIN, pattern or password makes it usable again.
+ */
+fun Throwable?.isKeystoreLockedRefusal(): Boolean =
+    generateSequence(this) { it.cause.takeIf { next -> next !== it } }.take(8).any { it is UserNotAuthenticatedException }

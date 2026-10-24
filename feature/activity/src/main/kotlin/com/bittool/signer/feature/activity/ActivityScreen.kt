@@ -65,6 +65,7 @@ import kotlinx.coroutines.flow.emptyFlow
 object ActivityTags {
     const val ROW = "activity.row"
     const val CLEAR = "activity.clear"
+    const val LOCKED = "activity.locked"
     const val CLEAR_CONFIRM = "activity.clearConfirm"
     const val LIST = "activity.list"
 
@@ -136,6 +137,14 @@ internal fun ActivityContent(
         ) { insets ->
             when {
                 state.loading -> Unit
+                state.locked -> CenteredState(insets) {
+                    EmptyState(
+                        icon = SignerIcons.DeviceLock,
+                        title = stringResource(R.string.wallets_keys_locked_title),
+                        description = stringResource(R.string.crypto_device_locked),
+                        modifier = Modifier.testTag(ActivityTags.LOCKED),
+                    )
+                }
                 state.unreadable -> CenteredState(insets) {
                     EmptyState(
                         icon = SignerIcons.StorageAlert,

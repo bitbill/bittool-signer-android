@@ -130,7 +130,9 @@ class JournalKeyLossTest {
         keystore.loadFailures.clear()
 
         keystore.locked = true
-        assertFailsWith<VaultError.AuthenticationFailed> { cipher.open(sealed) }
+        // A phone that counts as locked (face unlock, Smart Lock) is neither a damaged journal nor a lost key.
+        assertTrue(assertFailsWith<VaultError.DeviceKeyUnavailable> { cipher.open(sealed) }.deviceLocked)
+        assertTrue(assertFailsWith<VaultError.DeviceKeyUnavailable> { cipher.seal(journal) }.deviceLocked)
         assertFalse(cipher.discardLostKey(), "a locked device")
         keystore.locked = false
         assertContentEquals(journal, cipher.open(sealed))

@@ -9,6 +9,7 @@ import com.bittool.signer.core.crypto.Bip39Seed
 import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.bip39.Bip39
 import com.bittool.signer.core.crypto.vault.VaultError
+import com.bittool.signer.core.crypto.vault.isKeystoreLockedRefusal
 import com.bittool.signer.core.crypto.vault.WalletNames
 import com.bittool.signer.core.crypto.vault.WalletVault
 import com.bittool.signer.core.engine.EngineCalls
@@ -247,8 +248,8 @@ class DefaultSignerStore @Inject constructor(
         // QA L4: the person may have removed or set the screen lock while the app was in the background.
         val before = current
         if (before.isLoading || !before.walletLoadSucceeded || before.wallets.isEmpty()) return@withContext
-        if (before.keysLocked) {
-            // The phone may have been unlocked with its screen lock since: the public data is read again.
+        if (before.keysLocked || before.activityLocked) {
+            // The phone may have been unlocked with its screen lock since: the public data and Activity are read again.
             reload()
             return@withContext
         }
@@ -987,15 +988,21 @@ class DefaultSignerStore @Inject constructor(
         try {
             val records = readJournal()
             val notice = restartNoticePending()
-            _state.update { it.copy(receipts = records, activityUnreadable = false, activityRestarted = notice) }
+            _state.update { it.copy(receipts = records, activityUnreadable = false, activityLocked = false, activityRestarted = notice) }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            if (e.isKeystoreLockedRefusal()) {
+                // Face unlock or Smart Lock left the journal's key locked: not damaged, read again on the next foreground.
+                _state.update { it.copy(activityLocked = true, activityUnreadable = false) }
+                return@withLock
+            }
             val notice = restartNoticePending()
             _state.update {
                 it.copy(
                     receipts = emptyList(),
                     activityUnreadable = true,
+                    activityLocked = false,
                     activityRestarted = notice,
                     error = UiText.Resource(R.string.data_activity_unreadable),
                 )

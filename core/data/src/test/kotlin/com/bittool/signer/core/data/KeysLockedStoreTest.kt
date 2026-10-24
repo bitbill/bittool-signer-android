@@ -1,5 +1,6 @@
 package com.bittool.signer.core.data
 
+import com.bittool.signer.core.data.doubles.AesGcmJournalCipher
 import com.bittool.signer.core.data.doubles.HmacPublicDataKey
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.PublicMetadataStatus
@@ -11,6 +12,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -43,6 +45,26 @@ class KeysLockedStoreTest {
         assertEquals(PublicMetadataStatus.Ready, state.metadataStatus(wallet.id))
         store.retryMatching()
         assertNotNull(state.plan)
+    }
+
+    /** The Activity journal's key is locked the same way: no "could not be read" alert, and it reads again later. */
+    @Test
+    fun aLockedJournalIsNotUnreadableAndIsReadAgainOnceUnlocked() = JvmStore.run {
+        store.reload()
+        create()
+        store.prepare(FakeEngine.request())
+        sign(state.plan!!.tasks.single().id)
+        assertEquals(1, state.receipts.size)
+        val journal = fixture.cipher as AesGcmJournalCipher
+        journal.locked = true
+        store.reload()
+        assertTrue(state.activityLocked)
+        assertFalse(state.activityUnreadable)
+        assertNull(state.error, "no \"could not be read\" alert")
+        journal.locked = false
+        store.refreshDeviceKeys()
+        assertFalse(state.activityLocked)
+        assertEquals(1, state.receipts.size)
     }
 
     @Test

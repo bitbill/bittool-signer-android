@@ -33,6 +33,11 @@ data class ActivityUiState(
      * empty list, and no "Clear" (DECISIONS.md §10, iOS parity).
      */
     val unreadable: Boolean = false,
+    /**
+     * Android-only (`SignerState.activityLocked`): Keystore keeps the record's key locked after a face or Smart Lock
+     * unlock. "Unlock with Your Screen Lock" instead of the empty list; it reads again on the next foreground.
+     */
+    val locked: Boolean = false,
     val days: List<ActivityDay> = emptyList(),
     /** "Clear all activity?" is up. */
     val showsClearConfirmation: Boolean = false,
@@ -103,6 +108,7 @@ class ActivityViewModel @Inject constructor(
     private data class ListInputs(
         val loading: Boolean,
         val unreadable: Boolean,
+        val locked: Boolean,
         val entries: List<ActivityEntry>,
         val securityEpoch: Long,
         val restarted: Boolean,
@@ -112,6 +118,7 @@ class ActivityViewModel @Inject constructor(
             return ActivityUiState(
                 loading = loading,
                 unreadable = unreadable && entries.isEmpty(),
+                locked = locked && entries.isEmpty(),
                 days = days,
                 showsClearConfirmation = confirmationEpoch != null && confirmationEpoch == securityEpoch && days.isNotEmpty(),
                 restartNotice = restarted && !(unreadable && entries.isEmpty()),
@@ -122,6 +129,7 @@ class ActivityViewModel @Inject constructor(
             fun of(state: SignerState) = ListInputs(
                 loading = state.isLoading,
                 unreadable = state.activityUnreadable,
+                locked = state.activityLocked,
                 entries = state.receipts.map { receipt ->
                     ActivityEntry(
                         id = receipt.id,

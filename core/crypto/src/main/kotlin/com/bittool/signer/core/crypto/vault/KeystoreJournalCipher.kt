@@ -49,6 +49,8 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
         } catch (e: VaultError) {
             throw e
         } catch (e: GeneralSecurityException) {
+            // A phone that counts as locked (face unlock, Smart Lock) is not a broken key.
+            if (e.isKeystoreLockedRefusal()) throw VaultError.DeviceKeyUnavailable(e)
             throw VaultError.EncryptionFailure(e)
         } catch (e: ProviderException) {
             throw VaultError.EncryptionFailure(e)
@@ -70,7 +72,9 @@ class KeystoreJournalCipher internal constructor(private val policy: KeystoreKey
             return plaintext
         } catch (e: VaultError) {
             throw e
-        } catch (_: GeneralSecurityException) {
+        } catch (e: GeneralSecurityException) {
+            // A phone that counts as locked (face unlock, Smart Lock) says nothing about the journal: not "invalid".
+            if (e.isKeystoreLockedRefusal()) throw VaultError.DeviceKeyUnavailable(e)
             throw VaultError.AuthenticationFailed()
         } catch (_: ProviderException) {
             throw VaultError.AuthenticationFailed()
