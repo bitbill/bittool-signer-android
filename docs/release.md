@@ -420,6 +420,16 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
    - The other App content answers: no ads; app access needs no account or login; the content rating questionnaire; a target audience of adults only (the app is not designed for children).
 4. Promote to production with a staged rollout.
 
+**Verifiable release (both channels; the iOS app does the same, `docs/Reproducible-Build.md`):**
+
+1. On the commit that passed `verify-release.sh --release`, run `tools/release/release-manifest.sh`. It writes
+   `release/` (SHA-256 of every tracked file, the engine rebuilt from a clean install in a throwaway copy, and the
+   signed APK/AAB hashes and certificate from the archived build). It must print "reproduces it exactly".
+2. Commit `release/` on top of that commit (the manifest names the commit it describes, as on iOS).
+3. Publish a GitHub release on https://github.com/bitbill/bittool-signer-android for the tag, with the `apk`-channel
+   APK, `SHA256SUMS` and `release/release-manifest.json` attached. bittool.com/signer links to it and repeats the
+   certificate, APK and engine hashes, so each copy can be checked against the other.
+
 **Both channels:**
 
 1. Tag the verified commit: `git tag -s android-v<version>`. Push the tag with the release.
