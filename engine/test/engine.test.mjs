@@ -128,7 +128,7 @@ test('Solana refuses ALT, bad signatures and wrong signer; unknown programs are 
 });
 test('dispatch rejects oversized/malformed input without reflecting secrets',()=>{const r=JSON.parse(dispatch('{"operation":"sign","mnemonic":"SECRET","request":{}}'));assert.equal(r.ok,false);assert.ok(!JSON.stringify(r).includes('SECRET'));assert.equal(JSON.parse(dispatch('x'.repeat(1048577))).error.code,'LIMIT');});
 test('browser bundle operates in a JavaScriptCore-like isolated environment',()=>{
- let source;try{source=readFileSync(new URL('../../BitToolSigner/Resources/signer.js',import.meta.url),'utf8');}catch{return;}
+ let source;try{source=readFileSync(new URL('../../core/engine/src/main/assets/engine/signer.js',import.meta.url),'utf8');}catch{return;}
  const context=vm.createContext({});vm.runInContext(source,context,{timeout:20000});
  const result=JSON.parse(context.BitToolSignerEngine.dispatch(JSON.stringify({operation:'deriveAccounts',mnemonic:MN})));
  assert.equal(result.ok,true);assert.equal(result.result.accounts[1].address,accounts[1].address);assert.equal(vm.runInContext('typeof fetch',context),'undefined');

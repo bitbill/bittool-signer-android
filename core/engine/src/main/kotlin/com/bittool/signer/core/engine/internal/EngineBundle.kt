@@ -20,8 +20,8 @@ internal class EngineBundle private constructor(
     companion object {
         const val ASSET_PATH = "engine/signer.js"
         /** SHA-256 of signer.js (engine/bundle-manifest.json of BitTool Signer 1.0.0). */
-        const val EXPECTED_SHA256 = "6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077"
-        const val EXPECTED_BYTES = 1_181_026
+        const val EXPECTED_SHA256 = "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19"
+        const val EXPECTED_BYTES = 1_181_432
 
         /**
          * Captures and removes the native entropy function before the bundle runs, then installs a frozen

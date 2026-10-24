@@ -33,6 +33,18 @@ echo "signer.js synced from iOS: $sha ($bytes bytes)"
 rsync -a --delete --exclude node_modules "$IOS/engine/" "$ROOT/engine/"
 sed -i '' -e "s#'../BitToolSigner/Resources/signer.js'#'../core/engine/src/main/assets/engine/signer.js'#g" \
   -e "s#file:'BitToolSigner/Resources/signer.js'#file:'core/engine/src/main/assets/engine/signer.js'#" "$ROOT/engine/build.mjs"
+# The engine tests read the app's resources at iOS paths (audit BTS-06): here they are the Android assets, the same
+# files (the data check compares them with iOS byte for byte). Without this, `npm test` failed one test and skipped the
+# bundle test without loading any bundle.
+sed -i '' -e "s#'../../BitToolSigner/Resources/signer.js'#'../../core/engine/src/main/assets/engine/signer.js'#g" \
+  -e "s#'../../BitToolSigner/Resources/token-registry.json'#'../../core/data/src/main/assets/registry/token-registry.json'#g" \
+  -e "s#'../../BitToolSigner/Resources/TokenIcons.index.json'#'../../core/data/src/main/assets/registry/TokenIcons.index.json'#g" \
+  -e "s#'../../BitToolSigner/Resources/TokenIcons.pack'#'../../core/data/src/main/assets/registry/TokenIcons.pack'#g" \
+  "$ROOT/engine/test/engine.test.mjs" "$ROOT/engine/test/chain-expansion.test.mjs"
+if grep -rq "BitToolSigner/Resources" "$ROOT/engine/test"; then
+  echo "engine/test still names an iOS resource path: extend the rewrite in $0" >&2
+  exit 1
+fi
 echo "engine source synced from iOS into engine/ (rebuild: cd engine && npm ci --ignore-scripts && npm run build)"
 "$ROOT/tools/l10n/sync-from-ios.sh" "$IOS"
 echo "Next: tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest"
