@@ -1,0 +1,33 @@
+{
+  "product": "BitTool Signer for Android",
+  "applicationId": "com.bittool.signer",
+  "version": "1.0.0",
+  "commit": "71af693db0c9e728b906c2112e14bab561ed308c",
+  "trackedFiles": 1938,
+  "trackedManifestSHA256": "a452e7c9eade79bb7f1ba7b29a7e3ae8a506b8df1047e861b6364761ce630092",
+  "engineBundle": {
+    "path": "core/engine/src/main/assets/engine/signer.js",
+    "apkPath": "assets/engine/signer.js",
+    "shippedSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19",
+    "rebuiltSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19",
+    "reproduced": true,
+    "node": "v20.20.2",
+    "npm": "10.8.2",
+    "inApkSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19"
+  },
+  "versionCode": 1000001,
+  "signing": {
+    "certificateSHA256": "af41ed101765393ae89038eb4c6fc7fa96d930f6fcd76b881437a39b5a9e4631",
+    "playUploadCertificateSHA256": "af41ed101765393ae89038eb4c6fc7fa96d930f6fcd76b881437a39b5a9e4631"
+  },
+  "artifacts": {
+    "BitToolSigner-1.0.0-1000001-apk.apk": {
+      "sha256": "109dbf5c622ee77672904c34a10229df3c9b0eac45b07096c510b1e1e169c2a4",
+      "bytes": 20791832
+    },
+    "BitToolSigner-1.0.0-1000001-play.aab": {
+      "sha256": "5ded3a1eb520b488bdc5b5acce994f031cbbd2bcc0327411680655568ac6ffb9",
+      "bytes": 24328218
+    }
+  }
+}
