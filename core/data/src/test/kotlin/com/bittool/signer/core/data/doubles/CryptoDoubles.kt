@@ -70,7 +70,13 @@ class JvmSecureRandomSource : SecureRandomSource {
  * phrase = whitespace-collapsed lowercase NFKD, salt = NFKD("mnemonic" + passphrase). Reproduces the published vectors.
  */
 class HmacBip39Seed : Bip39Seed {
-    override fun hex(mnemonic: SecretText, passphrase: SecretText): CharArray {
+    /** Sees every seed handed out, before it is returned (tests check it is wiped, never its contents). */
+    @Volatile
+    var onProduced: ((CharArray) -> Unit)? = null
+
+    override fun hex(mnemonic: SecretText, passphrase: SecretText): CharArray = produce(mnemonic, passphrase).also { onProduced?.invoke(it) }
+
+    private fun produce(mnemonic: SecretText, passphrase: SecretText): CharArray {
         val normalized = Normalizer.normalize(mnemonic.view(), Normalizer.Form.NFKD).lowercase(Locale.ROOT)
         val phrase = normalized.split(WHITESPACE).filter { it.isNotEmpty() }.joinToString(" ")
         if (phrase.isEmpty() || phrase.utf8Size() > 1_024 || passphrase.utf8Size() > 1_024) throw VaultError.InvalidSecret()

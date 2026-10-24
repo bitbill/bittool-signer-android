@@ -70,6 +70,23 @@ class HardeningTest {
         assertEquals(1, blocked)
     }
 
+    /** Audit BTS-01: a strict guard (the review's Sign button) refuses a partly covered window too. */
+    @Test
+    fun aStrictGuardAlsoRefusesAPartiallyObscuredTouch() {
+        var clicks = 0
+        var blocked = 0
+        lateinit var view: View
+        compose.setContent {
+            view = LocalView.current
+            Box(Modifier.size(120.dp).strictObscuredTouchGuard { blocked++ }.clickable { clicks++ })
+        }
+        tap(view, MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED)
+        assertEquals(0, clicks, "an overlay over the amount must not let Sign through")
+        assertEquals(1, blocked)
+        tap(view, 0)
+        assertEquals(1, clicks)
+    }
+
     @Test
     fun revealedSecretsMarkTheViewSensitiveWhileShown() {
         var revealed by mutableStateOf(false)

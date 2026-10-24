@@ -4,6 +4,7 @@ import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.JvmStore.Companion.PASSWORD
 import com.bittool.signer.core.data.doubles.AesGcmJournalCipher
 import com.bittool.signer.core.data.doubles.EngineGate
+import com.bittool.signer.core.data.doubles.HmacBip39Seed
 import com.bittool.signer.core.data.doubles.asSecret
 import com.bittool.signer.core.engine.EngineException
 import com.bittool.signer.core.engine.EngineOperation
@@ -28,6 +29,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
@@ -498,6 +500,30 @@ class DefaultSignerStoreTest {
         assertNotNull(state.plan)
         assertNull(state.matchingIssue)
         assertEquals(UiText.Ios("No interrupted or unmatched request to retry."), assertFailsWith<AppIssue> { store.retryMatching() }.text)
+    }
+
+    /**
+     * Audit BTS-03: a caller cancelled while the derived seed returns from the dispatcher switch loses withContext's
+     * result; the seed is still wiped and never reaches the engine.
+     */
+    @Test
+    fun aSeedDerivedForACancelledCallerIsStillWiped() = JvmStore.run {
+        store.reload()
+        val produced = ArrayList<CharArray>()
+        val lookup = test.async(start = CoroutineStart.LAZY) {
+            FakeEngine.PHRASE.asSecret { words -> "".asSecret { store.existingWallet(words, it) } }
+        }
+        (fixture.seed as HmacBip39Seed).onProduced = { seed ->
+            produced += seed
+            lookup.cancel() // after production, before the result is back on the caller's dispatcher
+        }
+        var indexCalls = 0
+        engine.on(EngineOperation.DerivePublicIndex) { indexCalls++; FakeEngine.publicIndex(it.str("seed")!!) }
+        lookup.start()
+        assertIs<CancellationException>(runCatching { lookup.await() }.exceptionOrNull())
+        assertEquals(1, produced.size)
+        assertTrue(produced.single().all { it == '\u0000' }, "the seed is wiped")
+        assertEquals(0, indexCalls)
     }
 
     /**

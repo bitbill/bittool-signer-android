@@ -942,14 +942,18 @@ class DefaultSignerStore @Inject constructor(
         riskAcknowledged: Boolean,
     ): JsonObject = withSecret(task.walletId, password) { secret ->
         requireSession(epoch, requestId)
-        val seed = withContext(default) { bip39Seed.hex(secret.mnemonic, secret.passphrase) }
+        // Owned out here before the dispatcher switch returns: a caller cancelled right then would lose the result of
+        // withContext, and with it the wipe (audit BTS-03).
+        var seed: CharArray? = null
         try {
+            withContext(default) { seed = bip39Seed.hex(secret.mnemonic, secret.passphrase) }
             // Deriving the seed suspends (iOS derives it synchronously right after this check): a session that ended
             // meanwhile never sends the seed to the engine.
             requireSession(epoch, requestId)
-            engineCall { engine.signPlanTask(request, plan.raw, task.id, seed, riskAcknowledged, previousResult) }
+            val derived = checkNotNull(seed)
+            engineCall { engine.signPlanTask(request, plan.raw, task.id, derived, riskAcknowledged, previousResult) }
         } finally {
-            seed.wipe()
+            seed?.wipe()
         }
     }
 
@@ -1060,7 +1064,15 @@ class DefaultSignerStore @Inject constructor(
     /** iOS `validateMnemonic` (`:171-175`): exact spellings, checksum verified, any of the ten languages. */
     private suspend fun canonical(mnemonic: SecretText): SecretText {
         currentCoroutineContext().ensureActive()
-        return withContext(default) { SecretText.of(bip39.validatedCanonical(mnemonic.view()).phrase) }
+        // As in derivePublicIndex: a caller cancelled while the result returns from withContext still gets it wiped.
+        var words: SecretText? = null
+        try {
+            withContext(default) { words = SecretText.of(bip39.validatedCanonical(mnemonic.view()).phrase) }
+            return checkNotNull(words)
+        } catch (e: Throwable) {
+            words?.wipe()
+            throw e
+        }
     }
 
     /**
@@ -1069,12 +1081,16 @@ class DefaultSignerStore @Inject constructor(
      * sent: after a suspend it never reaches the engine. Callers still check after the engine call.
      */
     private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText, epoch: Long): JsonObject {
-        val seed = withContext(default) { bip39Seed.hex(mnemonic, passphrase) }
+        // Owned out here before the dispatcher switch returns: a caller cancelled right then would lose the result of
+        // withContext, and with it the wipe (audit BTS-03).
+        var seed: CharArray? = null
         return try {
+            withContext(default) { seed = bip39Seed.hex(mnemonic, passphrase) }
             requireSession(epoch)
-            engineCall { engine.derivePublicIndex(seed) }
+            val derived = checkNotNull(seed)
+            engineCall { engine.derivePublicIndex(derived) }
         } finally {
-            seed.wipe()
+            seed?.wipe()
         }
     }
 

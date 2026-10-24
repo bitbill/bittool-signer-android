@@ -40,22 +40,35 @@ import java.util.WeakHashMap
  * root: screen-dimmer apps would otherwise make the whole app unresponsive. On API 31+ `:app` and every dialog / sheet
  * also hide foreign overlays (`HideOverlayWindowsEffect`); this guard covers API 26–30 and anything that slips through.
  * Accessibility actions (TalkBack double tap) are not touches and are not affected.
+ *
+ * Keyboard-free consent controls use [strictObscuredTouchGuard].
  */
-fun Modifier.obscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(onBlocked)
+fun Modifier.obscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(false, onBlocked)
 
 /**
- * Whether `MotionEvent.flags` say another app's window covered the touched point (pure, unit-tested).
- * `FLAG_WINDOW_IS_PARTIALLY_OBSCURED` is deliberately not refused: every input method (e.g. Huawei's secure keyboard)
- * is another app's window and sets it whenever it is shown, which made decisive buttons untappable with the keyboard
- * up. Foreign overlays are hidden on API 31+ anyway (`HideOverlayWindowsEffect`).
+ * [obscuredTouchGuard] for keyboard-free consent controls (the review's Sign button and risk acknowledgement): it also
+ * refuses a touch while another app's window covers any part of the app (`FLAG_WINDOW_IS_PARTIALLY_OBSCURED`, API
+ * 29+), since an overlay could replace the amount or recipient and leave the button itself visible (audit BTS-01). Not
+ * for controls used with the keyboard up: an input method sets that flag whenever it is shown.
  */
-@Suppress("UNUSED_PARAMETER")
-fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT): Boolean =
-    flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
+fun Modifier.strictObscuredTouchGuard(onBlocked: () -> Unit): Modifier = this then ObscuredTouchGuardElement(true, onBlocked)
 
-private data class ObscuredTouchGuardElement(val onBlocked: () -> Unit) : ModifierNodeElement<ObscuredTouchGuardNode>() {
-    override fun create() = ObscuredTouchGuardNode(onBlocked)
+/**
+ * Whether `MotionEvent.flags` say another app's window covered the touched point (pure, unit-tested). Unless
+ * [strict], `FLAG_WINDOW_IS_PARTIALLY_OBSCURED` is deliberately not refused: every input method (e.g. Huawei's secure
+ * keyboard) is another app's window and sets it whenever it is shown, which made decisive buttons untappable with the
+ * keyboard up. Foreign overlays are hidden on API 31+ anyway (`HideOverlayWindowsEffect`). The partial flag exists
+ * from API 29.
+ */
+fun isObscuredTouch(flags: Int, sdk: Int = Build.VERSION.SDK_INT, strict: Boolean = false): Boolean =
+    flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0 ||
+        (strict && sdk >= Build.VERSION_CODES.Q && flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0)
+
+private data class ObscuredTouchGuardElement(val strict: Boolean, val onBlocked: () -> Unit) :
+    ModifierNodeElement<ObscuredTouchGuardNode>() {
+    override fun create() = ObscuredTouchGuardNode(strict, onBlocked)
     override fun update(node: ObscuredTouchGuardNode) {
+        node.strict = strict
         node.onBlocked = onBlocked
     }
 
@@ -64,14 +77,14 @@ private data class ObscuredTouchGuardElement(val onBlocked: () -> Unit) : Modifi
     }
 }
 
-private class ObscuredTouchGuardNode(var onBlocked: () -> Unit) : Modifier.Node(), PointerInputModifierNode {
+private class ObscuredTouchGuardNode(var strict: Boolean, var onBlocked: () -> Unit) : Modifier.Node(), PointerInputModifierNode {
     /** True from a refused `ACTION_DOWN` until every pointer of that gesture is up. */
     private var blocking = false
 
     override fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize) {
         if (pass != PointerEventPass.Initial) return
         val motion = pointerEvent.motionEvent
-        if (!blocking && motion != null && motion.actionMasked == MotionEvent.ACTION_DOWN && isObscuredTouch(motion.flags)) {
+        if (!blocking && motion != null && motion.actionMasked == MotionEvent.ACTION_DOWN && isObscuredTouch(motion.flags, strict = strict)) {
             blocking = true
             onBlocked()
         }

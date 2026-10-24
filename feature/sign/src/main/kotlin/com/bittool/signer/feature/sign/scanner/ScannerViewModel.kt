@@ -159,7 +159,14 @@ class ScannerViewModel @Inject constructor(
 
     /** iOS `receive(_:store:completed:)`: one accepted QR text, exactly as scanned. */
     fun receive(frame: String) {
-        if (stopped || _uiState.value.error != null || store.state.value.review != null || !seen.add(frame)) return
+        if (stopped || _uiState.value.error != null || store.state.value.review != null) return
+        // A part waiting for a retry (interrupted by backgrounding) comes back as the same text, which a static QR code
+        // only ever shows: it resumes the queue instead of being dropped as a duplicate (audit BTS-05).
+        if (frame in queue) {
+            drain()
+            return
+        }
+        if (!seen.add(frame)) return
         hasFrames = true
         _uiState.update { it.copy(received = it.received + 1) }
         queue.addLast(frame)

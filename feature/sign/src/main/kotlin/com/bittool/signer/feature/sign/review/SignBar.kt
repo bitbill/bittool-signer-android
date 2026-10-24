@@ -48,6 +48,7 @@ import com.bittool.signer.core.designsystem.component.SecondaryButton
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.security.strictObscuredTouchGuard
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -143,7 +144,7 @@ internal fun SignActions(
             icon = SignerIcons.Signature,
             busy = interactive && state.busy,
             enabled = interactive && !state.blocked && !state.busy,
-            modifier = if (interactive) Modifier.obscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE) else Modifier,
+            modifier = if (interactive) Modifier.strictObscuredTouchGuard(onObscuredTouch).testTag(SignTags.AUTHORIZE) else Modifier,
         )
     }
 }
@@ -218,7 +219,7 @@ internal fun RiskAcknowledgement(
         fullyDecoded = fullyDecoded,
         modifier = modifier
             .clip(SignerShapes.callout)
-            .obscuredTouchGuard(onObscuredTouch)
+            .strictObscuredTouchGuard(onObscuredTouch)
             .toggleable(value = checked, role = Role.Checkbox) {
                 haptics.selection()
                 onToggle()

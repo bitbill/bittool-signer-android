@@ -303,6 +303,24 @@ class ScannerViewModelTest {
         assertEquals(listOf("A", "A", "B"), received(), "the interrupted part goes first, then the new one")
     }
 
+    /** Audit BTS-05: a static QR code shows one text only, so the interrupted frame itself must resume the queue. */
+    @Test
+    fun anInterruptedStaticQrCodeIsRetriedWhenItIsSeenAgain() = runTest {
+        val first = CompletableDeferred<Double>()
+        store.onReceiveFrame = { frame -> if (received().size == 1) first.await() else 0.4 }
+        val vm = scanner()
+        runCurrent()
+        vm.receive("STATIC")
+        runCurrent()
+        store.suspendSession()
+        first.completeExceptionally(CancellationException("The session changed; the late result is discarded."))
+        runCurrent()
+        repeat(3) { vm.receive("STATIC") }
+        runCurrent()
+        assertEquals(listOf("STATIC", "STATIC"), received(), "retried once, not once per callback")
+        assertNull(vm.uiState.value.error)
+    }
+
     @Test
     fun aResultForAnEarlierSessionIsDropped() = runTest {
         val first = CompletableDeferred<Double>()

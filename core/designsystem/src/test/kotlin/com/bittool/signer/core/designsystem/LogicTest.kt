@@ -41,6 +41,11 @@ class LogicTest {
         assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q))
         assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.P))
         assertFalse(isObscuredTouch(0, Build.VERSION_CODES.BAKLAVA))
+        // Strict (keyboard-free consent controls, audit BTS-01): any foreign window over the app, where Android says so.
+        assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.Q, strict = true))
+        assertTrue(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.R, strict = true))
+        assertFalse(isObscuredTouch(MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED, Build.VERSION_CODES.P, strict = true))
+        assertFalse(isObscuredTouch(0, Build.VERSION_CODES.Q, strict = true))
     }
 
     @Test
