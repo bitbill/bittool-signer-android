@@ -1,33 +1,33 @@
 {
   "product": "BitTool Signer for Android",
   "applicationId": "com.bittool.signer",
-  "version": "1.0.0",
-  "commit": "71af693db0c9e728b906c2112e14bab561ed308c",
-  "trackedFiles": 1938,
-  "trackedManifestSHA256": "a452e7c9eade79bb7f1ba7b29a7e3ae8a506b8df1047e861b6364761ce630092",
+  "version": "1.1.0",
+  "commit": "1ea23d7dbd8faf6f2c7b820b0dceea34e9c2c930",
+  "trackedFiles": 1976,
+  "trackedManifestSHA256": "bc57fb465c82f13b66ee6049573f8e65ab8f5f7b153ea1463248ff7942bb5f51",
   "engineBundle": {
     "path": "core/engine/src/main/assets/engine/signer.js",
     "apkPath": "assets/engine/signer.js",
-    "shippedSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19",
-    "rebuiltSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19",
+    "shippedSHA256": "f774f1f2b0614e7faec0eeac30ee216bd351ae4f2a326846a057b489a7c01a96",
+    "rebuiltSHA256": "f774f1f2b0614e7faec0eeac30ee216bd351ae4f2a326846a057b489a7c01a96",
     "reproduced": true,
     "node": "v20.20.2",
     "npm": "10.8.2",
-    "inApkSHA256": "4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19"
+    "inApkSHA256": "f774f1f2b0614e7faec0eeac30ee216bd351ae4f2a326846a057b489a7c01a96"
   },
-  "versionCode": 1000001,
+  "versionCode": 1010002,
   "signing": {
     "certificateSHA256": "af41ed101765393ae89038eb4c6fc7fa96d930f6fcd76b881437a39b5a9e4631",
     "playUploadCertificateSHA256": "af41ed101765393ae89038eb4c6fc7fa96d930f6fcd76b881437a39b5a9e4631"
   },
   "artifacts": {
-    "BitToolSigner-1.0.0-1000001-apk.apk": {
-      "sha256": "109dbf5c622ee77672904c34a10229df3c9b0eac45b07096c510b1e1e169c2a4",
-      "bytes": 20791832
+    "BitToolSigner-1.1.0-1010002-apk.apk": {
+      "sha256": "ce58d56c8b411b41e936c0769f96fb4aa35fd3c740672c362877b5441806e06e",
+      "bytes": 22479276
     },
-    "BitToolSigner-1.0.0-1000001-play.aab": {
-      "sha256": "5ded3a1eb520b488bdc5b5acce994f031cbbd2bcc0327411680655568ac6ffb9",
-      "bytes": 24328218
+    "BitToolSigner-1.1.0-1010002-play.aab": {
+      "sha256": "c1eca92b809a67bf5628e480b35d295208132ae2aebcea6dcb384648764d6492",
+      "bytes": 25052792
     }
   }
 }
