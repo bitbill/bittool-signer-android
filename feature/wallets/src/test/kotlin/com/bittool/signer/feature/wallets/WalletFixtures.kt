@@ -8,6 +8,7 @@ import com.bittool.signer.core.model.PublicAccount
 import com.bittool.signer.core.model.PublicMetadataStatus
 import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.WalletId
+import com.bittool.signer.core.model.WalletIdentitySignature
 import com.bittool.signer.core.model.WalletPublicMetadata
 import com.bittool.signer.core.model.pairing.PairingPayload
 import com.bittool.signer.core.model.pairing.QrPayloadView
@@ -74,8 +75,14 @@ object WalletFixtures {
             ),
         )
 
-    /** One ready wallet ("Public fixture 1"), optionally a wallet that needs repair and a duplicate pair. */
-    fun state(repair: Boolean = false, duplicates: Boolean = false): SignerState {
+    /** A well-formed KH v2 identity (65 synthetic bytes in base64); never a real signature. */
+    val identity = WalletIdentitySignature(1, "I" + "A".repeat(86) + "=")
+
+    /**
+     * One ready wallet ("Public fixture 1"), optionally a wallet that needs repair and a duplicate pair. Ready wallets
+     * carry an identity signature (saved by 1.1.0), unless [unsigned] (saved by 1.0.0).
+     */
+    fun state(repair: Boolean = false, duplicates: Boolean = false, unsigned: Boolean = false): SignerState {
         val wallets = buildList {
             add(VaultMetadata(readyId, "Public fixture 1", CREATED_AT))
             if (repair) add(VaultMetadata(repairId, "Travel Signer", CREATED_AT + 60_000))
@@ -94,6 +101,7 @@ object WalletFixtures {
             metadataStatuses = wallets.associate { wallet ->
                 wallet.id to if (public.containsKey(wallet.id)) PublicMetadataStatus.Ready else PublicMetadataStatus.NeedsCompletion
             },
+            walletIdentities = if (unsigned) emptyMap() else public.keys.associateWith { identity },
             duplicateWalletIds = if (duplicates) setOf(readyId, twinId) else emptySet(),
         )
     }

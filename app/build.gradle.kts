@@ -16,11 +16,11 @@ fun secret(key: String): String = (secrets.getProperty(key) ?: System.getenv(key
 
 /**
  * Version. versionCode = MAJOR·1 000 000 + MINOR·10 000 + PATCH·100 + BUILD, where BUILD (0–99,
- * `-Psigner.buildNumber=N`, default 1 = iOS CURRENT_PROJECT_VERSION) re-issues the same versionName (e.g. a rejected store upload).
+ * `-Psigner.buildNumber=N`, default 2 = iOS CURRENT_PROJECT_VERSION) re-issues the same versionName (e.g. a rejected store upload).
  * 1.0.0 (1) → 1000001; 1.0.1 (1) → 1000101; 1.1.0 (1) → 1010001. Kept in step with the iOS MARKETING_VERSION.
  */
-val signerVersionName = "1.0.0"
-val signerBuildNumber = providers.gradleProperty("signer.buildNumber").orNull?.trim()?.toInt() ?: 1
+val signerVersionName = "1.1.0"
+val signerBuildNumber = providers.gradleProperty("signer.buildNumber").orNull?.trim()?.toInt() ?: 2
 val signerVersionCode: Int = signerVersionName.split('.').map(String::toInt).let { (major, minor, patch) ->
     require(minor in 0..99 && patch in 0..99 && signerBuildNumber in 0..99) {
         "versionName $signerVersionName / signer.buildNumber $signerBuildNumber out of range (0–99 each)"
@@ -35,8 +35,14 @@ val signerVersionCode: Int = signerVersionName.split('.').map(String::toInt).let
  * Without them the release build is unsigned, or debug-signed with `-Psigner.allowDebugSigning=true`
  * (local device testing only — never distribute such a build).
  */
+/**
+ * `-Psigner.ignoreSigningKeys=true` builds as if no release or upload key were configured. verify-release.sh passes it
+ * when the working tree has uncommitted changes, so the release key never signs a build no commit describes
+ * (2026-11-16 audit M-04).
+ */
+val ignoreSigningKeys = providers.gradleProperty("signer.ignoreSigningKeys").orNull.toBoolean()
 val releaseSigningKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
-    .associateWith { secret("signer.release.$it") }
+    .associateWith { if (ignoreSigningKeys) "" else secret("signer.release.$it") }
 val hasReleaseKey = releaseSigningKeys.values.all { it.isNotEmpty() }
 val missingReleaseKeys = releaseSigningKeys.filterValues { it.isEmpty() }.keys
 val allowDebugSigning = providers.gradleProperty("signer.allowDebugSigning").orNull.toBoolean()
@@ -47,7 +53,7 @@ val allowDebugSigning = providers.gradleProperty("signer.allowDebugSigning").orN
  * the `apk` distribution keeps the release key, whose certificate fingerprint is what users verify.
  */
 val uploadSigningKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
-    .associateWith { secret("signer.upload.$it") }
+    .associateWith { if (ignoreSigningKeys) "" else secret("signer.upload.$it") }
 val hasUploadKey = uploadSigningKeys.values.all { it.isNotEmpty() }
 val missingUploadKeys = uploadSigningKeys.filterValues { it.isEmpty() }.keys
 

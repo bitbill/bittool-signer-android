@@ -5,6 +5,7 @@ import com.bittool.signer.core.common.coroutines.IoDispatcher
 import com.bittool.signer.core.common.storage.AtomicFiles
 import com.bittool.signer.core.common.storage.InvalidFileException
 import com.bittool.signer.core.common.storage.SignerDataDir
+import com.bittool.signer.core.common.time.MonotonicClock
 import com.bittool.signer.core.common.time.WallClock
 import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.internal.hasUnpairedSurrogate
@@ -57,6 +58,7 @@ class DefaultWalletVault @Inject constructor(
     private val deviceKeys: DeviceKeyStore,
     private val random: SecureRandomSource,
     private val clock: WallClock,
+    private val elapsed: MonotonicClock,
     @DefaultDispatcher private val cpu: CoroutineDispatcher,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : WalletVault {
@@ -256,10 +258,15 @@ class DefaultWalletVault @Inject constructor(
             if (!deviceKeys.isDeviceSecure()) throw VaultError.DevicePasscodeRequired()
             vault to attempts.read(id)
         }
-        val now = clock.currentTimeMillis()
-        AttemptCounter.lockedSeconds(previous, now)?.let { throw VaultError.TemporarilyLocked(it) }
+        // The delay runs on elapsedRealtime, which the owner of the phone cannot set (audit M-02); see AttemptCounter.
+        val nowElapsed = elapsed.elapsedRealtimeMillis()
+        val current = AttemptCounter.anchored(previous, nowElapsed)
+        AttemptCounter.lockedSeconds(current, nowElapsed)?.let { seconds ->
+            if (current != previous) withContext(io) { attempts.write(id, current) }
+            throw VaultError.TemporarilyLocked(seconds)
+        }
         // Persist the attempt before costly decryption: killing and relaunching the process cannot reset the counter.
-        withContext(io) { attempts.write(id, AttemptCounter.afterAttempt(previous, now)) }
+        withContext(io) { attempts.write(id, AttemptCounter.afterAttempt(current, clock.currentTimeMillis(), nowElapsed)) }
 
         val chars = password.chars()
         if (chars.isEmpty() || password.utf8Size() > MAX_PASSWORD_BYTES || hasUnpairedSurrogate(chars)) {
@@ -302,7 +309,7 @@ class DefaultWalletVault @Inject constructor(
             // usually refuses this write as well, and then the attempt stays counted.
             withContext(io) {
                 try {
-                    attempts.write(id, previous)
+                    attempts.write(id, current)
                 } catch (_: VaultError) {
                 }
             }

@@ -1,6 +1,10 @@
 {
  "language": "fr",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "fr"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Portefeuille supprimé"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Une autre app s’affiche par-dessus BitTool Signer. Fermez-la, puis réessayez."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Une application peut lire votre écran"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Une application d’accessibilité qui n’était pas fournie avec ce téléphone peut lire ce qui s’affiche à l’écran : %1$s. Sur cette version d’Android, elle pourrait aussi lire les mots de votre phrase de récupération. Si vous ne lui faites pas confiance, désactivez-la d’abord dans Paramètres › Accessibilité."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Le verrouillage de l’app n’a pas pu être modifié. Réessayez."
@@ -234,8 +246,8 @@
    "value": "Code source du moteur de signature"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s : un xpub de compte pour chaque type d’adresse Bitcoin, pour EVM et pour TRON, et les trois adresses Solana, dans un seul QR code animé"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s : un xpub de compte pour chaque type d’adresse Bitcoin, pour EVM et pour TRON, les trois adresses Solana et la signature d’identité de ce portefeuille, dans un seul QR code animé"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

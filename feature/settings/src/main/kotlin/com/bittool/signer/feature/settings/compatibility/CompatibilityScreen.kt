@@ -214,9 +214,9 @@ private fun Chain.formatsRes(): Int = when (this) {
 /** The translated "Signing" prose of a chain. */
 private fun Chain.signingRes(): Int = when (this) {
     Chain.Bitcoin -> R.string.psbt_v0_v2_single_sig_legacy_nested_native_segwit
-    Chain.Evm -> R.string.legacy_eip_2930_and_eip_1559_transactions_personal
+    Chain.Evm -> R.string.legacy_eip_2930_eip_1559_and_eip_7702_transactions_on
     Chain.Tron -> R.string.trx_and_trc_20_transfers_contract_calls_permission
-    Chain.Solana -> R.string.legacy_and_v0_transactions_with_static_accounts_and
+    Chain.Solana -> R.string.legacy_and_v0_transactions_including_address_lookup
 }
 
 private const val SEGMENT_FADE_MILLIS = 200

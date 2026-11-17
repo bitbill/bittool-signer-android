@@ -54,8 +54,11 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
@@ -78,6 +81,8 @@ import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.security.NoPersonalizedLearning
+import com.bittool.signer.core.designsystem.security.ScreenReaderWarning
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -322,6 +327,8 @@ internal fun ImportWalletStep(state: WalletSetupUiState, model: WalletSetupViewM
     ) {
         // Before any word is typed: without a screen lock no wallet can be saved (QA wallets-04).
         if (!state.deviceSecure) DeviceLockNotice()
+        // Below API 34, before any word is typed: an untrusted accessibility app is on (audit M-03).
+        ScreenReaderWarning(rememberScreenReaders())
         // The status line and the whole editor stay above the bar (and its suggestions, or the in-app keyboard) while
         // typing, the line being typed at least once the editor is taller than the space left (QA setup-02).
         Column(Modifier.keepTogetherInView(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -535,12 +542,26 @@ internal fun BackupLanguageDialog(choices: List<Bip39Canonical>, onChoose: (Bip3
         onDismissRequest = onDismiss,
     ) {
         AccessibilitySensitive(active = true)
+        val hidden = rememberScreenReaders().hideSecrets
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             for (reading in choices) {
+                val language = reading.language.displayName
                 SecondaryButton(
-                    text = stringResource(L10n.string.x_x, reading.language.displayName, reading.words.take(3).joinToString(" ")),
+                    text = stringResource(L10n.string.x_x, language, reading.words.take(3).joinToString(" ")),
                     onClick = { onChoose(reading) },
-                    modifier = Modifier.testTag("setup.language.${reading.language.fileName}"),
+                    // Below API 34 with an untrusted service on and no screen reader: the language only, no words
+                    // (audit M-03).
+                    modifier = Modifier.testTag("setup.language.${reading.language.fileName}").then(
+                        if (hidden) {
+                            Modifier.clearAndSetSemantics {
+                                contentDescription = language
+                                role = Role.Button
+                                onClick { onChoose(reading); true }
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
                 )
             }
         }

@@ -42,6 +42,7 @@ import androidx.compose.ui.test.requestFocus
 import com.bittool.signer.core.crypto.bip39.Bip39Candidates
 import com.bittool.signer.core.crypto.bip39.Bip39Language
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
+import com.bittool.signer.core.ui.keyboard.Bip39KeyboardTags
 import com.bittool.signer.feature.setup.SetupTestHost
 import com.bittool.signer.feature.setup.offers
 import com.bittool.signer.feature.setup.processTextKey
@@ -260,7 +261,7 @@ class PhraseEditorTest {
             }
         }
         compose.onNodeWithContentDescription("Insert abandon").assertExists()
-        compose.onNodeWithTag("suggestion.ability").performClick()
+        compose.onNodeWithTag(Bip39KeyboardTags.suggestion(1)).performClick()
         compose.onNodeWithText("Done").performClick()
         compose.runOnIdle {
             assertEquals(listOf("ability"), inserted)

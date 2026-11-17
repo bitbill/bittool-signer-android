@@ -206,7 +206,7 @@ class SettingsScreensTest {
         compose.onNodeWithText("crypto-account (account xpub), crypto-psbt, BBQR, Base64 PSBT").assertExists()
         compose.onNodeWithTag(CompatibilityTags.FORMATS_LIST).performScrollToNode(hasText("Ethereum & EVM"))
         compose.onNodeWithTag(CompatibilityTags.FORMATS_LIST).performScrollToNode(hasText("Wallet Level · all chains"))
-        compose.onNodeWithText("bittool-signer-wallet v1 (ur:bytes, canonical CBOR)", substring = true).assertExists()
+        compose.onNodeWithText("bittool-signer-wallet v2 (ur:bytes, canonical CBOR)", substring = true).assertExists()
         compose.onNodeWithTag(CompatibilityTags.WALLETS).performClick()
         assertEquals(CompatibilityTab.Wallets, selected)
     }

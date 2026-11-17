@@ -10,6 +10,7 @@ import com.bittool.signer.core.model.signing.PlanCandidate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -72,10 +73,23 @@ class EngineCallsTest {
         assertEquals(listOf("chain", "index", "outputMode", "profile", "publicIndex"), keys(last().second))
         assertEquals("""{"chain":"tron","index":3,"outputMode":"address","profile":"standard"}""", JsonObject(last().second - "publicIndex").canonicalJson())
 
-        calls.createWalletPairing(index)
+        // KH v2: the wallet-level code always carries the stored identity signature and its epoch.
+        val khSig = "I" + "A".repeat(86) + "="
+        calls.createWalletPairing(index, khSig, 1)
         assertEquals(EngineOperation.CreateWalletPairing, last().first)
         assertEquals("full", (last().second["mode"] as JsonPrimitive).content)
-        assertEquals(listOf("mode", "publicIndex"), keys(last().second))
+        assertEquals(listOf("khEpoch", "khSig", "mode", "publicIndex"), keys(last().second))
+        assertEquals("""{"khEpoch":1,"khSig":"$khSig","mode":"full"}""", JsonObject(last().second - "publicIndex").canonicalJson())
+    }
+
+    @Test
+    fun theIdentitySignatureTakesOnlyTheSeedAndTheEpoch() = runTest {
+        // KH v2: there is no message parameter, so nothing but `OwnbitAuth:v2:epoch=<N>` can ever be signed.
+        calls.signKhV2("ab".repeat(64).toCharArray(), 1)
+        assertEquals(EngineOperation.SignKhV2, last().first)
+        assertEquals(listOf("epoch", "seed"), keys(last().second), "no message, mnemonic or passphrase next to the seed")
+        assertEquals(1, (last().second["epoch"] as JsonPrimitive).content.toInt())
+        assertTrue(EngineOperation.SignKhV2.production && !EngineOperation.SignKhV2.isWarm, "a seed operation runs in a fresh runtime")
     }
 
     @Test

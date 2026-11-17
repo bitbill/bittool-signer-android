@@ -117,8 +117,10 @@ val LocalSensitiveDataMarking: ProvidableCompositionLocal<Boolean> = staticCompo
  * that declare `isAccessibilityTool` (TalkBack, Switch Access, Voice Access) can read or act on it; the previous value
  * comes back on dispose. Use it wherever a secret is on screen: revealed word grids and cards, the revealed recovery
  * QR, the verification board, a non-empty phrase editor, a visible passphrase, the authorize sheet (ARCHITECTURE §4.8).
- * Dialogs and sheets are separate windows: call it inside them. Reference-counted per view. Nothing exists below API
- * 34; `FLAG_SECURE` and the immediate conceal on pause remain the protection there.
+ * Dialogs and sheets are separate windows: call it inside them. Reference-counted per view. Nothing like it exists
+ * below API 34: there `FLAG_SECURE`, the immediate conceal on pause and [ScreenReaders] (2026-11-16 audit M-03: a
+ * warning while an accessibility app that did not come with the phone is on, and secret text left out of the
+ * accessibility tree while no screen reader needs it) are the protection.
  *
  * The pinned Compose also offers the per-node `Modifier.semantics { isSensitiveData = true }` (gaps G5.1 asked to
  * check): it hides that one node and its events from non-tool services. Components that draw a secret set it on the

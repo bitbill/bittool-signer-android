@@ -38,6 +38,8 @@ enum class EngineOperation(val wireName: String, val production: Boolean, val is
     Mnemonic("mnemonic", production = true),
     Capabilities("capabilities", production = true),
     DerivePublicIndex("derivePublicIndex", production = true),
+    /** KH v2 wallet identity (docs/Wallet-Pairing-v2.md): signs only `OwnbitAuth:v2:epoch=<N>`; fresh runtime (a seed). */
+    SignKhV2("signKhV2", production = true),
     DerivePublicAddresses("derivePublicAddresses", production = true, isWarm = true),
     CreatePublicPairing("createPublicPairing", production = true, isWarm = true),
     CreateWalletPairing("createWalletPairing", production = true, isWarm = true),

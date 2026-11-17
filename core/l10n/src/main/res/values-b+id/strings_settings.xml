@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Sertifikat penandatanganan</string>
     <string name="settings_open_source_intro">BitTool Signer sepenuhnya sumber terbuka. Aplikasi Android, mesin penandatanganan luring, dan data token diterbitkan, sehingga siapa pun bisa membaca apa yang dilakukan signer terhadap frasa pemulihan — lalu membangunnya ulang dan membandingkan hasilnya dengan salinan yang terpasang di sini.</string>
     <string name="settings_engine_source">Kode sumber mesin penandatanganan</string>
-    <string name="settings_wallet_level_format">%1$s: satu xpub akun untuk setiap jenis alamat Bitcoin, untuk EVM dan untuk TRON, serta ketiga alamat Solana, dalam satu QR beranimasi</string>
+    <string name="settings_wallet_level_format">%1$s: satu xpub akun untuk setiap jenis alamat Bitcoin, untuk EVM dan untuk TRON, ketiga alamat Solana, serta tanda tangan identitas dompet ini, dalam satu QR beranimasi</string>
 </resources>

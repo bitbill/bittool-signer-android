@@ -84,7 +84,7 @@ class PairingTest {
         assertEquals(listOf("btc/native", "evm/standard"), payload.firstAddresses.map { it.id })
         assertEquals("UR:BYTES/1-2/A\nUR:BYTES/2-2/B", payload.text)
         assertEquals("{\n  \"protocol\" : \"bittool-signer-wallet\",\n  \"url\" : \"a/b\",\n  \"version\" : 1\n}", payload.json)
-        assertEquals("bittool-signer-wallet v1 · ur:bytes (canonical CBOR) · 1561 bytes", payload.formatLine)
+        assertEquals("bittool-signer-wallet v2 · ur:bytes (canonical CBOR) · 1561 bytes", payload.formatLine)
     }
 
     @Test

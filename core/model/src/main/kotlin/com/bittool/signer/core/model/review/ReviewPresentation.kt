@@ -137,13 +137,20 @@ object ReviewPresentation {
  * activity-settings.md §2.5). [label] is an iOS English key ("Action", "Amount", "Network fee", "Energy budget") or,
  * for the counterparty, the engine's own caption ("Spender", "Operator", "To") resolved through `ReviewText.phrase`.
  */
-data class ActivityEssential(val id: String, val label: String, val value: String) {
+data class ActivityEssential(
+    val id: String,
+    val label: String,
+    val value: String,
+    /** The "amount" line's parts as the engine wrote them, for `ReviewText.amountLine` (the unit word translates). */
+    val amount: String? = null,
+    val symbol: String? = null,
+) {
     companion object {
         fun of(review: TransactionReview): List<ActivityEssential> {
             val lines = mutableListOf(ActivityEssential("action", "Action", review.display?.action ?: review.title))
             val display = review.display ?: return lines
             display.amount?.let { amount ->
-                lines += ActivityEssential("amount", "Amount", listOfNotNull(amount, display.symbol).joinToString(" "))
+                lines += ActivityEssential("amount", "Amount", listOfNotNull(amount, display.symbol).joinToString(" "), amount, display.symbol)
             }
             display.counterparty?.let { counterparty ->
                 lines += ActivityEssential("counterparty", display.counterpartyLabel ?: "To", AddressFormatter.short(counterparty, 6, 6))

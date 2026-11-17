@@ -400,7 +400,9 @@ so that one node carries the label the way iOS's combined accessibility element 
 
 1 fixture; camera permission revoked first (`pm revoke <pkg> android.permission.CAMERA`). Tap `wallets.scan` → answer
 the system dialog (Allow while using the app) → within 20 s a "Close" control and the title "Scan Request" exist → Close
-→ `signing.scan` exists (the person is left on Scan).
+→ `signing.scan` exists (the person is left on Scan). **Android since 17eab7a (owner request):** the camera opens right
+over Wallets without showing the Scan tab, so after Close `wallets.scan` and the "Wallets" title exist and
+`signing.scan` does not; only a scanned request selects Scan.
 
 #### G1.12 The scan card opens the camera without a password (UIT:513-534)
 
@@ -462,7 +464,7 @@ stays **off** (it turns on only after a successful biometric check).
 - "Compatibility" → background and reactivate → still "Compatibility". `compatibility.tab` → "Wallets": "says it supports", "Anyone can submit a wallet" and "BitTool is not responsible" exist; `directory.wallet.Sparrow` can be scrolled to; "sparrowwallet.com" is shown as text; **no link nodes** exist (on Android: no `ClickableSpan`/`LinkAnnotation` and nothing launching `ACTION_VIEW`).
 - `directory.submit` → "Submit a Wallet": "support@bittool.com", "Add supported wallet", "Wallet name", "Official website", "App icon", "Source code" and "QR formats supported" → back → back.
 - "Contact Us" → "BITTOOL PTE. LTD.", "support@bittool.com", no link → back.
-- `settings.openSource` → "Open Source": the repository address (iOS asserts `https://github.com/bitbill/bittool-signer-ios`; Android: open question 1); "Signing engine"; a 64-hex-digit digest appears within 10 s (computed on the device); `openSource.notices` → "Third-Party Notices" → back → back.
+- `settings.openSource` → "Open Source": the repository address (iOS asserts `https://github.com/bitbill/bittool-signer-ios`; Android since 0e99bac: `https://github.com/bitbill/bittool-signer-android`, also as "Signing engine source" in `openSource.engineRepository`, and the iOS repository nowhere on the page); "Signing engine"; a 64-hex-digit digest appears within 10 s (computed on the device); `openSource.notices` → "Third-Party Notices" → back → back.
 - "Terms of Use" → "Version 1.1"; "Privacy Policy" → "collects nothing"; no text containing "open in your browser".
 - No "Offline Setup Guide" button exists.
 
@@ -576,6 +578,22 @@ phrase editor's text, a revealed passphrase and the verification chips are all r
    Password fields are already masked to accessibility.
 2. **Below API 34** nothing equivalent exists; FLAG_SECURE, the immediate conceal on `onPause` and the
    reveal-only-while-resumed rule (app-shell §15.8) remain the protection. Document this in the Android Security.md.
+   **Since 1.1.0 (2026-11-16 audit M-03)** two more measures apply there (`core/designsystem/…/security/ScreenReaders.kt`).
+   An accessibility service is *untrusted* when its app did not come with the system image (`FLAG_SYSTEM`, also when
+   updated since). `isAccessibilityTool` is not used, because below API 34 any app can declare it and nothing checks it.
+   - **Warning (B).** While an untrusted service is on, the backup panel (words and QR code), the recovery cards
+     sheet, the backup check and the import step show "An app can read your screen", naming the apps.
+   - **Hiding (A).** While an untrusted service is on and touch exploration is off (no screen reader needs the
+     words), these leave the accessibility tree: revealed words and the passphrase under them, card cells, placed
+     words and chips of the backup check, the phrase editor's text and status line, completion chips, and a shown
+     passphrase (it reports bullets). The language-choice buttons are read by language only. Pointer input is
+     unchanged. With a screen reader on, the words stay readable and the warning is the protection.
+   - Nothing that leaves the accessibility tree may stay in node metadata either: completion chips are tagged by
+     position (`suggestion.<index>`), never by word, because Compose publishes test tags to every service as the
+     extra-data key `androidx.compose.ui.semantics.testTag` (2026-11-17 re-audits, R3 BTS-14). The tests request every
+     advertised extra-data key, as a service would.
+   - Nothing changes when no untrusted service is on, so the e2e suite on the API 31 AVD and the Robolectric tests
+     behave as before. `LocalScreenReaders` overrides the system answer in tests.
 3. **Verify** that UiAutomator, which the e2e suite uses (G1), can still read nodes marked sensitive. If it cannot, the
    debug harness (G3) must skip the marking when `bts.uitest.run` is set, in debug builds only.
 4. Also verify on API 30+ that content capture (`View.setImportantForContentCapture(IMPORTANT_FOR_CONTENT_CAPTURE_NO_EXCLUDE_DESCENDANTS)`

@@ -3,6 +3,7 @@ package com.bittool.signer.core.crypto
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bittool.signer.core.common.time.SystemMonotonicClock
 import com.bittool.signer.core.common.time.WallClock
 import com.bittool.signer.core.crypto.testing.TestKeystore
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
@@ -97,7 +98,7 @@ class LostKeystoreKeyTest {
 
     @Test
     fun aWalletWhoseKeystoreKeyIsGoneIsRemovedWithoutItsPassword(): Unit = runBlocking {
-        val vault = DefaultWalletVault(dataDir, store, SystemSecureRandomSource(), WallClock { System.currentTimeMillis() }, Dispatchers.Default, Dispatchers.IO)
+        val vault = DefaultWalletVault(dataDir, store, SystemSecureRandomSource(), WallClock { System.currentTimeMillis() }, SystemMonotonicClock(), Dispatchers.Default, Dispatchers.IO)
         val kept = SecretText.of(ABANDON_PHRASE).use { phrase ->
             SecretText.of("").use { pass -> SecretText.of(PASSWORD).use { pw -> vault.create("Kept", phrase, pass, pw, newId()) } }
         }

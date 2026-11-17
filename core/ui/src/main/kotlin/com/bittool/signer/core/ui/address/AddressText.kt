@@ -49,6 +49,7 @@ import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
+import com.bittool.signer.core.designsystem.theme.localizedDirection
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.l10n.R
@@ -57,11 +58,15 @@ import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import kotlinx.coroutines.delay
 
 /**
- * A full address in monospaced groups (iOS `AddressText`, `Design/AddressText.swift:43-62`): groups of [groupSize]
+ * A full address in monospaced groups (iOS `AddressText`, `Design/AddressText.swift`): groups of [groupSize]
  * joined by single spaces (a `0x` prefix stays on the first group); the **first and last groups semibold** in the
  * label colour, the middle ones regular at 78 % ("swapped addresses usually differ there first"). Left to right in
  * every language, wrapping only between groups; never ellipsized. TalkBack reads the groups separated by commas.
  * Copying always uses the original [address].
+ *
+ * A value with whitespace is not an identifier ([AddressFormatter.isIdentifier]) — the engine's placeholder for a Solana
+ * account supplied by an address lookup table reads `[lookup table <account> · entry <n>]` — so it is drawn as it is,
+ * in the ordinary face, and read as it is (iOS Revision 13: grouped into fours it became unreadable).
  */
 @Composable
 fun AddressText(
@@ -72,6 +77,16 @@ fun AddressText(
     textAlign: TextAlign? = null,
 ) {
     val label = SignerTheme.colors.label
+    if (!AddressFormatter.isIdentifier(address)) {
+        Text(
+            text = address,
+            modifier = modifier.testTag(PLAIN_VALUE_TAG),
+            style = style.localizedDirection(address),
+            color = label,
+            textAlign = textAlign ?: TextAlign.Unspecified,
+        )
+        return
+    }
     val groups = remember(address, groupSize) { AddressFormatter.groups(address, groupSize) }
     val text = remember(groups, label) { groupedAddress(groups, label) }
     Text(
@@ -226,6 +241,9 @@ internal fun CopyGlyphButton(copied: Boolean, label: String, onClick: () -> Unit
         }
     }
 }
+
+/** Test tag of an [AddressText] value drawn as plain text because it is not an identifier. */
+const val PLAIN_VALUE_TAG = "address.plainValue"
 
 /** Test tag of every copy glyph button (tests address it inside larger components). */
 const val COPY_BUTTON_TAG = "copyButton"

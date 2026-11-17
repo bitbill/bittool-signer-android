@@ -5,6 +5,8 @@ import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.View
@@ -50,6 +52,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
@@ -59,6 +62,8 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.bittool.signer.core.designsystem.security.LocalScreenReaders
+import com.bittool.signer.core.designsystem.security.ScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.ui.WindowSignals
 import kotlin.test.assertEquals
@@ -97,7 +102,7 @@ class Bip39KeyboardTest {
     /** The clipboard the keyboard is given (the platform's, through [ReadCountingClipboard] when a test wraps it). */
     private var clipboardFor: (Clipboard) -> Clipboard = { it }
 
-    private fun show(rtl: Boolean = false) {
+    private fun show(rtl: Boolean = false, readers: ScreenReaders? = null) {
         compose.setContent {
             view = LocalView.current
             val density = LocalDensity.current
@@ -106,6 +111,7 @@ class Bip39KeyboardTest {
                     LocalDensity provides Density(density.density, fontScale),
                     LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr,
                     LocalClipboard provides clipboardFor(LocalClipboard.current),
+                    LocalScreenReaders provides readers,
                 ) { Host() }
             }
         }
@@ -371,12 +377,58 @@ class Bip39KeyboardTest {
         assertEquals(1, counting.sumOf { it.reads }, "Paste read the clip once")
     }
 
+    /**
+     * 2026-11-17 re-audits (R3 BTS-14, L-12): below API 34, with an untrusted accessibility service on and no screen
+     * reader, a completion chip says nothing about its word to that service — not in its text or description, and not
+     * in any metadata it can request: the resource id, and every advertised extra-data key (Compose publishes the test
+     * tag as `androidx.compose.ui.semantics.testTag`). The chip stays a button and is tagged by position.
+     */
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2])
+    fun hiddenCompletionsGiveTheirWordsToNoAccessibilityMetadata() {
+        show(readers = ScreenReaders(listOf("Battery Saver Pro"), screenReaderOn = false))
+        suggestions = KeyboardSuggestions.Words(listOf("legal", "winner"))
+        compose.waitForIdle()
+        val chips = compose.onAllNodes(
+            SemanticsMatcher("a completion chip") { it.config.getOrNull(SemanticsProperties.TestTag)?.startsWith("suggestion.") == true },
+            useUnmergedTree = true,
+        ).fetchSemanticsNodes().map { it.id }
+        assertEquals(2, chips.size, "both completions are on screen")
+        val chip = chips.first()
+        val ids = compose.onRoot(useUnmergedTree = true).fetchSemanticsNode().let { root ->
+            generateSequence(listOf(root)) { level -> level.flatMap { it.children }.takeIf { it.isNotEmpty() } }.flatten().map { it.id }.toList()
+        }
+        compose.runOnIdle {
+            val provider = checkNotNull(view.accessibilityNodeProvider)
+            val chipInfo = checkNotNull(provider.createAccessibilityNodeInfo(chip), { "the chip is still a node" })
+            assertTrue(chipInfo.isClickable, "the chip stays a button")
+            val exposed = ids.flatMap { id ->
+                val info = provider.createAccessibilityNodeInfo(id) ?: return@flatMap emptyList()
+                for (key in info.availableExtraData) provider.addExtraDataToAccessibilityNodeInfo(id, info, key, Bundle())
+                listOf(info.text, info.contentDescription, info.stateDescription, info.hintText, info.viewIdResourceName).map { it?.toString() } +
+                    info.extras.keySet().map { info.extras.get(it)?.toString() }
+            }.filterNotNull()
+            for (word in listOf("legal", "winner")) {
+                assertTrue(exposed.none { it.contains(word) }, "\"$word\" reached accessibility metadata")
+            }
+        }
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.S_V2])
+    fun withoutAnUntrustedServiceCompletionsSayWhatTheyInsert() {
+        show(readers = ScreenReaders.None)
+        suggestions = KeyboardSuggestions.Words(listOf("legal", "winner"))
+        compose.onNodeWithContentDescription("Insert legal").assertExists()
+        compose.onNodeWithTag(Bip39KeyboardTags.suggestion(1), useUnmergedTree = true).assertExists()
+    }
+
     @Test
     fun suggestionsHintsDoneAndTheGlobeKeyGoToTheCaller() {
         show()
         suggestions = KeyboardSuggestions.Words(listOf("abandon", "ability"))
         compose.onNodeWithContentDescription("Insert abandon").assertExists()
-        key("suggestion.ability").performClick()
+        key(Bip39KeyboardTags.suggestion(1)).performClick()
         suggestions = KeyboardSuggestions.Hint("Type a word to see suggestions")
         compose.onNodeWithText("Type a word to see suggestions").assertExists()
         key(Bip39KeyboardTags.DONE).performClick()

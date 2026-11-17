@@ -1,11 +1,13 @@
 package com.bittool.signer.feature.wallets.connect
 
+import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.data.PreparedConnect
 import com.bittool.signer.core.data.testing.FakeSignerStore
 import com.bittool.signer.core.data.testing.FakeSignerStore.Call
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.PairingLevel
 import com.bittool.signer.core.model.QrMatrix
+import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.navigation.ConnectRoute
 import com.bittool.signer.feature.wallets.MainDispatcherRule
@@ -251,5 +253,89 @@ class ConnectViewModelTest {
         val state = observe(coin(scriptedStore()).uiState)
         advanceUntilIdle()
         assertEquals("73C5DA0A", state.value.masterFingerprint)
+    }
+
+    // ---- KH v2: a wallet saved before 1.1.0 (iOS `needsIdentity`, `WalletIdentityAuthorizationView`) ---------------
+
+    private fun unsignedStore(): FakeSignerStore = WalletFixtures.store(WalletFixtures.state(unsigned = true)).apply {
+        onPairing = { _, chain, profile, mode, index -> WalletFixtures.coinPayload(path = "${chain.wire}/$profile/$mode/$index", mode = mode) }
+        onWalletPairing = { WalletFixtures.walletPayload() }
+        // The real store saves the signature and reloads; the state then has it.
+        onAuthorizeWalletIdentity = { id, _ -> setState { it.copy(walletIdentities = it.walletIdentities + (id to WalletFixtures.identity)) } }
+    }
+
+    @Test
+    fun anUnsignedWalletShowsThePasswordCardInsteadOfACode() = runTest(main.dispatcher) {
+        val store = unsignedStore()
+        val vm = wallet(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        assertTrue(state.value.needsIdentity)
+        assertNull(state.value.wallet)
+        assertNull(state.value.error, "no error next to the card: nothing was loaded")
+        assertNull(state.value.copyText)
+        assertTrue(store.calls<Call.WalletPairing>().isEmpty(), "no code is asked for without the identity")
+        // Coin Level is unchanged and needs no password.
+        vm.selectLevel(PairingLevel.Coin)
+        advanceUntilIdle()
+        assertNotNull(state.value.coin)
+        assertTrue(store.calls<Call.AuthorizeWalletIdentity>().isEmpty())
+    }
+
+    @Test
+    fun thePasswordOnceSignsAndTheCodeLoadsByItself() = runTest(main.dispatcher) {
+        val store = unsignedStore()
+        val vm = wallet(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        val password = SecretText.of("Public-Test-Password1!")
+        vm.authorizeIdentity(password)
+        advanceUntilIdle()
+        assertEquals(listOf(Call.AuthorizeWalletIdentity(WalletFixtures.readyId, "Public-Test-Password1!")), store.calls<Call.AuthorizeWalletIdentity>())
+        assertTrue(password.isEmpty(), "the password is wiped after use")
+        assertFalse(state.value.needsIdentity)
+        assertFalse(state.value.identityBusy)
+        assertEquals(1, store.calls<Call.WalletPairing>().size, "the v2 code loads once the identity exists")
+        assertNotNull(state.value.wallet)
+        // The second time the page opens: no card, no password.
+        val again = observe(wallet(store).uiState)
+        advanceUntilIdle()
+        assertFalse(again.value.needsIdentity)
+        assertNotNull(again.value.wallet)
+        assertEquals(1, store.calls<Call.AuthorizeWalletIdentity>().size)
+    }
+
+    @Test
+    fun aWrongPasswordStaysOnTheCardAndProducesNoCode() = runTest(main.dispatcher) {
+        val store = unsignedStore().apply { onAuthorizeWalletIdentity = { _, _ -> throw VaultError.AuthenticationFailed() } }
+        val vm = wallet(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.authorizeIdentity(SecretText.of("Wrong-Password1"))
+        advanceUntilIdle()
+        assertEquals(UiText.Ios("The password is incorrect."), state.value.identityError)
+        assertTrue(state.value.needsIdentity)
+        assertNull(state.value.wallet)
+        assertTrue(store.calls<Call.WalletPairing>().isEmpty())
+    }
+
+    @Test
+    fun leavingTheCardCancelsAndAnEmptyPasswordIsIgnored() = runTest(main.dispatcher) {
+        val hold = CompletableDeferred<Unit>()
+        val store = unsignedStore().apply { onAuthorizeWalletIdentity = { _, _ -> hold.await() } }
+        val vm = wallet(store)
+        val state = observe(vm.uiState)
+        advanceUntilIdle()
+        vm.authorizeIdentity(SecretText.of(""))
+        advanceUntilIdle()
+        assertTrue(store.calls<Call.AuthorizeWalletIdentity>().isEmpty())
+        vm.authorizeIdentity(SecretText.of("Public-Test-Password1!"))
+        advanceUntilIdle()
+        assertTrue(state.value.identityBusy)
+        vm.cancelIdentity()
+        advanceUntilIdle()
+        assertFalse(state.value.identityBusy)
+        assertTrue(state.value.needsIdentity, "cancelling leaves the page without a code")
+        assertTrue(store.calls<Call.WalletPairing>().isEmpty())
     }
 }

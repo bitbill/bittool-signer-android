@@ -373,11 +373,55 @@ class WalletsUiTest {
         compose.onNodeWithText("Pair Wallet").assertExists()
         compose.onNodeWithTag("connect.walletQR").assertExists()
         compose.onNodeWithTag("connect.copy").assertIsEnabled()
-        compose.onNodeWithText("bittool-signer-wallet v1", substring = true).performScrollTo().assertExists()
+        compose.onNodeWithText("bittool-signer-wallet v2", substring = true).performScrollTo().assertExists()
+        compose.onNodeWithTag("connect.walletLevelVersion").performScrollTo().assertExists()
+        compose.onNodeWithText("This code is version 2 and needs BitTool Wallet 1.1.0 or later.").assertExists()
+        compose.onNodeWithTag("connect.walletIdentity").assertDoesNotExist()
         compose.onNodeWithText("BitTool Wallet").performScrollTo().assertExists()
         compose.onNodeWithText("Bitcoin · Taproot").performScrollTo().assertExists()
         compose.onNodeWithTag("connect.level.coin").performClick()
         assertEquals(listOf(PairingLevel.Coin), levels)
+    }
+
+    @Test
+    fun aWalletFrom100AsksForItsPasswordOnceInsteadOfShowingACode() {
+        var entered: String? = null
+        content {
+            ConnectContent(
+                uiState = ConnectUiState(level = PairingLevel.Wallet, needsIdentity = true, masterFingerprint = "73C5DA0A"),
+                toast = rememberStatusToastState(),
+                actions = ConnectActions(onAuthorizeIdentity = { secret: SecretText -> entered = String(secret.chars()); secret.wipe() }),
+            )
+        }
+        compose.onNodeWithTag("connect.walletIdentity").assertExists()
+        compose.onNodeWithText("Verify your password once").assertExists()
+        compose.onNodeWithText("Until then this wallet has no wallet-level code. Chain-specific codes (Coin Level) work as before.")
+            .performScrollTo().assertExists()
+        compose.onNodeWithTag("connect.walletQR").assertDoesNotExist()
+        compose.onNodeWithTag("connect.walletLevelVersion").assertDoesNotExist()
+        compose.onNodeWithTag("connect.copy").assertIsNotEnabled()
+        compose.onNodeWithTag("connect.identitySubmit").assertIsNotEnabled()
+        compose.onNodeWithTag("connect.identityPassword").performTextInput("Public-Test-Password1!")
+        compose.onNodeWithTag("connect.identityPassword").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Password))
+        compose.onNodeWithTag("connect.identitySubmit").performScrollTo().assertIsEnabled().performClick()
+        assertEquals("Public-Test-Password1!", entered)
+        compose.onNodeWithTag("connect.identitySubmit").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theIdentityCardShowsItsFailure() {
+        content {
+            ConnectContent(
+                uiState = ConnectUiState(
+                    level = PairingLevel.Wallet,
+                    needsIdentity = true,
+                    identityError = UiText.Ios("The password is incorrect."),
+                ),
+                toast = rememberStatusToastState(),
+                actions = ConnectActions(),
+            )
+        }
+        compose.onNodeWithText("The password is incorrect.").performScrollTo().assertExists()
     }
 
     @Test

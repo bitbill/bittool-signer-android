@@ -1,6 +1,10 @@
 {
  "language": "uk",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "uk"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Видалений гаманець"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Інший застосунок відображається поверх BitTool Signer. Закрийте його й спробуйте ще раз."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Застосунок може читати ваш екран"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Застосунок спеціальних можливостей, який не був попередньо встановлений на цьому телефоні, може читати вміст екрана: %1$s. У цій версії Android він також може прочитати слова вашої фрази відновлення. Якщо ви йому не довіряєте, спершу вимкніть його в «Налаштуваннях» › «Спеціальні можливості»."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Не вдалося змінити блокування застосунку. Спробуйте ще раз."
@@ -234,8 +246,8 @@
    "value": "Початковий код рушія підпису"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: xpub рахунку для кожного типу біткоїн-адрес, для EVM і TRON, а також усі три адреси Solana в одному анімованому QR-коді"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: xpub рахунку для кожного типу біткоїн-адрес, для EVM і TRON, усі три адреси Solana та підпис ідентичності цього гаманця в одному анімованому QR-коді"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

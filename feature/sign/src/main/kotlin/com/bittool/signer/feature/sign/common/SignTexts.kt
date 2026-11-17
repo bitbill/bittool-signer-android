@@ -31,10 +31,13 @@ internal fun MatchingIssue.message(): String = when (this) {
     is MatchingIssue.Failure -> (text as? UiText.Verbatim)?.let { enginePhrase(it.text) } ?: text.asString()
 }
 
-/** iOS `ReviewText.phrase` in the composition's language: the catalogue translation of [english], else [english]. */
+/**
+ * iOS `ReviewText.sentence` in the composition's language (Revision 15): the catalogue translation of [english], a
+ * value-carrying template filled with the engine's own values, else [english].
+ */
 @Composable
 @ReadOnlyComposable
-private fun enginePhrase(english: String): String = LocalResources.current.reviewText().phrase(english)
+private fun enginePhrase(english: String): String = LocalResources.current.reviewText().sentence(english)
 
 /** The explanation under a matching issue (scan-sign.md §11.7 table; localized on iOS). */
 @get:StringRes

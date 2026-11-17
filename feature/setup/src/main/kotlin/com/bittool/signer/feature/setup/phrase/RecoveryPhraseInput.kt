@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
@@ -93,12 +94,15 @@ import com.bittool.signer.core.designsystem.component.TextAction
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
+import com.bittool.signer.core.designsystem.security.hiddenFromScreenReaders
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
 import com.bittool.signer.core.designsystem.theme.monospaced
 import com.bittool.signer.core.designsystem.theme.semibold
+import com.bittool.signer.core.ui.keyboard.Bip39KeyboardTags
 import com.bittool.signer.core.ui.keyboard.InAppKeyboardChip
 import com.bittool.signer.core.ui.keyboard.InAppKeyboardInput
 import com.bittool.signer.core.ui.keyboard.KeyboardSuggestions
@@ -154,6 +158,9 @@ internal fun RecoveryPhraseEditor(
     val placeholder = stringResource(L10n.string.enter_your_words_separated_by_spaces)
     RecoveryScreenshotWarning()
     AccessibilitySensitive(active = state.text.isNotEmpty())
+    // Below API 34 with an untrusted service on and no screen reader: the field's text (and name) leave the
+    // accessibility tree; typing, the caret and Paste work as before (audit M-03).
+    val hidden = rememberScreenReaders().hideSecrets
     ExcludeFromAutofill()
     val interfaceDirection = LocalLayoutDirection.current
     val noWrites = rememberNoWriteClipboard()
@@ -176,7 +183,8 @@ internal fun RecoveryPhraseEditor(
                         // Nor do the accessibility actions (outside the field's own semantics, so these win).
                         .refuseCopyAndCut(state)
                         .secretTextMenu()
-                        .testTag(EDITOR_TAG),
+                        .testTag(EDITOR_TAG)
+                        .hiddenFromScreenReaders(hidden),
                     textStyle = typography.body.monospaced().ltr().copy(color = colors.label),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.None,
@@ -357,7 +365,8 @@ internal fun RecoveryPhraseStatus(analysis: PhraseAnalysis, modifier: Modifier =
                     maxLines = STATUS_MAX_LINES,
                     overflow = TextOverflow.Ellipsis,
                     autoSize = TextAutoSize.StepBased(minFontSize = typography.footnote.fontSize * 0.8f, maxFontSize = typography.footnote.fontSize),
-                    modifier = Modifier.testTag(STATUS_TEXT_TAG),
+                    // An unknown word is quoted here: hidden like the editor (audit M-03).
+                    modifier = Modifier.testTag(STATUS_TEXT_TAG).hiddenFromScreenReaders(rememberScreenReaders().hideSecrets),
                 )
             }
         },
@@ -439,6 +448,8 @@ internal fun RecoverySuggestionBar(
     modifier: Modifier = Modifier,
     onInAppKeyboard: (() -> Unit)? = null,
 ) {
+    // Asked once for the bar, not per chip (audit M-03; see SuggestionChip).
+    val hideCompletions = rememberScreenReaders().hideSecrets
     Row(modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             when (candidates) {
@@ -452,8 +463,8 @@ internal fun RecoverySuggestionBar(
                     ) {
                         // The switch back scrolls away with the chips, so they keep the room.
                         if (onInAppKeyboard != null) item(key = SWITCH_BACK_KEY) { InAppKeyboardChip(onClick = onInAppKeyboard) }
-                        items(candidates.words, key = { it }) { word ->
-                            SuggestionChip(word, onClick = { onInsert(word) })
+                        itemsIndexed(candidates.words, key = { _, word -> word }) { index, word ->
+                            SuggestionChip(word, index, hideCompletions, onClick = { onInsert(word) })
                         }
                     }
                 }
@@ -530,7 +541,7 @@ private const val SWITCH_BACK_KEY = "switch-back"
  * (QA setup-03). Dark keeps the raised grey on the black page.
  */
 @Composable
-private fun SuggestionChip(word: String, onClick: () -> Unit) {
+private fun SuggestionChip(word: String, index: Int, hidden: Boolean, onClick: () -> Unit) {
     val colors = SignerTheme.colors
     val description = stringResource(L10n.string.insert_x, word)
     Text(
@@ -543,8 +554,10 @@ private fun SuggestionChip(word: String, onClick: () -> Unit) {
             .clip(SignerShapes.capsule)
             .background(suggestionChipColor(colors))
             .clickable(role = Role.Button, indication = ripple(), interactionSource = null, onClick = onClick)
-            .semantics { contentDescription = description }
-            .testTag("suggestion.$word")
+            .semantics { if (!hidden) contentDescription = description }
+            // By position, never by word: test tags reach accessibility services (R3 BTS-14).
+            .testTag(Bip39KeyboardTags.suggestion(index))
+            .hiddenFromScreenReaders(hidden)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     )
 }

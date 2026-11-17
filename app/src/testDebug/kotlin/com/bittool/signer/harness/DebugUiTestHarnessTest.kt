@@ -232,7 +232,7 @@ class DebugUiTestHarnessTest {
     fun theLoseDeviceKeysSwitchMakesTheRunsWalletsRemovableWithoutTheirPassword() = runTest {
         val root = File(context.cacheDir, "ui-tests/${runId.lowercase()}").apply { deleteRecursively() }
         val keys = FixtureDeviceKeyStore(File(root, FixtureDeviceKeyStore.DIRECTORY))
-        val vault = DefaultWalletVault(root, keys, SystemSecureRandomSource(), { 1_760_000_000_000 }, Dispatchers.Default, Dispatchers.IO)
+        val vault = DefaultWalletVault(root, keys, SystemSecureRandomSource(), { 1_760_000_000_000 }, { 100_000L }, Dispatchers.Default, Dispatchers.IO)
         val id = WalletId.random()
         vault.create("Public fixture 1", SecretText.of(PUBLIC_PHRASE), SecretText.of(""), SecretText.of("Public-Test-Password1!"), id)
         keys.publicDataKey(createIfMissing = true)

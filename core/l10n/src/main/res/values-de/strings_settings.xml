@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Signaturzertifikat</string>
     <string name="settings_open_source_intro">BitTool Signer ist vollständig quelloffen. Android-App, Offline-Signier-Engine und Token-Daten sind veröffentlicht, sodass jeder nachlesen kann, was der Signierer mit einer Wiederherstellungsphrase tut — und ihn neu bauen und mit der hier installierten Fassung vergleichen kann.</string>
     <string name="settings_engine_source">Quellcode der Signier-Engine</string>
-    <string name="settings_wallet_level_format">%1$s: je einen Konto-xpub für jeden Bitcoin-Adresstyp, für EVM und für TRON sowie alle drei Solana-Adressen in einem animierten QR-Code</string>
+    <string name="settings_wallet_level_format">%1$s: je einen Konto-xpub für jeden Bitcoin-Adresstyp, für EVM und für TRON, alle drei Solana-Adressen und die Identitätssignatur dieser Wallet in einem animierten QR-Code</string>
 </resources>

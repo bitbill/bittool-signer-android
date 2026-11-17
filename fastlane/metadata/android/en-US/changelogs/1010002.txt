@@ -1,0 +1,1 @@
+The wallet-level pairing code is now version 2 and carries a wallet-identity signature; it needs BitTool Wallet 1.1.0 or later. Signing now covers any EVM chain (60 are named, the rest are shown by chain ID), EIP-7702 delegations and Solana v0 transactions with address lookup tables; anything the device cannot read offline is marked for you to confirm.

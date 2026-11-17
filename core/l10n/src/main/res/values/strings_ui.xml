@@ -5,6 +5,10 @@
   it untranslated, the Android port translates it. Brand and protocol tokens stay translatable="false" (DECISIONS §10).
 -->
 <resources>
+    <!-- Not words: write this language's code exactly as the file name says (ja, es-419, zh-Hans…). The English default
+         "en" tells the app that the interface has no translation table for engine text, so warnings and labels are drawn
+         exactly as the engine wrote them, never rebuilt from translated parts (iOS has no English table either). -->
+    <string name="l10n_table_language">en</string>
     <!-- WalletIdentityHeader: "Fingerprint %@" value when a wallet has no public index (setup-backup.md §9.3). -->
     <string name="ui_setup_required">Setup required</string>
     <!-- QrPayloadView.titleEnglish for hex / text payloads (PayloadDisclosure title; "Payload (JSON)" is a catalogue key). -->

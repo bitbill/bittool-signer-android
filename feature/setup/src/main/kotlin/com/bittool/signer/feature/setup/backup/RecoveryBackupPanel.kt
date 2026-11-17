@@ -25,6 +25,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.component.SegmentedControl
 import com.bittool.signer.core.designsystem.icon.SignerIcons
+import com.bittool.signer.core.designsystem.security.ScreenReaderWarning
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.feature.setup.flow.RecoveryWords
 import com.bittool.signer.feature.setup.ui.LinkButton
@@ -69,6 +71,8 @@ fun RecoveryBackupPanel(
     val formatLabel = stringResource(L10n.string.backup_format)
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Below API 34, before the words or the QR code are revealed: an untrusted accessibility app is on (audit M-03).
+        ScreenReaderWarning(rememberScreenReaders())
         SegmentedControl(
             options = listOf(stringResource(L10n.string.words), stringResource(L10n.string.qr_code)),
             selectedIndex = format.ordinal,

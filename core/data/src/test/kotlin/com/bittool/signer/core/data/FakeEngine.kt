@@ -54,13 +54,18 @@ class FakeEngine : SignerEngine {
         return when (operation) {
             EngineOperation.Mnemonic -> JsonObject(mapOf("mnemonic" to JsonPrimitive(PHRASE)))
             EngineOperation.DerivePublicIndex -> publicIndex(parameters.str("seed") ?: error("seed"))
+            EngineOperation.SignKhV2 -> khV2(parameters.str("seed") ?: error("seed"), parameters["epoch"].toString().toInt())
             EngineOperation.Review -> review(parameters.obj("request") ?: error("request"))
             EngineOperation.ResolveSigningPlan -> resolve(parameters)
             EngineOperation.SignPlanTask -> sign(parameters)
             EngineOperation.EncodeResponse -> encode()
             EngineOperation.DecodePayload, EngineOperation.DecodeQR ->
                 JsonObject(mapOf("complete" to JsonPrimitive(true), "progress" to JsonPrimitive(1), "request" to request()))
-            EngineOperation.CreateWalletPairing -> walletPairing()
+            EngineOperation.CreateWalletPairing -> {
+                // As the real engine: no v1 code any more, only v2 with a signature (createWalletPairing.requireKhV2).
+                parameters.str("khSig") ?: throw EngineException("INVALID", "khSig is required.")
+                walletPairing()
+            }
             EngineOperation.DerivePublicAddresses -> JsonObject(mapOf("addresses" to JsonArray(emptyList())))
             else -> throw EngineException("UNSCRIPTED", "Unscripted ${operation.wireName}")
         }
@@ -207,6 +212,19 @@ class FakeEngine : SignerEngine {
             put("payloadFormat", "json")
             put("payload", buildJsonObject { put("signature", "ab".repeat(65)) })
             put("payloadBytes", 89)
+        }
+
+        /**
+         * A structurally valid `signKhV2` result for [seed]: its `walletKeyId` is [publicIndex]'s, its signature 65
+         * synthetic bytes in base64 (88 characters), so `WalletIdentitySignature.of` accepts it. Not a real signature.
+         */
+        fun khV2(seed: String, epoch: Int): JsonObject = buildJsonObject {
+            val bytes = (Hex.decode(sha256Hex("sig:$seed:$epoch"))!! + Hex.decode(sha256Hex("sig+:$seed:$epoch"))!!).copyOf(64)
+            put("epoch", epoch)
+            put("message", "OwnbitAuth:v2:epoch=$epoch")
+            put("path", "m/44'/0'/0'/0/1000000000")
+            put("walletKeyId", sha256Hex("key:$seed"))
+            put("signature", java.util.Base64.getEncoder().encodeToString(byteArrayOf(31) + bytes))
         }
 
         fun walletPairing(): JsonObject = buildJsonObject {

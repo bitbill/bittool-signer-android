@@ -1,0 +1,122 @@
+[
+  {
+    "source": "solana lookup table",
+    "kind": "warning",
+    "text": "HIGH RISK: 2 of this transaction's 5 accounts come from 1 address lookup table. Those addresses are stored on-chain and BitTool Signer is offline, so it cannot show you what they are. Anything marked “lookup table” below could be any account at all — including a recipient you did not intend. Only continue if you trust the wallet that built this transaction and you have checked it there."
+  },
+  {
+    "source": "solana lookup table",
+    "kind": "warning",
+    "text": "Blockhash freshness, network identity, account state and base network fee cannot be verified offline."
+  },
+  {
+    "source": "solana lookup table",
+    "kind": "warning",
+    "text": "1 of this instruction's 2 accounts come from an address lookup table and cannot be shown."
+  },
+  {
+    "source": "evm unnamed chain",
+    "kind": "warning",
+    "text": "This device does not recognise EVM chain 7700, so it cannot name the network or its native currency, and no token or contract on it is registered here — every address below reads as unregistered. Amounts are shown to 18 decimals, the usual EVM convention. Check the network in the wallet that built this request."
+  },
+  {
+    "source": "evm unnamed chain",
+    "kind": "warning",
+    "text": "HIGH RISK: This contract method is not decoded. The contract may move assets or change permissions."
+  },
+  {
+    "source": "evm unnamed chain",
+    "kind": "warning",
+    "text": "This device has no reference for a normal network fee on Chain 7700, so it cannot tell you whether this one is unusual. The maximum is shown above."
+  },
+  {
+    "source": "evm unnamed chain",
+    "kind": "warning",
+    "text": "This contract is not in the bundled list of known public contracts. That is normal for a new or private deployment; check the address against the project’s own documentation."
+  },
+  {
+    "source": "evm high fee",
+    "kind": "warning",
+    "text": "HIGH FEE: This transaction allows up to 1 ETH in network fees. Check the gas settings in your other wallet."
+  },
+  {
+    "source": "7702 own account",
+    "kind": "warning",
+    "text": "HIGH RISK: Authorization 1 hands this wallet's own account (0x9858EfFD232B4033E47d90003D41EC34EcaEda94) to the contract at 0x00000000219ab540356cBB839Cbe05303d7705Fa. From then on that contract's code runs as your account and can move everything in it, on every later transaction, until the delegation is replaced. BitTool Signer is offline and cannot read that contract. Only continue if you set this up and trust that contract completely."
+  },
+  {
+    "source": "7702 other account",
+    "kind": "warning",
+    "text": "HIGH RISK: Authorization 1 hands the account 0x1563915e194D8CfBA1943570603F7606A3115508 to the contract at 0x00000000219ab540356cBB839Cbe05303d7705Fa. That contract's code then runs as that account and can move everything in it."
+  },
+  {
+    "source": "7702 chain 0",
+    "kind": "warning",
+    "text": "HIGH RISK: Authorization 1 hands this wallet's own account (0x9858EfFD232B4033E47d90003D41EC34EcaEda94) to the contract at 0x00000000219ab540356cBB839Cbe05303d7705Fa. From then on that contract's code runs as your account and can move everything in it, on every later transaction, until the delegation is replaced. BitTool Signer is offline and cannot read that contract. Only continue if you set this up and trust that contract completely."
+  },
+  {
+    "source": "7702 chain 0",
+    "kind": "warning",
+    "text": "HIGH RISK: Authorization 1 is signed for chain 0, so it applies on every EVM chain, not only Ethereum."
+  },
+  {
+    "source": "7702 revoke",
+    "kind": "warning",
+    "text": "Authorization 1 removes the code delegation on 0x9858EfFD232B4033E47d90003D41EC34EcaEda94. That restores a plain account and takes no new permission."
+  },
+  {
+    "source": "7702 revoke other account",
+    "kind": "warning",
+    "text": "Authorization 1 asks to remove the code delegation on 0x1563915e194D8CfBA1943570603F7606A3115508. It takes effect only if that account’s nonce is 3 when this transaction runs, which BitTool Signer cannot check offline."
+  },
+  {
+    "source": "7702 own nonce cannot apply",
+    "kind": "refusal",
+    "text": "Authorization 1 cannot take effect: it is signed for nonce 0, but this wallet’s nonce will be 1 when it is applied."
+  },
+  {
+    "source": "7702 wrong chain",
+    "kind": "refusal",
+    "text": "Authorization 1 is for chain 56, but this transaction is for chain 1."
+  },
+  {
+    "source": "7702 empty list",
+    "kind": "refusal",
+    "text": "An EIP-7702 transaction must carry at least one authorization."
+  },
+  {
+    "source": "solana long message",
+    "kind": "refusal",
+    "text": "This message is 1500 bytes. BitTool Signer signs messages of up to 1024 bytes, which is far more than a sign-in or ownership message needs; anything larger is refused because it is usually transaction data in disguise."
+  },
+  {
+    "source": "solana transaction as message",
+    "kind": "refusal",
+    "text": "This is a transaction, not a message. Signing it as a message would authorize the transaction without showing you what it does. The wallet or app that produced this code should send it as a Solana transaction request."
+  },
+  {
+    "source": "unsupported chain id 0",
+    "kind": "refusal",
+    "text": "Unprotected or missing-chain-ID EVM transactions are refused."
+  },
+  {
+    "source": "solana ata via lookup table",
+    "kind": "warning",
+    "text": "HIGH RISK: 3 of this transaction's 7 accounts come from 1 address lookup table. Those addresses are stored on-chain and BitTool Signer is offline, so it cannot show you what they are. Anything marked “lookup table” below could be any account at all — including a recipient you did not intend. Only continue if you trust the wallet that built this transaction and you have checked it there."
+  },
+  {
+    "source": "solana ata via lookup table",
+    "kind": "warning",
+    "text": "Blockhash freshness, network identity, account state and base network fee cannot be verified offline."
+  },
+  {
+    "source": "solana ata via lookup table",
+    "kind": "warning",
+    "text": "The token account, owner or mint of this instruction comes from an address lookup table, so BitTool Signer cannot check that the token account belongs to that owner."
+  },
+  {
+    "source": "solana ata via lookup table",
+    "kind": "warning",
+    "text": "3 of this instruction's 6 accounts come from an address lookup table and cannot be shown."
+  }
+]

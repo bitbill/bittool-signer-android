@@ -147,8 +147,8 @@ data class WalletPairingPayload(
         val id: String get() = "$chain/$profile"
     }
 
-    /** The Format line (verbatim English): `bittool-signer-wallet v1 · ur:bytes (canonical CBOR) · 1561 bytes`. */
-    val formatLine: String get() = "bittool-signer-wallet v1 · ur:bytes (canonical CBOR) · $payloadBytes bytes"
+    /** The Format line (verbatim English): `bittool-signer-wallet v2 · ur:bytes (canonical CBOR) · 1666 bytes` (KH v2). */
+    val formatLine: String get() = "bittool-signer-wallet v2 · ur:bytes (canonical CBOR) · $payloadBytes bytes"
 
     companion object {
         fun parse(raw: JsonObject): WalletPairingPayload {

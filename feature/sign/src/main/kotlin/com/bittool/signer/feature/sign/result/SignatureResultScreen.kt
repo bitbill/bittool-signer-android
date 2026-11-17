@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -64,6 +65,7 @@ import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.bold
 import com.bittool.signer.core.designsystem.theme.contentDirection
+import com.bittool.signer.core.designsystem.theme.localizedDirection
 import com.bittool.signer.core.designsystem.theme.semibold
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.review.TransactionReview
@@ -75,6 +77,8 @@ import com.bittool.signer.core.ui.payload.PayloadDisclosure
 import com.bittool.signer.core.ui.text.Callout
 import com.bittool.signer.core.ui.text.localizedSummary
 import com.bittool.signer.core.ui.text.localizedTitle
+import com.bittool.signer.core.ui.text.rememberReviewText
+import com.bittool.signer.core.ui.text.reviewTitleText
 import com.bittool.signer.feature.sign.common.SignTags
 import com.bittool.signer.feature.sign.common.rememberLatest
 import kotlinx.coroutines.flow.Flow
@@ -255,11 +259,15 @@ private fun ResultHeader(bounce: Boolean) {
     }
 }
 
-/** The request this signature answers (`SignatureResultView.swift:30-47`): icon at 32, engine title and summary verbatim. */
+/**
+ * The request this signature answers (`SignatureResultView.swift:30-47`): icon at 32, the engine title through
+ * `ReviewText.phrase` (iOS 2026-11-17) and the summary verbatim.
+ */
 @Composable
 private fun RequestSummary(review: TransactionReview) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
+    val title = reviewTitleText(review.title, rememberReviewText(), LocalResources.current)
     SignerCard(Modifier.semantics(mergeDescendants = true) {}, padding = PaddingValues(14.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.clearAndSetSemantics {}) {
@@ -272,7 +280,7 @@ private fun RequestSummary(review: TransactionReview) {
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(review.title, style = typography.subheadline.semibold().contentDirection(), color = colors.label)
+                Text(title, style = typography.subheadline.semibold().localizedDirection(title), color = colors.label)
                 if (review.summary.isNotEmpty()) {
                     Text(
                         text = review.summary,

@@ -55,6 +55,7 @@ import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
 import com.bittool.signer.core.designsystem.security.ExcludeFromAutofill
 import com.bittool.signer.core.designsystem.security.LocalSensitiveDataMarking
 import com.bittool.signer.core.designsystem.security.NoPersonalizedLearning
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.designsystem.theme.ltr
@@ -147,6 +148,9 @@ fun PasswordField(
     // The node-level marking follows the same G5.3 switch as the view-level one; the bullets below do not.
     val markSensitive = LocalSensitiveDataMarking.current
     AccessibilitySensitive(active = shown)
+    // Below API 34 a shown secret is plain text to every accessibility service; with an untrusted one on and no screen
+    // reader, the field keeps reporting bullets while shown (audit M-03).
+    val bulletsWhileShown = rememberScreenReaders().hideSecrets
     ExcludeFromAutofill()
     // No undo history, whoever edits the state: typing, the caller's clearText(), a paste.
     LaunchedEffect(state) {
@@ -165,7 +169,7 @@ fun PasswordField(
                 .semantics {
                     isSensitiveData = markSensitive
                     val mask = AnnotatedString(maskForAccessibility(state.text.length))
-                    if (!shown) editableText = mask
+                    if (!shown || bulletsWhileShown) editableText = mask
                     // Nor to Autofill (backlog B27): the text field also publishes what was typed as its input text
                     // and its autofill value, which only the app-wide Autofill exclusion kept away. Revealed or not,
                     // the node holds no fillable data, both carry the bullets, and no service can write into it.

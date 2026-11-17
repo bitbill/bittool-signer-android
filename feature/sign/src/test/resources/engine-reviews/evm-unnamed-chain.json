@@ -1,0 +1,76 @@
+{
+  "chain": "evm",
+  "title": "Native transfer",
+  "summary": "0.025 native units",
+  "fields": [
+    {
+      "label": "Derivation path",
+      "value": "m/44'/60'/0'/0/0"
+    },
+    {
+      "label": "Requested signer",
+      "value": "0x9858EfFD232B4033E47d90003D41EC34EcaEda94"
+    },
+    {
+      "label": "Network",
+      "value": "Chain 12345"
+    },
+    {
+      "label": "Chain ID",
+      "value": "12345"
+    },
+    {
+      "label": "Transaction type",
+      "value": "2"
+    },
+    {
+      "label": "Recipient / contract",
+      "value": "0x1111111111111111111111111111111111111111"
+    },
+    {
+      "label": "Native amount (wei)",
+      "value": "25000000000000000"
+    },
+    {
+      "label": "Native amount (native units)",
+      "value": "0.025"
+    },
+    {
+      "label": "Nonce",
+      "value": "7"
+    },
+    {
+      "label": "Gas limit",
+      "value": "21000"
+    },
+    {
+      "label": "Maximum gas price (wei)",
+      "value": "30000000000"
+    },
+    {
+      "label": "Maximum network fee (native units)",
+      "value": "0.00063"
+    }
+  ],
+  "warnings": [
+    "This device does not recognise EVM chain 12345, so it cannot name the network or its native currency, and no token or contract on it is registered here — every address below reads as unregistered. Amounts are shown to 18 decimals, the usual EVM convention. Check the network in the wallet that built this request.",
+    "This device has no reference for a normal network fee on Chain 12345, so it cannot tell you whether this one is unusual. The maximum is shown above."
+  ],
+  "requestHash": "6e7d1bf255156ccbbe87f2d0607fec9af9f87d42fbada7dd8559ec3d2c46dea7",
+  "canSign": true,
+  "decodeStatus": "fullyDecoded",
+  "riskLevel": "warning",
+  "display": {
+    "action": "Send",
+    "amount": "0.025",
+    "symbol": "native units",
+    "counterpartyLabel": "To",
+    "counterparty": "0x1111111111111111111111111111111111111111",
+    "fee": "0.00063 native units"
+  },
+  "network": {
+    "chainId": "12345",
+    "name": "Chain 12345",
+    "symbol": "native units"
+  }
+}

@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Certificado de assinatura</string>
     <string name="settings_open_source_intro">O BitTool Signer é totalmente de código aberto. A app para Android, o motor de assinatura offline e os dados dos tokens são publicados: qualquer pessoa pode ler o que o assinador faz com uma frase de recuperação, recompilá-lo e comparar o resultado com a cópia aqui instalada.</string>
     <string name="settings_engine_source">Código-fonte do motor de assinatura</string>
-    <string name="settings_wallet_level_format">%1$s: uma xpub de conta para cada tipo de endereço do Bitcoin, para EVM e para TRON, e os três endereços da Solana, num QR animado</string>
+    <string name="settings_wallet_level_format">%1$s: uma xpub de conta para cada tipo de endereço do Bitcoin, para EVM e para TRON, os três endereços da Solana e a assinatura de identidade desta carteira, num QR animado</string>
 </resources>

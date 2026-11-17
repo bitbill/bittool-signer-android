@@ -33,6 +33,23 @@ object SignFixtures {
 
     fun review(json: String): TransactionReview = TransactionReview.parse(parseJsonObject(json)!!)
 
+    /** A review exactly as the bundled engine produced it (`src/test/resources/engine-reviews/`). */
+    private fun engineReview(name: String): TransactionReview =
+        review(checkNotNull(SignFixtures::class.java.getResource("/engine-reviews/$name")) { name }.readText())
+
+    /**
+     * The Solana v0 transfer of the iOS screenshot tour (`ScreenshotTour.solanaLookupTableRequest`) reviewed by the
+     * engine: its recipient comes from an address lookup table, so it is `high` and `partiallyDecoded`, the first
+     * warning starts with HIGH RISK and the recipient is the `[lookup table … · entry 3]` placeholder.
+     */
+    val solanaLookupTable: TransactionReview by lazy { engineReview("solana-lookup-table.json") }
+
+    /** The `[lookup table … · entry 3]` placeholder of [solanaLookupTable]'s recipient. */
+    const val LOOKUP_PLACEHOLDER = "[lookup table QWmroo4YnnMqYW3cnxWkFdaTxGD3P7vMSzwMHGbUzwF · entry 3]"
+
+    /** An EIP-1559 transfer on EVM chain 12345, which the engine does not name: "Chain 12345", `warning`. */
+    val evmUnnamedChain: TransactionReview by lazy { engineReview("evm-unnamed-chain.json") }
+
     /** A fully decoded Bitcoin send with a verified change note (no acknowledgement needed). */
     val bitcoinSend: TransactionReview = review(
         """

@@ -1,6 +1,10 @@
 {
  "language": "ko",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "ko"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "삭제된 지갑"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "다른 앱이 BitTool Signer 위에 표시되고 있습니다. 그 앱을 닫은 뒤 다시 시도하세요."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "화면을 읽을 수 있는 앱이 있습니다"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "이 휴대전화에 기본으로 설치되지 않은 접근성 앱이 화면의 내용을 읽을 수 있습니다: %1$s. 이 Android 버전에서는 복구 구문의 단어도 읽을 수 있습니다. 신뢰하는 앱이 아니라면 먼저 설정 › 접근성에서 사용 중지하세요."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "앱 잠금을 변경하지 못했습니다. 다시 시도하세요."
@@ -234,8 +246,8 @@
    "value": "서명 엔진 소스 코드"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: 비트코인 주소 유형별 계정 xpub, EVM·TRON의 계정 xpub, Solana 주소 세 개를 모두 하나의 애니메이션 QR 코드에 담음"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: 비트코인 주소 유형별 계정 xpub, EVM·TRON의 계정 xpub, Solana 주소 세 개 전부와 이 지갑의 신원 서명을 하나의 애니메이션 QR 코드에 담음"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

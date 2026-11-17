@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">ใบรับรองการเซ็น</string>
     <string name="settings_open_source_intro">BitTool Signer เป็นโอเพนซอร์สทั้งหมด ทั้งแอป Android เอนจินเซ็นแบบออฟไลน์ และข้อมูลโทเคน ล้วนเผยแพร่ไว้ ใครก็อ่านได้ว่าตัวเซ็นทำอะไรกับวลีกู้คืน แล้วสร้างใหม่เองและเทียบผลลัพธ์กับสำเนาที่ติดตั้งอยู่ตรงนี้</string>
     <string name="settings_engine_source">ซอร์สโค้ดเอนจินการเซ็น</string>
-    <string name="settings_wallet_level_format">%1$s: xpub ระดับบัญชีของที่อยู่ Bitcoin ทุกประเภท รวมถึงของ EVM และ TRON พร้อมที่อยู่ Solana ทั้งสามแบบ ในคิวอาร์เคลื่อนไหวอันเดียว</string>
+    <string name="settings_wallet_level_format">%1$s: xpub ระดับบัญชีของที่อยู่ Bitcoin ทุกประเภท รวมถึงของ EVM และ TRON ที่อยู่ Solana ทั้งสามแบบ และลายเซ็นระบุตัวตนของกระเป๋านี้ ในคิวอาร์เคลื่อนไหวอันเดียว</string>
 </resources>

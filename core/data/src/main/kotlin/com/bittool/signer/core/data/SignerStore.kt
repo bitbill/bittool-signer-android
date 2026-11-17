@@ -114,12 +114,14 @@ interface SignerStore {
 
     /**
      * iOS `createWallet` (§5.3): re-entrancy guard ("A wallet is already being saved."), passphrase ≤ 1,024 UTF-8 bytes,
-     * canonical words (`Bip39.validatedCanonical`, exact spellings), native seed → `derivePublicIndex` → index
-     * validation → reload (must succeed: "The existing wallet collection could not be read. Retry before adding a
+     * canonical words (`Bip39.validatedCanonical`, exact spellings), native seed → `derivePublicIndex` and, from the same
+     * seed, the KH v2 identity (`signKhV2`, checked against the index's `walletKeyId`; "This wallet’s identity signature
+     * could not be produced.") → index validation → reload (must succeed: "The existing wallet collection could not be read. Retry before adding a
      * wallet.") → duplicate `walletKeyId` refused ("This recovery phrase and passphrase already belong to an existing
      * wallet.") → a trimmed [name] whose vault header would exceed the reader's bound is `VaultError.InvalidName`
      * before anything is written (`WalletNames`, QA audit A04) → public sidecar written first (trimmed [name]) → vault
-     * create (sidecar removed on failure) → reload.
+     * create (sidecar removed on failure) → reload. The identity is stored in the sidecar with the index, so the
+     * wallet-level code never needs the password.
      * Pass [passphrase] empty when the passphrase option is off. Returns the stored metadata.
      */
     suspend fun createWallet(name: String, mnemonic: SecretText, passphrase: SecretText, password: SecretText): VaultMetadata
@@ -150,15 +152,26 @@ interface SignerStore {
     /**
      * iOS `resetPassword` (§5.3): the wallet must have an index ("This wallet needs repair before its password can be
      * reset."); the phrase must derive the same `walletKeyId` ("This recovery phrase belongs to a different wallet.");
-     * then the vault re-encrypts, the session is suspended and the list reloaded.
+     * then the vault re-encrypts, the session is suspended and the list reloaded. A wallet from before 1.1.0 gets its
+     * KH v2 identity signature here too, silently, from the same seed (a failure only leaves it unsigned).
      */
     suspend fun resetPassword(walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText)
 
     /**
-     * "Repair": unlocks the vault once, re-derives the public index (encrypted wallet = identity authority), saves the
-     * sidecar with the currently displayed name, reloads. Guarded by the security and sensitive epochs.
+     * "Repair": unlocks the vault once, re-derives the public index (encrypted wallet = identity authority) and signs the
+     * KH v2 identity from the same seed, saves both in the sidecar with the currently displayed name, reloads. Guarded by
+     * the security and sensitive epochs.
      */
     suspend fun completeSetup(walletId: WalletId, password: SecretText)
+
+    /**
+     * iOS `authorizeWalletIdentity` (KH v2): signs the identity of a wallet that has none — one saved before 1.1.0 —
+     * after its password is entered, and stores it beside the index (the index on disk is left exactly as it is), then
+     * reloads. "Repair this wallet before pairing it." without an index; a wrong password is the vault's error and
+     * counts as an attempt. Guarded by the security and sensitive epochs. Only the fixed `OwnbitAuth:v2:epoch=1` text
+     * is ever signed (the engine operation takes no message).
+     */
+    suspend fun authorizeWalletIdentity(walletId: WalletId, password: SecretText)
 
     /**
      * Changes only the sidecar display name (trimmed, 1–40 graphemes and a name a vault header could hold, else
@@ -227,7 +240,11 @@ interface SignerStore {
     /** Coin Level export (`createPublicPairing`); parameters from `ConnectOptions`. "Wallet setup required." without index. */
     suspend fun pairing(walletId: WalletId, chain: Chain, profile: String, outputMode: String, index: Long): PairingPayload
 
-    /** Wallet Level export (`createWalletPairing`, mode `full`). "Wallet setup required." without index. */
+    /**
+     * Wallet Level export (`createWalletPairing`, mode `full`): the v2 payload, always with this wallet's stored
+     * identity (`khSig`, `khEpoch`). "Wallet setup required." without index; "Verify this wallet’s password once to
+     * create its pairing code." without an identity ([authorizeWalletIdentity] first).
+     */
     suspend fun walletPairing(walletId: WalletId): WalletPairingPayload
 
     // -------------------------------------------------------------------------------------------------------------

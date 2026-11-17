@@ -1,6 +1,10 @@
 {
  "language": "zh-Hans",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "zh-Hans"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "已删除的钱包"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "其他 App 正覆盖在 BitTool Signer 上方。请关闭该 App 后重试。"
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "有应用可以读取你的屏幕"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "一个并非手机自带的无障碍应用可以读取屏幕上的内容：%1$s。在这个 Android 版本上，它也可能读到你的助记词。除非你信任它，否则请先在“设置 › 无障碍”中将其关闭。"
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "无法更改 App 锁。请重试。"
@@ -234,8 +246,8 @@
    "value": "签名引擎源代码"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s：比特币各地址类型及 EVM、TRON 的账户 xpub，外加全部三个 Solana 地址，集中在一个动态二维码中"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s：比特币各地址类型及 EVM、TRON 的账户 xpub、全部三个 Solana 地址，以及这个钱包的身份签名，集中在一个动态二维码中"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

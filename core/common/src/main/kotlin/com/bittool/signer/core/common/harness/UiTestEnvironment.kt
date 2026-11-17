@@ -29,6 +29,11 @@ data class UiTestRun(
     val localeTag: String,
     /** `bts.uitest.allowCapture=true` → `FLAG_SECURE` stays off for this process (screenshot tour). */
     val allowCapture: Boolean,
+    /**
+     * `bts.uitest.unsignedWalletPairing=true` (iOS `--unsigned-wallet-pairing`): every fixture is saved again without its
+     * KH v2 identity signature, as a wallet from 1.0.0 is, so Wallet Level asks for the password once.
+     */
+    val unsignedWalletPairing: Boolean = false,
 ) {
     init {
         require(fixtures in 0..MAX_FIXTURES)

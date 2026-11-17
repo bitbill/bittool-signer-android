@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">İmzalama sertifikası</string>
     <string name="settings_open_source_intro">BitTool Signer baştan sona açık kaynaklıdır. Android uygulaması, çevrimdışı imzalama motoru ve token verileri yayımlanır; böylece herkes imzalayıcının bir kurtarma ifadesiyle ne yaptığını okuyabilir, yeniden derleyebilir ve sonucu burada kurulu kopyayla karşılaştırabilir.</string>
     <string name="settings_engine_source">İmzalama motoru kaynak kodu</string>
-    <string name="settings_wallet_level_format">%1$s: her Bitcoin adres türü, EVM ve TRON için birer hesap xpub’ı ve üç Solana adresinin tamamı, tek bir hareketli QR kodunda</string>
+    <string name="settings_wallet_level_format">%1$s: her Bitcoin adres türü, EVM ve TRON için birer hesap xpub’ı, üç Solana adresinin tamamı ve bu cüzdanın kimlik imzası, tek bir hareketli QR kodunda</string>
 </resources>

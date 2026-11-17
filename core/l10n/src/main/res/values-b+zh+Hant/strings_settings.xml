@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">簽名憑證</string>
     <string name="settings_open_source_intro">BitTool Signer 完全開源。Android App、離線簽名引擎與代幣資料都已公開，任何人都能看清簽名器如何處理助記詞，也能自行重新建置並與這台裝置上安裝的版本比對。</string>
     <string name="settings_engine_source">簽名引擎原始碼</string>
-    <string name="settings_wallet_level_format">%1$s：比特幣各地址類型及 EVM、TRON 的帳戶 xpub，外加全部三個 Solana 地址，集中在一個動態 QR Code 中</string>
+    <string name="settings_wallet_level_format">%1$s：比特幣各地址類型及 EVM、TRON 的帳戶 xpub、全部三個 Solana 地址，以及這個錢包的身分簽章，集中在一個動態 QR Code 中</string>
 </resources>

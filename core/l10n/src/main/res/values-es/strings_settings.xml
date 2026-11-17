@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Certificado de firma</string>
     <string name="settings_open_source_intro">BitTool Signer es de código abierto, por completo. La app para Android, el motor de firma sin conexión y los datos de tokens están publicados, así que cualquiera puede leer qué hace el firmante con una frase de recuperación, reconstruirlo y comparar el resultado con la copia instalada aquí.</string>
     <string name="settings_engine_source">Código fuente del motor de firma</string>
-    <string name="settings_wallet_level_format">%1$s: un xpub de cuenta para cada tipo de dirección de Bitcoin, para EVM y para TRON, y las tres direcciones de Solana, en un QR animado</string>
+    <string name="settings_wallet_level_format">%1$s: un xpub de cuenta para cada tipo de dirección de Bitcoin, para EVM y para TRON, las tres direcciones de Solana y la firma de identidad de esta cartera, en un QR animado</string>
 </resources>

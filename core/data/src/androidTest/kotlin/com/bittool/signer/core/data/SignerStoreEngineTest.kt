@@ -19,6 +19,7 @@ import com.bittool.signer.core.model.json.objects
 import com.bittool.signer.core.model.json.parseJsonObject
 import com.bittool.signer.core.model.json.str
 import com.bittool.signer.core.model.json.strings
+import com.bittool.signer.core.model.review.TransactionReview
 import com.bittool.signer.core.model.signing.PlanCandidate
 import com.bittool.signer.core.model.signing.SigningPlan
 import com.bittool.signer.core.model.signing.SigningReceipt
@@ -167,6 +168,9 @@ class SignerStoreEngineTest {
             val expected = vector["expected"] as JsonObject
             val review = calls.review(request)
             val requestHash = assertNotNull(review.str("requestHash"))
+            // The consent the app gives (iOS Revision 16, L-1: the engine itself now refuses an unacknowledged HIGH RISK
+            // request, as it already refused an unacknowledged partial decode): exactly the review's own rule.
+            val acknowledged = TransactionReview.parse(review).requiresAcknowledgement
             val planObject = calls.resolveSigningPlan(request, candidates)
             val plan = SigningPlan.parse(planObject, requestHash)
             assertEquals(goldens.getValue(name), requestHash to plan.planHash, name)
@@ -177,7 +181,7 @@ class SignerStoreEngineTest {
             val completed = mutableListOf<String>()
             for (task in plan.tasks) {
                 val mnemonic = wallets.first { WalletId.parse(it.str("localWalletId")) == task.walletId }.str("mnemonic")!!
-                val result = calls.signPlanTask(request, planObject, task.id, seed(mnemonic), riskAcknowledged = false, previousResult = previous)
+                val result = calls.signPlanTask(request, planObject, task.id, seed(mnemonic), riskAcknowledged = acknowledged, previousResult = previous)
                 completed += task.id
                 assertEquals(plan.requestHash, result.str("requestHash"))
                 assertEquals(plan.planHash, result.str("planHash"))

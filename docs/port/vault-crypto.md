@@ -400,6 +400,13 @@ Delay table (count after the attempt → delay before the next one):
 
 Consequences: a correct password always works when not inside a delay window (the counter counts the successful attempt and then resets). The clock is the wall clock (`Date()`); `docs/Security.md:56` documents that clock control or filesystem rollback can interfere ("an application control, not a secure hardware counter"). The app never destroys a wallet after failed attempts.
 
+**Android, since 1.1.0 (2026-11-16 audit M-02, L-07): the window runs on `SystemClock.elapsedRealtime()`, not the wall clock.** On iOS and in Android before this change, moving the date forward skipped every delay, and moving it back (a drained battery resets the clock on an offline phone) locked the wallet for the whole gap. The delay table and the count are unchanged. The sealed JSON gains `attemptElapsed` (milliseconds since boot when the counted attempt opened the window). `retryAfter` is still written but never decides anything. Rules (`AttemptCounter.anchored` / `lockedSeconds`):
+
+- A count without a delay (1–4) is never locked, whatever its `attemptElapsed`: that start may belong to an earlier boot, and reading it as a window locked a wallet for the previous boot's uptime after one typo and a restart (2026-11-17 re-audits, R3 BTS-13).
+- Remaining = `attemptElapsed + delay(count) − now`, so it never exceeds the delay for the count (at most 300 s).
+- A start later than `now` belongs to an earlier boot. The window then counts from this boot's start (`attemptElapsed = 0`), because at least `now` has passed since that attempt. The new start is saved, so the old boot's window cannot return once this boot outlasts it. A reboot whose uptime has already passed the old start goes unnoticed, which is still safe: the wait then ends no earlier than `delay` after the attempt.
+- A file without `attemptElapsed` (written by an earlier version) restarts the full delay at the first check and saves that start.
+
 Every secret operation shares this counter: show phrase, change password (its `unlock`), delete, repair (`completeSetup`), App Lock password fallback (`verifyPassword`), signing.
 
 Tests: five wrong attempts, then a *new* `WalletVault` instance on the same directory refuses the correct password with `temporarilyLocked(seconds > 0)` (`BitToolSignerTests/SecurityTests.swift:86-104`); a reset clears the delay (`:208-218`).
@@ -997,7 +1004,7 @@ Decision for the lead — passcode removal. iOS's `WhenPasscodeSetThisDeviceOnly
 
 ### 17.5 Attempts file
 
-Same semantics and AAD (`com.bittool.signer.auth.v1/<UPPERCASE-UUID>`), sealed with the wallet's Keystore key. Suggested plaintext: `{"count":<0..16>,"retryAfter":<epoch ms>}` (`retryAfter = 0` for "distant past"). Inject a `Clock` (wall clock, `System.currentTimeMillis()`) for tests. Keep "persist before PBKDF2" and "damaged file = `malformedVault`".
+Same AAD (`com.bittool.signer.auth.v1/<UPPERCASE-UUID>`), sealed with the wallet's Keystore key. Plaintext: `{"attemptElapsed":<ms since boot>,"count":<0..16>,"retryAfter":<epoch ms>}` (`retryAfter = 0` for "distant past"; `attemptElapsed` absent when cleared and in files from before 1.1.0; a negative or non-integer value is `malformedVault`). The delay runs on the injected `MonotonicClock`, as described at the end of §8; the `WallClock` only fills `retryAfter` and `createdAt`. Keep "persist before PBKDF2" and "damaged file = `malformedVault`".
 
 ### 17.6 PBKDF2-HMAC-SHA256 at 600,000 iterations — performance risk
 

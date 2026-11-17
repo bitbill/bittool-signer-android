@@ -256,7 +256,12 @@ private fun InputSection(decode: DecodeState, json: String, reviewText: ReviewTe
                     item(key = line.id) {
                         ValueRow(
                             label = reviewText.phrase(line.label),
-                            value = if (line.id == "action") actionText(line.value, reviewText, resources) else line.value,
+                            value = when {
+                                line.id == "action" -> actionText(line.value, reviewText, resources)
+                                // "Unlimited", "raw units", "native coin" translate; a symbol stays (iOS amountLine).
+                                line.id == "amount" -> line.amount?.let { reviewText.amountLine(it, line.symbol) } ?: line.value
+                                else -> line.value
+                            },
                             verbatim = true,
                         )
                     }

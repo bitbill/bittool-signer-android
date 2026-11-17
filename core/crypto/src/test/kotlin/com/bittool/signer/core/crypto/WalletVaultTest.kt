@@ -1,18 +1,22 @@
 package com.bittool.signer.core.crypto
 
+import com.bittool.signer.core.common.testing.FakeMonotonicClock
 import com.bittool.signer.core.common.testing.FakeWallClock
 import com.bittool.signer.core.crypto.testing.InMemoryDeviceKeyStore
+import com.bittool.signer.core.crypto.vault.AttemptCounter
 import com.bittool.signer.core.crypto.vault.VaultError
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.util.Hex
 import java.io.File
+import java.time.Duration
 import org.junit.After
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonObject
@@ -234,8 +238,8 @@ class WalletVaultTest {
 
     @Test
     fun theDelayTableAndUncountedLockedAttempts(): Unit = runBlocking {
-        val clock = FakeWallClock()
-        val store = vault(dataDir, clock = clock)
+        val clock = FakeMonotonicClock()
+        val store = vault(dataDir, elapsed = clock)
         val wallet = store.create("Delays", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
         // count after the attempt → delay before the next one: 1–4 → 0, 5 → 2, 6 → 4, … 12 → 256, 13–16 → 300.
         val expected = listOf(0L, 0, 0, 0, 2, 4, 8, 16, 32, 64, 128, 256, 300, 300, 300, 300, 300)
@@ -253,6 +257,143 @@ class WalletVaultTest {
         store.unlock(wallet.id, secret(password)).close()
         repeat(4) { assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) } }
         store.unlock(wallet.id, secret(password)).close()
+    }
+
+    @Test
+    fun movingTheDateForwardDoesNotSkipTheDelay(): Unit = runBlocking {
+        // Audit M-02: an offline phone's date is the owner's to set, so the window runs on elapsedRealtime.
+        val wall = FakeWallClock()
+        val elapsed = FakeMonotonicClock()
+        val store = vault(dataDir, clock = wall, elapsed = elapsed)
+        val wallet = store.create("Date", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        repeat(13) {
+            runCatching { store.unlock(wallet.id, secret("Wrong-Password1")) }
+            elapsed.advanceBy(300_000)
+        }
+        assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) }
+        wall.advanceBy(Duration.ofDays(365).toMillis())
+        assertEquals(300L, assertFailsWith<VaultError.TemporarilyLocked> { store.unlock(wallet.id, secret(password)) }.seconds)
+        elapsed.advanceBy(300_000)
+        store.unlock(wallet.id, secret(password)).close()
+    }
+
+    @Test
+    fun movingTheDateBackDoesNotExtendTheDelay(): Unit = runBlocking {
+        // Audit L-07: a clock reset (a drained battery on an offline phone) used to lock the wallet for the whole gap.
+        val wall = FakeWallClock()
+        val elapsed = FakeMonotonicClock()
+        val store = vault(dataDir, clock = wall, elapsed = elapsed)
+        val wallet = store.create("Reset clock", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        repeat(5) { assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) } }
+        wall.nowMillis = 946_684_800_000L // 1 January 2000
+        assertEquals(2L, assertFailsWith<VaultError.TemporarilyLocked> { store.unlock(wallet.id, secret(password)) }.seconds)
+        elapsed.advanceBy(2_000)
+        store.unlock(wallet.id, secret(password)).close()
+    }
+
+    @Test
+    fun aRebootCountsTheTimeSinceBootAndNeverMore(): Unit = runBlocking {
+        // elapsedRealtime restarts at 0: at least the time since boot has passed since the last attempt, so the window
+        // counts from the boot, and a reboot neither skips the delay nor lengthens it.
+        val keys = InMemoryDeviceKeyStore()
+        val elapsed = FakeMonotonicClock(5_000_000L)
+        val store = vault(dataDir, keys, elapsed = elapsed)
+        val wallet = store.create("Reboot", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        repeat(13) {
+            runCatching { store.unlock(wallet.id, secret("Wrong-Password1")) }
+            elapsed.advanceBy(300_000)
+        }
+        assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) }
+        elapsed.nowMillis = 40_000L
+        val rebooted = vault(dataDir, keys, elapsed = elapsed)
+        assertEquals(260L, assertFailsWith<VaultError.TemporarilyLocked> { rebooted.unlock(wallet.id, secret(password)) }.seconds)
+        elapsed.nowMillis = 200_000L
+        assertEquals(100L, assertFailsWith<VaultError.TemporarilyLocked> { rebooted.unlock(wallet.id, secret(password)) }.seconds)
+        // Once this boot outlasts the old start time, the old window must not come back (the boot start was saved).
+        elapsed.nowMillis = 8_950_000L
+        rebooted.unlock(wallet.id, secret(password)).close()
+    }
+
+    @Test
+    fun oneToFourFailuresAndARebootNeverLockTheWallet(): Unit = runBlocking {
+        // 2026-11-17 re-audits (R3 BTS-13, M-1): counts 1–4 carry no delay, but their attempts still record a start on
+        // elapsedRealtime. After a reboot that start belongs to the previous boot; it used to be read as a window of
+        // "previous uptime − current uptime", so one typo and a restart locked the wallet for days.
+        for (failures in 1..4) {
+            val dir = tempDataDir()
+            try {
+                val keys = InMemoryDeviceKeyStore()
+                val elapsed = FakeMonotonicClock(Duration.ofDays(30).toMillis())
+                val store = vault(dir, keys, elapsed = elapsed)
+                val wallet = store.create("Typo $failures", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+                repeat(failures) { assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) } }
+                elapsed.nowMillis = 40_000L
+                val rebooted = vault(dir, keys, elapsed = elapsed)
+                rebooted.unlock(wallet.id, secret(password)).close()
+                assertEquals(AttemptCounter.State.Cleared, AttemptCounter(File(dir, "Vaults"), keys).read(wallet.id), "$failures: cleared")
+            } finally {
+                dir.deleteRecursively()
+            }
+        }
+    }
+
+    @Test
+    fun aCorrectPasswordInterruptedAfterItWasCountedDoesNotLockAfterAReboot(): Unit = runBlocking {
+        // A correct password whose process dies during key derivation leaves count 1 on disk (the attempt is persisted
+        // first). That too must not become a lock after the phone restarts.
+        val keys = InMemoryDeviceKeyStore()
+        val elapsed = FakeMonotonicClock(Duration.ofDays(7).toMillis())
+        val store = vault(dataDir, keys, elapsed = elapsed)
+        val wallet = store.create("Killed", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        val counter = AttemptCounter(files.directory, keys)
+        counter.write(wallet.id, AttemptCounter.afterAttempt(AttemptCounter.State.Cleared, 1_760_000_000_000L, elapsed.nowMillis))
+        elapsed.nowMillis = 45_000L
+        vault(dataDir, keys, elapsed = elapsed).unlock(wallet.id, secret(password)).close()
+    }
+
+    @Test
+    fun aCountWithoutADelayIsNeverLockedWhateverItsStart() {
+        for (count in 1..4) {
+            for (start in listOf(0L, 40_000L, Duration.ofDays(30).toMillis())) {
+                assertNull(AttemptCounter.lockedSeconds(AttemptCounter.State(count, 0, start), 40_000L), "count $count, start $start")
+            }
+        }
+        assertEquals(2L, AttemptCounter.lockedSeconds(AttemptCounter.State(5, 0, 40_000L), 40_000L), "count 5 keeps its delay")
+    }
+
+    @Test
+    fun aCounterFromAnEarlierVersionRestartsItsDelayInsteadOfTrustingTheDate(): Unit = runBlocking {
+        // Files written before the monotonic window carry only the wall-clock retryAfter, which is not trusted.
+        val keys = InMemoryDeviceKeyStore()
+        val elapsed = FakeMonotonicClock()
+        val store = vault(dataDir, keys, elapsed = elapsed)
+        val wallet = store.create("Legacy", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        val counter = AttemptCounter(files.directory, keys)
+        counter.write(wallet.id, AttemptCounter.State(count = 13, retryAfterMillis = 0))
+        assertEquals(300L, assertFailsWith<VaultError.TemporarilyLocked> { store.unlock(wallet.id, secret(password)) }.seconds)
+        assertEquals(AttemptCounter.State(13, 0, elapsed.nowMillis), counter.read(wallet.id), "the restarted window is kept")
+        elapsed.advanceBy(299_000)
+        assertEquals(1L, assertFailsWith<VaultError.TemporarilyLocked> { store.unlock(wallet.id, secret(password)) }.seconds)
+        elapsed.advanceBy(1_000)
+        store.unlock(wallet.id, secret(password)).close()
+        assertEquals(AttemptCounter.State.Cleared, counter.read(wallet.id))
+    }
+
+    @Test
+    fun theCounterFileRecordsTheMonotonicStartOfItsWindow(): Unit = runBlocking {
+        val keys = InMemoryDeviceKeyStore()
+        val wall = FakeWallClock(1_760_000_000_000L)
+        val elapsed = FakeMonotonicClock(123_456L)
+        val store = vault(dataDir, keys, clock = wall, elapsed = elapsed)
+        val wallet = store.create("Format", secret(ABANDON_PHRASE), secret(""), secret(password), WalletId.random())
+        repeat(5) { assertFailsWith<VaultError.AuthenticationFailed> { store.unlock(wallet.id, secret("Wrong-Password1")) } }
+        val plaintext = keys.open(wallet.id, files.attempts(wallet.id).readBytes(), AttemptCounter.aad(wallet.id)).decodeToString()
+        assertEquals("""{"attemptElapsed":123456,"count":5,"retryAfter":1760000002000}""", plaintext)
+        // A negative or non-integer start is a damaged file, as a bad count is.
+        for (bad in listOf("""{"attemptElapsed":-1,"count":5,"retryAfter":0}""", """{"attemptElapsed":"1","count":5,"retryAfter":0}""")) {
+            files.attempts(wallet.id).writeBytes(keys.seal(wallet.id, bad.encodeToByteArray(), AttemptCounter.aad(wallet.id)))
+            assertFailsWith<VaultError.MalformedVault> { store.unlock(wallet.id, secret(password)) }
+        }
     }
 
     @Test

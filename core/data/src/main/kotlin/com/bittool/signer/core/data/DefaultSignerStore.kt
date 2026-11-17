@@ -25,11 +25,13 @@ import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.VaultSecret
 import com.bittool.signer.core.model.WalletId
+import com.bittool.signer.core.model.WalletIdentitySignature
 import com.bittool.signer.core.model.WalletPublicMetadata
 import com.bittool.signer.core.model.json.SignerJson
 import com.bittool.signer.core.model.json.bool
 import com.bittool.signer.core.model.json.canonicalJson
 import com.bittool.signer.core.model.json.double
+import com.bittool.signer.core.model.json.long
 import com.bittool.signer.core.model.json.obj
 import com.bittool.signer.core.model.json.objects
 import com.bittool.signer.core.model.json.parseJsonObject
@@ -191,12 +193,14 @@ class DefaultSignerStore @Inject constructor(
             val displayed = ArrayList<VaultMetadata>(originals.size)
             val indexes = LinkedHashMap<WalletId, WalletPublicMetadata>()
             val statuses = LinkedHashMap<WalletId, PublicMetadataStatus>()
+            val identities = LinkedHashMap<WalletId, WalletIdentitySignature>()
             var keysLocked = false
             for (wallet in originals) {
                 val snapshot = publicRepository.snapshot(wallet.id, key)
                 displayed += wallet.copy(name = snapshot.displayName ?: wallet.name)
                 snapshot.metadata?.let { indexes[wallet.id] = it }
                 statuses[wallet.id] = snapshot.status
+                snapshot.identity?.let { identities[wallet.id] = it }
                 keysLocked = keysLocked || snapshot.keyLocked
             }
             // Android-only (QA L3, L4): what is known about the wallets without an authenticated index — the identity
@@ -223,6 +227,7 @@ class DefaultSignerStore @Inject constructor(
                     wallets = displayed,
                     publicWallets = indexes,
                     metadataStatuses = statuses,
+                    walletIdentities = identities,
                     duplicateWalletIds = duplicates,
                     walletLoadSucceeded = true,
                     lostKeyWalletIds = lost,
@@ -416,7 +421,12 @@ class DefaultSignerStore @Inject constructor(
 
     private suspend fun prefetchConnectPairings() {
         for (wallet in current.wallets) {
-            if (connectPrefetch[wallet.id] != null || current.metadataStatus(wallet.id) != PublicMetadataStatus.Ready) continue
+            // KH v2: a wallet saved before 1.1.0 has no identity yet; its code needs the password once, on the page.
+            if (connectPrefetch[wallet.id] != null || current.metadataStatus(wallet.id) != PublicMetadataStatus.Ready ||
+                !current.hasWalletIdentity(wallet.id)
+            ) {
+                continue
+            }
             if (!currentCoroutineContext().isActive) return
             val index = current.publicMetadata(wallet.id)?.canonicalJson ?: return
             val epoch = current.securityEpoch
@@ -471,7 +481,14 @@ class DefaultSignerStore @Inject constructor(
                 if (passphrase.utf8Size() > MAX_PASSPHRASE_BYTES) throw AppIssue("The BIP39 passphrase exceeds 1,024 UTF-8 bytes.")
                 // The vault always stores the canonical words the seed is derived from.
                 canonical(mnemonic).useAndWipe { words ->
-                    val raw = derivePublicIndex(words, passphrase, epoch)
+                    // The seed is here once, so the wallet-level QR never needs the password again: the KH v2 identity is
+                    // signed from the same seed and stored with the index (iOS signs after the duplicate check, holding
+                    // its seed across the reload; here the seed is gone before it).
+                    val (raw, identity) = withSeed(words, passphrase, epoch) { seed ->
+                        val raw = engineCall { engine.derivePublicIndex(seed) }
+                        requireSession(epoch)
+                        raw to signWalletIdentity(seed, WalletPublicMetadata.parse(raw).walletKeyId, epoch)
+                    }
                     requireSession(epoch)
                     val index = WalletPublicMetadata.parse(raw)
                     reload()
@@ -495,7 +512,7 @@ class DefaultSignerStore @Inject constructor(
                     val id = WalletId.random()
                     val key = withContext(default) { vault.publicDataKey(createIfMissing = true) } ?: throw VaultError.DeviceKeyUnavailable()
                     try {
-                        publicRepository.save(index, id, trimmedName, key)
+                        publicRepository.save(index, id, trimmedName, key, identity)
                         requireSession(epoch)
                     } catch (e: Throwable) {
                         withContext(NonCancellable) { runCatching { publicRepository.remove(id) } }
@@ -553,13 +570,26 @@ class DefaultSignerStore @Inject constructor(
             val existing = current.publicMetadata(walletId)
                 ?: throw AppIssue("This wallet needs repair before its password can be reset.")
             val epoch = current.securityEpoch
+            val needsIdentity = !current.hasWalletIdentity(walletId)
             canonical(mnemonic).useAndWipe { words ->
-                val raw = derivePublicIndex(words, passphrase, epoch)
+                val identity = withSeed(words, passphrase, epoch) { seed ->
+                    val raw = engineCall { engine.derivePublicIndex(seed) }
+                    requireSession(epoch)
+                    val derived = WalletPublicMetadata.parse(raw)
+                    if (derived.walletKeyId != existing.walletKeyId) throw AppIssue("This recovery phrase belongs to a different wallet.")
+                    // The seed is in hand and verified against this wallet, so a wallet from before 1.1.0 gets its
+                    // identity signature here too, silently (a failure leaves it to the Connect page's password).
+                    if (needsIdentity) runCatchingCancellable { signWalletIdentity(seed, existing.walletKeyId, epoch) }.getOrNull() else null
+                }
                 requireSession(epoch)
-                val derived = WalletPublicMetadata.parse(raw)
-                if (derived.walletKeyId != existing.walletKeyId) throw AppIssue("This recovery phrase belongs to a different wallet.")
                 withContext(NonCancellable) {
                     withContext(default) { vault.resetPassword(walletId, words, passphrase, newPassword) }
+                    if (identity != null) {
+                        runCatching {
+                            withContext(default) { vault.publicDataKey(createIfMissing = false) }
+                                ?.let { publicRepository.saveIdentity(identity, walletId, it) }
+                        }
+                    }
                     // The password that was authorising this session is gone.
                     suspendSession()
                     reload()
@@ -572,18 +602,41 @@ class DefaultSignerStore @Inject constructor(
         if (current.wallet(walletId) == null) throw VaultError.WalletNotFound()
         val epoch = current.securityEpoch
         val sensitive = sensitiveEpoch
-        val raw = withSecret(walletId, password) { secret ->
+        val (raw, identity) = withSecret(walletId, password) { secret ->
             requireSession(epoch)
-            derivePublicIndex(secret.mnemonic, secret.passphrase, epoch)
+            withSeed(secret.mnemonic, secret.passphrase, epoch) { seed ->
+                val raw = engineCall { engine.derivePublicIndex(seed) }
+                requireSession(epoch)
+                raw to signWalletIdentity(seed, WalletPublicMetadata.parse(raw).walletKeyId, epoch)
+            }
         }
         requireSession(epoch)
         requireSensitive(sensitive)
         val index = WalletPublicMetadata.parse(raw)
         withContext(NonCancellable) {
             val key = withContext(default) { vault.publicDataKey(createIfMissing = true) } ?: throw VaultError.DeviceKeyUnavailable()
-            publicRepository.save(index, walletId, current.displayName(walletId) ?: UNKNOWN_WALLET_LABEL, key)
+            publicRepository.save(index, walletId, current.displayName(walletId) ?: UNKNOWN_WALLET_LABEL, key, identity)
             // Existing duplicate encrypted records are kept and reported; the resolver rejects an ambiguous identity
             // instead of deleting user data.
+            reload()
+        }
+    }
+
+    override suspend fun authorizeWalletIdentity(walletId: WalletId, password: SecretText) = withContext(main) {
+        // iOS AppStore.authorizeWalletIdentity: only the signature is written; the index on disk stays exactly as it is.
+        val existing = current.publicMetadata(walletId) ?: throw AppIssue("Repair this wallet before pairing it.")
+        val epoch = current.securityEpoch
+        val sensitive = sensitiveEpoch
+        val identity = withSecret(walletId, password) { secret ->
+            requireSession(epoch)
+            requireSensitive(sensitive)
+            withSeed(secret.mnemonic, secret.passphrase, epoch) { seed -> signWalletIdentity(seed, existing.walletKeyId, epoch) }
+        }
+        requireSession(epoch)
+        requireSensitive(sensitive)
+        withContext(NonCancellable) {
+            val key = withContext(default) { vault.publicDataKey(createIfMissing = false) } ?: throw VaultError.DeviceKeyUnavailable()
+            publicRepository.saveIdentity(identity, walletId, key)
             reload()
         }
     }
@@ -699,9 +752,12 @@ class DefaultSignerStore @Inject constructor(
         }
 
     override suspend fun walletPairing(walletId: WalletId): WalletPairingPayload = withContext(main) {
-        // AppStore.swift:305-309: the account-level (`full`) payload, the only wallet-level form.
+        // AppStore.swift walletPairing: the account-level (`full`) payload, the only wallet-level form, now always v2 with
+        // this wallet's identity signature. A wallet without a stored signature needs its password once.
         val metadata = current.publicMetadata(walletId) ?: throw AppIssue("Wallet setup required.")
-        WalletPairingPayload.parse(engineCall { engine.createWalletPairing(metadata) })
+        val identity = current.walletIdentities[walletId]
+            ?: throw AppIssue("Verify this wallet’s password once to create its pairing code.")
+        WalletPairingPayload.parse(engineCall { engine.createWalletPairing(metadata, identity.signature, identity.epoch) })
     }
 
     // =============================================================================================================
@@ -1087,18 +1143,42 @@ class DefaultSignerStore @Inject constructor(
      * suspends (iOS computes it synchronously), so the caller's security [epoch] is checked again before the seed is
      * sent: after a suspend it never reaches the engine. Callers still check after the engine call.
      */
-    private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText, epoch: Long): JsonObject {
+    private suspend fun derivePublicIndex(mnemonic: SecretText, passphrase: SecretText, epoch: Long): JsonObject =
+        withSeed(mnemonic, passphrase, epoch) { seed -> engineCall { engine.derivePublicIndex(seed) } }
+
+    /**
+     * Runs [block] with the native BIP39 seed of [mnemonic] and [passphrase], wiped afterwards in every case. Deriving
+     * the seed suspends, so the caller's security [epoch] is checked before [block] sees it.
+     */
+    private suspend inline fun <R> withSeed(mnemonic: SecretText, passphrase: SecretText, epoch: Long, block: (CharArray) -> R): R {
         // Owned out here before the dispatcher switch returns: a caller cancelled right then would lose the result of
         // withContext, and with it the wipe (audit BTS-03).
         var seed: CharArray? = null
         return try {
             withContext(default) { seed = bip39Seed.hex(mnemonic, passphrase) }
             requireSession(epoch)
-            val derived = checkNotNull(seed)
-            engineCall { engine.derivePublicIndex(derived) }
+            block(checkNotNull(seed))
         } finally {
             seed?.wipe()
         }
+    }
+
+    /**
+     * iOS `signWalletIdentity`: signs the fixed KH v2 text `OwnbitAuth:v2:epoch=1` with the wallet's identity key and
+     * checks that the signature belongs to the wallet it will be stored beside. The engine verifies the signature against
+     * its own key before returning it; this checks it against the public index ([walletKeyId]), so a signature is never
+     * filed under another wallet's keys. Neither the signature nor anything derived from it is logged.
+     */
+    private suspend fun signWalletIdentity(seed: CharArray, walletKeyId: String, epoch: Long): WalletIdentitySignature {
+        val result = engineCall { engine.signKhV2(seed, KH_V2_EPOCH) }
+        requireSession(epoch)
+        val identity = WalletIdentitySignature.of(result.long("epoch"), result.str("signature"))
+        if (identity == null || identity.epoch != KH_V2_EPOCH ||
+            !result.str("walletKeyId").equals(walletKeyId, ignoreCase = true)
+        ) {
+            throw AppIssue("This wallet’s identity signature could not be produced.")
+        }
+        return identity
     }
 
     /** Where [unlockInto] leaves the decrypted secret before control returns to a possibly cancelled caller. */
@@ -1164,6 +1244,9 @@ class DefaultSignerStore @Inject constructor(
         /** Batch QR decode frame limit (`AppStore.swift:346`). */
         const val MAX_FRAMES = 2_048
         const val MAX_PASSPHRASE_BYTES = 1_024
+        /** KH v2: every identity is signed for epoch 1 (iOS `signWalletIdentity`); a later epoch is a future rotation. */
+        const val KH_V2_EPOCH = 1
+
         /** The Connect prefetch waits this long after it is allowed (`AppStore.swift:285`). */
         const val PREFETCH_DELAY_MILLIS = 600L
         /** iOS `walletLabel(for:)` for an unknown wallet (`AppStore.swift:151`). */

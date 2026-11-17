@@ -22,8 +22,8 @@ class BuildIdentityTest {
     @Test
     fun theVersionReadsLikeIos() {
         val info = AppModule.buildInfo(ApplicationProvider.getApplicationContext(), DistributionModule.distribution())
-        // iOS shows "1.0.0 (1)": the build number defaults to 1 (DECISIONS §10).
-        assertEquals("1.0.0 (1)", info.displayVersion)
+        // iOS 1.1.0 shows "1.1.0 (2)": the build number defaults to its CURRENT_PROJECT_VERSION (DECISIONS §10).
+        assertEquals("1.1.0 (2)", info.displayVersion)
         assertEquals("https://github.com/bitbill/bittool-signer-android", info.repositoryUrl)
         assertEquals(BuildConfig.DEBUG, info.isDebug)
         assertTrue(AppModule.engineTestOperations() == BuildConfig.DEBUG)

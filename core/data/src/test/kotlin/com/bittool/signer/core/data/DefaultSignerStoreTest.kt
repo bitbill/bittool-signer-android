@@ -464,7 +464,7 @@ class DefaultSignerStoreTest {
     }
 
     @Test
-    fun hostEngineErrorsAreTranslatedAndEngineMessagesStayVerbatim() = JvmStore.run {
+    fun hostEngineErrorsAreTranslatedAndEngineMessagesAreTranslatedWhenDrawn() = JvmStore.run {
         store.reload()
         create()
         engine.on(EngineOperation.Review) { throw EngineException(EngineException.ENGINE_FAILURE, "The offline engine could not process this request.") }
@@ -474,7 +474,9 @@ class DefaultSignerStoreTest {
         engine.on(EngineOperation.Review) { FakeEngine.review(it.obj("request")!!) }
         engine.on(EngineOperation.ResolveSigningPlan) { throw EngineException("REQUEST", "Unsupported signing request") }
         store.prepare(request())
-        assertEquals(MatchingIssue.Failure(UiText.Verbatim("Unsupported signing request")), state.matchingIssue)
+        // iOS Revision 15: the engine's refusal keeps its English and is translated only when drawn.
+        assertEquals(MatchingIssue.Failure(UiText.Engine("Unsupported signing request")), state.matchingIssue)
+        assertEquals("Unsupported signing request", state.matchingIssue!!.english)
         engine.on(EngineOperation.ResolveSigningPlan) {
             throw EngineException(EngineException.REQUEST_TOO_LARGE, "This request exceeds the 1 MB offline signing limit.")
         }

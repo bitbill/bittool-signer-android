@@ -1,5 +1,6 @@
 package com.bittool.signer.core.crypto
 
+import com.bittool.signer.core.common.testing.FakeMonotonicClock
 import com.bittool.signer.core.common.testing.FakeWallClock
 import com.bittool.signer.core.crypto.bip39.Bip39WordlistSource
 import com.bittool.signer.core.crypto.bip39.DefaultBip39
@@ -34,4 +35,5 @@ fun vault(
     dataDir: File,
     keys: DeviceKeyStore = InMemoryDeviceKeyStore(),
     clock: FakeWallClock = FakeWallClock(),
-): DefaultWalletVault = DefaultWalletVault(dataDir, keys, SystemSecureRandomSource(), clock, Dispatchers.Default, Dispatchers.IO)
+    elapsed: FakeMonotonicClock = FakeMonotonicClock(),
+): DefaultWalletVault = DefaultWalletVault(dataDir, keys, SystemSecureRandomSource(), clock, elapsed, Dispatchers.Default, Dispatchers.IO)

@@ -7,6 +7,7 @@ import com.bittool.signer.core.model.LegalBlock
 import com.bittool.signer.core.model.LegalDocument
 import com.bittool.signer.core.model.PublicWalletSnapshot
 import com.bittool.signer.core.model.WalletId
+import com.bittool.signer.core.model.WalletIdentitySignature
 import com.bittool.signer.core.model.WalletPublicMetadata
 import com.bittool.signer.core.model.registry.ReferenceData
 import com.bittool.signer.core.model.signing.SigningReceipt
@@ -54,8 +55,25 @@ interface PublicWalletRepository {
     /** The status table of vault-crypto.md §10.5 (missing → needs completion; nil key / bad MAC / invalid → invalid). */
     suspend fun snapshot(walletId: WalletId, key: PublicDataKey?): PublicWalletSnapshot
 
-    /** Writes the index with [displayName] (or the name of a valid existing file). */
-    suspend fun save(metadata: WalletPublicMetadata, walletId: WalletId, displayName: String?, key: PublicDataKey)
+    /**
+     * Writes the index with [displayName] (or the name of a valid existing file) and [identity] when given. Rebuilding
+     * an index without one drops any stored signature (iOS `save`): a signature must never outlive the keys it was
+     * checked against.
+     */
+    suspend fun save(
+        metadata: WalletPublicMetadata,
+        walletId: WalletId,
+        displayName: String?,
+        key: PublicDataKey,
+        identity: WalletIdentitySignature? = null,
+    )
+
+    /**
+     * Stores [identity] for a wallet whose index is already saved and valid (the path a wallet from before 1.1.0 takes
+     * once its password is entered); the index itself is left exactly as it is. `VaultError.WalletNotFound` when the
+     * file has no valid index.
+     */
+    suspend fun saveIdentity(identity: WalletIdentitySignature, walletId: WalletId, key: PublicDataKey)
 
     /**
      * Sets the display name (trimmed, 1–40 graphemes and a name a vault header could hold, `WalletNames.fitsVaultHeader`;

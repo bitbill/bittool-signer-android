@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Signing certificate</string>
     <string name="settings_open_source_intro">Buong-buong open source ang BitTool Signer. Ang Android app, ang offline signing engine at ang token data ay inilathala, kaya kahit sino ay makakabasa kung ano ang ginagawa ng signer sa isang recovery phrase — at mabubuo itong muli at maihahambing ang resulta sa kopyang naka-install dito.</string>
     <string name="settings_engine_source">Source code ng signing engine</string>
-    <string name="settings_wallet_level_format">%1$s: isang account xpub para sa bawat uri ng Bitcoin address, para sa EVM at para sa TRON, at lahat ng tatlong Solana address, sa iisang animated na QR</string>
+    <string name="settings_wallet_level_format">%1$s: isang account xpub para sa bawat uri ng Bitcoin address, para sa EVM at para sa TRON, lahat ng tatlong Solana address at ang identity signature ng wallet na ito, sa iisang animated na QR</string>
 </resources>

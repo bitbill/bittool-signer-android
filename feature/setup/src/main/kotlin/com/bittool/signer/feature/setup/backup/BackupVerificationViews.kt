@@ -38,6 +38,8 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
+import com.bittool.signer.core.designsystem.security.hiddenFromScreenReaders
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -67,6 +69,8 @@ internal fun BackupVerificationGrid(
     val colors = SignerTheme.colors
     val haptics = rememberSignerHaptics()
     val measured = verification.chips.map { it.word } + MASK
+    // Asked once for the grid, not per blank (audit M-03; see Blank).
+    val hidden = rememberScreenReaders().hideSecrets
     Box(modifier.fillMaxWidth().background(colors.card, SignerShapes.card).padding(12.dp)) {
         WordGrid(count = verification.wordCount, columns = WordGridColumns.Verification, measuredWords = measured) { position, layout ->
             val cellModifier = Modifier.fillMaxSize().onGloballyPositioned { onCellPositioned(position, it) }
@@ -76,6 +80,7 @@ internal fun BackupVerificationGrid(
                     word = verification.word(position),
                     active = verification.activePosition == position,
                     layout = layout,
+                    hidden = hidden,
                     onTap = { filled ->
                         if (filled) {
                             haptics.selection()
@@ -118,6 +123,7 @@ private fun Blank(
     word: String?,
     active: Boolean,
     layout: WordGridLayout,
+    hidden: Boolean,
     onTap: (filled: Boolean) -> Unit,
     modifier: Modifier,
 ) {
@@ -154,7 +160,8 @@ private fun Blank(
             .testTag("verification.slot.$position")
             .clearAndSetSemantics {
                 contentDescription = label
-                stateDescription = value
+                // A placed word is a phrase word: not read out to an untrusted service (audit M-03).
+                if (word == null || !hidden) stateDescription = value
             },
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -186,6 +193,7 @@ internal fun BackupVerificationChips(verification: BackupVerification, onPlace: 
     val haptics = rememberSignerHaptics()
     val placedLabel = stringResource(L10n.string.placed)
     val availableLabel = stringResource(L10n.string.available)
+    val hidden = rememberScreenReaders().hideSecrets
     FlowRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
@@ -210,6 +218,8 @@ internal fun BackupVerificationChips(verification: BackupVerification, onPlace: 
                     }
                     .semantics { stateDescription = if (placed) placedLabel else availableLabel }
                     .testTag("verification.chip.${chip.id}")
+                    // The chip stays a button; its word is not read out to an untrusted service (audit M-03).
+                    .hiddenFromScreenReaders(hidden)
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {

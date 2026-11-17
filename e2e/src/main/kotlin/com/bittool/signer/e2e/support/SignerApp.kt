@@ -28,6 +28,7 @@ class SignerApp(private val ui: Ui) {
         locale: String? = null,
         camera: Boolean? = null,
         waitUntilReady: Boolean = true,
+        unsignedWalletPairing: Boolean = false,
     ) {
         forceStop()
         camera?.let(::setCameraPermission)
@@ -40,6 +41,8 @@ class SignerApp(private val ui: Ui) {
             if (dark) { add("--es"); add(EXTRA_APPEARANCE); add("dark") }
             if (allowCapture) { add("--ez"); add(EXTRA_ALLOW_CAPTURE); add("true") }
             locale?.let { add("--es"); add(EXTRA_LOCALE); add(it) }
+            // KH v2: the fixtures are saved without their identity signature, like wallets from 1.0.0.
+            if (unsignedWalletPairing) { add("--ez"); add(EXTRA_UNSIGNED_WALLET_PAIRING); add("true") }
         }
         val output = Shell.run("am start -W -n $PACKAGE/$ACTIVITY ${extras.joinToString(" ")}")
         assertTrue("The app did not start: $output", output.contains("Status: ok") || output.contains("Complete"))
@@ -124,6 +127,7 @@ class SignerApp(private val ui: Ui) {
         const val EXTRA_APPEARANCE = "bts.uitest.appearance"
         const val EXTRA_LOCALE = "bts.uitest.locale"
         const val EXTRA_ALLOW_CAPTURE = "bts.uitest.allowCapture"
+        const val EXTRA_UNSIGNED_WALLET_PAIRING = "bts.uitest.unsignedWalletPairing"
 
         private val STATE = Regex("""\bm?[sS]tate=([A-Z_]+)""")
         private val STOPPED_FLAG = Regex("""\bstopped=true""")

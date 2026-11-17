@@ -12,9 +12,11 @@ import com.bittool.signer.core.model.AppIssue
 import com.bittool.signer.core.model.PublicMetadataStatus
 import com.bittool.signer.core.model.PublicWalletSnapshot
 import com.bittool.signer.core.model.WalletId
+import com.bittool.signer.core.model.WalletIdentitySignature
 import com.bittool.signer.core.model.WalletPublicMetadata
 import com.bittool.signer.core.model.json.canonicalJson
 import com.bittool.signer.core.model.json.int
+import com.bittool.signer.core.model.json.long
 import com.bittool.signer.core.model.json.obj
 import com.bittool.signer.core.model.json.parseJsonObject
 import com.bittool.signer.core.model.json.str
@@ -71,7 +73,9 @@ class FilePublicWalletRepository @Inject constructor(
             if (name != null && !validName(name)) return@locked INVALID
             val index = body.obj("publicIndex")
                 ?: return@locked PublicWalletSnapshot(name, null, PublicMetadataStatus.NeedsCompletion)
-            PublicWalletSnapshot(name, WalletPublicMetadata.parse(index), PublicMetadataStatus.Ready)
+            val stored = body.obj(IDENTITY_KEY)
+            val identity = WalletIdentitySignature.of(stored?.long("epoch"), stored?.str("signature"))
+            PublicWalletSnapshot(name, WalletPublicMetadata.parse(index), PublicMetadataStatus.Ready, identity = identity)
         } catch (e: CancellationException) {
             throw e
         } catch (e: VaultError.DeviceKeyUnavailable) {
@@ -81,7 +85,13 @@ class FilePublicWalletRepository @Inject constructor(
         }
     }
 
-    override suspend fun save(metadata: WalletPublicMetadata, walletId: WalletId, displayName: String?, key: PublicDataKey) =
+    override suspend fun save(
+        metadata: WalletPublicMetadata,
+        walletId: WalletId,
+        displayName: String?,
+        key: PublicDataKey,
+        identity: WalletIdentitySignature?,
+    ) =
         locked {
             // PublicWalletRepository.swift:43-51: the given name, else the name of a valid existing file.
             val name = displayName ?: readOrNull(walletId, key)?.str("displayName")
@@ -93,8 +103,17 @@ class FilePublicWalletRepository @Inject constructor(
                 if (!validName(name)) throw VaultError.InvalidName()
                 body["displayName"] = JsonPrimitive(name)
             }
+            identity?.let { body[IDENTITY_KEY] = identityJson(it) }
             write(JsonObject(body), walletId, key)
         }
+
+    override suspend fun saveIdentity(identity: WalletIdentitySignature, walletId: WalletId, key: PublicDataKey) = locked {
+        val existing = readOrNull(walletId, key)
+        if (existing?.obj("publicIndex") == null) throw VaultError.WalletNotFound()
+        val body = LinkedHashMap<String, JsonElement>(existing)
+        body[IDENTITY_KEY] = identityJson(identity)
+        write(JsonObject(body), walletId, key)
+    }
 
     override suspend fun rename(walletId: WalletId, name: String, key: PublicDataKey) = locked {
         // PublicWalletRepository.swift:53-59: an unreadable existing file loses its index (the wallet needs repair).
@@ -191,6 +210,12 @@ class FilePublicWalletRepository @Inject constructor(
         const val MAX_FILE_BYTES = 600_000
         const val MAX_BODY_BYTES = 300_000
         private const val DOMAIN = "com.bittool.signer.public-wallet.v2"
+
+        /** iOS `body["khV2"]`: `{epoch, signature}` beside the index, under the same MAC. */
+        const val IDENTITY_KEY = "khV2"
+
+        private fun identityJson(identity: WalletIdentitySignature) =
+            JsonObject(linkedMapOf("epoch" to JsonPrimitive(identity.epoch), "signature" to JsonPrimitive(identity.signature)))
 
         private val INVALID = PublicWalletSnapshot(null, null, PublicMetadataStatus.Invalid)
         private val KEY_LOCKED = PublicWalletSnapshot(null, null, PublicMetadataStatus.Invalid, keyLocked = true)

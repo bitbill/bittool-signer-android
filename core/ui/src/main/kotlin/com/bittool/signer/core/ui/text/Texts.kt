@@ -128,9 +128,27 @@ fun reviewActionLine(review: TransactionReview, reviewText: ReviewText, resource
     return reviewText.phrase(english)
 }
 
-/** The asset-contract caption: the engine's own caption verbatim, or the translated default "NFT contract (not verified)". */
-fun assetContractCaption(display: ReviewDisplay, resources: Resources): String =
-    display.assetContractLabel ?: resources.getString(R.string.ui_nft_contract_not_verified)
+/**
+ * The asset-contract caption: the engine's own caption through [ReviewText.label] ("NFT contract (not verified) · receives
+ * the 1 ETH"), or the translated default "NFT contract (not verified)".
+ */
+fun assetContractCaption(display: ReviewDisplay, resources: Resources, reviewText: ReviewText): String =
+    display.assetContractLabel?.let(reviewText::label) ?: resources.getString(R.string.ui_nft_contract_not_verified)
+
+/** A review or receipt title (engine English) through [ReviewText.phrase]; the engine's default title is the translated "Review request". */
+fun reviewTitleText(title: String, reviewText: ReviewText, resources: Resources): String =
+    if (title == TransactionReview.DEFAULT_TITLE) resources.getString(R.string.ui_review_request) else reviewText.phrase(title)
+
+/** The summary's amount: the engine's number and the word beside it ("Unlimited", "raw units", a symbol) via [ReviewText.amountLine]. */
+fun reviewAmountLine(review: TransactionReview, reviewText: ReviewText): String? {
+    val display = review.display ?: return null
+    val amount = display.amount ?: return null
+    return reviewText.amountLine(amount, display.symbol)
+}
+
+/** A headline: the requester's own words (a message, an unknown typed-data type) exactly as given, the engine's through [ReviewText.headline]. */
+fun reviewHeadlineText(review: TransactionReview, headline: String, reviewText: ReviewText): String =
+    if (ReviewText.headlineIsTheirs(review.display?.action)) headline else reviewText.headline(headline)
 
 private val moreLine = Regex("^\\+(\\d+) more \\(see Details\\)$")
 

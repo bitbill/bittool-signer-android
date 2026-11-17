@@ -14,11 +14,19 @@ object AddressFormatter {
     private val base58 = Regex("^[1-9A-HJ-NP-Za-km-z]{32,44}$")
 
     /**
-     * Groups of [size] characters; a `0x`/`0X` prefix is glued to the first group (`0x9858 EfFD …`). An empty value or
-     * a non-positive size returns `[value]`. The last group may be shorter.
+     * Whether [value] is a compact identifier (no whitespace at all) rather than text. Grouping and shortening exist so
+     * two identifiers can be compared character by character; a value with spaces is prose — the engine's
+     * `[lookup table <account> · entry <n>]` placeholder for a Solana account this device cannot resolve, for one —
+     * and cutting it up only makes it unreadable (iOS `AddressFormatter.groups`, Revision 13).
+     */
+    fun isIdentifier(value: String): Boolean = value.none { it.isWhitespace() }
+
+    /**
+     * Groups of [size] characters; a `0x`/`0X` prefix is glued to the first group (`0x9858 EfFD …`). An empty value, a
+     * non-positive size or a value that is not an [isIdentifier] returns `[value]`. The last group may be shorter.
      */
     fun groups(value: String, size: Int = 4): List<String> {
-        if (size <= 0 || value.isEmpty()) return listOf(value)
+        if (size <= 0 || value.isEmpty() || !isIdentifier(value)) return listOf(value)
         val chars = Graphemes.split(value)
         val result = ArrayList<String>()
         var i = 0
@@ -37,9 +45,12 @@ object AddressFormatter {
 
     /**
      * Middle ellipsis for summaries only: `prefix(leading + hexPrefix) + "…" + suffix(trailing)` where `hexPrefix` is 2
-     * only for a lowercase `0x`. Unchanged when the value has at most `leading + trailing + hexPrefix + 1` characters.
+     * only for a lowercase `0x`. Unchanged when the value has at most `leading + trailing + hexPrefix + 1` characters,
+     * and unchanged when it is not an [isIdentifier]: a middle ellipsis would cut the words that say what it is
+     * (Android also applies this to Activity's counterparty; iOS 1.1.0 shortens there).
      */
     fun short(value: String, leading: Int = 6, trailing: Int = 4): String {
+        if (!isIdentifier(value)) return value
         val hexPrefix = if (value.startsWith("0x")) 2 else 0
         if (Graphemes.count(value) <= leading + trailing + hexPrefix + 1) return value
         return Graphemes.prefix(value, leading + hexPrefix) + "…" + Graphemes.suffix(value, trailing)

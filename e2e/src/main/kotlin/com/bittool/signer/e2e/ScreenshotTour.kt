@@ -7,9 +7,11 @@ import androidx.test.uiautomator.By
 import com.bittool.signer.e2e.support.Args
 import com.bittool.signer.e2e.support.DeviceSetupRule
 import com.bittool.signer.e2e.support.Fixtures.APPROVE_KNOWN_SPENDER_REQUEST
+import com.bittool.signer.e2e.support.Fixtures.EVM_UNNAMED_CHAIN_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.FIXTURE_PASSWORD
 import com.bittool.signer.e2e.support.Fixtures.PUBLIC_RECOVERY_PHRASE
 import com.bittool.signer.e2e.support.Fixtures.PUBLIC_SIGNING_REQUEST
+import com.bittool.signer.e2e.support.Fixtures.SOLANA_LOOKUP_TABLE_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.SPANISH_PHRASE
 import com.bittool.signer.e2e.support.Shots
 import com.bittool.signer.e2e.support.SignerApp
@@ -42,6 +44,104 @@ class ScreenshotTour {
 
     @Test
     fun tourDark() = tour(dark = true)
+
+    /**
+     * iOS `testSolanaLookupTableReview` (Revision 13, same shot names): a Solana v0 transaction whose recipient comes
+     * from an address lookup table reaches the review instead of being refused, with the red high-risk warning naming
+     * the table, a recipient that is a placeholder rather than an address, and the acknowledgement Sign waits for.
+     * Then (Revision 14, Android-only shots 63–64) an EVM transfer on a chain the engine does not name.
+     */
+    @Test
+    fun newChainReviews() {
+        prefix = "light"
+        Shots.prepare(prefix)
+        // The warnings are drawn in the run's language (iOS Revision 15); their English is only checked in English.
+        val english = Args.locale?.startsWith("en") != false
+        try {
+            soft("solana lookup table") {
+                if (reviewOf(SOLANA_LOOKUP_TABLE_REQUEST)) {
+                    shot("60-solana-lookup-table")
+                    if (!english || ui.scrollToExistence(ui.containing("address lookup table"))) {
+                        settle()
+                        shot("61-solana-lookup-table-warning")
+                    } else {
+                        problems += "The review must say the accounts came from a lookup table."
+                    }
+                    ui.swipeUp()
+                    settle()
+                    shot("62-solana-lookup-table-detail")
+                }
+            }
+            soft("evm unnamed chain") {
+                if (reviewOf(EVM_UNNAMED_CHAIN_REQUEST)) {
+                    shot("63-evm-unnamed-chain")
+                    if (english && !ui.scrollToExistence(ui.containing("does not recognise EVM chain 12345"))) {
+                        problems += "The review must say the chain is not recognised."
+                    }
+                    // Below it: the fee notice ("no reference for a normal network fee") and the details.
+                    ui.swipeUp()
+                    settle()
+                    if (english && !ui.exists(ui.containing("no reference for a normal network fee"))) {
+                        problems += "The review must say the fee cannot be judged on this chain."
+                    }
+                    shot("64-evm-unnamed-chain-notice")
+                }
+            }
+        } finally {
+            app.forceStop()
+        }
+        if (problems.isNotEmpty()) fail("The chain reviews met ${problems.size} problem(s):\n" + problems.joinToString("\n"))
+    }
+
+    /** A fresh launch with one fixture, [request] pasted on the Scan tab; true once its review can be signed. */
+    private fun reviewOf(request: String): Boolean {
+        app.launch(fixtures = 1, allowCapture = true, locale = Args.locale)
+        openTab("Scan")
+        click(ui.tag("signing.paste"))
+        val payload = ui.tag("signing.payload")
+        if (!expect(payload, 5_000)) return false
+        typePayload(request, into = payload)
+        click(ui.tag("signing.decode"))
+        val reached = expect(ui.tag("signing.authorize"), 30_000)
+        settle()
+        return reached
+    }
+
+    /**
+     * iOS `testWalletLevelPairingStates` (KH v2, 1.1.0): the two states of the Wallet Level page — a wallet created on
+     * 1.1.0, which shows its version 2 code straight away, and a wallet saved before 1.1.0, which asks for its password
+     * once before it has a code. Same shot names as iOS.
+     */
+    @Test
+    fun walletLevelPairingStates() {
+        prefix = "light"
+        Shots.prepare(prefix)
+        try {
+            for ((unsigned, name) in listOf(false to "15e-wallet-level-signed", true to "15f-wallet-level-password")) {
+                soft(name) {
+                    app.launch(fixtures = 1, allowCapture = true, locale = Args.locale, unsignedWalletPairing = unsigned)
+                    // Pair on the wallet card opens Wallet Level directly.
+                    click(ui.tagPrefix("wallet.connect."))
+                    if (unsigned) {
+                        if (expect(ui.tag("connect.walletIdentity"), 10_000) && ui.exists(ui.tag("connect.walletQR"))) {
+                            problems += "A wallet from before 1.1.0 must show no QR until it is signed."
+                        }
+                    } else if (expect(ui.tag("connect.walletQR"), 20_000) && ui.exists(ui.tag("connect.walletIdentity"))) {
+                        problems += "A wallet created on 1.1.0 must not ask for its password."
+                    }
+                    settle()
+                    shot(name)
+                    ui.swipeUp()
+                    settle()
+                    shot("$name-bottom")
+                    app.forceStop()
+                }
+            }
+        } finally {
+            app.forceStop()
+        }
+        if (problems.isNotEmpty()) fail("The Wallet Level states met ${problems.size} problem(s):\n" + problems.joinToString("\n"))
+    }
 
     private fun tour(dark: Boolean) {
         prefix = if (dark) "dark" else "light"

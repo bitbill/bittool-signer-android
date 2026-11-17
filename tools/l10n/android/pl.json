@@ -1,6 +1,10 @@
 {
  "language": "pl",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "pl"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Usunięty portfel"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Inna aplikacja wyświetla się nad BitTool Signer. Zamknij ją i spróbuj ponownie."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Aplikacja może odczytywać ekran"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Aplikacja ułatwień dostępu, która nie była fabrycznie zainstalowana na tym telefonie, może odczytywać zawartość ekranu: %1$s. W tej wersji Androida mogłaby odczytać także słowa Twojej frazy odzyskiwania. Jeśli jej nie ufasz, najpierw wyłącz ją w Ustawieniach › Ułatwienia dostępu."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Nie udało się zmienić blokady aplikacji. Spróbuj ponownie."
@@ -234,8 +246,8 @@
    "value": "Źródła silnika podpisu"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: xpub konta dla każdego typu adresu Bitcoina, dla EVM i dla TRON oraz wszystkie trzy adresy Solany w jednym animowanym kodzie QR"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: xpub konta dla każdego typu adresu Bitcoina, dla EVM i dla TRON, wszystkie trzy adresy Solany oraz podpis tożsamości tego portfela w jednym animowanym kodzie QR"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

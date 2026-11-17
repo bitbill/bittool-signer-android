@@ -47,7 +47,9 @@ import com.bittool.signer.core.designsystem.component.Tone
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.ScreenReaderWarning
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -115,6 +117,7 @@ internal fun RecoveryCardsPage(words: RecoveryWords, hasPassphrase: Boolean, ses
         if (hasPassphrase) {
             Callout(stringResource(L10n.string.the_cards_contain_the_words_only_back_up_your_bip39), tone = Tone.Warning)
         }
+        ScreenReaderWarning(rememberScreenReaders())
         RecoveryCardsContent(words, session, active = true, onReveal = onReveal)
     }
 }
@@ -163,6 +166,7 @@ internal fun RecoveryCardView(words: RecoveryWords, card: Int, modifier: Modifie
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val omitted = RecoveryCards.omittedPositions(card, words.size).joinToString(", ") { (it + 1).toString() }
+    val hidden = rememberScreenReaders().hideSecrets
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -189,7 +193,8 @@ internal fun RecoveryCardView(words: RecoveryWords, card: Int, modifier: Modifie
                     .background(if (shown) colors.raised else colors.raised.copy(alpha = 0.45f), CardCellShape)
                     .padding(horizontal = 8.dp, vertical = 10.dp)
                     .testTag("cards.card.$card.word.$position")
-                    .clearAndSetSemantics { contentDescription = label },
+                    // Below API 34 with an untrusted service on and no screen reader, not even the label (audit M-03).
+                    .clearAndSetSemantics { if (!hidden) contentDescription = label },
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

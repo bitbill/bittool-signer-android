@@ -5,6 +5,7 @@ import com.bittool.signer.core.model.QrMatrix
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.VaultMetadata
 import com.bittool.signer.core.model.WalletId
+import com.bittool.signer.core.model.WalletIdentitySignature
 import com.bittool.signer.core.model.WalletPublicMetadata
 import com.bittool.signer.core.model.pairing.QrPayloadView
 import com.bittool.signer.core.model.pairing.WalletPairingPayload
@@ -30,6 +31,12 @@ data class SignerState(
     /** Only wallets with a valid authenticated index. */
     val publicWallets: Map<WalletId, WalletPublicMetadata> = emptyMap(),
     val metadataStatuses: Map<WalletId, PublicMetadataStatus> = emptyMap(),
+    /**
+     * KH v2 identity signatures (iOS `walletIdentities`), one per wallet that has one: every wallet saved by 1.1.0 or
+     * later. A wallet saved before has none until its password is entered once ([SignerStore.authorizeWalletIdentity]).
+     * Public data, stored beside the index under the same MAC; never logged.
+     */
+    val walletIdentities: Map<WalletId, WalletIdentitySignature> = emptyMap(),
     /** Wallets sharing a `walletKeyId` with another: warned about, never signable. */
     val duplicateWalletIds: Set<WalletId> = emptySet(),
     /** The request under review. A new non-null `review.requestHash` selects the Scan tab. */
@@ -119,6 +126,12 @@ data class SignerState(
 
     /** iOS `metadataStatus(for:)`: defaults to needs-completion. */
     fun metadataStatus(id: WalletId): PublicMetadataStatus = metadataStatuses[id] ?: PublicMetadataStatus.NeedsCompletion
+
+    /**
+     * iOS `hasWalletIdentity`: whether this wallet can show its wallet-level QR without asking for a password. False for
+     * a wallet saved before 1.1.0, which signs its identity once before the v2 pairing code can be built.
+     */
+    fun hasWalletIdentity(id: WalletId): Boolean = id in walletIdentities
 
     /** Avatar colour seed: the `walletKeyId`, else the UUID in uppercase (iOS parity). Never used for signing decisions. */
     fun avatarIdentity(id: WalletId): String = publicWallets[id]?.walletKeyId ?: id.uppercase

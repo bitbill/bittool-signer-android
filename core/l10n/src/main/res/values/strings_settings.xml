@@ -38,8 +38,8 @@
     <string name="settings_formats_tron" translatable="false">Address QR (any index), tron-sign-request / tron-signature</string>
     <string name="settings_formats_solana" translatable="false">crypto-multi-accounts, sol-sign-request / sol-signature</string>
     <!-- Compatibility › Wallet Level "QR format": the protocol token stays, the English tail is translated (gaps.md G6). -->
-    <string name="settings_wallet_level_token" translatable="false">bittool-signer-wallet v1 (ur:bytes, canonical CBOR)</string>
-    <string name="settings_wallet_level_format">%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR</string>
+    <string name="settings_wallet_level_token" translatable="false">bittool-signer-wallet v2 (ur:bytes, canonical CBOR)</string>
+    <string name="settings_wallet_level_format">%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR</string>
 
     <!-- Contact Us / Submit a Wallet data (SettingsTab.swift:119-120, SubmitWalletView.swift:6-7). -->
     <string name="settings_publisher_name" translatable="false">BITTOOL PTE. LTD.</string>

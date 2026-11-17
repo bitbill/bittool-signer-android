@@ -75,6 +75,34 @@ class RequestReviewViewModelTest {
     }
 
     @Test
+    fun aLookupTableTransactionCannotBeSignedUntilAcknowledged() = runTest {
+        // Revision 13: the engine marks it high risk and partially decoded, so the gate always applies.
+        val vm = review()
+        reviewed(SignFixtures.solanaLookupTable, "task-1" to walletA)
+        assertTrue(vm.uiState.value.requiresAcknowledgement)
+        assertTrue(vm.uiState.value.blocked)
+        vm.openAuthorize()
+        runCurrent()
+        assertNull(vm.uiState.value.authorize, "Sign does nothing before the box is ticked")
+        vm.toggleRisk()
+        runCurrent()
+        vm.openAuthorize()
+        runCurrent()
+        assertTrue(assertNotNull(vm.uiState.value.authorize).riskAcknowledged, "the engine gets riskAcknowledged = true")
+    }
+
+    @Test
+    fun anUnnamedEvmChainNeedsNoAcknowledgement() = runTest {
+        // Revision 14: "Chain 12345" is a warning-level notice on a fully decoded transfer, not a gate.
+        val vm = review()
+        reviewed(SignFixtures.evmUnnamedChain, "task-1" to walletA)
+        assertFalse(vm.uiState.value.requiresAcknowledgement)
+        vm.openAuthorize()
+        runCurrent()
+        assertEquals(false, vm.uiState.value.authorize?.riskAcknowledged)
+    }
+
+    @Test
     fun aFullyDecodedNormalRequestNeedsNoAcknowledgement() = runTest {
         val vm = review()
         reviewed(SignFixtures.bitcoinSend, "task-1" to walletA)

@@ -93,6 +93,11 @@ object ReviewStates {
     val approval = state(SignFixtures.knownSpenderApproval, SignFixtures.plan("task-1" to walletA))
     val approvalAcknowledged = state(SignFixtures.knownSpenderApproval, SignFixtures.plan("task-1" to walletA), riskAccepted = true)
     val partial = state(SignFixtures.partiallyDecoded, SignFixtures.plan("task-1" to walletA))
+    val solanaLookupTable by lazy { state(SignFixtures.solanaLookupTable, SignFixtures.plan("task-1" to walletA)) }
+    val solanaLookupTableAcknowledged by lazy {
+        state(SignFixtures.solanaLookupTable, SignFixtures.plan("task-1" to walletA), riskAccepted = true)
+    }
+    val evmUnnamedChain by lazy { state(SignFixtures.evmUnnamedChain, SignFixtures.plan("task-1" to walletA)) }
     val multiWallet = state(
         SignFixtures.bitcoinSend,
         SignFixtures.plan("task-a" to walletA, "task-b" to walletB),

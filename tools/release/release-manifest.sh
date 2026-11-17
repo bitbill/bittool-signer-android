@@ -9,8 +9,9 @@
 #   SHA256SUMS.txt          the SHA-256 of every file tracked by Git, in a fixed order (compare two with `diff`);
 #   release-manifest.json   the commit, the version, the hash of SHA256SUMS.txt, the engine bundle hash as committed and
 #                           as rebuilt from a clean dependency install in a throwaway copy of the commit, and, when
-#                           tools/release/verify-release.sh has archived this commit's signed build, the APK and AAB
-#                           hashes, the signing certificate and the engine hash read back out of the APK;
+#                           tools/release/verify-release.sh has archived this commit's signed build (clean tree,
+#                           release key, same version, engine = the rebuilt one), the APK and AAB hashes, the signing
+#                           certificate and the engine hash read back out of the APK;
 #   clean-install.log, clean-build.log   the full output of that engine rebuild.
 #
 # The working tree must be clean: a manifest describing uncommitted edits would name a commit nobody can check out.
@@ -45,10 +46,36 @@ REBUILT=$(shasum -a 256 "$WORK/$BUNDLE" | cut -d' ' -f1)
 REPRODUCED=false
 [ "$SHIPPED" = "$REBUILT" ] && REPRODUCED=true
 
-# The signed build of this commit, when verify-release.sh archived one (the newest such archive).
-BUILD_MANIFEST=$(ls -t build/release/BitToolSigner-*/release-manifest.json 2>/dev/null | while read -r m; do
-  grep -q "\"commit\": \"$COMMIT\"" "$m" && ! grep -q '"mode": "debug"' "$m" && { echo "$m"; break; }
-done || true)
+# The signed build of this commit, when verify-release.sh archived one (the newest such archive). Only a build that
+# provably came from this record's source counts (2026-11-16 audit M-04): built from a clean tree at this commit, by a
+# full run (not --checks-only), signed with the release key, with this version, and carrying the engine bundle that
+# this commit rebuilds to. Any other archive of the commit is named and left out.
+BUILD_MANIFEST=$(ls -t build/release/BitToolSigner-*/release-manifest.json 2>/dev/null \
+  | COMMIT="$COMMIT" VERSION="$VERSION" REBUILT="$REBUILT" SHIPPED="$SHIPPED" python3 -c '
+import json, os, sys
+for path in sys.stdin.read().split("\n"):
+    if not path:
+        continue
+    try:
+        b = json.load(open(path))
+    except (OSError, ValueError) as e:
+        print("skipped    %s: unreadable (%s)" % (path, e), file=sys.stderr)
+        continue
+    if b.get("commit") != os.environ["COMMIT"]:
+        continue
+    why = []
+    if b.get("treeClean") is not True: why.append("built from a tree with uncommitted changes")
+    if b.get("checksOnly") is not False: why.append("a --checks-only run")
+    if (b.get("signing") or {}).get("mode") != "release": why.append("not signed with the release key")
+    if b.get("versionName") != os.environ["VERSION"]: why.append("version %s, not %s" % (b.get("versionName"), os.environ["VERSION"]))
+    if b.get("engineSha256") != os.environ["REBUILT"] or b.get("engineSha256") != os.environ["SHIPPED"]:
+        why.append("its engine %s is not the rebuilt one" % (b.get("engineSha256") or "?")[:12])
+    if why:
+        print("skipped    %s: %s" % (os.path.dirname(path), "; ".join(why)), file=sys.stderr)
+        continue
+    print(path)
+    break
+')
 
 COMMIT="$COMMIT" VERSION="$VERSION" FILES="$FILES" MANIFEST_HASH="$MANIFEST_HASH" SHIPPED="$SHIPPED" REBUILT="$REBUILT" \
 REPRODUCED="$REPRODUCED" BUILD_MANIFEST="$BUILD_MANIFEST" NODE="$(node --version)" NPM="$(npm --version)" \
@@ -91,7 +118,7 @@ EOF
 echo "commit     $COMMIT"
 echo "files      $FILES (manifest $MANIFEST_HASH)"
 echo "signer.js  $SHIPPED"
-[ -n "$BUILD_MANIFEST" ] && echo "build      $(dirname "$BUILD_MANIFEST")" || echo "build      none archived for this commit (run tools/release/verify-release.sh --release first)"
+[ -n "$BUILD_MANIFEST" ] && echo "build      $(dirname "$BUILD_MANIFEST")" || echo "build      none recorded: no qualifying archive of this commit (run tools/release/verify-release.sh --release first)"
 if [ "$REPRODUCED" = true ]; then
   echo "rebuild    reproduces it exactly"
 else

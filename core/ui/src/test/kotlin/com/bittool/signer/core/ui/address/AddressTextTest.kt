@@ -6,9 +6,11 @@ import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.test.core.app.ApplicationProvider
@@ -53,6 +55,24 @@ class AddressTextTest {
         compose.setContent { SignerTheme(false, false) { AddressText(CatalogSamples.BITCOIN_ADDRESS) } }
         val spoken = AddressFormatter.groups(CatalogSamples.BITCOIN_ADDRESS).joinToString(", ")
         compose.onNodeWithContentDescription(spoken).assertExists()
+    }
+
+    @Test
+    fun aValueWithSpacesIsShownAsItIsNotCutIntoGroups() {
+        // The engine's placeholder for a Solana account loaded from an address lookup table (iOS Revision 13).
+        val placeholder = "[lookup table 4uQeVj5tqViQh7yWWGStvkEG1Zmhx6uasJtWCJziofM · entry 3]"
+        compose.setContent { SignerTheme(false, false) { AddressText(placeholder) } }
+        compose.onNodeWithTag(PLAIN_VALUE_TAG).assertTextEquals(placeholder)
+        compose.onNodeWithContentDescription(AddressFormatter.groups("4uQeVj5tqViQh7yWWGStvkEG1Zmhx6uasJtWCJziofM").joinToString(", "), substring = true)
+            .assertDoesNotExist()
+        compose.onNodeWithText("[look", substring = true).assertExists()
+    }
+
+    @Test
+    fun anAddressIsStillGrouped() {
+        compose.setContent { SignerTheme(false, false) { AddressText(CatalogSamples.EVM_ADDRESS) } }
+        compose.onNodeWithTag(PLAIN_VALUE_TAG).assertDoesNotExist()
+        compose.onNodeWithContentDescription(AddressFormatter.groups(CatalogSamples.EVM_ADDRESS).joinToString(", ")).assertExists()
     }
 
     @Test

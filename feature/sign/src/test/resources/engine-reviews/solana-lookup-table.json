@@ -1,0 +1,92 @@
+{
+  "chain": "solana",
+  "title": "Sign Solana transaction",
+  "summary": "1 SOL",
+  "fields": [
+    {
+      "label": "Network",
+      "value": "Solana"
+    },
+    {
+      "label": "Network context",
+      "value": "Network context not included in message bytes"
+    },
+    {
+      "label": "Derivation path",
+      "value": "m/44'/501'/0'/0'"
+    },
+    {
+      "label": "Message version",
+      "value": "v0"
+    },
+    {
+      "label": "Fee payer",
+      "value": "HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk"
+    },
+    {
+      "label": "Recent blockhash / durable nonce",
+      "value": "cGfHiC6Kgg3FpFZvgwGcswsCRtp4aBP2fzuXRQPizuN"
+    },
+    {
+      "label": "Required signers",
+      "value": "HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk"
+    },
+    {
+      "label": "Address lookup tables",
+      "value": "QWmroo4YnnMqYW3cnxWkFdaTxGD3P7vMSzwMHGbUzwF (2 writable, 0 read-only)"
+    },
+    {
+      "label": "Accounts loaded from lookup tables",
+      "value": "2"
+    },
+    {
+      "label": "Instruction 1 · Program",
+      "value": "11111111111111111111111111111111"
+    },
+    {
+      "label": "Instruction 1 · Action",
+      "value": "Transfer SOL"
+    },
+    {
+      "label": "Instruction 1 · Source",
+      "value": "HAgk14JpMQLgt6rVgv7cBQFJWFto5Dqxi472uT3DKpqk"
+    },
+    {
+      "label": "Instruction 1 · Recipient",
+      "value": "[lookup table QWmroo4YnnMqYW3cnxWkFdaTxGD3P7vMSzwMHGbUzwF · entry 3]"
+    },
+    {
+      "label": "Instruction 1 · Amount (SOL)",
+      "value": "1"
+    },
+    {
+      "label": "Base network fee (SOL)",
+      "value": "0.000005"
+    },
+    {
+      "label": "Maximum priority fee (SOL)",
+      "value": "0"
+    }
+  ],
+  "warnings": [
+    "HIGH RISK: 2 of this transaction's 5 accounts come from 1 address lookup table. Those addresses are stored on-chain and BitTool Signer is offline, so it cannot show you what they are. Anything marked “lookup table” below could be any account at all — including a recipient you did not intend. Only continue if you trust the wallet that built this transaction and you have checked it there.",
+    "Blockhash freshness, network identity, account state and base network fee cannot be verified offline.",
+    "1 of this instruction's 2 accounts come from an address lookup table and cannot be shown."
+  ],
+  "requestHash": "b8b81aa1e4bd95c97011aa808274ed1c701f8240e181d20c29863c6818a5d72b",
+  "canSign": true,
+  "decodeStatus": "partiallyDecoded",
+  "riskLevel": "high",
+  "network": {
+    "name": "Solana",
+    "symbol": "SOL"
+  },
+  "display": {
+    "action": "Transfer SOL",
+    "amount": "1",
+    "symbol": "SOL",
+    "counterpartyLabel": "To",
+    "counterparty": "[lookup table QWmroo4YnnMqYW3cnxWkFdaTxGD3P7vMSzwMHGbUzwF · entry 3]",
+    "fee": "0.000005 SOL max"
+  }
+}

@@ -47,6 +47,7 @@ import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.PairingLevel
+import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.ui.clipboard.SignerClipboard
 import com.bittool.signer.feature.wallets.common.IconAction
@@ -63,6 +64,9 @@ data class ConnectActions(
     val onSelectSolanaProfile: (String) -> Unit = {},
     val onSelectOutputMode: (String) -> Unit = {},
     val onSelectTronIndex: (Long) -> Unit = {},
+    /** "Create Pairing Code" of a wallet saved before 1.1.0 (KH v2); the callee owns and wipes the password. */
+    val onAuthorizeIdentity: (SecretText) -> Unit = { it.wipe() },
+    val onCancelIdentity: () -> Unit = {},
 )
 
 /**
@@ -95,6 +99,8 @@ fun ConnectScreen(onBack: () -> Unit, onSubmitWallet: () -> Unit, onClose: () ->
             onSelectSolanaProfile = viewModel::selectSolanaProfile,
             onSelectOutputMode = viewModel::selectOutputMode,
             onSelectTronIndex = viewModel::selectTronIndex,
+            onAuthorizeIdentity = viewModel::authorizeIdentity,
+            onCancelIdentity = viewModel::cancelIdentity,
         ),
     )
 }
@@ -157,6 +163,7 @@ fun ConnectContent(uiState: ConnectUiState, toast: StatusToastState, actions: Co
                                 error = uiState.error,
                                 masterFingerprint = uiState.masterFingerprint,
                                 onSubmitWallet = actions.onSubmitWallet,
+                                identity = IdentityRequest.of(uiState, toast, actions),
                             )
                         }
                     }

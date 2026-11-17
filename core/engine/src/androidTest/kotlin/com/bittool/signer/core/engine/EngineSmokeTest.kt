@@ -79,7 +79,8 @@ class EngineSmokeTest {
 
         val digest = engine.bundleDigest()
         log("engine ${digest.sha256} ${digest.bytes} bytes, QuickJS ${digest.quickJsVersion}")
-        assertEquals("6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077", digest.sha256)
+        // The pin, not a literal: it moves with every engine synced from iOS (tools/engine/sync-from-ios.sh).
+        assertEquals(EngineBundle.EXPECTED_SHA256, digest.sha256)
     }
 
     @Test

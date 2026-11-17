@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
@@ -105,6 +106,8 @@ import androidx.compose.ui.unit.sp
 import com.bittool.signer.core.designsystem.haptics.rememberSignerHaptics
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.hiddenFromScreenReaders
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -218,6 +221,9 @@ fun Bip39Keyboard(
         }
     }
     AccessibilitySensitive(active = true)
+    // Below API 34 with an untrusted accessibility service on and no screen reader, completions are not read out: they
+    // give away the word being typed (audit M-03). Asked once here, not per chip.
+    val hideCompletions = rememberScreenReaders().hideSecrets
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Column(
             modifier
@@ -245,6 +251,7 @@ fun Bip39Keyboard(
                     metrics = metrics,
                     announce = pasteRefused > 0,
                     onPick = { word -> tick(); onSuggestion(word) },
+                    hideCompletions = hideCompletions,
                 )
                 val letter: @Composable RowScope.(Char, Float, Alignment, PreviewEdge) -> Unit = { c, weight, alignment, edge ->
                     LetterKey(c, weight, alignment, edge, colors, metrics, onPress = tick) {
@@ -372,6 +379,14 @@ object Bip39KeyboardTags {
 
     /** The key that types [c]. */
     fun letter(c: Char): String = "keyboard.key.$c"
+
+    /**
+     * The completion chip at [index] in the top row (or the system keyboard's suggestion bar). By position, never by
+     * word: a test tag is published to every accessibility service as extra data
+     * (`androidx.compose.ui.semantics.testTag`), so a tag holding the word gave hidden completions away (2026-11-17
+     * re-audits: R3 BTS-14, L-12).
+     */
+    fun suggestion(index: Int): String = "suggestion.$index"
 }
 
 /** Colours of [Bip39Keyboard] ([Bip39KeyboardDefaults.colors]). */
@@ -717,6 +732,7 @@ private fun SuggestionRow(
     metrics: KeyboardMetrics,
     announce: Boolean,
     onPick: (String) -> Unit,
+    hideCompletions: Boolean = false,
 ) {
     // The same height with or without chips, so the keys never jump.
     Box(Modifier.fillMaxWidth().height(metrics.suggestionRow), contentAlignment = Alignment.CenterStart) {
@@ -731,7 +747,9 @@ private fun SuggestionRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    items(suggestions.words, key = { it }) { word -> SuggestionChip(word, colors, onClick = { onPick(word) }) }
+                    itemsIndexed(suggestions.words, key = { _, word -> word }) { index, word ->
+                        SuggestionChip(word, index, colors, hideCompletions, onClick = { onPick(word) })
+                    }
                 }
             }
             is KeyboardSuggestions.Hint -> CompositionLocalProvider(LocalLayoutDirection provides interfaceDirection) {
@@ -756,7 +774,7 @@ private fun SuggestionRow(
 
 /** One completion: the whole row height is the touch target, the capsule is drawn inside it. Never focusable. */
 @Composable
-private fun SuggestionChip(word: String, colors: Bip39KeyboardColors, onClick: () -> Unit) {
+private fun SuggestionChip(word: String, index: Int, colors: Bip39KeyboardColors, hidden: Boolean, onClick: () -> Unit) {
     val description = stringResource(L10n.string.insert_x, word)
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
@@ -766,9 +784,10 @@ private fun SuggestionChip(word: String, colors: Bip39KeyboardColors, onClick: (
             .focusProperties { canFocus = false }
             .clickable(interactionSource = source, indication = null, role = Role.Button, onClick = onClick)
             .semantics {
-                contentDescription = description
-                testTag = "suggestion.$word"
-            },
+                if (!hidden) contentDescription = description
+                testTag = Bip39KeyboardTags.suggestion(index)
+            }
+            .hiddenFromScreenReaders(hidden),
         contentAlignment = Alignment.Center,
     ) {
         Text(

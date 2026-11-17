@@ -1,6 +1,10 @@
 {
  "language": "vi",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "vi"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Ví đã xóa"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Một ứng dụng khác đang hiển thị đè lên BitTool Signer. Hãy đóng ứng dụng đó rồi thử lại."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Có ứng dụng có thể đọc màn hình của bạn"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Một ứng dụng hỗ trợ tiếp cận không đi kèm điện thoại này có thể đọc nội dung trên màn hình: %1$s. Trên phiên bản Android này, ứng dụng đó cũng có thể đọc các từ trong cụm từ khôi phục của bạn. Nếu bạn không tin tưởng ứng dụng này, hãy tắt nó trước trong Cài đặt › Hỗ trợ tiếp cận."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Không thay đổi được khóa ứng dụng. Hãy thử lại."
@@ -234,8 +246,8 @@
    "value": "Mã nguồn bộ máy ký"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: một xpub cấp tài khoản cho từng loại địa chỉ Bitcoin, cho EVM và cho TRON, cùng cả ba địa chỉ Solana, trong một mã QR động"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: một xpub cấp tài khoản cho từng loại địa chỉ Bitcoin, cho EVM và cho TRON, cả ba địa chỉ Solana và chữ ký danh tính của ví này, trong một mã QR động"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

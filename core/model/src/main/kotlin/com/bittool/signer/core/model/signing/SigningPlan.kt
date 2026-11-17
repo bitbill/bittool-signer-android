@@ -175,6 +175,7 @@ sealed interface MatchingIssue {
             get() = when (text) {
                 is UiText.Ios -> text.english
                 is UiText.Verbatim -> text.text
+                is UiText.Engine -> text.english
                 is UiText.Resource -> ""
             }
     }

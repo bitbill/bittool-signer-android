@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">شهادة التوقيع</string>
     <string name="settings_open_source_intro">‏BitTool Signer مفتوح المصدر بالكامل. تطبيق Android ومحرك التوقيع دون اتصال وبيانات الرموز كلها منشورة، فيمكن لأي شخص أن يقرأ ما يفعله الموقّع بالعبارة الاحتياطية، وأن يعيد بناءه ويقارن النتيجة بالنسخة المثبّتة هنا.</string>
     <string name="settings_engine_source">الشيفرة المصدرية لمحرك التوقيع</string>
-    <string name="settings_wallet_level_format">‏%1$s: ‏xpub حساب لكل نوع من عناوين بيتكوين، ولشبكات EVM ولـ TRON، إضافة إلى عناوين Solana الثلاثة جميعها، في رمز QR متحرك واحد</string>
+    <string name="settings_wallet_level_format">‏%1$s: ‏xpub حساب لكل نوع من عناوين بيتكوين، ولشبكات EVM ولـ TRON، وعناوين Solana الثلاثة جميعها وتوقيع هوية هذه المحفظة، في رمز QR متحرك واحد</string>
 </resources>

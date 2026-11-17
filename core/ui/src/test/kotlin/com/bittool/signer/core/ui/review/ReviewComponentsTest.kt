@@ -40,6 +40,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import com.bittool.signer.core.l10n.reviewText
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -103,6 +104,26 @@ class ReviewComponentsTest {
         assertEquals(listOf(false, true, false), warnings.map(ReviewPresentation::isSevereStoredWarning))
         content { ReviewWarnings(warnings) }
         warnings.forEach { compose.onNodeWithText(it).assertExists() }
+    }
+
+    /**
+     * iOS Revision 15: the engine's warnings are drawn in the interface language — here the HIGH RISK lookup-table
+     * warning the engine writes for a Solana v0 transfer, with its straight apostrophe and its values — while the tone
+     * is still decided from the English.
+     */
+    @Test
+    @Config(qualifiers = "ja")
+    fun warningsAreDrawnInTheInterfaceLanguageWithTheirValues() {
+        val english = "HIGH RISK: 2 of this transaction's 5 accounts come from 1 address lookup table. Those addresses are " +
+            "stored on-chain and BitTool Signer is offline, so it cannot show you what they are. Anything marked “lookup table” " +
+            "below could be any account at all — including a recipient you did not intend. Only continue if you trust the " +
+            "wallet that built this transaction and you have checked it there."
+        val japanese = ApplicationProvider.getApplicationContext<Context>().resources.reviewText().sentence(english)
+        assertTrue(japanese != english && japanese.contains("2") && japanese.contains("5"), japanese)
+        assertTrue(ReviewPresentation.isSevereWarning(english))
+        content { ReviewWarnings(listOf(english)) }
+        compose.onNodeWithText(japanese).assertExists()
+        compose.onNodeWithText("HIGH RISK", substring = true).assertDoesNotExist()
     }
 
     @Test

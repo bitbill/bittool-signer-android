@@ -47,6 +47,7 @@ import com.bittool.signer.core.model.signing.SigningReceipt
 import com.bittool.signer.core.ui.logo.GenericNetworkLogo
 import com.bittool.signer.core.ui.logo.NetworkLogo
 import com.bittool.signer.core.ui.text.currentLocale
+import com.bittool.signer.core.ui.text.reviewTitleText
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -193,7 +194,7 @@ internal fun ReceiptLogo(chain: Chain, chainId: String?, size: Dp, modifier: Mod
  * (activity-settings.md §12.2); the engine's default title is the translated "Review request".
  */
 internal fun receiptTitle(title: String, reviewText: ReviewText, resources: android.content.res.Resources): String =
-    if (title == TransactionReview.DEFAULT_TITLE) resources.getString(R.string.ui_review_request) else reviewText.headline(title)
+    reviewTitleText(title, reviewText, resources)
 
 /**
  * The status pill text (iOS shows the stored `resultType` verbatim, `ActivityTab.swift:129-130`): the two values the

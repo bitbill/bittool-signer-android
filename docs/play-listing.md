@@ -12,6 +12,7 @@ be uploaded with `fastlane supply`); the images are drawn by `tools/store/render
 | Feature graphic | `images/featureGraphic.png` — 1024 × 500, 24-bit PNG | 302 KB / 15 MB |
 | Phone screenshots | `images/phoneScreenshots/1…8_en-US.png` — 1080 × 1920 (9:16) | 8 / 8, ~0.6 MB each |
 | Release notes 1.0.0 | `changelogs/1000001.txt` (versionCode of 1.0.0 build 1) | 500 |
+| Release notes 1.1.0 | `changelogs/1010002.txt` (versionCode of 1.1.0 build 2); all 21 languages in `docs/Release-Notes-1.1.0.md` | 354 / 500 |
 
 ## The other App content answers
 

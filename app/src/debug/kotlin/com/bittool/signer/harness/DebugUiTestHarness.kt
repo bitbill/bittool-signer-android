@@ -19,11 +19,14 @@ import com.bittool.signer.core.common.harness.UiTestEnvironment
 import com.bittool.signer.core.common.harness.UiTestRun
 import com.bittool.signer.core.common.log.Log
 import com.bittool.signer.core.crypto.vault.SignerFiles
+import com.bittool.signer.core.crypto.vault.WalletVault
+import com.bittool.signer.core.data.PublicWalletRepository
 import com.bittool.signer.core.data.SignerStore
 import com.bittool.signer.core.data.preferences.DataStoreSignerPreferences
 import com.bittool.signer.core.l10n.resolve
 import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
+import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.core.model.useAndWipe
 import dagger.hilt.EntryPoint
@@ -53,6 +56,7 @@ import kotlinx.coroutines.launch
  * | `bts.uitest.appearance=dark\|light` | the Theme preference |
  * | `bts.uitest.locale=<tag>` | the per-app language (default `en-US`), applied before the first composition and winning over the language an earlier run or the Language page stored; a change relaunches the activity once (API 33+: `LocaleManager` does; below, [recreateForRunLocale]) |
  * | `bts.uitest.allowCapture=true` | `FLAG_SECURE` stays off for this process (screenshot tour) |
+ * | `bts.uitest.unsignedWalletPairing=true` | every fixture is saved again without its KH v2 identity signature, exactly as a 1.0.0 wallet is (iOS `--unsigned-wallet-pairing`), so Wallet Level shows its password card |
  * | `bts.uitest.loseDeviceKeys=true` | deletes the run's wallet device keys before anything is injected: every wallet of the run (launched again with the same run id) then has a provably lost key, for the lost-key removal of backlog B9 (B24) |
  * | `bts.uitest.unreadableJournal=true` | replaces the run's Activity journal (`receipts.bin`) with one no key opens before anything is injected, so Activity shows its unreadable state ("Activity Unavailable"; QA round 2); the journal key is not lost (a loss an earlier `loseJournalKey` launch left pending is forgotten), so later launches of the run keep it (iOS behaviour), only a reset run starts a new journal |
  * | `bts.uitest.loseJournalKey=true` | deletes the run's Activity journal key for good before anything is injected, as removing the screen lock does (QA L1, round 3 activity-keyboard-07): the store proves the loss, starts a fresh journal and Activity shows "Activity Started Again" until "OK"; a run without a journal gets one the lost key sealed. Wins over `unreadableJournal` |
@@ -77,6 +81,7 @@ object DebugUiTestHarness : UiTestEnvironment {
     const val EXTRA_LOSE_DEVICE_KEYS = "bts.uitest.loseDeviceKeys"
     const val EXTRA_UNREADABLE_JOURNAL = "bts.uitest.unreadableJournal"
     const val EXTRA_LOSE_JOURNAL_KEY = "bts.uitest.loseJournalKey"
+    const val EXTRA_UNSIGNED_WALLET_PAIRING = "bts.uitest.unsignedWalletPairing"
 
     private const val TAG = "UiTestHarness"
     private const val DEFAULT_LOCALE = "en-US"
@@ -167,6 +172,7 @@ object DebugUiTestHarness : UiTestEnvironment {
             appearance = appearance,
             localeTag = extras.text(EXTRA_LOCALE)?.trim()?.takeIf { it.isNotEmpty() } ?: DEFAULT_LOCALE,
             allowCapture = extras.flag(EXTRA_ALLOW_CAPTURE) == true,
+            unsignedWalletPairing = extras.flag(EXTRA_UNSIGNED_WALLET_PAIRING) == true,
         )
     }
 
@@ -265,7 +271,8 @@ object DebugUiTestHarness : UiTestEnvironment {
                     SecretText.of(FIXTURE_PHRASE).useAndWipe { phrase ->
                         SecretText.of(if (index == 0) "" else "Public fixture $number").useAndWipe { passphrase ->
                             SecretText.of(FIXTURE_PASSWORD).useAndWipe { password ->
-                                store.createWallet("Public fixture $number", phrase, passphrase, password)
+                                val wallet = store.createWallet("Public fixture $number", phrase, passphrase, password)
+                                if (run.unsignedWalletPairing) dropIdentity(entry, store, wallet.id)
                             }
                         }
                     }
@@ -277,6 +284,18 @@ object DebugUiTestHarness : UiTestEnvironment {
                 store.setError(UiText.Verbatim("UI fixture setup failed: $message"))
             }
         }
+    }
+
+    /**
+     * iOS `dropWalletIdentityForUITests`: the fixture's sidecar is saved again from its own index without an identity —
+     * the repository's "a rebuilt index drops a stale signature" path, not a back door — and the list reloaded.
+     */
+    private suspend fun dropIdentity(entry: HarnessEntryPoint, store: SignerStore, id: WalletId) {
+        val state = store.state.value
+        val index = state.publicMetadata(id) ?: return
+        val key = entry.walletVault().publicDataKey(createIfMissing = false) ?: return
+        entry.publicWalletRepository().save(index, id, state.displayName(id), key)
+        store.reload()
     }
 
     private fun detectEmulator(): Boolean =
@@ -320,6 +339,10 @@ object DebugUiTestHarness : UiTestEnvironment {
 @InstallIn(SingletonComponent::class)
 internal interface HarnessEntryPoint {
     fun signerStore(): SignerStore
+
+    fun walletVault(): WalletVault
+
+    fun publicWalletRepository(): PublicWalletRepository
 
     @ApplicationScope
     fun applicationScope(): CoroutineScope

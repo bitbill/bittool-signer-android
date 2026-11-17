@@ -33,6 +33,13 @@
     <string name="security_delete_footer_biometric">Deleting asks for biometric confirmation, then for this wallet’s password.</string>
     <!-- A decisive control refused a touch because another app's window covers it (gaps.md G4.3). -->
     <string name="security_overlay_blocked">Another app is drawing over BitTool Signer. Close it, then try again.</string>
+    <!-- Warning title above revealed recovery words, cards, the recovery QR code, the backup check and phrase entry, on
+         Android 8–13 only, while an accessibility service that did not come with the phone is turned on (2026-11-16
+         audit M-03). -->
+    <string name="security_screen_reader_warning_title">An app can read your screen</string>
+    <!-- Its text. %1$s: the names of those accessibility apps, already joined as a list ("Foo", "Foo and Bar"; usually
+         one). "Settings › Accessibility": the system Settings app and its Accessibility page, as the phone names them. -->
+    <string name="security_screen_reader_warning">An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.</string>
     <!-- Lock screen (QA L2): no unlock path can succeed. Every wallet's device key is proven gone (Android deletes these
          keys, and the enrolled fingerprints, when the device's screen lock is removed) and no strong biometric can run.
          Title of the explanation card. -->

@@ -1,6 +1,10 @@
 {
  "language": "tr",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "tr"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Silinmiş cüzdan"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Başka bir uygulama BitTool Signer’ın üzerinde görüntüleniyor. Onu kapatıp tekrar deneyin."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Bir uygulama ekranınızı okuyabilir"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Bu telefonla birlikte gelmeyen bir erişilebilirlik uygulaması ekrandakileri okuyabilir: %1$s. Android’in bu sürümünde kurtarma ifadenizin kelimelerini de okuyabilir. Güvenmiyorsanız önce Ayarlar › Erişilebilirlik bölümünden kapatın."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Uygulama kilidi değiştirilemedi. Tekrar deneyin."
@@ -234,8 +246,8 @@
    "value": "İmzalama motoru kaynak kodu"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: her Bitcoin adres türü, EVM ve TRON için birer hesap xpub’ı ve üç Solana adresinin tamamı, tek bir hareketli QR kodunda"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: her Bitcoin adres türü, EVM ve TRON için birer hesap xpub’ı, üç Solana adresinin tamamı ve bu cüzdanın kimlik imzası, tek bir hareketli QR kodunda"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

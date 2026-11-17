@@ -306,6 +306,18 @@
    "formatted": true,
    "context": "A decisive control refused a touch because another app's window covers it (gaps.md G4.3)."
   },
+  "security_screen_reader_warning_title": {
+   "area": "security",
+   "english": "An app can read your screen",
+   "formatted": true,
+   "context": "Warning title above revealed recovery words, cards, the recovery QR code, the backup check and phrase entry, on Android 8–13 only, while an accessibility service that did not come with the phone is turned on (2026-11-16 audit M-03)."
+  },
+  "security_screen_reader_warning": {
+   "area": "security",
+   "english": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "formatted": true,
+   "context": "Its text. %1$s: the names of those accessibility apps, already joined as a list (\"Foo\", \"Foo and Bar\"; usually one). \"Settings › Accessibility\": the system Settings app and its Accessibility page, as the phone names them."
+  },
   "security_no_unlock_path_title": {
    "area": "security",
    "english": "No Way to Unlock",
@@ -386,7 +398,7 @@
   },
   "settings_wallet_level_format": {
    "area": "settings",
-   "english": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
+   "english": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
    "formatted": true,
    "context": "Compatibility › Wallet Level \"QR format\": the protocol token stays, the English tail is translated (gaps.md G6)."
   },
@@ -497,6 +509,12 @@
    "english": "The file could not be saved.",
    "formatted": true,
    "context": "Android-only. Export as File: shown when the system reports no message of its own for a failed save."
+  },
+  "l10n_table_language": {
+   "area": "ui",
+   "english": "en",
+   "formatted": true,
+   "context": "Not words: write this language's code exactly as the file name says (ja, es-419, zh-Hans…). The English default \"en\" tells the app that the interface has no translation table for engine text, so warnings and labels are drawn exactly as the engine wrote them, never rebuilt from translated parts (iOS has no English table either)."
   },
   "ui_setup_required": {
    "area": "ui",

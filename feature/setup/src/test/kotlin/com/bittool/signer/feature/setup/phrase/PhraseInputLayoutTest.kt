@@ -21,6 +21,7 @@ import com.bittool.signer.core.crypto.bip39.Bip39Candidates
 import com.bittool.signer.core.designsystem.theme.SignerColors
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.security.testing.FakeRecoverySessionFactory
+import com.bittool.signer.core.ui.keyboard.Bip39KeyboardTags
 import com.bittool.signer.feature.setup.Look
 import com.bittool.signer.feature.setup.SetupTestHost
 import com.bittool.signer.feature.setup.flow.PhraseAnalysis
@@ -73,7 +74,7 @@ class PhraseInputLayoutTest {
             assertTrue(suggestionChipColor(palette).distanceTo(palette.page) > 0.05f, "$look: the chip colour is the bar's")
         }
         suggestionBar(Look.Light)
-        val chip = compose.onNodeWithTag("suggestion.abandon").captureToImage().toPixelMap()
+        val chip = compose.onNodeWithTag(Bip39KeyboardTags.suggestion(0)).captureToImage().toPixelMap()
         // Inside the capsule, left of the word.
         val fill = chip[with(compose.density) { 4.dp.roundToPx() }, chip.height / 2]
         assertTrue(fill.distanceTo(SignerColors.Light.page) > 0.05f, "the chip is drawn in the bar's colour ($fill)")

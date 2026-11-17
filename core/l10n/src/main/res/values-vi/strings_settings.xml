@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Chứng chỉ ký</string>
     <string name="settings_open_source_intro">BitTool Signer là mã nguồn mở hoàn toàn. Ứng dụng Android, bộ máy ký ngoại tuyến và dữ liệu token đều được công bố, nên ai cũng có thể đọc xem trình ký làm gì với cụm từ khôi phục — rồi dựng lại và so sánh kết quả với bản đang cài ở đây.</string>
     <string name="settings_engine_source">Mã nguồn bộ máy ký</string>
-    <string name="settings_wallet_level_format">%1$s: một xpub cấp tài khoản cho từng loại địa chỉ Bitcoin, cho EVM và cho TRON, cùng cả ba địa chỉ Solana, trong một mã QR động</string>
+    <string name="settings_wallet_level_format">%1$s: một xpub cấp tài khoản cho từng loại địa chỉ Bitcoin, cho EVM và cho TRON, cả ba địa chỉ Solana và chữ ký danh tính của ví này, trong một mã QR động</string>
 </resources>

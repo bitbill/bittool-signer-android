@@ -18,6 +18,7 @@ fun UiText.resolve(resources: Resources): String = when (this) {
     is UiText.Ios -> IosStrings.lookup(english)?.let { id -> resources.format(id, args) } ?: fallbackEnglish()
     is UiText.Resource -> resources.format(id, args)
     is UiText.Verbatim -> text
+    is UiText.Engine -> resources.reviewText().sentence(english)
 }
 
 private fun Resources.format(id: Int, args: List<Any>): String =
@@ -28,7 +29,14 @@ private fun Resources.format(id: Int, args: List<Any>): String =
  * phrase in [resources]' language, or null. Never routes engine text through `getIdentifier`.
  */
 class ResourcesEngineTextLookup(private val resources: Resources) : EngineTextLookup {
-    override fun translation(english: String): String? = IosStrings.lookup(english)?.let(resources::getString)
+    /**
+     * Whether this interface language has its own table. English (and any language the app does not translate, which
+     * falls back to the English resources) has none, as on iOS: engine text is then drawn exactly as the engine wrote it.
+     * Rebuilding it from the English catalogue would reorder numbered warnings ("Order 2: HIGH RISK: …").
+     */
+    private val hasTable = resources.getString(R.string.l10n_table_language) != "en"
+
+    override fun translation(english: String): String? = if (!hasTable) null else IosStrings.lookup(english)?.let(resources::getString)
 }
 
 /** A [ReviewText] for [resources]' language (create one per configuration; it is cheap). */

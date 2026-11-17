@@ -13,6 +13,8 @@
     <string name="security_biometric_lockout">Na-lock ang biometrics dahil sa sobrang dami ng pagsubok. Gumamit ng wallet password, o i-unlock muna ang telepono mo gamit ang screen lock nito.</string>
     <string name="security_delete_footer_biometric">Sa pagbura, hihingin ang biometric na kumpirmasyon, tapos ang password ng wallet na ito.</string>
     <string name="security_overlay_blocked">May ibang app na nakapatong sa BitTool Signer. Isara ito, tapos subukan muli.</string>
+    <string name="security_screen_reader_warning_title">May app na nakakabasa ng screen mo</string>
+    <string name="security_screen_reader_warning">May accessibility app na hindi kasama sa teleponong ito na nakakabasa ng nasa screen: %1$s. Sa bersyong ito ng Android, puwede rin nitong mabasa ang mga salita ng recovery phrase mo. Kung hindi mo ito pinagkakatiwalaan, i-off muna ito sa Mga setting › Accessibility.</string>
     <string name="security_no_unlock_path_title">Walang paraan para mag-unlock</string>
     <string name="security_no_unlock_path_message">Wala na ang mga device key ng lahat ng wallet dito (binubura ito ng Android kapag inalis ang screen lock), kaya walang password ng wallet na makakapag-unlock sa BitTool Signer, at walang available na fingerprint o face unlock. Magpatuloy nang walang App Lock, tapos alisin ang mga wallet na ito at i-import muli ang mga recovery phrase nila. Puwede mong i-on muli ang App Lock sa Mga setting mamaya. Hindi apektado ang pondo.</string>
     <string name="security_no_unlock_path_continue">Magpatuloy nang walang App Lock</string>

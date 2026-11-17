@@ -132,6 +132,24 @@ RELEASE_KEYS=$(count_keys signer.release)
 UPLOAD_KEYS=$(count_keys signer.upload)
 GRADLE_PROPS=""
 [ -n "$BUILD_NUMBER" ] && GRADLE_PROPS="-Psigner.buildNumber=$BUILD_NUMBER"
+# The release key signs only a clean tree at a commit (2026-11-16 audit M-04): a build of uncommitted edits names a
+# commit that cannot rebuild it. With uncommitted changes, configured keys are ignored and the run is debug-signed
+# (and --release fails on the tree anyway). Untracked files under build/ do not count, as in the git check below.
+KEYS_SKIPPED=""
+if [ "$RELEASE_KEYS" != 0 ] || [ "$UPLOAD_KEYS" != 0 ]; then
+  if [ "$IN_GIT" != 1 ]; then
+    KEYS_SKIPPED="not a git checkout"
+  elif ! tree_state=$(git status --porcelain 2>/dev/null); then
+    KEYS_SKIPPED="git status failed"
+  elif [ -n "$(printf '%s\n' "$tree_state" | grep -v '^?? build/' | grep -v '^$')" ]; then
+    KEYS_SKIPPED="uncommitted changes"
+  fi
+fi
+if [ -n "$KEYS_SKIPPED" ]; then
+  RELEASE_KEYS=0
+  UPLOAD_KEYS=0
+  GRADLE_PROPS="$GRADLE_PROPS -Psigner.ignoreSigningKeys=true"
+fi
 if [ "$RELEASE_KEYS" = 4 ]; then
   SIGNING=release
   SIGNING_LABEL="release key"
@@ -139,6 +157,7 @@ if [ "$RELEASE_KEYS" = 4 ]; then
 else
   SIGNING=debug
   SIGNING_LABEL="DEBUG-SIGNED (no release key) - NOT FOR DISTRIBUTION"
+  [ -n "$KEYS_SKIPPED" ] && SIGNING_LABEL="DEBUG-SIGNED (release key not used: $KEYS_SKIPPED) - NOT FOR DISTRIBUTION"
   GRADLE_PROPS="$GRADLE_PROPS -Psigner.allowDebugSigning=true"
 fi
 NAME="BitToolSigner-$VERSION_NAME-$VERSION_CODE"
@@ -244,6 +263,8 @@ elif [ "$UPLOAD_KEYS" = 4 ] && [ $SIGNING = debug ]; then
   record FAIL "signing: Play upload key" "an upload key without a release key: play would be upload-signed and apk debug-signed"
 elif [ "$UPLOAD_KEYS" = 4 ]; then
   record PASS "signing: Play upload key" "play is signed with the upload key (Play App Signing re-signs it)"
+elif [ -n "$KEYS_SKIPPED" ]; then
+  record INFO "signing: Play upload key" "not used ($KEYS_SKIPPED): play is signed like apk"
 else
   record INFO "signing: Play upload key" "not configured: play is signed like apk"
 fi

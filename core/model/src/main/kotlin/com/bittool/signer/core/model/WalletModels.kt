@@ -64,7 +64,37 @@ data class PublicWalletSnapshot(
      * engine, but nothing is known to be wrong with the file: unlocking the phone with its screen lock reads it again.
      */
     val keyLocked: Boolean = false,
+    /**
+     * The KH v2 identity signature stored beside the index (iOS `WalletIdentitySignature`), or null: a wallet saved
+     * before 1.1.0, or one whose stored signature does not parse, needs its password once for a wallet-level code.
+     */
+    val identity: WalletIdentitySignature? = null,
 )
+
+/**
+ * A wallet's KH v2 identity signature (docs/Wallet-Pairing-v2.md; iOS `WalletIdentitySignature`): `OwnbitAuth:v2:epoch=`
+ * [epoch] signed with `m/44'/0'/0'/0/1000000000`. Public data — a signature over one fixed sentence — stored in the
+ * wallet's public file under the same HMAC as its index. [of] checks the shape so a damaged file reads as "not signed".
+ */
+data class WalletIdentitySignature(val epoch: Int, val signature: String) {
+    companion object {
+        private val BASE64_65 = Regex("^[A-Za-z0-9+/]{87}=$")
+        const val MAX_EPOCH: Int = 1_000_000
+
+        /** The stored or engine values, or null unless [epoch] is 1…[MAX_EPOCH] and [signature] is base64 of 65 bytes. */
+        fun of(epoch: Long?, signature: String?): WalletIdentitySignature? {
+            if (epoch == null || epoch < 1 || epoch > MAX_EPOCH || signature == null || !BASE64_65.matches(signature)) return null
+            val bytes = try {
+                java.util.Base64.getDecoder().decode(signature)
+            } catch (_: IllegalArgumentException) {
+                return null
+            }
+            return if (bytes.size == 65) WalletIdentitySignature(epoch.toInt(), signature) else null
+        }
+    }
+
+    override fun toString(): String = "WalletIdentitySignature(epoch=$epoch)"
+}
 
 /**
  * The frozen, public-only wallet index produced by the engine's `derivePublicIndex` (models-state.md §2.3, iOS

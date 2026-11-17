@@ -61,8 +61,8 @@ Published certificate SHA-256 (apk; play under A): _____________________________
 ## 3. Version and build number
 
 - **versionName** is `signerVersionName` in `app/build.gradle.kts`. It stays in step with the iOS `MARKETING_VERSION`; `verify-release.sh` compares the two. A bump is a one-line commit.
-- **versionCode** is `MAJOR·1 000 000 + MINOR·10 000 + PATCH·100 + BUILD`, with MINOR, PATCH and BUILD each in 0–99. For example, 1.0.0 (1) gives **1000001**. Both flavors use the same versionCode.
-- **BUILD** defaults to 1, the iOS `CURRENT_PROJECT_VERSION`, so Settings shows "1.0.0 (1)" like iOS (DECISIONS §10). To re-issue the same versionName, for example after Play rejected an upload, pass `--build-number N` (the script forwards `-Psigner.buildNumber=N`).
+- **versionCode** is `MAJOR·1 000 000 + MINOR·10 000 + PATCH·100 + BUILD`, with MINOR, PATCH and BUILD each in 0–99. For example, 1.0.0 (1) gave **1000001** and 1.1.0 (2) gives **1010002**. Both flavors use the same versionCode.
+- **BUILD** defaults to the iOS `CURRENT_PROJECT_VERSION` (2 for 1.1.0), so Settings shows "1.1.0 (2)" like iOS (DECISIONS §10). To re-issue the same versionName, for example after Play rejected an upload, pass `--build-number N` (the script forwards `-Psigner.buildNumber=N`).
   - Play never accepts a versionCode twice, even for an upload that was never released.
   - Under option A, an `apk` user moving to Play, or the reverse, needs a versionCode that does not decrease.
 - The script checks the versionName, versionCode, `minSdk 26`, `targetSdk 36` and ABIs (`arm64-v8a armeabi-v7a x86_64`) in all three artifacts, and checks that the artifacts agree.
@@ -101,6 +101,7 @@ A partially configured key fails the build and names the missing values.
   - the summary line and the signatures line say so.
 
   `--release` refuses this mode.
+- **Uncommitted changes:** configured keys are not used. The script adds `-Psigner.ignoreSigningKeys=true` and runs as without a release key (DEBUG-SIGNED, labelled "release key not used: uncommitted changes"). A build signed with the release key must be one that a commit describes, or nobody can trace it to source (2026-11-16 audit M-04). Untracked files under `build/` do not count.
 - **Signature checks:**
   - `apksigner verify` must pass on both APKs, with exactly one signer and a v2 signature.
   - `jarsigner -verify` must pass on the AAB.
@@ -120,7 +121,7 @@ This is an open point for the owner of `app/**` and the legal review (§8). The 
 tools/release/verify-release.sh                    # any machine; debug-signed (labelled) when no release key is configured
 tools/release/verify-release.sh --release          # the release candidate: release key, clean tree, iOS repo; warnings fail
 tools/release/verify-release.sh --checks-only      # re-check the artifacts already in app/build (no Gradle)
-tools/release/verify-release.sh --build-number 2   # re-issue 1.0.0 as 1000002
+tools/release/verify-release.sh --build-number 3   # re-issue 1.1.0 as 1010003
 tools/release/verify-release.sh --ios none         # no iOS repository: compare with the Android pins only (warns)
 ```
 
@@ -187,7 +188,7 @@ An iOS path without `engine/bundle-manifest.json` (a wrong `--ios`, `SIGNER_IOS_
 
 ## 6. Engine byte-identity with iOS
 
-There is one engine (DECISIONS §11). `core/engine/src/main/assets/engine/signer.js` is the iOS file, byte for byte, and its SHA-256 is pinned in `EngineBundle.EXPECTED_SHA256` / `EXPECTED_BYTES`. The engine checks the pin at runtime before it compiles the file, `EngineDigestTest` checks it at build time, and `verify-release.sh` checks it in every artifact. For 1.0.0 the digest is `6933d0d8a6f60faa8222506ac0bd7eef80eb884c9f73e31e9f354b4740f21077` (1,181,026 bytes).
+There is one engine (DECISIONS §11). `core/engine/src/main/assets/engine/signer.js` is the iOS file, byte for byte, and its SHA-256 is pinned in `EngineBundle.EXPECTED_SHA256` / `EXPECTED_BYTES`. The engine checks the pin at runtime before it compiles the file, `EngineDigestTest` checks it at build time, and `verify-release.sh` checks it in every artifact. The released 1.0.0 (71af693) carried `4b3717599e8ee3ed9d2480e640e7203731543cc8ab0f2c3cec3b78e6f400fa19` (1,181,432 bytes; the 2026-10-21 dry run in §14 had an earlier engine); 1.1.0 carries `f774f1f2b0614e7faec0eeac30ee216bd351ae4f2a326846a057b489a7c01a96` (1,203,208 bytes: KH v2, then iOS Revisions 13–17 — Solana address lookup tables, every EVM chain with 60 named, EIP-7702, translated warnings and refusals, the fixes for the external 1.1.0 audit, and in Revision 17 the independent-audit fixes M-01 and M-03–M-06 with Android's BTS-02 and BTS-11).
 
 When iOS ships a new engine:
 
@@ -424,7 +425,9 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
 
 1. On the commit that passed `verify-release.sh --release`, run `tools/release/release-manifest.sh`. It writes
    `release/` (SHA-256 of every tracked file, the engine rebuilt from a clean install in a throwaway copy, and the
-   signed APK/AAB hashes and certificate from the archived build). It must print "reproduces it exactly".
+   signed APK/AAB hashes and certificate from the archived build). It must print "reproduces it exactly". It records
+   only an archive of this commit that was built from a clean tree, signed with the release key, has the same version
+   and carries the engine this commit rebuilds to; it names any other archive of the commit and why it was left out.
 2. Commit `release/` on top of that commit (the manifest names the commit it describes, as on iOS).
 3. Publish a GitHub release on https://github.com/bitbill/bittool-signer-android for the tag, with the `apk`-channel
    APK, `SHA256SUMS` and `release/release-manifest.json` attached. bittool.com/signer links to it and repeats the
@@ -434,6 +437,31 @@ Wallet device keys (AES-256-GCM) are generated in StrongBox when the phone repor
 
 1. Tag the verified commit: `git tag -s android-v<version>`. Push the tag with the release.
 2. Keep the whole `build/release/BitToolSigner-<version>-<code>/` directory, with the §13 record, in the release archive. Do not keep the debug-signed one.
+
+---
+
+## 12a. Release notes
+
+Play Console › Release › *Release notes*, one sentence per language. The sentences are the iOS App Store *What's New*
+lines word for word (iOS `docs/Release-Notes-1.1.0.md`); `docs/Release-Notes-1.1.0.md` here has all 21 in Play's
+`<lang>` format, and `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` holds the English one.
+
+**1.1.0 (1010002):** The wallet-level pairing code is now version 2 and carries a wallet-identity signature; it needs BitTool Wallet 1.1.0 or later. Signing now covers any EVM chain (60 are named, the rest are shown by chain ID), EIP-7702 delegations and Solana v0 transactions with address lookup tables; anything the device cannot read offline is marked for you to confirm.
+
+What changed for a reviewer: nothing about the app's offline nature (no Internet permission, no analytics, no
+account). The new signature is produced on the device from the wallet's own seed, covers one fixed public sentence
+(`OwnbitAuth:v2:epoch=1`) with no amounts or recipients in it, and is stored beside the wallet's existing public key
+cache. A wallet created by 1.0.0 shows a one-time password prompt on the Wallet Level pairing page before its code can
+be produced; chain-specific codes (Coin Level) are unchanged and need no password. The format is
+`docs/Wallet-Pairing-v2.md`; its test vectors are `docs/kh2_bittool_vectors.json`. Both are the iOS files verbatim
+(`tools/engine/sync-from-ios.sh` copies them); the handoff fixtures the document links to (iOS
+`docs/bittool-handoff/fixtures/`) are in `core/engine/src/androidTest/assets/kh2/` here, where `KhV2VectorsTest` runs
+them through the bundled engine, and `SignerStoreIdentityTest` checks the store's code against the same frames.
+
+1.1.0 also signs any EVM chain ID (60 are named), EIP-7702 authorizations and Solana v0 transactions with address lookup
+tables (iOS Revisions 13–14, the same engine). The parts an offline device cannot read — lookup-table accounts, the
+delegate contract's code, the fee level on an unreferenced chain — are marked as such, never guessed, and a lookup table
+or a delegation always needs the acknowledgement before Sign is enabled. Still no Internet permission.
 
 ---
 

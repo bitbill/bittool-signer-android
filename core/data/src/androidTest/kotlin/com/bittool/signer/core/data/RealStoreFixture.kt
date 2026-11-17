@@ -1,5 +1,7 @@
 package com.bittool.signer.core.data
 
+import com.bittool.signer.core.common.time.MonotonicClock
+import com.bittool.signer.core.common.time.SystemMonotonicClock
 import com.bittool.signer.core.common.time.WallClock
 import com.bittool.signer.core.crypto.SecureRandomSource
 import com.bittool.signer.core.crypto.SystemSecureRandomSource
@@ -46,6 +48,7 @@ class RealStoreFixture(
     val deviceKeys: DeviceKeyStore = InMemoryDeviceKeyStore(),
     val random: SecureRandomSource = SystemSecureRandomSource(),
     val clock: WallClock = WallClock { System.currentTimeMillis() },
+    val elapsed: MonotonicClock = SystemMonotonicClock(),
 ) {
     val bip39 get() = DeviceCrypto.bip39
     val seed get() = DeviceCrypto.seed
@@ -101,7 +104,7 @@ class RealStoreFixture(
     /** The journal's plaintext, opened with the Keystore journal key. */
     fun journalText(): String = cipher.open(journalFile.readBytes()).decodeToString()
 
-    private fun newVault() = DefaultWalletVault(dataDir, deviceKeys, random, clock, default, io)
+    private fun newVault() = DefaultWalletVault(dataDir, deviceKeys, random, clock, elapsed, default, io)
 
     private fun build(vault: DefaultWalletVault, publicWallets: FilePublicWalletRepository, receipts: EncryptedReceiptRepository) =
         DefaultSignerStore(

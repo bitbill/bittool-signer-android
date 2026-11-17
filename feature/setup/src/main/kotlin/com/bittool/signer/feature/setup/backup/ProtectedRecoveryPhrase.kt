@@ -46,7 +46,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bittool.signer.core.designsystem.component.SignerCard
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.hiddenFromScreenReaders
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
 import com.bittool.signer.core.designsystem.theme.SignerTheme
@@ -118,8 +120,10 @@ private class ShownMaterial(var words: RecoveryWords, var passphrase: String)
 private fun RevealedPhrase(words: RecoveryWords, passphrase: String, onHide: () -> Unit) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
-    // Only accessibility tools (TalkBack, Switch Access) may read revealed words (gaps G5.1).
+    // Only accessibility tools (TalkBack, Switch Access) may read revealed words (gaps G5.1); below API 34, no untrusted
+    // service either while no screen reader needs them (audit M-03).
     AccessibilitySensitive(active = true)
+    val hidden = rememberScreenReaders().hideSecrets
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         RecoveryWordGrid(words)
         if (passphrase.isNotEmpty()) {
@@ -141,7 +145,7 @@ private fun RevealedPhrase(words: RecoveryWords, passphrase: String, onHide: () 
                     text = passphrase,
                     style = typography.body.monospaced().ltr(),
                     color = colors.label,
-                    modifier = Modifier.padding(top = 6.dp).testTag("recovery.passphrase"),
+                    modifier = Modifier.padding(top = 6.dp).testTag("recovery.passphrase").hiddenFromScreenReaders(hidden),
                 )
             }
         }
@@ -163,6 +167,7 @@ private fun RevealedPhrase(words: RecoveryWords, passphrase: String, onHide: () 
 internal fun RecoveryWordGrid(words: RecoveryWords, modifier: Modifier = Modifier) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
+    val hidden = rememberScreenReaders().hideSecrets
     Box(modifier.fillMaxWidth().background(colors.card, SignerShapes.card).padding(12.dp)) {
         WordGrid(count = words.size, columns = WordGridColumns.Words, measuredWords = words.list) { index, layout ->
             Row(
@@ -170,8 +175,10 @@ internal fun RecoveryWordGrid(words: RecoveryWords, modifier: Modifier = Modifie
                     .fillMaxSize()
                     .background(colors.raised, CellShape)
                     .padding(horizontal = 10.dp, vertical = 11.dp)
-                    .semantics(mergeDescendants = true) {}
-                    .testTag("recovery.word.$index"),
+                    // The tag stays outside, so tests find a cell whose word is hidden (audit M-03).
+                    .testTag("recovery.word.$index")
+                    .hiddenFromScreenReaders(hidden)
+                    .semantics(mergeDescendants = true) {},
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

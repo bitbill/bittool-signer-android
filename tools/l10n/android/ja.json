@@ -1,6 +1,10 @@
 {
  "language": "ja",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "ja"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "削除済みのウォレット"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "別のアプリが BitTool Signer の上に表示されています。そのアプリを閉じてから、もう一度お試しください。"
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "画面を読み取れるアプリがあります"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "この端末に最初から入っていたものではないユーザー補助アプリが、画面の内容を読み取れます：%1$s。このバージョンの Android では、リカバリーフレーズの単語も読み取られるおそれがあります。信頼できるアプリでない場合は、先に「設定」›「ユーザー補助」でオフにしてください。"
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "App ロックを変更できませんでした。もう一度お試しください。"
@@ -234,8 +246,8 @@
    "value": "署名エンジンのソースコード"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s：ビットコインの各アドレス形式、EVM、TRON のアカウント xpub と、3 つの Solana アドレスすべてを 1 つのアニメーション QR コードに収録"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s：ビットコインの各アドレス形式、EVM、TRON のアカウント xpub、3 つの Solana アドレスすべて、およびこのウォレットの身元署名を 1 つのアニメーション QR コードに収録"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

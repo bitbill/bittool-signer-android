@@ -10,7 +10,9 @@ import com.bittool.signer.core.model.AccountProfiles
 import com.bittool.signer.core.model.Chain
 import com.bittool.signer.core.model.ConnectOptions
 import com.bittool.signer.core.model.PairingLevel
+import com.bittool.signer.core.model.PublicMetadataStatus
 import com.bittool.signer.core.model.QrMatrix
+import com.bittool.signer.core.model.SecretText
 import com.bittool.signer.core.model.UiText
 import com.bittool.signer.core.model.WalletId
 import com.bittool.signer.core.model.pairing.PairingPayload
@@ -18,6 +20,7 @@ import com.bittool.signer.core.model.pairing.WalletPairingPayload
 import com.bittool.signer.core.model.toUiText
 import com.bittool.signer.feature.wallets.common.WalletArgs
 import com.bittool.signer.feature.wallets.common.WalletIdentity
+import com.bittool.signer.feature.wallets.common.WalletOperation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -33,8 +36,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * The Pair page (iOS `ConnectView` + `WalletLevelPairingView`, wallets-pairing.md §7). Public data only: no password,
- * nothing persisted, every chain keeps its options for the life of the page.
+ * The Pair page (iOS `ConnectView` + `WalletLevelPairingView`, wallets-pairing.md §7). Public data only, nothing
+ * persisted, every chain keeps its options for the life of the page. The one password is KH v2's: a wallet saved before
+ * 1.1.0 has no identity signature, so Wallet Level asks for its password once ([needsIdentity]) before it has a code.
  */
 @Immutable
 data class ConnectUiState(
@@ -52,12 +56,22 @@ data class ConnectUiState(
     /** Upper-case master fingerprint (`73C5DA0A`), or null without public data. */
     val masterFingerprint: String? = null,
     val gone: Boolean = false,
+    /**
+     * iOS `needsIdentity`: a ready wallet without a KH v2 identity signature (saved before 1.1.0). Wallet Level shows the
+     * password card instead of a code; Coin Level works as before.
+     */
+    val needsIdentity: Boolean = false,
+    /** The identity authorisation is running ("Create Pairing Code" spinner, the field is locked). */
+    val identityBusy: Boolean = false,
+    /** Its failure ("The password is incorrect.", the vault back-off), shown on the card. */
+    val identityError: UiText? = null,
+    val securityEpoch: Long = 0,
 ) {
     /** What "Copy QR Data" copies: exactly the text of the QR on screen; null while nothing is shown (disabled). */
     val copyText: String?
         get() = when (level) {
             PairingLevel.Coin -> coin?.text
-            PairingLevel.Wallet -> wallet?.text
+            PairingLevel.Wallet -> wallet?.text?.takeUnless { needsIdentity }
         }
 }
 
@@ -68,6 +82,7 @@ class ConnectViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val walletId: WalletId? = WalletArgs.walletId(savedStateHandle)
+    private val identityOperation = WalletOperation(viewModelScope) { store.state.value.securityEpoch }
 
     /** iOS `@State` of `ConnectView.swift:83-114`. */
     private data class Model(
@@ -102,18 +117,35 @@ class ConnectViewModel @Inject constructor(
         )
         viewModelScope.launch {
             // Any key change cancels the previous load and starts the next one at once (no debounce); stale results
-            // are dropped by key comparison (wallets-pairing §7.6).
-            model.map { it.loadKey }.distinctUntilChanged().collectLatest { key ->
-                if (key == WALLET_KEY) loadWallet() else loadCoin(key)
-            }
+            // are dropped by key comparison (wallets-pairing §7.6). Wallet Level is keyed on the identity too (iOS
+            // `walletKey + "|unsigned"`): once the password has produced the signature, the code loads by itself.
+            combine(model.map { it.loadKey }, store.state.map(::needsIdentity)) { key, unsigned -> key to (key == WALLET_KEY && unsigned) }
+                .distinctUntilChanged()
+                .collectLatest { (key, unsigned) ->
+                    when {
+                        key != WALLET_KEY -> loadCoin(key)
+                        // Nothing to load: the page shows the password card, and loading would only add an error to it.
+                        unsigned -> model.update { it.copy(walletPayload = null, walletLoaded = false, preparedMatrices = null, error = null) }
+                        else -> loadWallet()
+                    }
+                }
         }
     }
 
     // The initial value is the full current state, so a prefetched Wallet Level code is on the page's first frame.
-    val uiState: StateFlow<ConnectUiState> = combine(model, store.state, ::uiStateOf)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), uiStateOf(model.value, store.state.value))
+    val uiState: StateFlow<ConnectUiState> = combine(model, store.state, identityOperation.state, ::uiStateOf)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            uiStateOf(model.value, store.state.value, identityOperation.state.value),
+        )
 
-    private fun uiStateOf(m: Model, state: SignerState): ConnectUiState {
+    private fun needsIdentity(state: SignerState): Boolean {
+        val id = walletId ?: return false
+        return state.metadataStatus(id) == PublicMetadataStatus.Ready && !state.hasWalletIdentity(id)
+    }
+
+    private fun uiStateOf(m: Model, state: SignerState, identity: WalletOperation.State): ConnectUiState {
         val id = walletId
         return ConnectUiState(
             level = m.level,
@@ -125,8 +157,35 @@ class ConnectViewModel @Inject constructor(
             error = m.error,
             masterFingerprint = id?.let { state.publicMetadata(it)?.displayFingerprint },
             gone = WalletIdentity.isGone(state, id),
+            needsIdentity = needsIdentity(state),
+            identityBusy = identity.busy,
+            identityError = identity.error,
+            securityEpoch = state.securityEpoch,
         )
     }
+
+    /**
+     * "Create Pairing Code" (iOS `WalletIdentityAuthorizationView.submit`): the password decrypts the wallet once to
+     * sign its KH v2 identity, which is stored beside its public data; the code then loads by itself. A wrong password
+     * shows on the card. Takes ownership of [password] and wipes it.
+     */
+    fun authorizeIdentity(password: SecretText) {
+        val id = walletId
+        if (id == null || password.isEmpty() || identityOperation.busy) {
+            password.wipe()
+            return
+        }
+        identityOperation.run {
+            try {
+                store.authorizeWalletIdentity(id, password)
+            } finally {
+                password.wipe()
+            }
+        }
+    }
+
+    /** The card left the page (another level, Back): its operation is forgotten (iOS `onDisappear { operation.cancel() }`). */
+    fun cancelIdentity() = identityOperation.cancel()
 
     fun selectLevel(level: PairingLevel) = model.update { it.copy(level = level) }
 

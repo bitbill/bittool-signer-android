@@ -41,10 +41,30 @@ sed -i '' -e "s#'../../BitToolSigner/Resources/signer.js'#'../../core/engine/src
   -e "s#'../../BitToolSigner/Resources/TokenIcons.index.json'#'../../core/data/src/main/assets/registry/TokenIcons.index.json'#g" \
   -e "s#'../../BitToolSigner/Resources/TokenIcons.pack'#'../../core/data/src/main/assets/registry/TokenIcons.pack'#g" \
   "$ROOT/engine/test/engine.test.mjs" "$ROOT/engine/test/chain-expansion.test.mjs"
+# warning-coverage.test.mjs (iOS Revision 15) reads the translation catalogue at the iOS root, translations/*.json; here
+# the same files, byte for byte, are tools/l10n/translations/ (tools/l10n/sync-from-ios.sh copies them).
+sed -i '' -e "s#new URL('translations', root)#new URL('tools/l10n/translations', root)#" \
+  -e "s#new URL('translations/' + file, root)#new URL('tools/l10n/translations/' + file, root)#" \
+  "$ROOT/engine/test/warning-coverage.test.mjs"
+if grep -q "new URL('translations" "$ROOT/engine/test/warning-coverage.test.mjs"; then
+  echo "engine/test/warning-coverage.test.mjs still reads the iOS translations path: extend the rewrite in $0" >&2
+  exit 1
+fi
 if grep -rq "BitToolSigner/Resources" "$ROOT/engine/test"; then
   echo "engine/test still names an iOS resource path: extend the rewrite in $0" >&2
   exit 1
 fi
 echo "engine source synced from iOS into engine/ (rebuild: cd engine && npm ci --ignore-scripts && npm run build)"
+# KH v2 (1.1.0): the iOS wallet-pairing v2 format, its identity-signature vectors and the handoff fixtures are the
+# standard both apps must reproduce byte for byte. The documents go to docs/, the vectors and fixtures also to the
+# engine's instrumented-test assets, where KhV2VectorsTest runs them through the real QuickJS engine.
+KH2_ASSETS="$ROOT/core/engine/src/androidTest/assets/kh2"
+mkdir -p "$KH2_ASSETS"
+cp "$IOS/docs/Wallet-Pairing-v2.md" "$IOS/docs/kh2_bittool_vectors.json" "$ROOT/docs/"
+cp "$IOS/docs/kh2_bittool_vectors.json" "$KH2_ASSETS/"
+for f in wallet-pairing-current.json wallet-pairing-no-mode-receiver-extension.json wallet-pairing-v1-rejected.json; do
+  cp "$IOS/docs/bittool-handoff/fixtures/$f" "$KH2_ASSETS/$f"
+done
+echo "KH v2 vectors and wallet-pairing fixtures synced from iOS (docs/, core/engine/src/androidTest/assets/kh2/)"
 "$ROOT/tools/l10n/sync-from-ios.sh" "$IOS"
 echo "Next: tools/gradle-slot.sh ./gradlew :core:engine:testDebugUnitTest :core:engine:connectedDebugAndroidTest"

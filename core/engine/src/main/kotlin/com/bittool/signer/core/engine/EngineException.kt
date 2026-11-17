@@ -1,5 +1,6 @@
 package com.bittool.signer.core.engine
 
+import com.bittool.signer.core.model.EngineAuthoredError
 import java.text.BreakIterator
 
 /**
@@ -7,7 +8,10 @@ import java.text.BreakIterator
  * (code ≤ 80, message ≤ 400 grapheme clusters, like iOS `String.prefix`); unexpected failures carry a generic message
  * without input text.
  */
-class EngineException(val code: String, override val message: String) : Exception(message) {
+class EngineException(val code: String, override val message: String) : Exception(message), EngineAuthoredError {
+    /** The English the UI translates when drawing it ([com.bittool.signer.core.model.UiText.Engine]); [message] stays English. */
+    override val engineMessage: String get() = message
+
     companion object {
         const val ENGINE_UNAVAILABLE = "ENGINE_UNAVAILABLE"
         const val ENGINE_INVALID = "ENGINE_INVALID"

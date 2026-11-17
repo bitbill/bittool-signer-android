@@ -124,7 +124,7 @@ class PhraseKeyboardTest {
         type(*letters("ab"))
         assertEquals("ab", phrase())
         // The keyboard's top row shows the editor's own completions; a chip is its "Insert" action.
-        compose.onNodeWithTag("suggestion.abandon").performClick()
+        compose.onNodeWithTag(Bip39KeyboardTags.suggestion(0)).performClick()
         compose.waitForIdle()
         assertEquals("abandon ", phrase())
         compose.onNodeWithText("Type a word to see suggestions").assertExists()

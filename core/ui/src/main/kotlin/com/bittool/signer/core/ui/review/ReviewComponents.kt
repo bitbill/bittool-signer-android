@@ -79,7 +79,10 @@ import com.bittool.signer.core.ui.logo.NetworkLogo
 import com.bittool.signer.core.ui.logo.TokenIcon
 import com.bittool.signer.core.ui.text.assetContractCaption
 import com.bittool.signer.core.ui.text.flowLine
+import com.bittool.signer.core.ui.text.rememberReviewText
 import com.bittool.signer.core.ui.text.reviewActionLine
+import com.bittool.signer.core.ui.text.reviewAmountLine
+import com.bittool.signer.core.ui.text.reviewHeadlineText
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Summary card (scan-sign.md §11.3, iOS ReviewSummaryCard, Features/Sign/RequestReviewView.swift:221-461)
@@ -111,7 +114,7 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
         radius = SignerRadius.summary,
     ) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            BadgesRow(networkBadge = { NetworkBadge(review) }, decodeBadge = { DecodeBadge(review.decodeStatus) })
+            BadgesRow(networkBadge = { NetworkBadge(review, reviewText) }, decodeBadge = { DecodeBadge(review.decodeStatus) })
             Box(Modifier.padding(top = 4.dp)) { SummaryIcon(review) }
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 // Engine text, translated where the catalogue has it: a phrase left in English keeps its own direction
@@ -123,9 +126,10 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
                     color = colors.secondaryLabel,
                     textAlign = TextAlign.Center,
                 )
-                ReviewPresentation.amountText(review)?.let { amount -> AmountLine(amount, display) }
+                // "Unlimited", "raw units", "native coin" translate; a token symbol is a name and stays (iOS M-01).
+                reviewAmountLine(review, reviewText)?.let { amount -> AmountLine(amount, display) }
                 ReviewPresentation.secondaryHeadline(review)?.let { secondary ->
-                    val shown = reviewText.headline(secondary)
+                    val shown = reviewHeadlineText(review, secondary, reviewText)
                     Text(
                         text = shown,
                         style = typography.subheadline.localizedDirection(shown),
@@ -135,7 +139,8 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
                 }
                 ReviewPresentation.textHeadline(review)?.let { headline ->
                     val limit = ReviewPresentation.headlineLineLimit(display)
-                    val shown = reviewText.headline(headline)
+                    // A message's own words are never translated: the screen must show what is signed.
+                    val shown = reviewHeadlineText(review, headline, reviewText)
                     SelectionContainer {
                         Text(
                             text = shown,
@@ -149,7 +154,7 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
                     }
                 }
             }
-            if (display != null && display.showsAssetBox) AssetBox(display)
+            if (display != null && display.showsAssetBox) AssetBox(display, reviewText)
             display?.flowSections?.takeIf { it.isNotEmpty() }?.let { FlowBox(it) }
             ReviewPresentation.counterparty(review)?.let { counterparty ->
                 RaisedBox(Modifier.semantics(mergeDescendants = true) {}) {
@@ -168,9 +173,11 @@ fun ReviewSummaryCard(review: TransactionReview, reviewText: ReviewText, modifie
                 }
             }
             display?.note?.let { note ->
+                // "Change returns to your wallet": engine English, translated where the catalogue has it.
+                val shown = reviewText.sentence(note)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FirstLineIcon(SignerIcons.ShieldCheck, colors.success, typography.footnote.semibold(), size = 16.dp)
-                    Text(note, style = typography.footnote.semibold().contentDirection(), color = colors.successOnTint)
+                    Text(shown, style = typography.footnote.semibold().localizedDirection(shown), color = colors.successOnTint)
                 }
             }
             ReviewPresentation.feeLine(display)?.let { fee ->
@@ -246,7 +253,7 @@ private fun BadgesRow(networkBadge: @Composable () -> Unit, decodeBadge: @Compos
 }
 
 @Composable
-private fun NetworkBadge(review: TransactionReview) {
+private fun NetworkBadge(review: TransactionReview, reviewText: ReviewText) {
     val colors = SignerTheme.colors
     Row(
         modifier = Modifier
@@ -265,7 +272,9 @@ private fun NetworkBadge(review: TransactionReview) {
                 else -> GenericNetworkLogo(size = 18.dp)
             }
         }
-        Text(review.networkName, style = SignerTheme.typography.caption.semibold(), color = colors.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        // A network's name is a name; without a network object the badge is engine text ("Network context not included").
+        val name = if (review.network == null) reviewText.phrase(review.networkName) else review.networkName
+        Text(name, style = SignerTheme.typography.caption.semibold(), color = colors.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -293,7 +302,7 @@ private fun SummaryIcon(review: TransactionReview) {
 }
 
 @Composable
-private fun AssetBox(display: ReviewDisplay) {
+private fun AssetBox(display: ReviewDisplay, reviewText: ReviewText) {
     val colors = SignerTheme.colors
     val typography = SignerTheme.typography
     val resources = LocalResources.current
@@ -306,7 +315,7 @@ private fun AssetBox(display: ReviewDisplay) {
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(assetContractCaption(display, resources), style = typography.caption.semibold(), color = colors.secondaryLabel, textAlign = TextAlign.Center)
+                    Text(assetContractCaption(display, resources, reviewText), style = typography.caption.semibold(), color = colors.secondaryLabel, textAlign = TextAlign.Center)
                     AddressText(contract, style = typography.callout, textAlign = TextAlign.Center)
                 }
             }
@@ -509,19 +518,27 @@ private val ReviewContract.Role.addressCaption: Int
 // ---------------------------------------------------------------------------------------------------------------------
 
 /**
- * The engine's warnings, one verbatim `Callout` each (never translated; iOS `RequestReviewView.swift:71-82`): danger
- * when [isSevere], warning otherwise. The review passes the default rule (HIGH RISK / UNLIMITED / HIGH FEE); Activity's
- * Signed Request passes `ReviewPresentation::isSevereStoredWarning` (any "HIGH" prefix, `ActivityTab.swift:292`).
+ * The engine's warnings, one `Callout` each (iOS `RequestReviewView.swift`, Revision 15): drawn in the interface
+ * language through [ReviewText.sentence] — an exact catalogue entry, or a value-carrying template with the engine's
+ * own values — and in the engine's English when neither exists. Danger when [isSevere], warning otherwise. The review
+ * passes the default rule (HIGH RISK / UNLIMITED / HIGH FEE); Activity's Signed Request passes
+ * `ReviewPresentation::isSevereStoredWarning` (any "HIGH" prefix, `ActivityTab.swift:292`).
  */
 @Composable
 fun ReviewWarnings(
     warnings: List<String>,
     modifier: Modifier = Modifier,
     isSevere: (String) -> Boolean = ReviewPresentation::isSevereWarning,
+    reviewText: ReviewText = rememberReviewText(),
 ) {
     if (warnings.isEmpty()) return
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        warnings.forEach { warning -> Callout(text = warning, tone = if (isSevere(warning)) Tone.Danger else Tone.Warning, verbatim = true) }
+        warnings.forEach { warning ->
+            // Severity is read from the engine's English, never from the
+            // translation: "HIGH RISK" is a marker in the source text.
+            val tone = if (isSevere(warning)) Tone.Danger else Tone.Warning
+            Callout(text = reviewText.sentence(warning), tone = tone, verbatim = true)
+        }
     }
 }
 

@@ -10,5 +10,5 @@
     <string name="settings_signing_certificate">Сертификат подписи</string>
     <string name="settings_open_source_intro">BitTool Signer полностью открыт. Приложение для Android, офлайн-движок подписи и данные о токенах опубликованы, так что любой может прочитать, что подписывающее приложение делает с фразой восстановления, — собрать его заново и сравнить с установленной здесь копией.</string>
     <string name="settings_engine_source">Исходный код движка подписи</string>
-    <string name="settings_wallet_level_format">%1$s: xpub счёта для каждого типа биткойн-адресов, для EVM и TRON, а также все три адреса Solana в одном анимированном QR-коде</string>
+    <string name="settings_wallet_level_format">%1$s: xpub счёта для каждого типа биткойн-адресов, для EVM и TRON, все три адреса Solana и подпись идентичности этого кошелька в одном анимированном QR-коде</string>
 </resources>

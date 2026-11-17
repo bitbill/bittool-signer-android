@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bittool.signer.core.common.storage.AtomicFiles
+import com.bittool.signer.core.common.testing.FakeMonotonicClock
 import com.bittool.signer.core.common.testing.FakeWallClock
 import com.bittool.signer.core.crypto.kdf.Pbkdf2
 import com.bittool.signer.core.crypto.vault.AndroidKeystoreDeviceKeyStore
@@ -38,10 +39,11 @@ class KeystoreWalletVaultTest {
     private val dataDir = File(context.noBackupFilesDir, "vault-test-${System.nanoTime()}")
     private val keys = AndroidKeystoreDeviceKeyStore({ true }, KeystoreKeyPolicy(strongBox = false, unlockedDeviceRequired = false))
     private val clock = FakeWallClock()
+    private val elapsed = FakeMonotonicClock()
     private val created = mutableListOf<WalletId>()
     private val password = "Strong-Password1"
 
-    private fun vault() = DefaultWalletVault(dataDir, keys, SystemSecureRandomSource(), clock, Dispatchers.Default, Dispatchers.IO)
+    private fun vault() = DefaultWalletVault(dataDir, keys, SystemSecureRandomSource(), clock, elapsed, Dispatchers.Default, Dispatchers.IO)
 
     private fun s(text: String) = SecretText.of(text)
 

@@ -7,12 +7,14 @@ import com.bittool.signer.e2e.support.Fixtures.APPROVE_KNOWN_SPENDER_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.APPROVE_UNLISTED_SPENDER_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.BACKUP_PASSWORD
 import com.bittool.signer.e2e.support.Fixtures.BIOMETRIC_FAILURE
+import com.bittool.signer.e2e.support.Fixtures.EVM_UNNAMED_CHAIN_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.FINGERPRINT
 import com.bittool.signer.e2e.support.Fixtures.FIXTURE_PASSWORD
 import com.bittool.signer.e2e.support.Fixtures.MISMATCH_PASSWORD
 import com.bittool.signer.e2e.support.Fixtures.PUBLIC_RECOVERY_PHRASE
 import com.bittool.signer.e2e.support.Fixtures.PUBLIC_SIGNING_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.RECOVERED_PASSWORD
+import com.bittool.signer.e2e.support.Fixtures.SOLANA_LOOKUP_TABLE_REQUEST
 import com.bittool.signer.e2e.support.Fixtures.SPANISH_PHRASE
 import com.bittool.signer.e2e.support.Fixtures.UPDATED_PASSWORD
 import com.bittool.signer.e2e.support.Fixtures.WRONG_PASSWORD
@@ -549,7 +551,11 @@ class BitToolSignerUiTests : SignerTestCase() {
         if (!ui.exists(close)) ui.failWithScreen("The camera opens once the permission is answered.")
     }
 
-    /** G1.11 (UIT:490-510): the scan button on the wallet list opens the camera itself. */
+    /**
+     * G1.11 (UIT:490-510): the scan button on the wallet list opens the camera itself. Android differs from iOS after
+     * Close (owner request, 17eab7a): the camera opens right over Wallets without showing the Scan tab, so a cancelled
+     * scan is back on Wallets; only a scanned request selects Scan, where its review is.
+     */
     @Test
     fun testWalletsScanButtonOpensTheCameraDirectly() {
         app.launch(fixtures = 1, camera = false)
@@ -558,8 +564,10 @@ class BitToolSignerUiTests : SignerTestCase() {
         openScannerAnsweringPermission()
         assertExists(ui.title("Scan Request"), "The scanner is open.")
         ui.click(ui.labeled("Close"))
-        // Closing it leaves the person on Scan, where the request would be reviewed.
-        ui.waitFor(ui.tag("signing.scan"), 5_000)
+        // Closing it leaves the person on Wallets, where they tapped Scan, not on the Scan tab.
+        ui.waitFor(ui.tag("wallets.scan"), 5_000)
+        assertExists(ui.title("Wallets"), "A cancelled scan is back on the wallet list.")
+        assertFalse("The Scan tab was not shown for a cancelled scan.", ui.exists(ui.tag("signing.scan")))
     }
 
     /** G1.12 (UIT:513-534). */
@@ -578,6 +586,79 @@ class BitToolSignerUiTests : SignerTestCase() {
 
     // MARK: - Wallets
 
+    /**
+     * Revision 13 on the device's own engine: a Solana v0 transfer whose recipient comes from an address lookup table
+     * reaches the review (it used to be refused), Sign waits for the acknowledgement, and the signature is made.
+     * Revision 14: an EVM transfer on a chain the engine does not name is signed with no acknowledgement.
+     */
+    @Test
+    fun testLookupTableAndUnnamedChainRequestsSign() {
+        app.launch(fixtures = 1)
+        ui.selectTab("Scan")
+        ui.waitFor(ui.tag("signing.scan"), 5_000)
+        pasteRequest(SOLANA_LOOKUP_TABLE_REQUEST)
+        val sign = ui.tag("signing.authorize")
+        ui.waitFor(sign, 30_000, "A lookup-table transaction reaches the review instead of being refused.")
+        assertExists(ui.containing("[lookup table "), "The recipient is the lookup-table placeholder.")
+        val risk = ui.tag("signing.risk")
+        assertScrolledTo(risk, "The review carries the risk acknowledgement.")
+        assertDisabled(sign, "Signing waits for the risk acknowledgement.")
+        ui.tap(risk)
+        assertTrue("The acknowledgement is checked.", ui.waitUntil(3_000) { ui.isSelected(risk) })
+        assertEnabled(sign, "The acknowledgement enables signing.")
+        ui.tap(sign)
+        val password = ui.tag("Wallet password")
+        ui.waitFor(password, 5_000)
+        ui.type(FIXTURE_PASSWORD, into = password)
+        ui.tap(ui.tag("authorize.sign"))
+        ui.waitFor(ui.tag("signature.title"), 30_000, "The engine signs it once acknowledged.")
+        ui.tap(ui.tag("signature.done"))
+        ui.waitFor(ui.tag("signing.scan"), 5_000)
+
+        pasteRequest(EVM_UNNAMED_CHAIN_REQUEST)
+        ui.waitFor(sign, 30_000, "A chain the engine does not name reaches the review.")
+        assertExists(ui.containing("Chain 12345"), "It is named by its number.")
+        assertNotExists(risk, "A notice, not a gate: no acknowledgement for a fully decoded transfer.")
+        assertEnabled(sign, "It can be signed straight away.")
+        ui.tap(sign)
+        ui.waitFor(password, 5_000)
+        ui.type(FIXTURE_PASSWORD, into = password)
+        ui.tap(ui.tag("authorize.sign"))
+        ui.waitFor(ui.tag("signature.title"), 30_000, "The engine signs it.")
+    }
+
+    /**
+     * KH v2 (1.1.0): a wallet saved by 1.0.0 has no identity signature, so Wallet Level asks for its password once —
+     * a wrong one changes nothing — and then shows its version 2 code; the next visit and a cold launch need none.
+     */
+    @Test
+    fun testWalletFrom100SignsItsIdentityWithItsPasswordOnce() {
+        app.launch(fixtures = 1, unsignedWalletPairing = true)
+        ui.click(ui.tagPrefix("wallet.connect."))
+        ui.waitFor(ui.tag("connect.walletIdentity"), 10_000)
+        assertNotExists(ui.tag("connect.walletQR"), "No wallet-level code before the password.")
+        // Set without focusing (no keyboard relayout under the lookup), as on the Delete page.
+        ui.setText(ui.tag("connect.identityPassword"), "Wrong-Password1")
+        ui.click(ui.tag("connect.identitySubmit"))
+        ui.waitFor(ui.containing("The password is incorrect."), 15_000)
+        assertNotExists(ui.tag("connect.walletQR"), "A wrong password produces no code.")
+        ui.setText(ui.tag("connect.identityPassword"), FIXTURE_PASSWORD)
+        ui.click(ui.tag("connect.identitySubmit"))
+        ui.waitFor(ui.tag("connect.walletQR"), 30_000, "The v2 code appears once the identity is signed.")
+        assertNotExists(ui.tag("connect.walletIdentity"), "The password card is gone.")
+        assertScrolledTo(ui.containing("This code is version 2 and needs BitTool Wallet 1.1.0 or later."), "The page names the version.")
+        // The next visit: the code, no password.
+        ui.goBack()
+        ui.click(ui.tagPrefix("wallet.connect."))
+        ui.waitFor(ui.tag("connect.walletQR"), 20_000)
+        assertNotExists(ui.tag("connect.walletIdentity"), "The signature is stored: no password the second time.")
+        // And after a cold launch of the same run (its wallet, its stored signature).
+        app.launch(fixtures = 1, run = app.runId, reset = false)
+        ui.click(ui.tagPrefix("wallet.connect."))
+        ui.waitFor(ui.tag("connect.walletQR"), 20_000)
+        assertNotExists(ui.tag("connect.walletIdentity"), "Nor after a relaunch.")
+    }
+
     /** G1.13 (UIT:539-625). */
     @Test
     fun testConnectAndAddressesUsePublicDataOnly() {
@@ -593,7 +674,7 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertExists(ui.containing("all three Solana addresses"), "The page names the Solana addresses.")
         ui.waitFor(ui.tag("connect.walletQR"), 20_000)
         assertTrue("The wallet-level QR can be copied.", ui.waitUntilEnabled(ui.tag("connect.copy")))
-        assertScrolledTo(ui.containing("bittool-signer-wallet v1"), "The format is named.")
+        assertScrolledTo(ui.containing("bittool-signer-wallet v2"), "The format is named.")
         assertScrolledTo(ui.containing("BitTool Wallet"), "BitTool Wallet is listed for wallet-level pairing.")
         repeat(4) { ui.swipeDown() }
         ui.tap(ui.segment("connect.level", "Coin Level"))
@@ -920,13 +1001,18 @@ class BitToolSignerUiTests : SignerTestCase() {
         assertFalse("The address is text, not a mailto link.", hasLinksOnPage())
         ui.goBack()
 
-        // Open Source: the addresses are text, and the build is described on device. Android shows its own repository
-        // as this app's source and the iOS repository as the engine's (DECISIONS §9.1).
+        // Open Source: the addresses are text, and the build is described on device. Since 0e99bac the engine's source
+        // is vendored in this repository (engine/), so "Signing engine source" under "Rebuild it yourself" names this
+        // repository too, and the iOS repository is named nowhere (DECISIONS §9.1).
         ui.tap(ui.tag("settings.openSource"))
         ui.waitFor(ui.title("Open Source"), 5_000)
         assertScrolledTo(ui.containing("https://github.com/bitbill/bittool-signer-android"), "The app's repository is named.")
-        assertScrolledTo(ui.containing("https://github.com/bitbill/bittool-signer-ios"), "The engine's repository is named.")
         assertScrolledTo(ui.containing("Signing engine"), "The engine is described.")
+        val engineSource = Target("the engine source row naming this repository in openSource.engineRepository") { u ->
+            u.device.findObject(By.res("openSource.engineRepository"))?.findObject(By.textContains("https://github.com/bitbill/bittool-signer-android"))
+        }
+        assertScrolledTo(engineSource, "The engine's source is this repository.")
+        assertNowhereOnPage(ui.containing("bittool-signer-ios"), "The iOS repository is no longer the engine's source.")
         // The digest is read from the bundled engine, so it is 64 hex characters, never a placeholder. On Android the
         // signing certificate's SHA-256 is 64 hex digits too, so the value is looked for in the engine row only.
         val digest = Target("the engine digest (64 hex digits) in openSource.digest") { u ->

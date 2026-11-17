@@ -40,6 +40,15 @@ class EngineCalls @Inject constructor(private val engine: SignerEngine) {
         engine.run(EngineOperation.DerivePublicIndex, params("seed" to JsonPrimitive(String(seedHex))))
 
     /**
+     * `signKhV2 {seed, epoch}` (fresh runtime): the wallet-identity signature of `OwnbitAuth:v2:epoch=<epoch>` with
+     * `m/44'/0'/0'/0/1000000000` (docs/Wallet-Pairing-v2.md). There is deliberately no message parameter: the engine
+     * builds the only sentence it will sign, and verifies the signature against its own key before returning it.
+     * Result: `epoch`, `signature` (base64, 65 bytes), `walletKeyId` of that seed, `publicKey`, `address`, `kh2`.
+     */
+    suspend fun signKhV2(seedHex: CharArray, epoch: Int): JsonObject =
+        engine.run(EngineOperation.SignKhV2, params("seed" to JsonPrimitive(String(seedHex)), "epoch" to JsonPrimitive(epoch)))
+
+    /**
      * `derivePublicAddresses {publicIndex, chain, profile, start, count}` (warm). Profile: the Bitcoin single-sig preset,
      * `""` for Solana (all three presets at once), `"standard"` for EVM and TRON. Result: `addresses`.
      */
@@ -71,9 +80,16 @@ class EngineCalls @Inject constructor(private val engine: SignerEngine) {
             ),
         )
 
-    /** `createWalletPairing {publicIndex, mode: "full"}` (warm; also the Connect prefetch). Result → `WalletPairingPayload.parse`. */
-    suspend fun createWalletPairing(index: WalletPublicMetadata): JsonObject =
-        engine.run(EngineOperation.CreateWalletPairing, params("publicIndex" to index.raw, "mode" to JsonPrimitive("full")))
+    /**
+     * `createWalletPairing {publicIndex, mode: "full", khSig, khEpoch}` (warm; also the Connect prefetch): the
+     * `bittool-signer-wallet` v2 code. The engine refuses an identity signature that does not verify against [index].
+     * Result → `WalletPairingPayload.parse`.
+     */
+    suspend fun createWalletPairing(index: WalletPublicMetadata, khSig: String, khEpoch: Int): JsonObject =
+        engine.run(
+            EngineOperation.CreateWalletPairing,
+            params("publicIndex" to index.raw, "mode" to JsonPrimitive("full"), "khSig" to JsonPrimitive(khSig), "khEpoch" to JsonPrimitive(khEpoch)),
+        )
 
     /** `decodeQR {frames}` (fresh): the batch fallback; production scans use [beginScanSession]/[scan]. */
     suspend fun decodeQr(frames: List<String>): JsonObject =

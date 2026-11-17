@@ -18,8 +18,15 @@ sealed interface UiText {
     /** An Android-only string resource (`R.string.*` of `:core:l10n`). Only constructed in Android modules. */
     data class Resource(val id: Int, val args: List<Any> = emptyList()) : UiText
 
-    /** Text shown exactly as given: engine English, OS error text, data values. Never translated. */
+    /** Text shown exactly as given: OS error text, data values. Never translated. */
     data class Verbatim(val text: String) : UiText
+
+    /**
+     * A sentence the offline engine wrote — a refusal (iOS Revision 15, `SigningEngineError.errorDescription`) — in its
+     * own English. Translated when drawn, through `ReviewText.sentence` (exact entry, then a value-carrying template, else
+     * the English unchanged), so every place that shows a failure gets it without a catch of its own.
+     */
+    data class Engine(val english: String) : UiText
 
     companion object {
         /** Shorthand for [Ios]. */
@@ -70,6 +77,15 @@ fun UiText.debugText(): String = when (this) {
     is UiText.Ios -> fallbackEnglish()
     is UiText.Resource -> "R.string#$id$args"
     is UiText.Verbatim -> text
+    is UiText.Engine -> english
+}
+
+/**
+ * An error whose message the offline engine authored (`EngineException` of `:core:engine`). [engineMessage] stays the
+ * engine's English for code and tests; [toUiText] turns it into a [UiText.Engine], translated only when drawn.
+ */
+interface EngineAuthoredError {
+    val engineMessage: String
 }
 
 /**
@@ -83,11 +99,13 @@ class AppIssue(english: String, vararg args: Any) : SignerException(UiText.Ios(e
 
 /**
  * What the UI shows for [this] failure, or null when nothing must be shown: a cancellation (late result, epoch change)
- * is silent everywhere (models-state.md §5.2). [SignerException]s carry their text; anything else (engine errors,
- * file-system errors) is shown verbatim like iOS `error.localizedDescription`.
+ * is silent everywhere (models-state.md §5.2). [SignerException]s carry their text; an engine-authored error is the
+ * engine's English, translated when drawn ([UiText.Engine], iOS Revision 15); anything else (file-system errors) is
+ * shown verbatim like iOS `error.localizedDescription`.
  */
 fun Throwable.toUiText(): UiText? = when (this) {
     is CancellationException -> null
     is SignerException -> text
+    is EngineAuthoredError -> UiText.Engine(engineMessage)
     else -> UiText.Verbatim(localizedMessage ?: message ?: javaClass.simpleName)
 }

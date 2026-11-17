@@ -1,6 +1,10 @@
 {
  "language": "pt-BR",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "pt-BR"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Carteira excluída"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Outro app está sobreposto ao BitTool Signer. Feche-o e tente de novo."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Um app pode ler sua tela"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Um app de acessibilidade que não veio com este celular pode ler o que aparece na tela: %1$s. Nesta versão do Android, ele também poderia ler as palavras da sua frase de recuperação. Se você não confia nele, desative-o primeiro em Configurações › Acessibilidade."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Não foi possível alterar o bloqueio do app. Tente de novo."
@@ -234,8 +246,8 @@
    "value": "Código-fonte do mecanismo de assinatura"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: uma xpub de conta para cada tipo de endereço do Bitcoin, para EVM e para TRON, e os três endereços da Solana, em um QR animado"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: uma xpub de conta para cada tipo de endereço do Bitcoin, para EVM e para TRON, os três endereços da Solana e a assinatura de identidade desta carteira, em um QR animado"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

@@ -50,7 +50,9 @@ import com.bittool.signer.core.designsystem.component.SymbolHero
 import com.bittool.signer.core.designsystem.icon.SignerIcons
 import com.bittool.signer.core.designsystem.modifier.readableWidth
 import com.bittool.signer.core.designsystem.security.AccessibilitySensitive
+import com.bittool.signer.core.designsystem.security.ScreenReaderWarning
 import com.bittool.signer.core.designsystem.security.obscuredTouchGuard
+import com.bittool.signer.core.designsystem.security.rememberScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerMetrics
 import com.bittool.signer.core.designsystem.theme.SignerMotion
 import com.bittool.signer.core.designsystem.theme.SignerShapes
@@ -216,6 +218,8 @@ internal fun VerifyBackupStep(state: WalletSetupUiState, model: WalletSetupViewM
             )
         },
     ) {
+        // Below API 34, before the board shows phrase words: an untrusted accessibility app is on (audit M-03).
+        ScreenReaderWarning(rememberScreenReaders())
         if (verification != null) {
             BackupVerificationGrid(
                 verification = verification,

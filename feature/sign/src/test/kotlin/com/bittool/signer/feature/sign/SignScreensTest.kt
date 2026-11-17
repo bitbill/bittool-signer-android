@@ -61,6 +61,14 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.performScrollToNode
+import com.bittool.signer.core.model.review.DecodeStatus
+import com.bittool.signer.core.model.review.ReviewPresentation
+import com.bittool.signer.core.model.review.RiskLevel
+import com.bittool.signer.core.ui.address.PLAIN_VALUE_TAG
+import kotlin.test.assertNull
 
 /**
  * The Scan tab's semantics and controls as the e2e suite and TalkBack meet them (scan-sign.md §20; gaps.md G1.8–G1.12):
@@ -146,6 +154,61 @@ class SignScreensTest {
         compose.onNodeWithText("Sign with Public fixture 1").assertExists()
     }
 
+    /**
+     * Revision 13: a Solana v0 transaction whose recipient comes from an address lookup table is signable now, and the
+     * review states the cost — a red HIGH RISK warning first, the red "High risk" and orange "Partially decoded" pills,
+     * the recipient shown as the engine's `[lookup table … · entry 3]` text (never cut into address groups), and Sign
+     * held behind the acknowledgement. The review is the engine's own output for the iOS tour's request.
+     */
+    @Test
+    fun aLookupTableTransactionIsRedPartialAndGated() {
+        val review = SignFixtures.solanaLookupTable
+        assertTrue(review.warnings.first().startsWith("HIGH RISK:"))
+        assertTrue(ReviewPresentation.isSevereWarning(review.warnings.first()), "drawn in the danger tone")
+        assertEquals(RiskLevel.High, review.riskLevel)
+        assertEquals(DecodeStatus.PartiallyDecoded, review.decodeStatus)
+        assertTrue(review.requiresAcknowledgement)
+        review(ReviewStates.solanaLookupTable)
+        compose.onNodeWithText("High risk").assertExists()
+        compose.onNodeWithText("Partially decoded").assertExists()
+        // The summary's recipient: the placeholder as one piece of text.
+        compose.onNodeWithTag(PLAIN_VALUE_TAG, useUnmergedTree = true).assertTextEquals(SignFixtures.LOOKUP_PLACEHOLDER)
+        // The summary and the instruction's Recipient row both show it whole.
+        compose.onAllNodesWithText(SignFixtures.LOOKUP_PLACEHOLDER, substring = true).onFirst().assertExists()
+        val list = compose.onNodeWithTag(SignTags.REVIEW_LIST)
+        list.performScrollToNode(hasText("2 of this transaction's 5 accounts come from 1 address lookup table", substring = true))
+        compose.onNodeWithText("HIGH RISK: 2 of this transaction's 5 accounts", substring = true).assertExists()
+        // Sign stays disabled until the box is ticked.
+        compose.onNodeWithTag(SignTags.AUTHORIZE).assertIsNotEnabled()
+        compose.onNodeWithTag(SignTags.RISK).assertIsOff()
+    }
+
+    @Test
+    fun anAcknowledgedLookupTableTransactionCanBeSigned() {
+        var opened = 0
+        review(ReviewStates.solanaLookupTableAcknowledged, onAuthorize = { opened++ })
+        compose.onNodeWithTag(SignTags.RISK).assertIsOn()
+        compose.onNodeWithTag(SignTags.AUTHORIZE).assertIsEnabled().performClick()
+        assertEquals(1, opened)
+    }
+
+    /** Revision 14: an EVM chain the engine does not name is signed under "Chain <id>", with its notice, ungated. */
+    @Test
+    fun anUnnamedEvmChainIsSaidToBeUnnamedAndNeedsNoAcknowledgement() {
+        val review = SignFixtures.evmUnnamedChain
+        assertEquals("Chain 12345", review.networkName)
+        assertEquals(RiskLevel.Warning, review.riskLevel)
+        assertFalse(review.requiresAcknowledgement)
+        assertNull(review.network?.brand, "no bundled logo: the generic network logo")
+        assertFalse(review.warnings.any(ReviewPresentation::isSevereWarning), "a notice, not a danger")
+        review(ReviewStates.evmUnnamedChain)
+        compose.onAllNodesWithText("Chain 12345", substring = true).onFirst().assertExists()
+        compose.onNodeWithTag(SignTags.REVIEW_LIST)
+            .performScrollToNode(hasText("This device does not recognise EVM chain 12345", substring = true))
+        compose.onNodeWithTag(SignTags.RISK).assertDoesNotExist()
+        compose.onNodeWithTag(SignTags.AUTHORIZE).assertIsEnabled()
+    }
+
     @Test
     fun anAcknowledgedRequestCanBeSigned() {
         var opened = 0
@@ -183,7 +246,7 @@ class SignScreensTest {
      */
     @Test
     @Config(qualifiers = "+de")
-    fun theResolverMessagesAreTranslatedAndUnknownEngineTextStaysVerbatim() {
+    fun theResolverMessagesAndRefusalsAreTranslatedAndUnknownEngineTextStaysVerbatim() {
         var issue: MatchingIssue by mutableStateOf(MatchingIssue.Engine("No matching wallet"))
         compose.setContent {
             SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
@@ -206,9 +269,17 @@ class SignScreensTest {
         for ((english, german) in translated) {
             assertEquals(german, matchError(MatchingIssue.Engine(english)), english)
         }
-        assertEquals("Invalid master fingerprint", matchError(MatchingIssue.Engine("Invalid master fingerprint")))
+        // iOS Revision 15: every whole-sentence refusal the engine can throw is in the catalogue now…
+        assertEquals("Ungültiger Master-Fingerprint", matchError(MatchingIssue.Engine("Invalid master fingerprint")))
         assertEquals("Ungültige Signaturanfrage", matchError(MatchingIssue.Failure(UiText.Verbatim("Invalid signing request"))))
-        assertEquals("Unsupported signing request", matchError(MatchingIssue.Failure(UiText.Verbatim("Unsupported signing request"))))
+        assertEquals("Nicht unterstützte Signieranfrage", matchError(MatchingIssue.Failure(UiText.Engine("Unsupported signing request"))))
+        // …the ones that carry a value are translated with the engine's values in place…
+        assertEquals(
+            "Autorisierung 1 gilt für Chain 56, diese Transaktion ist aber für Chain 1.",
+            matchError(MatchingIssue.Failure(UiText.Engine("Authorization 1 is for chain 56, but this transaction is for chain 1."))),
+        )
+        // …and one the catalogue has never seen stays the engine's own English.
+        assertEquals("An engine refusal no catalogue has seen", matchError(MatchingIssue.Engine("An engine refusal no catalogue has seen")))
         assertEquals("Ungültiger Signierplan.", matchError(MatchingIssue.Failure(UiText.Ios("Invalid signing plan."))))
     }
 

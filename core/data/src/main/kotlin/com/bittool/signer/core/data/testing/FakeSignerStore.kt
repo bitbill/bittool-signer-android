@@ -73,6 +73,7 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
         data class ExistingWallet(val mnemonic: String, val passphrase: String) : Call
         data class ResetPassword(val walletId: WalletId, val mnemonic: String, val passphrase: String, val newPassword: String) : Call
         data class CompleteSetup(val walletId: WalletId, val password: String) : Call
+        data class AuthorizeWalletIdentity(val walletId: WalletId, val password: String) : Call
         data class RenameWallet(val walletId: WalletId, val name: String) : Call
         data class ChangePassword(val walletId: WalletId, val current: String, val new: String) : Call
         data class DeleteWallet(val walletId: WalletId, val password: String) : Call
@@ -127,6 +128,7 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
     var onResetPassword: suspend (walletId: WalletId, mnemonic: SecretText, passphrase: SecretText, newPassword: SecretText) -> Unit =
         { _, _, _, _ -> suspendSession() }
     var onCompleteSetup: suspend (walletId: WalletId, password: SecretText) -> Unit = { _, _ -> }
+    var onAuthorizeWalletIdentity: suspend (walletId: WalletId, password: SecretText) -> Unit = { _, _ -> }
     var onRenameWallet: suspend (walletId: WalletId, name: String) -> Unit = { id, name ->
         val trimmed = name.trimWhitespacesAndNewlines()
         setState { s -> s.copy(wallets = s.wallets.map { if (it.id == id) it.copy(name = trimmed) else it }) }
@@ -240,6 +242,11 @@ open class FakeSignerStore(initial: SignerState = SignerState(isLoading = false,
     override suspend fun completeSetup(walletId: WalletId, password: SecretText) {
         recorded += Call.CompleteSetup(walletId, password.text())
         onCompleteSetup(walletId, password)
+    }
+
+    override suspend fun authorizeWalletIdentity(walletId: WalletId, password: SecretText) {
+        recorded += Call.AuthorizeWalletIdentity(walletId, password.text())
+        onAuthorizeWalletIdentity(walletId, password)
     }
 
     override suspend fun renameWallet(walletId: WalletId, name: String) {

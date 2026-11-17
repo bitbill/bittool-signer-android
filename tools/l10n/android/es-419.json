@@ -1,6 +1,10 @@
 {
  "language": "es-419",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "es-419"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Billetera eliminada"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "Otra app se superpone a BitTool Signer. Ciérrala y vuelve a intentarlo."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "Una app puede leer tu pantalla"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "Una app de accesibilidad que no venía con este teléfono puede leer lo que aparece en la pantalla: %1$s. En esta versión de Android, también podría leer las palabras de tu frase de recuperación. Si no confías en ella, desactívala primero en Configuración › Accesibilidad."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "No se pudo cambiar el bloqueo de la app. Vuelve a intentarlo."
@@ -234,8 +246,8 @@
    "value": "Código fuente del motor de firma"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: un xpub de cuenta para cada tipo de dirección de Bitcoin, para EVM y para TRON, y las tres direcciones de Solana, en un QR animado"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: un xpub de cuenta para cada tipo de dirección de Bitcoin, para EVM y para TRON, las tres direcciones de Solana y la firma de identidad de esta billetera, en un QR animado"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

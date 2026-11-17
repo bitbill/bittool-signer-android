@@ -37,7 +37,7 @@ You need Node.js and npm (the versions a release used are in its `release/releas
 ```bash
 git clone https://github.com/bitbill/bittool-signer-android
 cd bittool-signer-android
-git checkout android-v1.0.0          # the tag or commit you are checking
+git checkout android-v1.1.0          # the tag or commit you are checking
 cd engine
 npm ci --ignore-scripts              # exact versions from the lockfile, no install hooks
 npm run build
@@ -65,7 +65,7 @@ unzip -p bittool-signer.apk assets/engine/signer.js | shasum -a 256
 Or from the APK downloaded from the website or the GitHub release:
 
 ```bash
-unzip -p BitToolSigner-1.0.0-1000001-apk.apk assets/engine/signer.js | shasum -a 256
+unzip -p BitToolSigner-1.1.0-1010002-apk.apk assets/engine/signer.js | shasum -a 256
 ```
 
 If the hash matches Step 1, **the code that decides what you are signing is exactly what this source builds.**
@@ -73,8 +73,8 @@ If the hash matches Step 1, **the code that decides what you are signing is exac
 ### Step 3: check the downloaded APK itself (website / GitHub channel)
 
 ```bash
-shasum -a 256 BitToolSigner-1.0.0-1000001-apk.apk               # = artifacts[…apk].sha256 in release-manifest.json
-apksigner verify --print-certs BitToolSigner-1.0.0-1000001-apk.apk
+shasum -a 256 BitToolSigner-1.1.0-1010002-apk.apk               # = artifacts[…apk].sha256 in release-manifest.json
+apksigner verify --print-certs BitToolSigner-1.1.0-1010002-apk.apk
 ```
 
 The certificate SHA-256 must equal `signing.certificateSHA256` in the release manifest and the value published on
@@ -84,7 +84,7 @@ This build shows the same certificate. Android itself refuses an update signed b
 The claim that the app never goes online can be checked on the APK too:
 
 ```bash
-apkanalyzer manifest permissions BitToolSigner-1.0.0-1000001-apk.apk   # no android.permission.INTERNET
+apkanalyzer manifest permissions BitToolSigner-1.1.0-1010002-apk.apk   # no android.permission.INTERNET
 ```
 
 ### Step 4: check the whole source snapshot

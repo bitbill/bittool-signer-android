@@ -11,6 +11,13 @@ plugins {
 
 android {
     namespace = "com.bittool.signer.core.l10n"
+
+    testOptions {
+        unitTests.all { test ->
+            // ReviewTextCoverageTest reads the corpus the engine sync brings over: a new corpus re-runs it.
+            test.inputs.file(rootProject.file("engine/test/fixtures/review-text-corpus.json")).withPathSensitivity(PathSensitivity.RELATIVE)
+        }
+    }
 }
 
 dependencies {

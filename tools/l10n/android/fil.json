@@ -1,6 +1,10 @@
 {
  "language": "fil",
  "strings": {
+  "l10n_table_language": {
+   "source": "en",
+   "value": "fil"
+  },
   "activity_deleted_wallet": {
    "source": "Deleted wallet",
    "value": "Binurang wallet"
@@ -193,6 +197,14 @@
    "source": "Another app is drawing over BitTool Signer. Close it, then try again.",
    "value": "May ibang app na nakapatong sa BitTool Signer. Isara ito, tapos subukan muli."
   },
+  "security_screen_reader_warning_title": {
+   "source": "An app can read your screen",
+   "value": "May app na nakakabasa ng screen mo"
+  },
+  "security_screen_reader_warning": {
+   "source": "An accessibility app that did not come with this phone can read what is on the screen: %1$s. On this version of Android it could also read your recovery words. Unless you trust it, turn it off in Settings › Accessibility first.",
+   "value": "May accessibility app na hindi kasama sa teleponong ito na nakakabasa ng nasa screen: %1$s. Sa bersyong ito ng Android, puwede rin nitong mabasa ang mga salita ng recovery phrase mo. Kung hindi mo ito pinagkakatiwalaan, i-off muna ito sa Mga setting › Accessibility."
+  },
   "security_app_lock_save_failed": {
    "source": "App Lock could not be changed. Try again.",
    "value": "Hindi mabago ang App Lock. Subukan muli."
@@ -234,8 +246,8 @@
    "value": "Source code ng signing engine"
   },
   "settings_wallet_level_format": {
-   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, and all three Solana addresses, in one animated QR",
-   "value": "%1$s: isang account xpub para sa bawat uri ng Bitcoin address, para sa EVM at para sa TRON, at lahat ng tatlong Solana address, sa iisang animated na QR"
+   "source": "%1$s: an account xpub for each Bitcoin address type, for EVM and for TRON, all three Solana addresses and this wallet’s identity signature, in one animated QR",
+   "value": "%1$s: isang account xpub para sa bawat uri ng Bitcoin address, para sa EVM at para sa TRON, lahat ng tatlong Solana address at ang identity signature ng wallet na ito, sa iisang animated na QR"
   },
   "setup_screenshot_detected": {
    "source": "Screenshot Detected",

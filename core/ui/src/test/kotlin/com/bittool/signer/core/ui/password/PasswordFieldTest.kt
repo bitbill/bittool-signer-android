@@ -47,7 +47,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.test.core.app.ApplicationProvider
+import com.bittool.signer.core.designsystem.security.LocalScreenReaders
 import com.bittool.signer.core.designsystem.security.LocalSensitiveDataMarking
+import com.bittool.signer.core.designsystem.security.ScreenReaders
 import com.bittool.signer.core.designsystem.theme.SignerTheme
 import com.bittool.signer.core.l10n.R
 import kotlin.test.assertEquals
@@ -206,6 +208,26 @@ class PasswordFieldTest {
                 assertFalse(info.text.toString().contains(SECRET), "${kind.english}: the typed secret is not in the node")
             }
         }
+    }
+
+    /**
+     * 2026-11-16 audit M-03: below API 34 a shown passphrase is plain text to every accessibility service. With one that
+     * did not come with the phone on and no screen reader, the field keeps reporting bullets while the passphrase is shown.
+     */
+    @Test
+    @Config(sdk = [32])
+    fun anUntrustedServiceGetsBulletsEvenForAShownPassphrase() {
+        val state = TextFieldState("correct horse")
+        compose.setContent {
+            CompositionLocalProvider(LocalScreenReaders provides ScreenReaders(listOf("Battery Saver Pro"), screenReaderOn = false)) {
+                SignerTheme(darkTheme = false, applySystemBarAppearance = false) {
+                    PasswordField(PasswordKind.Passphrase, state, isNew = true, revealable = true)
+                }
+            }
+        }
+        compose.onNodeWithTag(PasswordKind.Passphrase.revealTag).performClick()
+        compose.onNodeWithTag(PasswordKind.Passphrase.revealTag).assertContentDescriptionEquals("Hide secret")
+        compose.onNodeWithTag(PasswordKind.Passphrase.english).assert(editableTextIs(maskForAccessibility("correct horse".length)))
     }
 
     /**
